@@ -1,0 +1,13 @@
+<!--The content below is only a placeholder and can be replaced.-->
+<ul>
+    <li class="card-box" *ngFor="let item of cards$ | async">
+      <h5>{{item.id}} - {{item.name}}</h5>
+      <div class="card-border">
+        <img [src]="'/assets/cards/' + item.image">
+      </div>
+    </li>
+  </ul>
+
+  <button (click)="initDB()">INIT DB</button>
+
+  <router-outlet></router-outlet>

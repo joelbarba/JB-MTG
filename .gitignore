@@ -41,3 +41,8 @@ testem.log
 # System Files
 .DS_Store
 Thumbs.db
+
+
+# Api key to Firebase
+./src/environments/environment.ts
+src/environments/environment.ts
