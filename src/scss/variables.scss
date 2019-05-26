@@ -1,0 +1,47 @@
+/* Main Blueface color palette */
+
+$primary_color    : #00B6F1;
+$secondary_color  : #93C83E;
+$tertiary_color   : #ED0677;
+$quaternary_color : #004A64;
+$warning_color    : #ED0677;
+$extra_color      : #F17B3F;
+
+$white: #FFF;
+
+$menu-bg: #d4d4d4;
+
+
+/* Bootstrap theme overwritting */
+$primary:       $primary_color;
+$secondary:     $secondary_color;
+$success:       $primary_color;
+$info:          $quaternary_color;
+$warning:       $extra_color;
+$danger:        $warning_color;
+$light:         $primary_color;
+$dark:          $primary_color;
+
+$navbar-dark-color:                 $white;
+$navbar-dark-hover-color:           rgba($white, .75);
+$navbar-dark-active-color:          rgba($white, .80);
+$navbar-dark-disabled-color:        rgba($white, .25);
+
+$navbar-dark-brand-color:           $white;
+$navbar-dark-brand-hover-color:     $white;
+
+// Define CSS variables (IEexplorer does not support it)
+$bf-colors: (
+  "primary_color"     : $primary_color,
+  "secondary_color"   : $secondary_color,
+  "tertiary_color"    : $tertiary_color,
+  "quaternary_color"  : $quaternary_color,
+  "warning_color"     : $warning_color,
+  "extra_color"       : $extra_color,
+  "white"             : $white,
+);
+:root {
+  @each $color, $value in $bf-colors {
+    --#{$color}: #{$value};
+  }
+}

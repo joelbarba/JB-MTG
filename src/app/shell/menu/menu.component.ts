@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { Location } from '@angular/common';
 
 @Component({
   selector: 'app-menu',
@@ -6,10 +8,16 @@ import { Component, OnInit } from '@angular/core';
   styleUrls: ['./menu.component.scss']
 })
 export class MenuComponent implements OnInit {
+  public menuEntries = [
+    { id: 1, name: 'Home',        icon: 'icon-home',      isActive: false, route: 'home' },
+    { id: 2, name: 'Library',     icon: 'icon-list',      isActive: false, route: 'library' },
+    { id: 3, name: 'User',        icon: 'icon-user-plus', isActive: false, route: 'user' },
+  ];
 
-  constructor() { }
-
-  ngOnInit() {
-  }
-
+  constructor(
+    private router: Router,
+    private activatedRoute: ActivatedRoute,
+    private location: Location
+  ) { }
+  ngOnInit() {}
 }

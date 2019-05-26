@@ -1,3 +1,9 @@
-<p>
-  menu works!
-</p>
+<div class="menu-bar">
+  <ul>
+    <li *ngFor="let menuEntry of menuEntries" class="menu-entry" [class.active]="menuEntry.isActive">
+      <a class="menu-entry-link" [routerLink]="menuEntry.route">
+        <span [ngClass]="menuEntry.icon"></span>
+      </a>
+    </li>
+  </ul>
+</div>
