@@ -11,16 +11,12 @@ import { AngularFireStorageModule } from '@angular/fire/storage';
 import { AngularFireAuthModule } from '@angular/fire/auth';
 import { ShellModule } from './shell/shell.module';
 import { LoginModule } from './pages/login/login.module';
-import { LoginComponent } from './pages/login/login.component';
 import { HomeModule } from './pages/home/home.module';
-import { HomeComponent } from './pages/home/home.component';
+import { UserModule } from './pages/user/user.module';
+import { DecksModule } from './pages/decks/decks.module';
 
 @NgModule({
-  declarations: [
-    AppComponent,
-    LoginComponent,
-    HomeComponent,
-  ],
+  declarations: [AppComponent],
   imports: [
     BrowserModule,
     AppRoutingModule,
@@ -28,7 +24,7 @@ import { HomeComponent } from './pages/home/home.component';
     AngularFirestoreModule, // imports firebase/firestore, only needed for database features
     AngularFireAuthModule, // imports firebase/auth, only needed for auth features,
     AngularFireStorageModule,  // imports firebase/storage only needed for storage features
-    ShellModule, LoginModule, HomeModule,
+    ShellModule, LoginModule, HomeModule, UserModule, DecksModule,
   ],
   providers: [],
   bootstrap: [AppComponent]

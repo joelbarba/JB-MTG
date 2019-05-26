@@ -121,7 +121,7 @@ mkdir src/scss
 #   { path: '', redirectTo: '/home', pathMatch: 'full' },
 #   { path: 'home',         component: HomeComponent },
 #   { path: 'login',        component: LoginComponent },
-# ];
+# ]; // RouteEnd
 
 # @NgModule({
 #   imports: [RouterModule.forRoot(routes)],
