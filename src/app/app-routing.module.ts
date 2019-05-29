@@ -1,4 +1,4 @@
-import { DecksComponent } from './pages/decks/decks.component';
+import { LibraryComponent } from './pages/library/library.component';
 import { UserComponent } from './pages/user/user.component';
 import { HomeComponent } from './pages/home/home.component';
 import { LoginComponent } from './pages/login/login.component';
@@ -11,7 +11,7 @@ const routes: Routes = [
   { path: 'home',         component: HomeComponent },
   { path: 'login',        component: LoginComponent },
   { path: 'user',     component: UserComponent },
-  { path: 'decks',     component: DecksComponent },
+  { path: 'library',     component: LibraryComponent },
 ]; // RouteEnd
 
 @NgModule({

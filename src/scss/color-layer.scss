@@ -1,0 +1,98 @@
+// These restyles the application components with the selected color palette (sass color variables)
+
+// Define CSS variables (IEexplorer does not support it)
+$bf-colors: (
+        "primary"     : $primary_color,
+        "secondary"   : $secondary_color,
+        "tertiary"    : $tertiary_color,
+        "quaternary"  : $quaternary_color,
+        "warning"     : $warning_color,
+        "extra"       : $extra_color,
+        "white"       : $white,
+);
+
+
+// --- Button color reset ----------------------------------------------------
+@mixin btn-color-mixin($btn-color) {
+  color: white;
+  background: $btn-color;
+  .btn-icon-section { background: darken($btn-color, 5%); }
+  .btn-icon-section.small-btn { background: $btn-color; } // If icon btn
+  &:hover:not(:disabled) {
+    background: darken($btn-color, 3%);
+    .btn-icon-section { background: darken($btn-color, 7%); }
+  }
+}
+@each $color, $value in $bf-colors {
+  .#{$color}.bf-btn  { @include btn-color-mixin($value); }
+}
+
+
+
+// --- Checkbox color reset --------------------------------------------------
+@mixin checkbox-color-mixin($main-color) {
+  div.checkbox label input[type='checkbox'] {
+    + span.check-box {  // Box unmarked (unchecked)
+      background: $white;
+      border-color: $main-color;
+    }
+
+    &:checked + span.check-box {  // Box marked (checked)
+      background: $main-color;
+      border-color: darken($main-color, 3%);
+      &:before { color: $white; }
+    }
+
+    &[disabled] + span.check-box {  // Box disabled (checked or unchecked)
+      background: $disabled-color;
+      border-color: darken($disabled-color, 3%);
+    }
+  }
+}
+@include checkbox-color-mixin($primary_color);
+
+
+// --- Switch reset --------------------------------------------------
+div.bf-switch {
+
+  .switch-bar {  // Background bar
+    background: white;
+    border-color: #ccc;
+  }
+
+  //.switch-value {  // Text color (ON/OFF)
+  //  .bf-switch-off-text { color: red; }
+  //  .bf-switch-on-text  { color: green; }
+  //}
+
+  .switch-lever {  // Switch color
+    color: white;
+    background: #f3f3f3;
+    &.is-on  { background: $primary_color; }
+    //&.is-off { background: red; }
+  }
+
+  &.is-disabled {
+    .switch-bar   { background: #d4d4d4; }
+    .switch-lever { background: #f3f3f3; }
+  }
+}
+
+
+// --- Growl reset --------------------------------------------------
+div.growl-wrapper {
+  .msg-box.success {
+    background: darken($primary_color, 15%);
+    color: $white;
+  }
+  .msg-box.error {
+    background: $warning_color;
+    color: $white;
+  }
+  .msg-box {
+    border: 1px solid rgba($white, 0.4);
+    border-radius: 4px;
+  }
+}
+
+

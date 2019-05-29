@@ -1,8 +1,9 @@
 echo "Init an Angular 7 Project with the following:"
 echo "  1. Bootstrap 4"
 echo "  2. IcoMoon"
-echo "  3. Bf-UI-lib"
-echo "  4. Basic app folder structure + default files"
+echo "  3. Ng Bootstrap"
+echo "  4. bf-ui-lib"
+echo "  5. Basic app folder structure + default files"
 echo ""
 echo "------------------------------------------------"
 # echo "  1. Install Bootstrap 4 and inject it in styles.scss"
@@ -19,18 +20,27 @@ echo "------------------------------------------------"
 # npm install bf-icomoon --save
 # echo '@import "~bf-icomoon/css/icomoon.css";' >> src/styles.scss
 # echo '@import "scss/layout.scss";' >> src/styles.scss
-
+# echo '@import "scss/helpers.scss";' >> src/styles.scss
+# echo '@import "scss/color-layer.scss";' >> src/styles.scss
 
 
 # echo ""
 # echo "----------------------------------------------------------"
-# echo "  3. Bf-UI-lib"
+# echo "  3. Install Angular Bootstrap (ngBootstrap): https://github.com/ng-bootstrap/ng-bootstrap"
+# read x
+# npm install --save @ng-bootstrap/ng-bootstrap
+
+# echo ""
+# echo "----------------------------------------------------------"
+# echo "  4. Bf-UI-lib"
 # read x
 # npm install bf-ui-lib
 
+
+
 echo ""
 echo "----------------------------------------------------------"
-echo "  4. Basic app folder structure:"
+echo "  5. Basic app folder structure:"
 echo "     - scss"
 echo "        * variables.scss"
 echo "        * layout.scss"
@@ -46,6 +56,7 @@ echo "           * footer"
 read x
 mkdir src/scss
 # mkdir src/app/globals
+# ng generate module globals   -m=app.module
 
 # ng generate module shell -m=app.module
 # ng generate component shell/navbar -m=shell.module
@@ -60,6 +71,37 @@ mkdir src/scss
 
 
 # Default files:
+
+###############################################################################################
+##### Default globals module #####
+# echo "import { NgModule } from '@angular/core';
+# import { CommonModule } from '@angular/common';
+# import { HttpClientModule } from '@angular/common/http';
+# import { BfUiLibModule } from 'bf-ui-lib';
+# import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
+# import { AbstractTranslateService } from 'bf-ui-lib';
+
+# class TranslateService extends AbstractTranslateService {
+#   constructor() { super(); }
+#   doTranslate(label ?: string): string { return label; }
+# }
+
+# @NgModule({
+#   declarations: [],
+#   providers: [],
+#   imports: [
+#     CommonModule,
+#     HttpClientModule,
+#     NgbModule,
+#     BfUiLibModule.forRoot({ TranslateService: TranslateService  })
+#   ],
+#   exports: [
+#     BfUiLibModule,
+#     NgbModule,
+#   ]
+# })
+# export class GlobalsModule { }" > src/app/globals/globals.module.ts
+
 
 ###############################################################################################
 ##### Default app shell module #####
@@ -141,6 +183,7 @@ mkdir src/scss
 
 # \$white: #FFF;
 # \$menu-bg: #d4d4d4;
+# \$disabled-color: #a0a0a0;
 
 # /* Bootstrap theme overwritting */
 # \$primary:       $primary_color;

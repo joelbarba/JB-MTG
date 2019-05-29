@@ -1,0 +1,42 @@
+<div class="modal-header">
+    <h4 class="modal-title">Edit Card: {{refCard.name}}</h4>
+    <button type="button" class="close" aria-label="Close" (click)="activeModal.dismiss('Cross click')">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+  <div class="modal-body" *ngIf="!!editCard">
+    <div class="row">
+
+      <div class="col-9">
+        <bf-input bfLabel="Card Name" [(ngModel)]="editCard.name" [bfRequired]="true" name="name"></bf-input>
+      </div>
+
+      <div class="col-3">
+        <bf-input bfLabel="Card Id" [(ngModel)]="refCard.id" [bfDisabled]="true" name="id"></bf-input>
+      </div>
+
+      <div class="col-4">
+        <bf-input bfLabel="Color" [(ngModel)]="editCard.color" [bfRequired]="true" name="color"></bf-input>
+      </div>
+      <div class="col-4">
+        <bf-input bfLabel="Type" [(ngModel)]="editCard.type" [bfRequired]="true" name="type"></bf-input>
+      </div>
+      <div class="col-4">
+        <bf-input bfLabel="Image" [(ngModel)]="editCard.image" [bfRequired]="true" name="image"></bf-input>
+      </div>
+
+      <div class="col-12">
+        <bf-input bfLabel="Text" [(ngModel)]="editCard.text" [bfRequired]="true" name="text"></bf-input>
+      </div>
+
+
+      editCard={{editCard| json}}
+
+    </div>
+  </div>
+
+  <div class="modal-footer">
+    <bf-btn bfType="cancel" bfText="Close" (bfClick)="activeModal.close()"></bf-btn>
+    <bf-btn bfType="delete" bfText="Remove" (bfClick)="deleteCard()"> </bf-btn>
+    <bf-btn bfType="update" bfText="Save Changes" (bfClick)="saveCard()"> </bf-btn>
+  </div>

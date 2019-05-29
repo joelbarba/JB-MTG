@@ -75,3 +75,19 @@ nav.navbar-dark {
   font-weight: 600;
   color: $primary_color;
 }
+
+
+ngb-modal-window {
+  .modal-dialog {
+    margin-top: 100px;
+    .modal-header button.close {
+        outline: none;
+    }
+  }
+}
+
+.modal-body {
+  padding: 25px 30px;
+  margin-left: 0;
+  margin-right: 0;
+}

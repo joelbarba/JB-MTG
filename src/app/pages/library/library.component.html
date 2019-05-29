@@ -1,0 +1,45 @@
+<div class="row">
+  <div class="col-12">
+    <h1>Library</h1>
+  </div>
+
+  <div class="col-3" *ngIf="!!selected">
+    <div class="card-box big-size">
+      <div class="card-border">
+        <img [src]="'/assets/cards/' + selected.image">
+      </div>
+    </div>
+
+    <div>
+      <bf-label class="marR10" bfText="Name"></bf-label>
+      <span>{{selected.id}} - {{selected.name}}</span>
+    </div>
+
+    <div>
+      <bf-label class="marR10" bfText="Type"></bf-label>
+      <span>{{selected.type}}</span>
+    </div>
+
+    <div>
+      <bf-label class="marR10" bfText="Color"></bf-label>
+      <span>{{selected.color}}</span>
+    </div>
+
+    <bf-btn class="full-width" bfText="Purchase" (bfClick)="initDB()"></bf-btn>
+    <bf-btn class="marT10" bfType="edit" bfText="Edit" (bfClick)="openEdit(selected)"></bf-btn>
+    <bf-btn class="marT10" bfType="add" bfText="Add Card" (bfClick)="openAdd()"></bf-btn>
+  </div>
+
+  <div class="col-9 padT20">
+    <ul>
+      <li class="card-box" *ngFor="let item of cards$ | async" (click)="selected = item;">
+        <div class="card-border">
+          <img [src]="'/assets/cards/' + item.image">
+        </div>
+        <h5>{{item.name}}</h5>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<!-- <button (click)="initDB()">INIT DB</button> -->

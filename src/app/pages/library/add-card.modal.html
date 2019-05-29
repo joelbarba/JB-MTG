@@ -1,0 +1,41 @@
+<div class="modal-header">
+    <h4 class="modal-title">Add New Card</h4>
+    <button type="button" class="close" aria-label="Close" (click)="activeModal.dismiss('Cross click')">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+  <div class="modal-body">
+    <div class="row">
+
+      <div class="col-9">
+        <bf-input bfLabel="Card Name" [(ngModel)]="newCard.name" [bfRequired]="true" name="name"></bf-input>
+      </div>
+
+      <div class="col-3">
+        <bf-input bfLabel="Card Id" [(ngModel)]="newCard.id" [bfDisabled]="true" name="id"></bf-input>
+      </div>
+
+      <div class="col-4">
+        <bf-input bfLabel="Color" [(ngModel)]="newCard.color" [bfRequired]="true" name="color"></bf-input>
+      </div>
+      <div class="col-4">
+        <bf-input bfLabel="Type" [(ngModel)]="newCard.type" [bfRequired]="true" name="type"></bf-input>
+      </div>
+      <div class="col-4">
+        <bf-input bfLabel="Image" [(ngModel)]="newCard.image" [bfRequired]="true" name="image"></bf-input>
+      </div>
+
+      <div class="col-12">
+        <bf-input bfLabel="Text" [(ngModel)]="newCard.text" [bfRequired]="true" name="text"></bf-input>
+      </div>
+
+
+      newCard={{newCard| json}}
+
+    </div>
+  </div>
+
+  <div class="modal-footer">
+    <bf-btn bfText="Close" bfType="cancel" (bfClick)="activeModal.close()"></bf-btn>
+    <bf-btn bfType="add" bfText="Create" (bfClick)="createCard()"> </bf-btn>
+  </div>

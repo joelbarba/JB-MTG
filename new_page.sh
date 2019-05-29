@@ -5,8 +5,7 @@ echo "          Add a new page to the app"
 echo "-----------------------------------------------------"
 echo ""
 echo "Type the name of the new page (camelCase):"
-# read ccName
-ccName="decks"
+read ccName
 
 CcName=`echo "$ccName" | sed -e "s/\b\(.\)/\u\1/g"`      # CcName = BfLabel     -> Camel Case starting with Uppercase
 vName=`echo $ccName | sed -e 's/\([A-Z]\)/-\L\1/g'`      # vName  = bf-label    -> Hypens all lowercase
@@ -33,4 +32,4 @@ sed -i "s/$routeMark/$newRoute\n$routeMark/" src/app/app-routing.module.ts
 
 
 # Export the component from the module to be accessible from the router
-sed -i "10i   ,exports: [$ccNameComp]" src/app/pages/decks/decks.module.ts
+sed -i "10i   , exports: [$ccNameComp]" src/app/pages/$vName/$vName.module.ts
