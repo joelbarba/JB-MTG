@@ -5,34 +5,99 @@
     </button>
   </div>
   <div class="modal-body" *ngIf="!!editCard">
-    <div class="row">
+    <form novalidate autocomplete="off">
+      <div class="row">
 
-      <div class="col-9">
-        <bf-input bfLabel="Card Name" [(ngModel)]="editCard.name" [bfRequired]="true" name="name"></bf-input>
+        <div class="col-9">
+          <bf-input bfLabel="Card Name" [(ngModel)]="editCard.name" [bfRequired]="true" name="name"></bf-input>
+        </div>
+
+        <div class="col-3">
+          <bf-input bfLabel="Card Id" [(ngModel)]="refCard.id" [bfDisabled]="true" name="id"></bf-input>
+        </div>
+
+        <div class="col-4">
+            <bf-dropdown [(ngModel)]="editCard.color"
+                        [bfList]="globals.CardColors"
+                        [bfRequired]="true"
+                        bfSelect="code"
+                        bfRender="name"
+                        bfLabel="Color"
+                        name="color">
+            </bf-dropdown>
+          </div>
+          <div class="col-4">
+            <bf-dropdown [(ngModel)]="editCard.type"
+                         [bfList]="globals.CardTypes"
+                         [bfRequired]="true"
+                         bfSelect="code"
+                         bfRender="name"
+                         bfLabel="Type"
+                         name="type">
+            </bf-dropdown>
+          </div>
+        <div class="col-4">
+          <bf-input bfLabel="Image" [(ngModel)]="editCard.image" [bfRequired]="true" name="image"></bf-input>
+        </div>
+
+        <div class="col-12">
+          <bf-input bfLabel="Text" [(ngModel)]="editCard.text" [bfRequired]="true" name="text"></bf-input>
+        </div>
+
+
+        <div class="col-8">
+          <bf-label bfText="Cast"></bf-label>
+          <div style="display: flex">
+
+            <div class="mana-input">
+              <img src="/assets/mana.png">
+              <bf-input [(ngModel)]="editCard.cast[0]" name="cast0"></bf-input>
+            </div>
+            <div class="mana-input">
+              <img src="/assets/blueMana.png">
+              <bf-input [(ngModel)]="editCard.cast[1]" name="cast1"></bf-input>
+            </div>
+            <div class="mana-input">
+              <img src="/assets/whiteMana.png"/>
+              <bf-input [(ngModel)]="editCard.cast[2]" name="cast2"></bf-input>
+            </div>
+            <div class="mana-input">
+              <img src="/assets/blackMana.png"/>
+              <bf-input [(ngModel)]="editCard.cast[3]" name="cast3"></bf-input>
+            </div>
+            <div class="mana-input">
+              <img src="/assets/redMana.png">
+              <bf-input [(ngModel)]="editCard.cast[4]" name="cast4"></bf-input>
+            </div>
+            <div class="mana-input">
+              <img src="/assets/greenMana.png">
+              <bf-input [(ngModel)]="editCard.cast[5]" name="cast5"></bf-input>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="col-4" *ngIf="editCard.type === 'creature'">
+          <bf-label bfText="Power / Defence"></bf-label>
+          <div style="display: flex">
+            <bf-input [(ngModel)]="editCard.power" name="power"></bf-input>
+            <span class="marL5 marR5" style="font-size: 20px;">/</span>
+            <bf-input [(ngModel)]="editCard.defence" name="defence"></bf-input>
+          </div>
+        </div>
+
+
+        editCard={{editCard| json}}
       </div>
-
-      <div class="col-3">
-        <bf-input bfLabel="Card Id" [(ngModel)]="refCard.id" [bfDisabled]="true" name="id"></bf-input>
+      <div class="row">
+        <div class="col-12">
+          <hr>
+          <bf-label bfText="Units"></bf-label>
+          {{editCard.units.length}} : {{ editCard.units | json }}
+          <bf-btn class="marL10" bfText="Add unit" bfType="add" (bfClick)="addUnit()"></bf-btn>
+        </div>
       </div>
-
-      <div class="col-4">
-        <bf-input bfLabel="Color" [(ngModel)]="editCard.color" [bfRequired]="true" name="color"></bf-input>
-      </div>
-      <div class="col-4">
-        <bf-input bfLabel="Type" [(ngModel)]="editCard.type" [bfRequired]="true" name="type"></bf-input>
-      </div>
-      <div class="col-4">
-        <bf-input bfLabel="Image" [(ngModel)]="editCard.image" [bfRequired]="true" name="image"></bf-input>
-      </div>
-
-      <div class="col-12">
-        <bf-input bfLabel="Text" [(ngModel)]="editCard.text" [bfRequired]="true" name="text"></bf-input>
-      </div>
-
-
-      editCard={{editCard| json}}
-
-    </div>
+    </form>
   </div>
 
   <div class="modal-footer">

@@ -2,6 +2,7 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { BfUiLibModule } from 'bf-ui-lib';
+import { Globals } from './globals.service';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { AbstractTranslateService } from 'bf-ui-lib';
 
@@ -12,7 +13,7 @@ class TranslateService extends AbstractTranslateService {
 
 @NgModule({
   declarations: [],
-  providers: [],
+  providers: [Globals],
   imports: [
     CommonModule,
     HttpClientModule,

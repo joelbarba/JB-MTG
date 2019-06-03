@@ -1,0 +1,21 @@
+.mana-input {
+  margin-right: 10px;
+  img {
+    position: absolute;
+    z-index: 99;
+    height: 32px;
+    width: 36px;
+    border: 1px solid rgba(255, 255, 255, 0.50);
+    padding: 3px 5px;
+    background: #888888;
+    border-top-left-radius: 3px;
+    border-bottom-left-radius: 3px;
+    margin: 1px;
+  }
+  .bf-input-form-group {
+    input {
+      text-align: right;
+      padding-left: 30px;
+    }
+  }
+}

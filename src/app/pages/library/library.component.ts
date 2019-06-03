@@ -4,18 +4,23 @@ import { AngularFirestore, AngularFirestoreCollection, AngularFirestoreDocument 
 import * as RxOp from 'rxjs/operators';
 import { NgbModal, NgbActiveModal, ModalDismissReasons } from '@ng-bootstrap/ng-bootstrap';
 import { NgForm } from '@angular/forms';
-import { BfGrowlService } from 'bf-ui-lib';
+import { BfGrowlService, BfConfirmService } from 'bf-ui-lib';
+import { Globals } from 'src/app/globals/globals.service';
+import { ListHandler } from 'src/app/globals/listHandler';
 
 
 export interface Card {
   id?: string;
+  units: Array<string>;
   name: string;
   type: string;
   color: string;
   text: string;
   image: string;
+  cast: Array<number>;
+  power: number;
+  defence: number;
 }
-
 
 
 
@@ -25,33 +30,55 @@ export interface Card {
   styleUrls: ['./library.component.scss']
 })
 export class LibraryComponent implements OnInit {
-  cards$: Observable<any[]>;
-  cardsCollection: AngularFirestoreCollection<Card>;
+  public cards$: Observable<any[]>;
+  public cardsCollection: AngularFirestoreCollection<Card>;
   public selected: Card;
+  public lastCardId = 1;
+
+  public cardsList: ListHandler;
 
   constructor(
     afs: AngularFirestore,
     private modal: NgbModal,
+    private globals: Globals,
   ) {
+
 
     this.cardsCollection = afs.collection('cards');
     // this.cards$ = afs.collection('cards').valueChanges();
 
-
     this.cards$ = this.cardsCollection.snapshotChanges().pipe(
-      RxOp.map(actions => actions.map(a => {
-        const data = a.payload.doc.data() as Card;
-        const id = a.payload.doc.id;
-        return { id, ...data };
-      }))
+      RxOp.map(actions => {
+        return actions.map(a => {
+          const data = a.payload.doc.data() as Card;
+          const id = a.payload.doc.id;
+
+          // Find the highest ID (c9999)
+          const numId = Number.parseInt(id.slice(1));
+          if (numId > this.lastCardId) { this.lastCardId  = numId; }
+
+          return { id, ...data };
+          // return { status: 1, content: { id, ...data }};
+        });
+      })
     );
+
+
+    // const listConfig = { rowsPerPage: 20, orderFields: ['order'], filterFields: ['name'] };
+    // this.cardsList  = new ListHandler({ ...listConfig, listName: 'appsDev' });
+    // this.cardsList.loadFromObs(this.cards$);
 
   }
 
   ngOnInit() {  }
 
   public openAdd = () => {
-    const modalRef = this.modal.open(AddCardModalComponent, { size: 'lg' });
+    const modalRef = this.modal.open(AddCardModalComponent, { size: 'lg' })
+    modalRef.componentInstance.lastId = this.lastCardId;
+    modalRef.componentInstance.cardsCollection = this.cardsCollection;
+    modalRef.result.then((newCard) => {
+      console.log('new card', newCard);
+    });
   }
 
   public openEdit = (card: Card) => {
@@ -99,40 +126,48 @@ export class LibraryComponent implements OnInit {
 }
 
 
+
+
+// -----------------------------------------------------------------------------------
 @Component({
   selector: 'add-card-modal',
   templateUrl: 'add-card.modal.html'
 })
 export class AddCardModalComponent implements OnInit {
-  public newCard: Card = {};    // Working object
+  public newCard: Partial<Card> = {};    // Working object
+  public lastId: number; // Reference coming from parent
+  public cardsCollection: AngularFirestoreCollection<Card>;
 
   constructor(
     private afs: AngularFirestore,
     public activeModal: NgbActiveModal,
     private growl: BfGrowlService,
     private modal: NgbModal,
+    private globals: Globals,
   ) { }
 
   ngOnInit() {
-
-    // this.cardDoc = this.afs.doc<Card>('cards/' + this.refCard.id);
-
-    // const subs = this.cardDoc.snapshotChanges().subscribe(state => {
-    //   this.editCard = state.payload.data();
-    //   // this.editCard.id = state.payload.id;
-    //   subs.unsubscribe(); // Just take the value once
-    // });
-
+    this.newCard = { name: 'Howling Mine', type: 'artifact', image: 'howling mine.jpg', color: 'none',  text: '' };
+    this.newCard.id = 'c' + (this.lastId + 1);
+    // this.newCard.cast = [1, 2, 0, 3, 0, 0];
+    // this.newCard.power = 5;
+    // this.newCard.defence = 2;
   }
 
   public createCard = () => {
     // this.cardDoc.update(this.editCard);
+    const cardId = this.newCard.id;
+    delete this.newCard.id;
+    this.cardsCollection.doc(cardId).set(this.newCard);
     this.growl.success(`Card Updated Successfully`);
-    this.activeModal.close();
+    this.activeModal.close(this.newCard);
   }
 }
 
 
+
+
+// -----------------------------------------------------------------------------------
 @Component({
   selector: 'edit-card-modal',
   templateUrl: 'edit-card.modal.html'
@@ -147,6 +182,8 @@ export class EditCardModalComponent implements OnInit {
     public activeModal: NgbActiveModal,
     private growl: BfGrowlService,
     private modal: NgbModal,
+    private globals: Globals,
+    private confirm: BfConfirmService,
   ) { }
 
   ngOnInit() {
@@ -156,6 +193,10 @@ export class EditCardModalComponent implements OnInit {
     const subs = this.cardDoc.snapshotChanges().subscribe(state => {
       this.editCard = state.payload.data();
       // this.editCard.id = state.payload.id;
+
+      if (!this.editCard.cast) { this.editCard.cast = [0, 0, 0, 0, 0, 0]; }
+      if (!this.editCard.units) { this.editCard.units = []; }
+
       subs.unsubscribe(); // Just take the value once
     });
 
@@ -171,5 +212,18 @@ export class EditCardModalComponent implements OnInit {
     this.cardDoc.delete();
     this.growl.success(`Card Deleted Successfully`);
     this.activeModal.close();
+  }
+
+  public addUnit = () => {
+    const newId = this.afs.createId();
+    this.confirm.open({
+        title : `Add New Unit (${newId})`,
+        text : `Do you confirm you want to add a new unit of "${this.editCard.name}".`,
+        yesButtonText : 'Yes, add it',
+    }).then((res) => {
+      if (res === 'yes') {
+        this.editCard.units.push(newId);
+      }
+    }, () => {});
   }
 }
