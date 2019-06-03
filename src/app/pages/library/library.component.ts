@@ -58,22 +58,25 @@ export class LibraryComponent implements OnInit {
           if (numId > this.lastCardId) { this.lastCardId  = numId; }
 
           return { id, ...data };
-          // return { status: 1, content: { id, ...data }};
+          // return { status: 2, content: { id, ...data }};
         });
       })
     );
 
 
-    // const listConfig = { rowsPerPage: 20, orderFields: ['order'], filterFields: ['name'] };
-    // this.cardsList  = new ListHandler({ ...listConfig, listName: 'appsDev' });
-    // this.cardsList.loadFromObs(this.cards$);
+    const listConfig = { rowsPerPage: 20, orderFields: ['order'], filterFields: ['name'] };
+    this.cardsList  = new ListHandler({ ...listConfig, listName: 'cardsList' });
+    // this.cardsList.loadFromObs(this.cards$.pipe(
+    //   RxOp.map(content => ({ status: 2, content }))
+    // ));
+    this.cardsList.connectObs(this.cards$);
 
   }
 
   ngOnInit() {  }
 
   public openAdd = () => {
-    const modalRef = this.modal.open(AddCardModalComponent, { size: 'lg' })
+    const modalRef = this.modal.open(AddCardModalComponent, { size: 'lg' });
     modalRef.componentInstance.lastId = this.lastCardId;
     modalRef.componentInstance.cardsCollection = this.cardsCollection;
     modalRef.result.then((newCard) => {
@@ -147,9 +150,10 @@ export class AddCardModalComponent implements OnInit {
   ) { }
 
   ngOnInit() {
-    this.newCard = { name: 'Howling Mine', type: 'artifact', image: 'howling mine.jpg', color: 'none',  text: '' };
+    // this.newCard = { name: 'Howling Mine', type: 'artifact', image: 'howling mine.jpg', color: 'none',  text: '' };
     this.newCard.id = 'c' + (this.lastId + 1);
-    // this.newCard.cast = [1, 2, 0, 3, 0, 0];
+    this.newCard = { color: 'none',  text: '' };
+    this.newCard.cast = [0, 0, 0, 0, 0, 0];
     // this.newCard.power = 5;
     // this.newCard.defence = 2;
   }

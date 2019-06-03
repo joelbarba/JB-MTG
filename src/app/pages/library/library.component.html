@@ -31,6 +31,11 @@
         <span>{{ globals.getColorName(selected.color) }}</span>
       </div>
 
+      <div>
+        <bf-label class="marR10" bfText="Units"></bf-label>
+        <span>{{ !!selected.units ? selected.units.length : 0 }}</span>
+      </div>
+
       <bf-btn class="full-width" bfText="Purchase" (bfClick)="initDB()"></bf-btn>
     </div>
 
@@ -38,8 +43,9 @@
 
   <div class="col-9 padT20">
     <ul>
-      <li class="card-box" *ngFor="let item of cards$ | async" (click)="selected = item;">
-      <!-- <li *ngFor="let item of cardsList.renderList$ | async" class="card-box"> -->
+      <!-- <li class="card-box" *ngFor="let item of cards$ | async" (click)="selected = item;"> -->
+      <li *ngFor="let item of cardsList.renderList$ | async" 
+          class="card-box" (click)="selected = item;">
         <div class="card-border">
           <img [src]="'/assets/cards/' + item.image">
         </div>

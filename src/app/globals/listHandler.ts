@@ -4,17 +4,17 @@ import * as RxExt from 'rxjs/internal/observable/fromPromise';
 
 
 enum IStatus { Empty = 0, Loading = 1, Ready = 2, Error = 3 }
-interface IListObs { status: IStatus, content: Array<any> }
+interface IListObs { status: IStatus; content: Array<any>; }
 export interface ListHandlerConfig {
-  listName      ?: string
-  filterText    ?: string
-  filterField   ?: string
-  filterFields  ?: Array<string>
-  orderFields   ?: Array<string>
-  orderReverse  ?: boolean
-  rowsPerPage   ?: number
-  currentPage   ?: number
-  totalPages    ?: number
+  listName      ?: string;
+  filterText    ?: string;
+  filterField   ?: string;
+  filterFields  ?: Array<string>;
+  orderFields   ?: Array<string>;
+  orderReverse  ?: boolean;
+  rowsPerPage   ?: number;
+  currentPage   ?: number;
+  totalPages    ?: number;
 }
 
 
@@ -37,7 +37,20 @@ export class ListHandler {
   private setOrder   = new Rx.Subject();  // Subject to trigger a list reorder change -----> order()
   private setPage    = new Rx.Subject();  // Subject to trigger a list pagination change --> paginate() / nextPate() / prevPage ()
 
+
+
+
+
+
+
+
+  // Input Observables
+  public filter$: Rx.Observable<any>;     // Observable to listen any change on the filter
+  public order$: Rx.Observable<any>;      // Observable to listen any change on the ordering parameters
   public content$: Rx.Observable<any>;    // Observable to listen any change on the loaded list
+  public page$: Rx.Observable<any>;       // Observable to listen any change on the loaded list
+
+  // Output Observables
   public render$: Rx.Observable<any>;     // Observable to listen to rendering changes
   public renderList$: Rx.Observable<any>; // Observable to listen to rendering changes, mapping only renderedList as output
   public loadingPromise;                  // Promise to wait while loading the list
@@ -81,7 +94,7 @@ export class ListHandler {
       loadedList   : [],
       renderedList : [],
       filterText   : '',
-      filterFields  : [],
+      filterFields : [],
       orderFields  : [],
       orderReverse : false,
       rowsPerPage  : 15,
@@ -95,7 +108,7 @@ export class ListHandler {
       customInit.filterFields.unshift(customInit.filterField);
     }
 
-    const iniState:any = { ...defaultState, ...customInit };
+    const iniState = { ...defaultState, ...customInit };
     this.exposeState(iniState);
 
     this.setContent = new Rx.BehaviorSubject(iniState.loadedList);
@@ -110,23 +123,24 @@ export class ListHandler {
     );
 
     // List filter
-    const filter$ = this.setFilter.pipe(
+    this.filter$ = this.setFilter.pipe(
       RxOp.debounceTime(200),
       RxOp.map((filterText) => ({ filterText, type: 'filter' }))
     );
 
     // List order
-    const order$ = this.setOrder.pipe(
+    this.order$ = this.setOrder.pipe(
       RxOp.map((orderField) => ({ orderField, type: 'order' }))
     );
 
     // List Pagination
-    const page$ = this.setPage;
-    // const page$ = this.setPage.pipe();
+    this.page$ = this.setPage;
 
-    // List Render (mini Reducer)
-    //noinspection TypeScriptValidateTypes
-    this.render$ = Rx.merge(order$, filter$, this.content$, page$).pipe(
+    this.setReducer(iniState);
+  }
+
+  private setReducer = (iniState) => {
+    this.render$ = Rx.merge(this.order$, this.filter$, this.content$, this.page$).pipe(
       RxOp.scan((state, action:any) => {
         if (action.type === 'content') {
           console.log('Reducer pipe [', this.listName, ']----> ', action);
@@ -197,8 +211,8 @@ export class ListHandler {
     );
 
     this.renderList$ = this.render$.pipe(RxOp.map(res => res.renderedList));
-
   }
+
 
   // Update the class members as shortcut to current state (to be used out of subscriptions)
   private exposeState = (state) => {
@@ -233,7 +247,7 @@ export class ListHandler {
   public loadFromPromise = (loadPromise) => {
     this.loadingPromise = loadPromise;
     this.loadingStatus = 1;
-    return loadPromise.then((listContent) => {
+    return loadPromise.then(listContent => {
       this.load(listContent);
       this.loadingStatus = 2;
       return listContent;
@@ -245,11 +259,12 @@ export class ListHandler {
   // public loadFromObs = (contentObs$:Rx.Observable<{ status: number, content: any }>, callbackFunc?) => {
   public loadFromObs = (contentObs$, callbackFunc?) => {
     this.loadingStatus = 1;
+
     if (!!this.subscription) { this.subscription.unsubscribe(); }
-    this.subscription = contentObs$.subscribe((state) => {
+    this.subscription = contentObs$.subscribe(state => {
       this.loadingStatus = state.status;
       if (state.status === 2) {
-        // console.log('Loading list content from Observable [', this.listName ,']', state.content.length);
+        console.log(`Loading list content from Observable [${this.listName}], ${state.content.length}`);
         this.setContent.next(state.content);
         if (!!callbackFunc && typeof callbackFunc === 'function') {
           callbackFunc(state.content);
@@ -257,6 +272,41 @@ export class ListHandler {
       }
     });
   };
+
+
+  // Conect an observable that emits the content to the inner content observable
+  public connectObs = (contentObs$) => {
+    console.log('Connecting content observables')
+    this.content$ = contentObs$.pipe(
+      RxOp.map(content => {
+        console.log('mapping', content);
+        return ( { loadedList: content, type: 'content' } );
+        // return ( { loadedList: { status: 2, content }, type: 'content' } );
+      })
+    );
+
+    const currState = {
+      loadedList       : this.loadedList,
+      filterText       : this.filterText,
+      filterFields     : this.filterFields,
+      rowsPerPage      : this.rowsPerPage,
+      currentPage      : this.currentPage,
+      totalPages       : this.totalPages,
+      pagesList        : this.pagesList,
+      renderedList     : this.renderedList,
+      orderFields      : [this.orderConf.field],
+      orderReverse     : this.orderConf.reverse
+    };
+    this.setReducer(currState);
+  }
+
+  // // List content changes
+  // this.content$ = this.setContent.pipe(
+  //   RxOp.map((loadedList) => {
+  //     return { loadedList, type: 'content'};
+  //   })
+  // );
+
 
   // Default function to filter the list (on render). If "filterList" is extended later, this can be used to refer to the default
   public defaultFilterList = (list: Array<any>, filterText: string = '', filterFields: Array<string>): Array<any> => {
