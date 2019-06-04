@@ -20,9 +20,10 @@ export class Globals {
     { id: 0, code: 'land',         name: 'Land', },
     { id: 1, code: 'artifact',     name: 'Artifact', },
     { id: 2, code: 'creature',     name: 'Creature', },
-    { id: 3, code: 'spell',        name: 'Instant Spell', },
+    { id: 3, code: 'instant',      name: 'Instant Spell', },
     { id: 4, code: 'sorcery',      name: 'Sorcery', },
-    { id: 5, code: 'interruption', name: 'Interruption', },
+    { id: 5, code: 'interrupt',    name: 'Interrupt', },
+    { id: 6, code: 'enchantment',  name: 'Enchantment', },
   ];
 
   constructor() {

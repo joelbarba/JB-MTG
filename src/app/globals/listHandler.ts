@@ -276,7 +276,7 @@ export class ListHandler {
 
   // Conect an observable that emits the content to the inner content observable
   public connectObs = (contentObs$) => {
-    console.log('Connecting content observables')
+    console.log('Connecting content observables');
     this.content$ = contentObs$.pipe(
       RxOp.map(content => {
         console.log('mapping', content);
@@ -285,7 +285,7 @@ export class ListHandler {
       })
     );
 
-    const currState = {
+    this.setReducer({
       loadedList       : this.loadedList,
       filterText       : this.filterText,
       filterFields     : this.filterFields,
@@ -296,16 +296,8 @@ export class ListHandler {
       renderedList     : this.renderedList,
       orderFields      : [this.orderConf.field],
       orderReverse     : this.orderConf.reverse
-    };
-    this.setReducer(currState);
+    });
   }
-
-  // // List content changes
-  // this.content$ = this.setContent.pipe(
-  //   RxOp.map((loadedList) => {
-  //     return { loadedList, type: 'content'};
-  //   })
-  // );
 
 
   // Default function to filter the list (on render). If "filterList" is extended later, this can be used to refer to the default

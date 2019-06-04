@@ -3,6 +3,8 @@
     <h1>Library</h1>
   </div>
 
+
+
   <div class="col-3">
     <div>
       <bf-btn class="marT10" bfType="add" bfText="Add Card" (bfClick)="openAdd()"></bf-btn>
@@ -36,23 +38,63 @@
         <span>{{ !!selected.units ? selected.units.length : 0 }}</span>
       </div>
 
-      <bf-btn class="full-width" bfText="Purchase" (bfClick)="initDB()"></bf-btn>
+      <bf-btn class="full-width" bfText="Purchase" 
+              [bfDisabled]="!selected.units || !selected.units.length" 
+              (bfClick)="initDB()">
+      </bf-btn>
     </div>
 
   </div>
 
   <div class="col-9 padT20">
-    <ul>
-      <!-- <li class="card-box" *ngFor="let item of cards$ | async" (click)="selected = item;"> -->
-      <li *ngFor="let item of cardsList.renderList$ | async" 
-          class="card-box" (click)="selected = item;">
-        <div class="card-border">
-          <img [src]="'/assets/cards/' + item.image">
-        </div>
-        <h5>{{item.name}}</h5>
-      </li>
-    </ul>
+    <div class="row">
+      <div class="col-3 padB20 padL30">
+        <bf-input class="flat" name="searchText"
+                  [(ngModel)]="filters.searchText"
+                  (ngModelChange)="cardsList.filter($event)"
+                  bfPlaceholder="Search">
+        </bf-input>
+      </div>
+      <div class="col-6 padB20">
+        <bf-dropdown [(ngModel)]="filters.colorCode"
+                     (ngModelChange)="cardsList.filter($event)"
+                     [bfList]="globals.CardColors"
+                     bfSelect="code"
+                     bfRender="name"
+                     class="marR30">
+        </bf-dropdown>
+        <bf-dropdown [(ngModel)]="filters.cardType"
+                     (ngModelChange)="cardsList.filter($event)"
+                     [bfList]="globals.CardTypes"
+                     bfSelect="code"
+                     bfRender="name"
+                     class="marR30">
+        </bf-dropdown>
+      </div>
+      <div class="col-3 pad0 text-right">
+        <bf-btn bfIcon="icon-arrow-left6"  (bfClick)="cardsList.prevPage()"></bf-btn>
+        <span class="spacerL15 spacerR15">{{cardsList.currentPage}} / {{cardsList.totalPages}}</span>
+        <bf-btn bfIcon="icon-arrow-right3" (bfClick)="cardsList.nextPage()"></bf-btn>
+      </div>
+
+
+      <div class="col-12">
+        <ul class="pad0">
+          <!-- <li class="card-box" *ngFor="let item of cards$ | async" (click)="selected = item;"> -->
+          <li *ngFor="let item of cardsList.renderList$ | async" 
+              class="card-box" (click)="selected = item;" (dblclick)="selected = item; openEdit(selected)">
+            <div class="card-border" >
+              <img [src]="'/assets/cards/' + item.image">
+            </div>
+            <h5>{{item.name}}</h5>
+          </li>
+        </ul>
+      </div>
+    </div>
   </div>
+
+
+
 </div>
 
 <!-- <button (click)="initDB()">INIT DB</button> -->

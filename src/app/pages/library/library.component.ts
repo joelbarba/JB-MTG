@@ -11,6 +11,7 @@ import { ListHandler } from 'src/app/globals/listHandler';
 
 export interface Card {
   id?: string;
+  orderId?: string;
   units: Array<string>;
   name: string;
   type: string;
@@ -36,6 +37,7 @@ export class LibraryComponent implements OnInit {
   public lastCardId = 1;
 
   public cardsList: ListHandler;
+  public filters = { searchText: '', colorCode: '', cardType: '' };
 
   constructor(
     afs: AngularFirestore,
@@ -55,20 +57,31 @@ export class LibraryComponent implements OnInit {
 
           // Find the highest ID (c9999)
           const numId = Number.parseInt(id.slice(1));
+          data.orderId = ('00000' + numId).slice(-5).toString();
+
           if (numId > this.lastCardId) { this.lastCardId  = numId; }
 
           return { id, ...data };
-          // return { status: 2, content: { id, ...data }};
         });
       })
     );
 
 
-    const listConfig = { rowsPerPage: 20, orderFields: ['order'], filterFields: ['name'] };
+    const listConfig = { rowsPerPage: 20, orderFields: ['orderId'], filterFields: ['name'] };
     this.cardsList  = new ListHandler({ ...listConfig, listName: 'cardsList' });
     // this.cardsList.loadFromObs(this.cards$.pipe(
     //   RxOp.map(content => ({ status: 2, content }))
     // ));
+
+    this.cardsList.filterList = (list: Array<any>, filterText: string = '', filterFields: Array<string>): Array<any> => {
+      let filteredList = this.cardsList.defaultFilterList(list, this.filters.searchText, filterFields);
+      return filteredList.filter(item => {
+        let match = (!this.filters.colorCode || (this.filters.colorCode === item.color));
+        match = match && (!this.filters.cardType || (this.filters.cardType === item.type));
+        return match;
+      });
+    };
+
     this.cardsList.connectObs(this.cards$);
 
   }

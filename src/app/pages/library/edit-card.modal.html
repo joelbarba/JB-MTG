@@ -17,25 +17,25 @@
         </div>
 
         <div class="col-4">
-            <bf-dropdown [(ngModel)]="editCard.color"
-                        [bfList]="globals.CardColors"
+          <bf-dropdown [(ngModel)]="editCard.color"
+                      [bfList]="globals.CardColors"
+                      [bfRequired]="true"
+                      bfSelect="code"
+                      bfRender="name"
+                      bfLabel="Color"
+                      name="color">
+          </bf-dropdown>
+        </div>
+        <div class="col-4">
+          <bf-dropdown [(ngModel)]="editCard.type"
+                        [bfList]="globals.CardTypes"
                         [bfRequired]="true"
                         bfSelect="code"
                         bfRender="name"
-                        bfLabel="Color"
-                        name="color">
-            </bf-dropdown>
-          </div>
-          <div class="col-4">
-            <bf-dropdown [(ngModel)]="editCard.type"
-                         [bfList]="globals.CardTypes"
-                         [bfRequired]="true"
-                         bfSelect="code"
-                         bfRender="name"
-                         bfLabel="Type"
-                         name="type">
-            </bf-dropdown>
-          </div>
+                        bfLabel="Type"
+                        name="type">
+          </bf-dropdown>
+        </div>
         <div class="col-4">
           <bf-input bfLabel="Image" [(ngModel)]="editCard.image" [bfRequired]="true" name="image"></bf-input>
         </div>
