@@ -5,6 +5,7 @@ import { BfUiLibModule } from 'bf-ui-lib';
 import { Globals } from './globals.service';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { AbstractTranslateService } from 'bf-ui-lib';
+import { AsyncFieldPipe } from './asyncField.pipe';
 
 class TranslateService extends AbstractTranslateService {
   constructor() { super(); }
@@ -12,7 +13,7 @@ class TranslateService extends AbstractTranslateService {
 }
 
 @NgModule({
-  declarations: [],
+  declarations: [AsyncFieldPipe],
   providers: [Globals],
   imports: [
     CommonModule,
@@ -23,6 +24,7 @@ class TranslateService extends AbstractTranslateService {
   exports: [
     BfUiLibModule,
     NgbModule,
+    AsyncFieldPipe,
   ]
 })
 export class GlobalsModule { }

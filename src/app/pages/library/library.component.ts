@@ -40,7 +40,7 @@ export class LibraryComponent implements OnInit {
   public filters = { searchText: '', colorCode: '', cardType: '' };
 
   constructor(
-    afs: AngularFirestore,
+    private afs: AngularFirestore,
     private modal: NgbModal,
     private globals: Globals,
   ) {

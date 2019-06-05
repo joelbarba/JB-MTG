@@ -1,3 +1,27 @@
-<p>
-  user works!
-</p>
+<div class="row">
+  <div class="col-12">
+    <h1>User Pocket</h1>
+  </div>
+
+  <div class="col-12">
+    <h5>User: {{profileUser$ | async | asyncField : 'full_name'}} / {{profileUser$ | async | asyncField : 'username'}}</h5> 
+  </div>
+
+  <div class="col-12">
+    <h4>Cards:</h4>
+
+    <!-- {{userCards$ | async | json}} -->
+
+    <li class="card-box" *ngFor="let userCard of userCards$ | async">
+      <!-- <h5>{{userCard.card}}</h5>
+      <h5>{{userCard.unit}}</h5> -->
+      <h5>{{userCard.card}} - {{ userCard.ref$ | async | asyncField:'name' }}</h5>
+      <div class="card-border" >
+        <img [src]="'/assets/cards/' + (userCard.ref$ | async | asyncField:'image')">
+      </div>
+
+    </li>
+
+  </div>
+
+</div>  
