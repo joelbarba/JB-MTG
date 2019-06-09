@@ -7,12 +7,13 @@ import { NgForm } from '@angular/forms';
 import { BfGrowlService, BfConfirmService } from 'bf-ui-lib';
 import { Globals } from 'src/app/globals/globals.service';
 import { ListHandler } from 'src/app/globals/listHandler';
+import { Profile } from 'src/app/globals/profile.service';
 
 
 export interface Card {
   id?: string;
   orderId?: string;
-  units: Array<string>;
+  units: Array<{ ref: string; owner?: string }>;
   name: string;
   type: string;
   color: string;
@@ -21,6 +22,16 @@ export interface Card {
   cast: Array<number>;
   power: number;
   defence: number;
+}
+export interface User {
+  username: string;
+  email: string;
+  name: string;
+  cards: Array<UserCard>;
+}
+export interface UserCard {
+  card: string;
+  unit: string;
 }
 
 
@@ -43,6 +54,7 @@ export class LibraryComponent implements OnInit {
     private afs: AngularFirestore,
     private modal: NgbModal,
     private globals: Globals,
+    private profile: Profile,
   ) {
 
 
@@ -99,6 +111,11 @@ export class LibraryComponent implements OnInit {
 
   public openEdit = (card: Card) => {
     const modalRef = this.modal.open(EditCardModalComponent, { size: 'lg' });
+    modalRef.componentInstance.refCard = card;
+  }
+
+  public openPurchase = (card: Card) => {
+    const modalRef = this.modal.open(PurchaseCardModalComponent, { size: 'lg' });
     modalRef.componentInstance.refCard = card;
   }
 
@@ -160,6 +177,7 @@ export class AddCardModalComponent implements OnInit {
     private growl: BfGrowlService,
     private modal: NgbModal,
     private globals: Globals,
+    private profile: Profile,
   ) { }
 
   ngOnInit() {
@@ -201,6 +219,7 @@ export class EditCardModalComponent implements OnInit {
     private modal: NgbModal,
     private globals: Globals,
     private confirm: BfConfirmService,
+    private profile: Profile,
   ) { }
 
   ngOnInit() {
@@ -233,14 +252,84 @@ export class EditCardModalComponent implements OnInit {
 
   public addUnit = () => {
     const newId = this.afs.createId();
+    this.editCard.units.push({ ref: newId, owner: '' });
+    // this.confirm.open({
+    //     title : `Add New Unit (${newId})`,
+    //     text : `Do you confirm you want to add a new unit of "${this.editCard.name}".`,
+    //     yesButtonText : 'Yes, add it',
+    // }).then((res) => {
+    //   if (res === 'yes') {
+    //     this.editCard.units.push({ ref: newId, owner: '' });
+    //   }
+    // }, () => {});
+  }
+
+  public clearOwner = (unit) => {
     this.confirm.open({
-        title : `Add New Unit (${newId})`,
-        text : `Do you confirm you want to add a new unit of "${this.editCard.name}".`,
-        yesButtonText : 'Yes, add it',
+        title : `Remove ownership of the card (${this.refCard.name})`,
+        text : `Do you confirm you want to take back the card "${this.refCard.name}" from its owner ${unit.owner}?`,
+        yesButtonText : 'Yes, take it',
     }).then((res) => {
       if (res === 'yes') {
-        this.editCard.units.push(newId);
+        // Find the owner of the card and remove it from there + unit
+        const ownerDoc = this.afs.doc<User>('/users/' + unit.owner);
+        unit.owner = '';
+
+        const subs = ownerDoc.snapshotChanges().subscribe(state => {
+          subs.unsubscribe();
+          let ownerUser = state.payload.data();
+          ownerUser.cards.removeByProp('unit', unit.ref);
+
+          ownerDoc.update(ownerUser);
+          this.cardDoc.update(this.editCard);
+          this.growl.success(`Owner removed`);
+        });
       }
     }, () => {});
   }
+}
+
+
+// -----------------------------------------------------------------------------------
+@Component({
+  selector: 'purchase-card-modal',
+  templateUrl: 'purchase-card.modal.html'
+})
+export class PurchaseCardModalComponent implements OnInit {
+  public refCard: Card;     // Reference from the list
+  public editCard: Card;    // Working object
+  private cardDoc: AngularFirestoreDocument<Card>; // Afb reference
+
+  constructor(
+    private afs: AngularFirestore,
+    public activeModal: NgbActiveModal,
+    private growl: BfGrowlService,
+    private modal: NgbModal,
+    private globals: Globals,
+    private confirm: BfConfirmService,
+    private profile: Profile,
+  ) { }
+
+  ngOnInit() {
+
+    this.cardDoc = this.afs.doc<Card>('cards/' + this.refCard.id);
+
+    const subs = this.cardDoc.snapshotChanges().subscribe(state => {
+      this.editCard = state.payload.data();
+      if (!this.editCard.cast) { this.editCard.cast = [0, 0, 0, 0, 0, 0]; }
+      if (!this.editCard.units) { this.editCard.units = []; }
+      subs.unsubscribe(); // Just take the value once
+    });
+
+  }
+
+  public selectUnit = (unit) => {
+    unit.owner = this.profile.userId;
+    this.cardDoc.update(this.editCard);
+    this.profile.addUnitCard(this.refCard.id, unit.ref);
+    this.growl.success(`You got a ${this.editCard.name}`);
+  }
+
+
+
 }

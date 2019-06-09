@@ -1,0 +1,12 @@
+.deck-row {
+  display: flex;
+  align-items: center;
+  margin: 15px 0;
+  .deck-icon {
+    font-size: 50px;
+  }
+  .deck-name {
+    margin-left: 20px;
+    font-size: 20px;
+  }
+}

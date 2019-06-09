@@ -13,6 +13,7 @@ interface Array<T> {
   copy(): Array<T>;
   getById(id:string): T;
   removeById(id:string): T;
+  removeByProp(prop:string, value:string): T;
   getKeyById(keyName:string, value:string): T;
   getByProp(property:string, value:string): T;
   getKeyByProp(keyName:string, property:string, value:string): T;
@@ -74,6 +75,23 @@ Array.prototype['removeById'] = function(id:string) {
     let item = this.splice(pos, 1);
     return item;
 
+  } else {
+    return false;
+  }
+};
+
+/**
+ * @function removeByProp
+ * @memberOf Array
+ * @param {String} prop - name of the property to match
+ * @param {String} value - value of the property to match
+ * @description removes an object that matches the prov = value. It returns the subsctracted object
+ * */
+Array.prototype['removeByProp'] = function(property:string, value:string) {
+  const selectedItem = this.getByProp(property, value);
+  if (!!selectedItem) {
+    const pos = this.indexOf(selectedItem);
+    return this.splice(pos, 1);
   } else {
     return false;
   }

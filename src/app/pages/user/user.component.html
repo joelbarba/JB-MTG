@@ -1,27 +1,41 @@
 <div class="row">
   <div class="col-12">
-    <h1>User Pocket</h1>
+    <h1>My Stuff</h1>
   </div>
-
+  
   <div class="col-12">
-    <h5>User: {{profileUser$ | async | asyncField : 'full_name'}} / {{profileUser$ | async | asyncField : 'username'}}</h5> 
+    <h5>User: {{profileUser$ | async | asyncField : 'name'}}</h5> 
+    <hr>
   </div>
+</div>
 
-  <div class="col-12">
-    <h4>Cards:</h4>
+<div class="row">
 
-    <!-- {{userCards$ | async | json}} -->
-
+  <div class="col-6">
+    <h4>My Cards:</h4>
     <li class="card-box" *ngFor="let userCard of userCards$ | async">
-      <!-- <h5>{{userCard.card}}</h5>
-      <h5>{{userCard.unit}}</h5> -->
       <h5>{{userCard.card}} - {{ userCard.ref$ | async | asyncField:'name' }}</h5>
       <div class="card-border" >
         <img [src]="'/assets/cards/' + (userCard.ref$ | async | asyncField:'image')">
       </div>
-
     </li>
+  </div>
 
+  <div class="col-6">
+    <div class="row">
+      <div class="col-6">
+        <h4 class="marV5">My Decks:</h4>
+      </div>
+      <div class="col-6 text-right">
+        <bf-btn bfText="Create New Deck" bfType="add"></bf-btn>
+      </div>
+    </div>
+    <li class="row" *ngFor="let userDeck of userCards$ | async">
+      <div class="col-12 deck-row">
+        <span class="icon-stack4 deck-icon"></span>
+        <span class="deck-name">{{userDeck.card}}</span>
+      </div>
+    </li>
   </div>
 
 </div>  
