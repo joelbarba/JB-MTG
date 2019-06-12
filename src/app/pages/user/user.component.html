@@ -11,31 +11,84 @@
 
 <div class="row">
 
-  <div class="col-6">
-    <h4>My Cards:</h4>
-    <li class="card-box" *ngFor="let userCard of userCards$ | async">
-      <h5>{{userCard.card}} - {{ userCard.ref$ | async | asyncField:'name' }}</h5>
-      <div class="card-border" >
-        <img [src]="'/assets/cards/' + (userCard.ref$ | async | asyncField:'image')">
+
+  <div class="col-5">
+    <div class="row">
+      <div class="col-12">
+        <h4 class="marV5">
+          <span class="marR40">My Decks:</span>
+          <bf-btn bfText="Create New Deck" bfType="add" (bfClick)="openAddDeck()"></bf-btn>
+        </h4>
+      </div>
+    </div>
+    <li class="row" *ngFor="let userDeck of userDecks$ | async">
+      <div class="col-12 deck-row">
+        <span class="icon-stack4 deck-icon"></span>
+        <span class="deck-name">{{userDeck.name}} - {{userDeck.description}}</span>
       </div>
     </li>
   </div>
 
-  <div class="col-6">
+
+  <div class="col-7">
+    <h4>My Cards:</h4>
     <div class="row">
-      <div class="col-6">
-        <h4 class="marV5">My Decks:</h4>
+      <!-- <div class="col-12 padB20">
+        <bf-input class="flat" name="searchText"
+                  [(ngModel)]="filters.searchText"
+                  (ngModelChange)="cardsList.filter($event)"
+                  bfPlaceholder="Search">
+        </bf-input>
+      </div> -->
+      <div class="col-4">
+        <bf-dropdown [(ngModel)]="filters.collection"
+                      (ngModelChange)="cardsList.filter($event)"
+                      bfLabel="Collection"
+                      [bfList]="userDecks$ | async"
+                      bfRender="name"
+                      class="full-width">
+        </bf-dropdown>
       </div>
-      <div class="col-6 text-right">
-        <bf-btn bfText="Create New Deck" bfType="add"></bf-btn>
+      filters.collection={{filters.collection | json}}
+      <div class="col-4">
+        <bf-dropdown [(ngModel)]="filters.colorCode"
+                      (ngModelChange)="cardsList.filter($event)"
+                      bfLabel="Color"
+                      [bfList]="globals.CardColors"
+                      bfSelect="code"
+                      bfRender="name"
+                      class="full-width">
+        </bf-dropdown>
       </div>
+      <div class="col-4">
+        <bf-dropdown [(ngModel)]="filters.cardType"
+                      (ngModelChange)="cardsList.filter($event)"
+                      bfLabel="Type"
+                      [bfList]="globals.CardTypes"
+                      bfSelect="code"
+                      bfRender="name"
+                      class="full-width">
+        </bf-dropdown>
+      </div>
+
     </div>
-    <li class="row" *ngFor="let userDeck of userCards$ | async">
-      <div class="col-12 deck-row">
-        <span class="icon-stack4 deck-icon"></span>
-        <span class="deck-name">{{userDeck.card}}</span>
+    <div class="row marT20">
+      <div class="col-12">
+        <ul>
+          <li class="card-box" *ngFor="let userCard of cardsList.renderList$ | async">
+            <h5>{{userCard.card}} - {{ userCard.ref$ | async | asyncField:'name' }}</h5>
+            <div class="card-border" >
+              <img [src]="'/assets/cards/' + (userCard.ref$ | async | asyncField:'image')">
+            </div>
+          </li>
+        </ul>
       </div>
-    </li>
+      <div class="col-12 pad0 text-right">
+          <bf-btn bfIcon="icon-arrow-left6"  (bfClick)="cardsList.prevPage()"></bf-btn>
+          <span class="spacerL15 spacerR15">{{cardsList.currentPage}} / {{cardsList.totalPages}}</span>
+          <bf-btn bfIcon="icon-arrow-right3" (bfClick)="cardsList.nextPage()"></bf-btn>
+        </div>  
+    </div>
   </div>
 
 </div>  

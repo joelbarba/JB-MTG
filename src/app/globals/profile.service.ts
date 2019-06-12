@@ -1,32 +1,10 @@
-import { Injectable } from '@angular/core';
+import { Card, User, UserCard, UserDeck } from 'src/typings';
 import './prototypes';
+import { Injectable } from '@angular/core';
 import { AngularFirestore, AngularFirestoreCollection, AngularFirestoreDocument } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
+import { Globals } from './globals.service';
 import * as RxOp from 'rxjs/operators';
-
-export interface User {
-  username: string;
-  email: string;
-  name: string;
-  cards: Array<UserCard>;
-}
-export interface UserCard {
-  card: string;
-  unit: string;
-}
-export interface Card {
-  id?: string;
-  orderId?: string;
-  units: Array<string>;
-  name: string;
-  type: string;
-  color: string;
-  text: string;
-  image: string;
-  cast: Array<number>;
-  power: number;
-  defence: number;
-}
 
 
 @Injectable({
@@ -42,6 +20,7 @@ export class Profile {
 
   constructor(
     private afs: AngularFirestore,
+    private globals: Globals,
   ) {
 
     this.userId = 'qINbUCQ3s1GdAzPzaIBH';
@@ -66,7 +45,7 @@ export class Profile {
   }
 
   addUnitCard = (cardId: string, cardRef: string) => {
-    this.user.cards.push({ card: cardId, unit: cardRef });
+    this.user.cards.push({ card: cardId, ref: cardRef });
     this.userDoc.update(this.user);
 
   }

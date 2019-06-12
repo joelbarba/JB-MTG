@@ -1,10 +1,19 @@
-import { Injectable } from '@angular/core';
+import { Card, User, UserCard, UserDeck } from 'src/typings';
 import './prototypes';
+import { Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
+import { AngularFirestore, AngularFirestoreCollection, AngularFirestoreDocument } from '@angular/fire/firestore';
+import * as RxOp from 'rxjs/operators';
+
 
 @Injectable({
  providedIn: 'root'
 })
 export class Globals {
+  public cardsCollection: AngularFirestoreCollection<Card>;
+  public cards$: Observable<Card[]>;
+  public cardsPromise;
+  public cards: Card[] = [];
 
   public CardColors = [
     { id: 0, code: 'colorless', name: 'Colorless', img: 'mana.png' },
@@ -26,9 +35,39 @@ export class Globals {
     { id: 6, code: 'enchantment',  name: 'Enchantment', },
   ];
 
-  constructor() {
+  constructor(
+    private afs: AngularFirestore,
+  ) {
+    
 
+    this.cardsCollection = afs.collection('cards');
+    this.cards$ = this.cardsCollection.snapshotChanges().pipe(
+      RxOp.map(actions => {
+        return actions.map(a => {
+          let data = a.payload.doc.data() as Card;
+          data.id = a.payload.doc.id;
+
+          // Find the highest ID (c9999)
+          const numId = Number.parseInt(data.id.slice(1));
+          data.orderId = ('00000' + numId).slice(-5).toString();
+
+          return data;
+        });
+      })
+    );
+    this.cardsPromise = new Promise(resolve => {
+      const sub = this.cards$.subscribe((cards: Card[]) => {
+        this.cards = cards;
+        resolve(cards);
+        sub.unsubscribe();
+      });
+    });
   }
+
+  public getCardById = (cardId) => {
+    return this.cards.getById(cardId);
+  }
+
 
   public getColor(code) {
     return this.CardColors.find(c => c.code === code);
