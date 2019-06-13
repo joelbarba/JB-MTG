@@ -1,12 +1,24 @@
+@import 'src/scss/variables.scss';
+
 .deck-row {
-  display: flex;
-  align-items: center;
-  margin: 15px 0;
+  padding: 15px;
+  margin-bottom: 3px;
   .deck-icon {
     font-size: 50px;
   }
   .deck-name {
     margin-left: 20px;
     font-size: 20px;
+  }
+
+  cursor: pointer;
+  &:hover {
+    background: rgba($primary-color, 0.15);
+    border-radius: 6px;
+  }
+  &.selected {
+    background: rgba($primary-color, 0.3);
+    border: 2px solid $primary-color;
+    border-radius: 6px;
   }
 }

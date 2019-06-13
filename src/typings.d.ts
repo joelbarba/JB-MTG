@@ -13,18 +13,20 @@ export interface Card {
   units   ?: Array<{ ref: string; owner?: string }>;
 }
 export interface User {
-  username: string;
-  email: string;
-  name: string;
-  cards: Array<UserCard>;
+  username  : string;
+  email     : string;
+  name      : string;
+  cards     : Array<UserCard>;
+  decks    ?: Array<UserDeck>; 
 }
 export interface UserCard {
-  card: string;
-  ref: string;
-  cardObj ?: Card;
+  id : string;  // Pointer to /cards/<id> (c1)
+  ref: string;  // Pointer to card.units[ref]
+  card ?: Card; // Copy of the card object (from /cards)
 }
 
 export interface UserDeck {
+  id?: string
   name: string;
   description: string;
   cards: Array<UserCard>;

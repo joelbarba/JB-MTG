@@ -34,10 +34,11 @@ export class Profile {
     this.user$ = this.userDoc.valueChanges();
     this.userCards$ = this.user$.pipe(
       RxOp.map(usr => {
-        return usr.cards.map(card => {
+        return usr.cards.map(usrCard => {
           return {
-            ...card,
-            ref$ : this.afs.doc<Card>('cards/' + card.card).valueChanges()
+            ...usrCard,
+            card: this.globals.getCardById(usrCard.id)
+            // ref$ : this.afs.doc<Card>('cards/' + card.card).valueChanges()
           };
         });
       })
@@ -45,9 +46,8 @@ export class Profile {
   }
 
   addUnitCard = (cardId: string, cardRef: string) => {
-    this.user.cards.push({ card: cardId, ref: cardRef });
+    this.user.cards.push({ id: cardId, ref: cardRef });
     this.userDoc.update(this.user);
-
   }
 
 }

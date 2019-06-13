@@ -11,6 +11,10 @@ import { ListHandler } from 'src/app/globals/listHandler';
 import { Profile } from 'src/app/globals/profile.service';
 
 
+interface UserCardExt extends UserCard {
+  isSelected: boolean;
+}
+
 @Component({
   selector: 'app-user',
   templateUrl: './user.component.html',
@@ -21,53 +25,129 @@ export class UserComponent implements OnInit {
   public decksCollection: AngularFirestoreCollection<UserDeck>;
 
   public profileUser$: Observable<User>;
-  public userCards$: Observable<UserCard[]>;
+  public userCards$: Observable<UserCardExt[]>;
   public userDecks$: Observable<UserDeck[]>;
-
   public cardsList: ListHandler;
-  public filters = { searchText: '', collection: null, colorCode: '', cardType: '' };
+  public filters = { searchText: '', deckId: '', colorCode: '', cardType: '' };
+
+  public selUser: User;
+  public selDeck: UserDeck; // Selected deck on the list of decks
 
   constructor(
     private afs: AngularFirestore,
     private modal: NgbModal,
     private globals: Globals,
     private profile: Profile,
-  ) { }
-
-  async ngOnInit() {
+  ) {
     const listConfig = { rowsPerPage: 20, orderFields: ['orderId'], filterFields: ['name'] };
     this.cardsList  = new ListHandler({ ...listConfig, listName: 'userCardsList' });
+  }
 
-    // Wait until all cards are loaded
-    await this.globals.cardsPromise;
+  async ngOnInit() {
+    await this.globals.cardsPromise;  // Wait until all cards are loaded
 
     this.userDoc = this.afs.doc<User>('/users/qINbUCQ3s1GdAzPzaIBH');
-    this.profileUser$ = this.userDoc.valueChanges();
-    this.userCards$ = this.profileUser$.pipe(
-      RxOp.map(usr => {
-        return usr.cards.map(c => {
-          return {
-            ...c,
-            cardObj: this.globals.getCardById(c.card),
-            ref$ : this.afs.doc<Card>('cards/' + c.card).valueChanges()
-          };
-        });
-      })
-    );
-    this.cardsList.connectObs(this.userCards$);
-
     this.decksCollection = this.userDoc.collection<UserDeck>('decks');
-    this.userDecks$ = this.decksCollection.valueChanges();
+
+    this.profileUser$ = this.userDoc.valueChanges();
+
+    // One time subscription
+    const usrSub = this.profileUser$.subscribe((user: User) => {
+      usrSub.unsubscribe();
+
+      this.selUser = user;
+      this.selUser.cards = user.cards.map((usrCard: UserCard) => {
+        usrCard.card = this.globals.getCardById(usrCard.id);
+        return usrCard;
+      });
+      this.selUser.decks = [];
+
+      // Fetch user decks
+      this.userDecks$ = this.decksCollection.snapshotChanges().pipe(
+        RxOp.map(actions => {
+          return actions.map(deck => {
+            const data = deck.payload.doc.data() as UserDeck;
+            const id = deck.payload.doc.id;
+            return { ...data, id };
+          });
+        })
+      );
+      const deckSubs = this.userDecks$.subscribe((decks: UserDeck[]) => {
+        deckSubs.unsubscribe();
+        this.selUser.decks = decks.map((deck: UserDeck) => {
+          return { ...deck, isSelected: false };
+        });
+      });
+
+      this.cardsList.load(this.selUser.cards);
+    });
+    // this.userCards$ = this.profileUser$.pipe(
+    //   RxOp.map(usr => {
+    //     return usr.cards.map(usrCard => {
+    //       return {
+    //         ...usrCard,
+    //         card: this.globals.getCardById(usrCard.id),
+    //         isSelected: (deck: UserDeck) => {
+    //           if (!deck) { return false; }
+    //           return !!deck.cards.filter(c => c.ref === usrCard.ref).length;
+    //         }
+    //       };
+    //     });
+    //   })
+    // );
+    // this.cardsList.connectObs(this.userCards$);
+
+    // this.decksCollection = this.userDoc.collection<UserDeck>('decks');
+    // this.userDecks$ = this.decksCollection.snapshotChanges().pipe(
+    //   RxOp.map(actions => {
+    //     return actions.map(deck => {
+    //       const data = deck.payload.doc.data() as UserDeck;
+    //       const id = deck.payload.doc.id;
+    //       return { ...data, id };
+    //     });
+    //   })
+    // );
 
 
     this.cardsList.filterList = (list: Array<any>, filterText: string = '', filterFields: Array<string>): Array<any> => {
       const filteredList = this.cardsList.defaultFilterList(list, this.filters.searchText, filterFields);
       return filteredList.filter(item => {
-        let match = (!this.filters.colorCode || (this.filters.colorCode === item.cardObj.color));
-        match = match && (!this.filters.cardType || (this.filters.cardType === item.cardObj.type));
+        let match = (!this.filters.colorCode || (this.filters.colorCode === item.card.color));
+        match = match && (!this.filters.cardType || (this.filters.cardType === item.card.type));
+
+        // Check if the card is in the deck
+        const deck = this.selUser.decks.getById(this.filters.deckId);
+        if (!!deck) {
+          match = match && !!deck.cards.filter((c: UserCard) => c.ref === item.ref).length;
+        }
+
         return match;
       });
     };
+  }
+
+  public selectDeck = (deck: UserDeck) => {
+    this.filters.deckId = deck.id;
+    this.selDeck = deck;
+    this.selUser.cards.forEach((card: UserCardExt) => {
+      card.isSelected = !!this.selDeck.cards.getByProp('ref', card.ref);
+    });
+  }
+
+  public selectCard = (userCard: UserCardExt) => {
+    console.log(userCard);
+    if (!!this.selDeck) {
+      if (userCard.isSelected) {
+        this.selDeck.cards.removeByProp('ref', userCard.ref);
+        userCard.isSelected = false;
+      } else {
+        this.selDeck.cards.push({
+          id: userCard.id,
+          ref: userCard.ref
+        });
+        userCard.isSelected = true;
+      }
+    }
   }
 
   public openAddDeck = () => {

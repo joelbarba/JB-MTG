@@ -1,4 +1,4 @@
-<div class="row">
+<div class="row" *ngIf="!!selUser && !!selUser?.decks">
   <div class="col-12">
     <h1>My Stuff</h1>
   </div>
@@ -12,7 +12,7 @@
 <div class="row">
 
 
-  <div class="col-5">
+  <div class="col-5" *ngIf="!!selUser && !!selUser?.decks">
     <div class="row">
       <div class="col-12">
         <h4 class="marV5">
@@ -21,12 +21,15 @@
         </h4>
       </div>
     </div>
-    <li class="row" *ngFor="let userDeck of userDecks$ | async">
-      <div class="col-12 deck-row">
+    <li class="row" *ngFor="let userDeck of selUser.decks">
+      <div class="col-12 deck-row d-flex align-items-center" 
+           [class.selected]="selDeck?.id === userDeck?.id"
+           (click)="selectDeck(userDeck)">
         <span class="icon-stack4 deck-icon"></span>
         <span class="deck-name">{{userDeck.name}} - {{userDeck.description}}</span>
       </div>
     </li>
+
   </div>
 
 
@@ -40,16 +43,16 @@
                   bfPlaceholder="Search">
         </bf-input>
       </div> -->
-      <div class="col-4">
-        <bf-dropdown [(ngModel)]="filters.collection"
+      <div class="col-4" *ngIf="!!selUser && !!selUser.decks">
+        <bf-dropdown [(ngModel)]="filters.deckId"
                       (ngModelChange)="cardsList.filter($event)"
                       bfLabel="Collection"
-                      [bfList]="userDecks$ | async"
+                      [bfList]="selUser.decks"
                       bfRender="name"
+                      bfSelect="id"
                       class="full-width">
         </bf-dropdown>
       </div>
-      filters.collection={{filters.collection | json}}
       <div class="col-4">
         <bf-dropdown [(ngModel)]="filters.colorCode"
                       (ngModelChange)="cardsList.filter($event)"
@@ -70,18 +73,26 @@
                       class="full-width">
         </bf-dropdown>
       </div>
-
+      filters.collection={{filters.collection | json}}
     </div>
     <div class="row marT20">
       <div class="col-12">
         <ul>
-          <li class="card-box" *ngFor="let userCard of cardsList.renderList$ | async">
-            <h5>{{userCard.card}} - {{ userCard.ref$ | async | asyncField:'name' }}</h5>
+          <li class="card-box" *ngFor="let userCard of cardsList.renderList$ | async" 
+              (click)="selectCard(userCard)">
+            <h5>{{userCard.ref}}</h5>
+            <h5>{{userCard.id}} - {{ userCard.card.name }}</h5>
             <div class="card-border" >
-              <img [src]="'/assets/cards/' + (userCard.ref$ | async | asyncField:'image')">
+              <img [src]="'/assets/cards/' + userCard.card.image">
             </div>
+            sel={{userCard.isSelected}}
           </li>
         </ul>
+      </div>
+      <div class="col-12" *ngIf="!(cardsList.renderList$ | async)?.length">
+        <bf-btn bfType="add" bfText="Select Cards to Add" 
+               (bfClick)="filters.collection = null">
+        </bf-btn>
       </div>
       <div class="col-12 pad0 text-right">
           <bf-btn bfIcon="icon-arrow-left6"  (bfClick)="cardsList.prevPage()"></bf-btn>
@@ -90,5 +101,7 @@
         </div>  
     </div>
   </div>
-
+  <pre>
+    this.selUser={{ selUser | json }}
+  </pre>
 </div>  
