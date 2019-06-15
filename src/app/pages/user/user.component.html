@@ -1,6 +1,6 @@
 <div class="row" *ngIf="!!selUser && !!selUser?.decks">
   <div class="col-12">
-    <h1>My Stuff</h1>
+    <h1 (click)="pageMode = (!pageMode ? 1 : 0)">My Stuff - mode = {{pageMode}}</h1>
   </div>
   
   <div class="col-12">
@@ -12,7 +12,146 @@
 <div class="row">
 
 
-  <div class="col-5" *ngIf="!!selUser && !!selUser?.decks">
+  <div class="col-2">
+    <div class="card-box big-size">
+      <div class="card-border">
+        <img [src]="'/assets/cards/island.jpg'">
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Selected Deck -->
+  <div *ngIf="!!selDeck" class="deck-box"
+       [class.col-7]="pageMode === 0" 
+       [class.col-5]="pageMode === 1">
+
+    <div class="row">
+      <div class="col-5">
+        <h4 class="padL10">Deck {{selDeck?.name}}:</h4>
+      </div>
+      <div class="col-7 text-right">
+        <bf-btn [hidden]="pageMode === 1" bfType="edit"   bfText="Edit Deck" (bfClick)="pageMode = 1"></bf-btn>
+        <bf-btn [hidden]="pageMode === 0" bfType="cancel" bfText="Cancel"    (bfClick)="pageMode = 0"></bf-btn>
+        <bf-btn [hidden]="pageMode === 0" bfType="save"   bfText="Save Deck" (bfClick)="pageMode = 0"></bf-btn>
+      </div>
+    </div>
+
+    <div class="row marT20">
+      <div class="col-12">
+        <div *ngFor="let deckCard of deckCards.renderList$ | async" 
+              class="card-box" [class.selected]="deckCard.isSelected"
+            (click)="selectCard(deckCard)">
+          <!-- <h5>{{deckCard.ref}}</h5> -->
+          <h5>{{deckCard.id}} - {{ deckCard.card.name }}</h5>
+          <div class="card-border" >
+            <img [src]="'/assets/cards/' + deckCard.card.image">
+          </div>
+          <!-- sel={{deckCard.isSelected}} -->
+        </div>
+      </div>
+      <div class="col-12" *ngIf="!(deckCards.renderList$ | async)?.length">
+        <bf-btn bfType="add" bfText="Select Cards to Add" 
+               (bfClick)="filters.deckId = ''">
+        </bf-btn>
+      </div>
+      <div class="col-12 pad0 text-right">
+          <bf-btn bfIcon="icon-arrow-left6"  (bfClick)="deckCards.prevPage()"></bf-btn>
+          <span class="spacerL15 spacerR15">{{deckCards.currentPage}} / {{deckCards.totalPages}}</span>
+          <bf-btn bfIcon="icon-arrow-right3" (bfClick)="deckCards.nextPage()"></bf-btn>
+        </div>  
+    </div>
+  </div>
+
+
+
+
+  <!-- All Cards -->
+  <div *ngIf="!selDeck || pageMode === 1"
+       [class.col-7]="pageMode === 0" 
+       [class.col-5]="pageMode === 1">
+    <h4 class="padL10" >My Cards:</h4>
+    <div class="row cards-filter">
+      <div class="col-6 padT30">
+        <bf-input class="flat" name="searchText"
+                  [(ngModel)]="filters.searchText"
+                  (ngModelChange)="cardsList.filter($event)"
+                  bfPlaceholder="Search">
+        </bf-input>
+      </div>
+      <!-- <div class="col-4" *ngIf="!!selUser && !!selUser.decks">
+        <bf-dropdown [(ngModel)]="filters.deckId"
+                      (ngModelChange)="cardsList.filter($event)"
+                      bfLabel="Collection"
+                      [bfList]="selUser.decks"
+                      bfRender="name"
+                      bfSelect="id"
+                      class="full-width">
+        </bf-dropdown>
+      </div> -->
+      <div class="col-3">
+        <bf-dropdown [(ngModel)]="filters.colorCode"
+                      (ngModelChange)="cardsList.filter($event)"
+                      bfLabel="Color"
+                      [bfList]="globals.CardColors"
+                      bfSelect="code"
+                      bfRender="name"
+                      class="full-width">
+        </bf-dropdown>
+      </div>
+      <div class="col-3">
+        <bf-dropdown [(ngModel)]="filters.cardType"
+                      (ngModelChange)="cardsList.filter($event)"
+                      bfLabel="Type"
+                      [bfList]="globals.CardTypes"
+                      bfSelect="code"
+                      bfRender="name"
+                      class="full-width">
+        </bf-dropdown>
+      </div>
+      <!-- filters.deckId={{filters.deckId | json}} -->
+    </div>
+    <div class="row marT20">
+      <div class="col-12">
+        <div *ngFor="let userCard of cardsList.renderList$ | async" 
+              class="card-box" [class.selected]="userCard.isSelected"
+            (click)="selectCard(userCard)">
+          <!-- <h5>{{userCard.ref}}</h5> -->
+          <h5>{{userCard.id}} - {{ userCard.card.name }}</h5>
+          <div class="card-border" >
+            <img [src]="'/assets/cards/' + userCard.card.image">
+          </div>
+          <!-- sel={{userCard.isSelected}} -->
+        </div>
+      </div>
+      <div class="col-12" *ngIf="!(cardsList.renderList$ | async)?.length">
+        <bf-btn bfType="add" bfText="Select Cards to Add" 
+               (bfClick)="filters.deckId = ''">
+        </bf-btn>
+      </div>
+      <div class="col-12 pad0 text-right">
+          <bf-btn bfIcon="icon-arrow-left6"  (bfClick)="cardsList.prevPage()"></bf-btn>
+          <span class="spacerL15 spacerR15">{{cardsList.currentPage}} / {{cardsList.totalPages}}</span>
+          <bf-btn bfIcon="icon-arrow-right3" (bfClick)="cardsList.nextPage()"></bf-btn>
+        </div>  
+    </div>
+  </div>
+
+    
+  <!-- Deck list -->
+  <div class="col-3" 
+       *ngIf="!!selUser && !!selUser?.decks" 
+       [hidden]="pageMode !== 0">
+
+    <div class="row">
+      <div class="col-12 deck-row d-flex align-items-center" 
+           [class.selected]="!selDeck"
+           (click)="selectDeck(null)">
+        <span class="icon-stack4 deck-icon"></span>
+        <span class="deck-name">All My Cards</span>
+      </div>
+    </div>
+    <hr>
     <div class="row">
       <div class="col-12">
         <h4 class="marV5">
@@ -21,6 +160,7 @@
         </h4>
       </div>
     </div>
+    
     <li class="row" *ngFor="let userDeck of selUser.decks">
       <div class="col-12 deck-row d-flex align-items-center" 
            [class.selected]="selDeck?.id === userDeck?.id"
@@ -33,74 +173,7 @@
   </div>
 
 
-  <div class="col-7">
-    <h4>My Cards:</h4>
-    <div class="row">
-      <!-- <div class="col-12 padB20">
-        <bf-input class="flat" name="searchText"
-                  [(ngModel)]="filters.searchText"
-                  (ngModelChange)="cardsList.filter($event)"
-                  bfPlaceholder="Search">
-        </bf-input>
-      </div> -->
-      <div class="col-4" *ngIf="!!selUser && !!selUser.decks">
-        <bf-dropdown [(ngModel)]="filters.deckId"
-                      (ngModelChange)="cardsList.filter($event)"
-                      bfLabel="Collection"
-                      [bfList]="selUser.decks"
-                      bfRender="name"
-                      bfSelect="id"
-                      class="full-width">
-        </bf-dropdown>
-      </div>
-      <div class="col-4">
-        <bf-dropdown [(ngModel)]="filters.colorCode"
-                      (ngModelChange)="cardsList.filter($event)"
-                      bfLabel="Color"
-                      [bfList]="globals.CardColors"
-                      bfSelect="code"
-                      bfRender="name"
-                      class="full-width">
-        </bf-dropdown>
-      </div>
-      <div class="col-4">
-        <bf-dropdown [(ngModel)]="filters.cardType"
-                      (ngModelChange)="cardsList.filter($event)"
-                      bfLabel="Type"
-                      [bfList]="globals.CardTypes"
-                      bfSelect="code"
-                      bfRender="name"
-                      class="full-width">
-        </bf-dropdown>
-      </div>
-      filters.collection={{filters.collection | json}}
-    </div>
-    <div class="row marT20">
-      <div class="col-12">
-        <ul>
-          <li class="card-box" *ngFor="let userCard of cardsList.renderList$ | async" 
-              (click)="selectCard(userCard)">
-            <h5>{{userCard.ref}}</h5>
-            <h5>{{userCard.id}} - {{ userCard.card.name }}</h5>
-            <div class="card-border" >
-              <img [src]="'/assets/cards/' + userCard.card.image">
-            </div>
-            sel={{userCard.isSelected}}
-          </li>
-        </ul>
-      </div>
-      <div class="col-12" *ngIf="!(cardsList.renderList$ | async)?.length">
-        <bf-btn bfType="add" bfText="Select Cards to Add" 
-               (bfClick)="filters.collection = null">
-        </bf-btn>
-      </div>
-      <div class="col-12 pad0 text-right">
-          <bf-btn bfIcon="icon-arrow-left6"  (bfClick)="cardsList.prevPage()"></bf-btn>
-          <span class="spacerL15 spacerR15">{{cardsList.currentPage}} / {{cardsList.totalPages}}</span>
-          <bf-btn bfIcon="icon-arrow-right3" (bfClick)="cardsList.nextPage()"></bf-btn>
-        </div>  
-    </div>
-  </div>
+
   <pre>
     this.selUser={{ selUser | json }}
   </pre>

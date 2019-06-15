@@ -27,7 +27,11 @@ export class UserComponent implements OnInit {
   public profileUser$: Observable<User>;
   public userCards$: Observable<UserCardExt[]>;
   public userDecks$: Observable<UserDeck[]>;
-  public cardsList: ListHandler;
+
+  public pageMode = 0; // 0=view, 1=deck edit
+
+  public cardsList: ListHandler;  // all cards
+  public deckCards: ListHandler;  // selected deck cards
   public filters = { searchText: '', deckId: '', colorCode: '', cardType: '' };
 
   public selUser: User;
@@ -41,6 +45,7 @@ export class UserComponent implements OnInit {
   ) {
     const listConfig = { rowsPerPage: 20, orderFields: ['orderId'], filterFields: ['name'] };
     this.cardsList  = new ListHandler({ ...listConfig, listName: 'userCardsList' });
+    this.deckCards  = new ListHandler({ ...listConfig, listName: 'deckCardsList' });
   }
 
   async ngOnInit() {
@@ -80,6 +85,7 @@ export class UserComponent implements OnInit {
       });
 
       this.cardsList.load(this.selUser.cards);
+      this.deckCards.load(this.selUser.cards);
     });
     // this.userCards$ = this.profileUser$.pipe(
     //   RxOp.map(usr => {
@@ -127,11 +133,19 @@ export class UserComponent implements OnInit {
   }
 
   public selectDeck = (deck: UserDeck) => {
-    this.filters.deckId = deck.id;
-    this.selDeck = deck;
-    this.selUser.cards.forEach((card: UserCardExt) => {
-      card.isSelected = !!this.selDeck.cards.getByProp('ref', card.ref);
-    });
+    if (!deck || deck === this.selDeck) { // Unselect deck
+      this.selUser.cards.forEach((card: UserCardExt) => card.isSelected = false);
+      this.selDeck = null;
+      this.filters.deckId = null;
+
+    } else { // Select deck
+      this.selDeck = deck;
+      this.filters.deckId = deck.id;
+      this.selUser.cards.forEach((card: UserCardExt) => {
+        card.isSelected = !!this.selDeck.cards.getByProp('ref', card.ref);
+      });
+    }
+    this.cardsList.filter();
   }
 
   public selectCard = (userCard: UserCardExt) => {
