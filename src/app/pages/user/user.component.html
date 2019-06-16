@@ -1,6 +1,6 @@
 <div class="row" *ngIf="!!selUser && !!selUser?.decks">
   <div class="col-12">
-    <h1 (click)="pageMode = (!pageMode ? 1 : 0)">My Stuff - mode = {{pageMode}}</h1>
+    <h1 (click)="changePageMode()">My Stuff - mode = {{pageMode}}</h1>
   </div>
   
   <div class="col-12">
@@ -11,12 +11,30 @@
 
 <div class="row">
 
-
+  <!-- Selected (viewing) Card -->
   <div class="col-2">
-    <div class="card-box big-size">
-      <div class="card-border">
-        <img [src]="'/assets/cards/island.jpg'">
+    <div *ngIf="!!viewCard">
+      <div class="card-box big-size">
+        <div class="card-border">
+          <img [src]="'/assets/cards/' + viewCard.card.image">
+        </div>
       </div>
+
+      <!-- Remove from deck -->
+      <div class="marB20" *ngIf="pageMode === 1 && viewCard.from === 'deck'">
+        <bf-btn class="full-width" 
+                bfType="delete" 
+                bfText="Remove from deck"
+                (bfClick)="selectCard(this.selUser.cards.getByProp('ref', viewCard.ref), 'all')">
+        </bf-btn>
+      </div>
+
+      <bf-label class="value-list-3" bfText="Name"  [bfValue]="viewCard.id + ' - ' + viewCard.card.name"></bf-label>
+      <bf-label class="value-list-3" bfText="Ref"   [bfValue]="viewCard.ref"></bf-label>
+      <bf-label class="value-list-3" bfText="Color" [bfValue]="viewCard.card.color"></bf-label>
+      <bf-label class="value-list-3" bfText="Type"  [bfValue]="viewCard.card.type"></bf-label>
+      <bf-label class="value-list-3" bfText="Cast"  [bfValue]="viewCard.card.cast"></bf-label>
+
     </div>
   </div>
 
@@ -28,12 +46,21 @@
 
     <div class="row">
       <div class="col-5">
-        <h4 class="padL10">Deck {{selDeck?.name}}:</h4>
+        <h4 class="padL10">
+          <span>Deck {{selDeck?.name}}:</span>
+          <bf-btn *ngIf="pageMode === 1" class="marL15"
+                  (bfClick)="openEditDeck()"
+                  bfIcon="icon-pencil"
+                  bfTooltip="Click to edit deck details">
+          </bf-btn>
+        </h4>
       </div>
       <div class="col-7 text-right">
-        <bf-btn [hidden]="pageMode === 1" bfType="edit"   bfText="Edit Deck" (bfClick)="pageMode = 1"></bf-btn>
-        <bf-btn [hidden]="pageMode === 0" bfType="cancel" bfText="Cancel"    (bfClick)="pageMode = 0"></bf-btn>
-        <bf-btn [hidden]="pageMode === 0" bfType="save"   bfText="Save Deck" (bfClick)="pageMode = 0"></bf-btn>
+        <bf-btn [hidden]="pageMode === 1" bfType="edit"   bfText="Edit Deck" (bfClick)="changePageMode(1)"></bf-btn>
+        
+        <!-- <bf-btn [hidden]="pageMode === 0" bfType="delete" bfText="Delete Deck" (bfClick)="changePageMode(1)"></bf-btn> -->
+        <bf-btn [hidden]="pageMode === 0" bfType="cancel" bfText="Cancel"      (bfClick)="changePageMode(0)"></bf-btn>
+        <bf-btn [hidden]="pageMode === 0" bfType="save"   bfText="Save Deck"   (bfClick)="saveDeck()"></bf-btn>
       </div>
     </div>
 
@@ -41,7 +68,7 @@
       <div class="col-12">
         <div *ngFor="let deckCard of deckCards.renderList$ | async" 
               class="card-box" [class.selected]="deckCard.isSelected"
-            (click)="selectCard(deckCard)">
+            (click)="selectCard(deckCard, 'deck')">
           <!-- <h5>{{deckCard.ref}}</h5> -->
           <h5>{{deckCard.id}} - {{ deckCard.card.name }}</h5>
           <div class="card-border" >
@@ -51,9 +78,7 @@
         </div>
       </div>
       <div class="col-12" *ngIf="!(deckCards.renderList$ | async)?.length">
-        <bf-btn bfType="add" bfText="Select Cards to Add" 
-               (bfClick)="filters.deckId = ''">
-        </bf-btn>
+        <h5 class="no-card-warning" (click)="changePageMode(1)">No Cards at the moment</h5>
       </div>
       <div class="col-12 pad0 text-right">
           <bf-btn bfIcon="icon-arrow-left6"  (bfClick)="deckCards.prevPage()"></bf-btn>
@@ -64,13 +89,11 @@
   </div>
 
 
-
-
   <!-- All Cards -->
   <div *ngIf="!selDeck || pageMode === 1"
        [class.col-7]="pageMode === 0" 
        [class.col-5]="pageMode === 1">
-    <h4 class="padL10" >My Cards:</h4>
+    <h4 class="padL10">(main) My Cards:</h4>
     <div class="row cards-filter">
       <div class="col-6 padT30">
         <bf-input class="flat" name="searchText"
@@ -115,7 +138,7 @@
       <div class="col-12">
         <div *ngFor="let userCard of cardsList.renderList$ | async" 
               class="card-box" [class.selected]="userCard.isSelected"
-            (click)="selectCard(userCard)">
+            (click)="selectCard(userCard, 'all')">
           <!-- <h5>{{userCard.ref}}</h5> -->
           <h5>{{userCard.id}} - {{ userCard.card.name }}</h5>
           <div class="card-border" >
@@ -139,7 +162,7 @@
 
     
   <!-- Deck list -->
-  <div class="col-3" 
+  <div class="col-3 padL25 padR25" 
        *ngIf="!!selUser && !!selUser?.decks" 
        [hidden]="pageMode !== 0">
 
@@ -153,11 +176,11 @@
     </div>
     <hr>
     <div class="row">
-      <div class="col-12">
-        <h4 class="marV5">
-          <span class="marR40">My Decks:</span>
-          <bf-btn bfText="Create New Deck" bfType="add" (bfClick)="openAddDeck()"></bf-btn>
-        </h4>
+      <div class="col-6">
+        <h4 class="marT5 marB10">My Decks:</h4>
+      </div>
+      <div class="col-6 text-right">
+        <bf-btn bfText="Create New Deck" bfType="add" (bfClick)="openAddDeck()"></bf-btn>
       </div>
     </div>
     
@@ -174,7 +197,7 @@
 
 
 
-  <pre>
+  <!-- <pre>
     this.selUser={{ selUser | json }}
-  </pre>
+  </pre> -->
 </div>  

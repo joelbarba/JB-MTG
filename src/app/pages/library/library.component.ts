@@ -96,7 +96,6 @@ export class LibraryComponent implements OnInit {
   }
 
   public selectCard = (card: Card) => {
-    console.log('here')
     this.selected = card;
     // this.selCard$ = this.cards$.pipe(RxOp.map(cards => {
     //   if (!this.selected) { return {}; }
