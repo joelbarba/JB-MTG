@@ -88,4 +88,24 @@ export class Globals {
     if (!!selObj) { return selObj.name; }
     return '';
   }
+
+  // Returns a promise that resolves a user (1 time load)
+  public getUser = (userId: string): Promise<User> => {
+    return new Promise((resolve) => {
+      const sub1 = this.afs.doc<User>('/users/' + userId).valueChanges().subscribe(data => {
+        sub1.unsubscribe();
+        resolve(data);
+      });
+    });
+  }
+
+  // Returns a promise that resolves a user deck (1 time load)
+  public getUserDeck = (userId: string, deckId: string): Promise<UserDeck> => {
+    return new Promise((resolve) => {
+      const sub1 = this.afs.doc<UserDeck>('/users/' + userId + '/decks/' + deckId).valueChanges().subscribe(data => {
+        sub1.unsubscribe();
+        resolve(data);
+      });
+    });
+  }
 }

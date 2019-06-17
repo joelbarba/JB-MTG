@@ -31,3 +31,28 @@ export interface UserDeck {
   description: string;
   cards: Array<UserCard>;
 }
+
+
+
+export interface IGameCard {
+  id    : string,
+  ref   : string,
+  order : number,
+  loc   : 'deck' | 'hand' | 'game' | 'graveyard';
+  card  : Card,
+}
+export interface IUserGame {
+  user_id : string;
+  deck_id : string;
+  life   : number,
+  phase  : number,
+  ready  : boolean,
+  deck   : Array<IGameCard>
+}
+export interface IGame {
+  created: string;
+  status: number;
+  user_a: IUserGame;
+  user_b: IUserGame;
+}
+

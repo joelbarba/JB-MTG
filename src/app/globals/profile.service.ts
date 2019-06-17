@@ -23,7 +23,8 @@ export class Profile {
     private globals: Globals,
   ) {
 
-    this.userId = 'qINbUCQ3s1GdAzPzaIBH';
+    this.userId = 'qINbUCQ3s1GdAzPzaIBH'; // Joel
+    // this.userId = 'DygcQXEd6YCL0ICiESEq'; // Alice
     this.userDoc = this.afs.doc<User>('/users/' + this.userId);
 
     const subs = this.userDoc.snapshotChanges().subscribe(state => {

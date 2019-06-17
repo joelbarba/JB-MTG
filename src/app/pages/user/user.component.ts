@@ -46,7 +46,7 @@ export class UserComponent implements OnInit {
     private growl: BfGrowlService,
     private profile: Profile,
   ) {
-    const listConfig = { rowsPerPage: 20, orderFields: ['orderId'], filterFields: ['name'] };
+    const listConfig = { rowsPerPage: 24, orderFields: ['orderId'], filterFields: ['name'] };
     this.cardsList  = new ListHandler({ ...listConfig, listName: 'userCardsList' });
     this.deckCards  = new ListHandler({ ...listConfig, listName: 'deckCardsList' });
   }
@@ -54,7 +54,8 @@ export class UserComponent implements OnInit {
   async ngOnInit() {
     await this.globals.cardsPromise;  // Wait until all cards are loaded
 
-    this.userDoc = this.afs.doc<User>('/users/qINbUCQ3s1GdAzPzaIBH');
+    this.userDoc = this.afs.doc<User>('/users/qINbUCQ3s1GdAzPzaIBH'); // Joel
+    // this.userDoc = this.afs.doc<User>('/users/DygcQXEd6YCL0ICiESEq'); // Alice
     this.decksCollection = this.userDoc.collection<UserDeck>('decks');
 
     this.profileUser$ = this.userDoc.valueChanges();
@@ -127,7 +128,7 @@ export class UserComponent implements OnInit {
       this.selDeck = null;
 
     } else { // Select deck
-      this.selDeck = <UserDeck> deck.copy();
+      this.selDeck = <UserDeck> deck.dCopy();
 
       // Load the list of the cards of the selected deck
       this.reloadDeckList();
@@ -184,14 +185,15 @@ export class UserComponent implements OnInit {
     modalRef.componentInstance.decksCollection = this.decksCollection;
     modalRef.result.then((updatedDeck) => {
       if (!!updatedDeck) {
-        this.selDeck = { ...this.selDeck, ...updatedDeck };
-        this.reloadDeckList();
+        if (!!updatedDeck.id) { // Deck updated
+          this.selDeck = { ...this.selDeck, ...updatedDeck };
+          this.reloadDeckList();
 
-      } else {
-        // Deck was deleted
-        this.selUser.decks.removeById(this.selDeck.id);
-        this.selectDeck(null); // Unselect the new deck
-        this.changePageMode(0); // Change to view mode
+        } else { // Deck was deleted
+          this.selUser.decks.removeById(this.selDeck.id);
+          this.selectDeck(null); // Unselect the new deck
+          this.changePageMode(0); // Change to view mode
+        }
       }
     });
   }
@@ -268,7 +270,7 @@ export class EditDeckModalComponent implements OnInit {
   ) { }
 
   ngOnInit() {
-    this.deck = <UserDeck> this.selDeck.copy();
+    this.deck = <UserDeck> this.selDeck.dCopy();
   }
 
   public clearDeck = () => {
@@ -284,7 +286,7 @@ export class EditDeckModalComponent implements OnInit {
       if (res === 'yes') {
         this.decksCollection.doc(this.selDeck.id).delete();
         this.growl.success(`Deck ${this.selDeck.name} deleted`);
-        this.activeModal.close(null);
+        this.activeModal.close({});
       }
     }, (res) => {});
   }

@@ -1,0 +1,24 @@
+<div class="row">
+  <div class="col-12">
+    <h1>Game ({{ game.status$ | async }})</h1>
+  </div>
+</div>
+
+<div class="row" *ngIf="!(game.status$ | async)">
+  <div class="col-12">
+    <bf-btn bfText="Create New Game" bfType="add" (bfClick)="game.createNewGame()"></bf-btn>
+  </div>
+</div>
+
+<div class="row" *ngIf="!!(game.status$ | async)">
+  <div class="col-6">
+    <h4>User A</h4>
+    life={{ userA.life }}
+    <!-- , name={{ userA.userName$ | async | json }} -->
+    <!-- <bf-label bfText="Phase" bfValue="aa"></bf-label> -->
+  </div>
+  <div class="col-6">
+    <h4>User B</h4>
+    <!-- {{ userB | json }} -->
+  </div>
+</div>
