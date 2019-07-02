@@ -1,3 +1,25 @@
-<p>
-  login works!
-</p>
+<div class="row">
+  <h3>Login</h3>
+
+  <div class="col-12" *ngIf="afAuth.user | async as user">
+    <h1>Hello {{ user.displayName }}!</h1>
+  </div>
+  
+  <div class="col-12">
+    <form #loginForm autocomplete="off">
+      <bf-input bfLabel="User" [(ngModel)]="username" name="username"></bf-input>
+      <bf-input bfLabel="Pass" [(ngModel)]="password" name="password"></bf-input>
+    </form>
+  </div>
+
+  <div class="col-12">
+    <form #newUserForm autocomplete="off">
+      <hr>
+      <h4>Create New User</h4>
+      <bf-input bfLabel="Email" [(ngModel)]="newMail" name="newMail"></bf-input>
+      <bf-input bfLabel="Pass" [(ngModel)]="newPass" name="newPass"></bf-input>
+      <bf-btn bfText="Create User" (bfClick)="createUser()"></bf-btn>
+    </form>
+  </div>
+
+</div>
