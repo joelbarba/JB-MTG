@@ -12,7 +12,13 @@ export class LoginComponent implements OnInit {
   public username: string;
   public password: string;
 
-  public newMail: string;
+  public newUser = {
+    email: 'joel.barba.vidal@gmail.com',
+    password: '',
+    displayName: '',
+    photoURL: '',
+  };
+  public newMail: string = 'joel.barba.vidal@gmail.com';
   public newPass: string;
 
   constructor(
@@ -26,21 +32,64 @@ export class LoginComponent implements OnInit {
   }
 
   public createUser = () => {
+    this.afAuth.auth.createUserWithEmailAndPassword(this.newUser.email, this.newUser.password).then((userCredential) => {
+      // Update profile too
+      userCredential.user.updateProfile({
+        displayName : this.newUser.displayName,
+        photoURL    : this.newUser.photoURL
+      }).then(() => {}, (error) => {});
+
+    }).catch(function(error) {
+      // Handle Errors here.
+      const errorCode = error.code;
+      const errorMessage = error.message;
+      if (errorCode === 'auth/weak-password') {
+        alert('The password is too weak.');
+      } else {
+        alert(errorMessage);
+      }
+      console.log(error);
+    });
+  };
+
+  public logIn = () => {
+    this.afAuth.auth.signInWithEmailAndPassword(this.username, this.password).then(() => {
+      console.log('LOOOOOGED in !!!');
+    })
+      .catch(function(error) {
+        // Handle Errors here.
+        const errorCode = error.code;
+        const errorMessage = error.message;
+        if (errorCode === 'auth/wrong-password') {
+          alert('Wrong password.');
+        } else {
+          alert(errorMessage);
+        }
+        console.log(error);
+      });
+  };
+
+  public logOut = () => {
+    this.afAuth.auth.signOut().then(() => {
+      console.log('OUT !!');
+    });
+  };
+
+
+
+
+  public sendLoginLink = () => {
     console.log('eee');
-
-
-    this.afAuth.auth.createUserWithEmailAndPassword(this.newMail, this.newPass)
-    .catch(function(error) {
-    // Handle Errors here.
-    var errorCode = error.code;
-    var errorMessage = error.message;
-    if (errorCode == 'auth/weak-password') {
-    alert('The password is too weak.');
-    } else {
-    alert(errorMessage);
-    }
-    console.log(error);
+    const mailSettings = {
+      url: 'http://127.0.0.1:4200/sign-in-verify?param1=123',
+      // url: 'http://reikiwithinyou.com/jbmtg/sign-in-verification?param1=123',
+      handleCodeInApp: true
+    };
+    this.afAuth.auth.sendSignInLinkToEmail(this.newMail, mailSettings).then((resp) => {
+      console.log('ueeeeee', resp);
+      window.localStorage.setItem('jb-mtg-user-pending-confirmation', this.newMail);
+    }).catch((err) => {
+      console.log('error', err);
     });
   }
-
 }

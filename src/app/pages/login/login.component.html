@@ -3,12 +3,26 @@
 
   <div class="col-12" *ngIf="afAuth.user | async as user">
     <h1>Hello {{ user.displayName }}!</h1>
+    <p>User Id = {{ user.uid }}</p>
+    <p>photoURL = {{ user.photoURL }}</p>
+    <p>email = {{ user.email }}</p>
+    <p>emailVerified = {{ user.emailVerified }}</p>
+    <p>phoneNumber = {{ user.phoneNumber }}</p>
+    <!--<p>providerId = {{ user.providerData[0].providerId }}</p>-->
+    <!--<p>apiKey = {{ user.apiKey }}</p>-->
+    <!--<p>appName = {{ user.appName }}</p>-->
+    <!--<p>lastLoginAt = {{ user.lastLoginAt }}</p>-->
+    <!--<p>createdAt = {{ user.createdAt }}</p>-->
+
+    <!--<pre>{{user | json}}</pre>-->
   </div>
   
   <div class="col-12">
     <form #loginForm autocomplete="off">
       <bf-input bfLabel="User" [(ngModel)]="username" name="username"></bf-input>
       <bf-input bfLabel="Pass" [(ngModel)]="password" name="password"></bf-input>
+      <bf-btn bfText="Log Out" (bfClick)="logOut()"></bf-btn>
+      <bf-btn bfText="Log IN"  (bfClick)="logIn()"></bf-btn>
     </form>
   </div>
 
@@ -16,8 +30,10 @@
     <form #newUserForm autocomplete="off">
       <hr>
       <h4>Create New User</h4>
-      <bf-input bfLabel="Email" [(ngModel)]="newMail" name="newMail"></bf-input>
-      <bf-input bfLabel="Pass" [(ngModel)]="newPass" name="newPass"></bf-input>
+      <bf-input bfLabel="Email" [(ngModel)]="newUser.email" name="newMail"></bf-input>
+      <bf-input bfLabel="Pass" [(ngModel)]="newUser.password" name="newPass"></bf-input>
+      <bf-input bfLabel="Name" [(ngModel)]="newUser.displayName" name="displayName"></bf-input>
+      <bf-input bfLabel="photo URL" [(ngModel)]="newUser.photoURL" name="photoURL"></bf-input>
       <bf-btn bfText="Create User" (bfClick)="createUser()"></bf-btn>
     </form>
   </div>
