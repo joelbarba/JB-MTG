@@ -1,3 +1,4 @@
+import { GameComponent } from './pages/game/game.component';
 import { LibraryComponent } from './pages/library/library.component';
 import { UserComponent } from './pages/user/user.component';
 import { HomeComponent } from './pages/home/home.component';
@@ -12,6 +13,7 @@ const routes: Routes = [
   { path: 'login',        component: LoginComponent },
   { path: 'user',     component: UserComponent },
   { path: 'library',     component: LibraryComponent },
+  { path: 'game',     component: GameComponent },
 ]; // RouteEnd
 
 @NgModule({

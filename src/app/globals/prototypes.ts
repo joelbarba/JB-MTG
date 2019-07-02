@@ -10,7 +10,7 @@
 
 
 interface Array<T> {
-  copy(): Array<T>;
+  dCopy(): Array<T>;
   getById(id:string): T;
   removeById(id:string): T;
   removeByProp(prop:string, value:string): T;
@@ -22,7 +22,7 @@ interface Array<T> {
 
 interface Object {
   keyMap(propNames:string): Object;
-  copy(): Object;
+  dCopy(): Object;
 }
 
 /**
@@ -135,15 +135,15 @@ Array.prototype['getKeyByProp'] = function(keyName:string, property:string, valu
 
 
 /**
- * @function copy
+ * @function dCopy
  * @memberOf Array
  * @description Deep copy of the array
  * */
-Array.prototype['copy'] = function() {
+Array.prototype['dCopy'] = function() {
   let newArray = [];
   this.forEach(item => {
     if (item !== null && (Array.isArray(item) || typeof item === 'object')) {
-      newArray.push(item.copy());
+      newArray.push(item.dCopy());
 
     } else {
       newArray.push(item);
@@ -184,11 +184,11 @@ Object.defineProperty(Object.prototype, 'keyMap', {
 
 /**
  * @ngdoc Object.prototype
- * @name copy
+ * @name dCopy
  * @description It returns a deep copy of the object (no references at any level)
- * @example myObj2 = myObj1.copy();
+ * @example myObj2 = myObj1.dCopy();
  */
-Object.defineProperty(Object.prototype, 'copy', {
+Object.defineProperty(Object.prototype, 'dCopy', {
   value: function() {
     let newObj = {};
 
@@ -196,7 +196,7 @@ Object.defineProperty(Object.prototype, 'copy', {
       if (this.hasOwnProperty(keyName)) { // Exclude prototypes
 
         if (this[keyName] !== null && (typeof this[keyName] === 'object' || Array.isArray(this[keyName])) ) {
-          newObj[keyName] = this[keyName].copy();
+          newObj[keyName] = this[keyName].dCopy();
 
         } else {
           newObj[keyName] = this[keyName];

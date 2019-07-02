@@ -15,6 +15,7 @@ import { LoginModule } from './pages/login/login.module';
 import { HomeModule } from './pages/home/home.module';
 import { UserModule } from './pages/user/user.module';
 import { LibraryModule } from './pages/library/library.module';
+import { GameModule } from './pages/game/game.module';
 
 @NgModule({
   declarations: [AppComponent],
@@ -26,7 +27,7 @@ import { LibraryModule } from './pages/library/library.module';
     AngularFirestoreModule, // imports firebase/firestore, only needed for database features
     AngularFireAuthModule, // imports firebase/auth, only needed for auth features,
     AngularFireStorageModule,  // imports firebase/storage only needed for storage features
-    ShellModule, LoginModule, HomeModule, UserModule, LibraryModule,
+    ShellModule, LoginModule, HomeModule, UserModule, LibraryModule, GameModule,
   ],
   providers: [],
   bootstrap: [AppComponent]

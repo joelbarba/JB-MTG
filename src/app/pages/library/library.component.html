@@ -11,6 +11,8 @@
       <bf-btn class="marT10" bfType="edit" bfText="Edit" *ngIf="!!selected" (bfClick)="openEdit(selected)"></bf-btn>
     </div>
 
+    selCard$ = {{ selCard$ | async | json }}
+
     <div *ngIf="!!selected">
       <div class="card-box big-size">
         <div class="card-border">
@@ -82,7 +84,7 @@
         <ul class="pad0">
           <!-- <li class="card-box" *ngFor="let item of cards$ | async" (click)="selected = item;"> -->
           <li *ngFor="let item of cardsList.renderList$ | async" 
-              class="card-box" (click)="selected = item;" (dblclick)="selected = item; openEdit(selected)">
+              class="card-box" (click)="selectCard(item)" (dblclick)="selectCard(item); openEdit(selected)">
             <div class="card-border" >
               <img [src]="'/assets/cards/' + item.image">
             </div>

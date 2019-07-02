@@ -1,3 +1,4 @@
+import { Card, User, UserCard, UserDeck } from 'src/typings';
 import { Component, OnInit } from '@angular/core';
 import { Observable } from 'rxjs';
 import { AngularFirestore, AngularFirestoreCollection, AngularFirestoreDocument } from '@angular/fire/firestore';
@@ -7,29 +8,12 @@ import { NgForm } from '@angular/forms';
 import { BfGrowlService, BfConfirmService } from 'bf-ui-lib';
 import { Globals } from 'src/app/globals/globals.service';
 import { ListHandler } from 'src/app/globals/listHandler';
+import { Profile } from 'src/app/globals/profile.service';
 
-export interface User {
-  username: string;
-  email: string;
-  full_name: string;
-  cards: Array<UserCard>;
-}
-export interface UserCard {
-  card: string;
-  unit: string;
-}
-export interface Card {
-  id?: string;
-  orderId?: string;
-  units: Array<string>;
-  name: string;
-  type: string;
-  color: string;
-  text: string;
-  image: string;
-  cast: Array<number>;
-  power: number;
-  defence: number;
+
+interface UserCardExt extends UserCard {
+  isSelected?: boolean;
+  from ?: 'all' | 'deck';
 }
 
 @Component({
@@ -39,70 +23,281 @@ export interface Card {
 })
 export class UserComponent implements OnInit {
   public userDoc: AngularFirestoreDocument<User>;
+  public decksCollection: AngularFirestoreCollection<UserDeck>;
+
   public profileUser$: Observable<User>;
-  public userCards$: Observable<UserCard[]>;
-  // public cardsCollection: AngularFirestoreCollection<Card>;
-  // public selected: Card;
-  // public lastCardId = 1;
+  public userCards$: Observable<UserCardExt[]>;
+  public userDecks$: Observable<UserDeck[]>;
+
+  public pageMode = 0; // 0=view, 1=deck edit
+
+  public cardsList: ListHandler;  // all cards
+  public deckCards: ListHandler;  // selected deck cards
+  public filters = { searchText: '', deckId: '', colorCode: '', cardType: '' };
+
+  public selUser: User;         // User
+  public selDeck: UserDeck;     // Selected deck on the list of decks
+  public viewCard: UserCardExt; // Selected card to display on the big panel
 
   constructor(
     private afs: AngularFirestore,
     private modal: NgbModal,
     private globals: Globals,
-  ) { }
+    private growl: BfGrowlService,
+    private profile: Profile,
+  ) {
+    const listConfig = { rowsPerPage: 24, orderFields: ['orderId'], filterFields: ['name'] };
+    this.cardsList  = new ListHandler({ ...listConfig, listName: 'userCardsList' });
+    this.deckCards  = new ListHandler({ ...listConfig, listName: 'deckCardsList' });
+  }
 
-  ngOnInit() {
+  async ngOnInit() {
+    await this.globals.cardsPromise;  // Wait until all cards are loaded
 
-    this.userDoc = this.afs.doc<User>('/users/qINbUCQ3s1GdAzPzaIBH');
+    this.userDoc = this.afs.doc<User>('/users/qINbUCQ3s1GdAzPzaIBH'); // Joel
+    // this.userDoc = this.afs.doc<User>('/users/DygcQXEd6YCL0ICiESEq'); // Alice
+    this.decksCollection = this.userDoc.collection<UserDeck>('decks');
+
     this.profileUser$ = this.userDoc.valueChanges();
-    this.userCards$ = this.profileUser$.pipe(
-      RxOp.map(usr => {
-        return usr.cards.map(c => {
-          return {
-            ...c,
-            ref$ : this.afs.doc<Card>('cards/' + c.card).valueChanges()
-          };
+
+    // One time subscription
+    const usrSub = this.profileUser$.subscribe((user: User) => {
+      usrSub.unsubscribe();
+
+      this.selUser = user;
+      this.selUser.cards = user.cards.map((usrCard: UserCard) => {
+        usrCard.card = this.globals.getCardById(usrCard.id);
+        return usrCard;
+      });
+      this.selUser.decks = [];
+
+      // Fetch user decks
+      this.userDecks$ = this.decksCollection.snapshotChanges().pipe(
+        RxOp.map(actions => {
+          return actions.map(deck => {
+            const data = deck.payload.doc.data() as UserDeck;
+            const id = deck.payload.doc.id;
+            return { ...data, id };
+          });
+        })
+      );
+      const deckSubs = this.userDecks$.subscribe((decks: UserDeck[]) => {
+        deckSubs.unsubscribe();
+        this.selUser.decks = decks.map((deck: UserDeck) => {
+          return { ...deck, isSelected: false };
         });
-      })
-    );
+      });
 
+      this.cardsList.load(this.selUser.cards);
+      this.deckCards.load(this.selUser.cards);
+      this.selectCard(this.selUser.cards[0]);
+    });
 
+    this.cardsList.filterList = (list: Array<any>, filterText: string = '', filterFields: Array<string>): Array<any> => {
+      const filteredList = this.cardsList.defaultFilterList(list, this.filters.searchText, filterFields);
+      return filteredList.filter(item => {
+        let match = (!this.filters.colorCode || (this.filters.colorCode === item.card.color));
+        match = match && (!this.filters.cardType || (this.filters.cardType === item.card.type));
 
-    // this.cardsCollection = afs.collection('cards');
-    // this.cards$ = afs.collection('cards').valueChanges();
+        // Check if the card is in the deck
+        const deck = this.selUser.decks.getById(this.filters.deckId);
+        if (!!deck) {
+          match = match && !!deck.cards.filter((c: UserCard) => c.ref === item.ref).length;
+        }
 
-    // this.cards$ = this.cardsCollection.snapshotChanges().pipe(
-    //   RxOp.map(actions => {
-    //     return actions.map(a => {
-    //       const data = a.payload.doc.data() as Card;
-    //       const id = a.payload.doc.id;
+        return match;
+      });
+    };
+  }
 
-    //       // Find the highest ID (c9999)
-    //       const numId = Number.parseInt(id.slice(1));
-    //       data.orderId = ('00000' + numId).slice(-5).toString();
+  public changePageMode = (newMode?: number) => {
+    if (newMode === 0 || newMode === 1) {
+      this.pageMode = newMode;
+    } else {
+      this.pageMode = !this.pageMode ? 1 : 0;
+    }
 
-    //       if (numId > this.lastCardId) { this.lastCardId  = numId; }
+    if (this.pageMode === 0) {
+      this.selectDeck(this.selUser.decks.getById(this.selDeck.id));
+    }
+  }
 
-    //       return { id, ...data };
-    //     });
-    //   })
-    // );
+  public selectDeck = (deck: UserDeck) => {
+    if (!deck) { // Unselect deck
+      this.selUser.cards.forEach((card: UserCardExt) => card.isSelected = false);
+      this.selDeck = null;
 
+    } else { // Select deck
+      this.selDeck = <UserDeck> deck.dCopy();
 
-    // const listConfig = { rowsPerPage: 20, orderFields: ['orderId'], filterFields: ['name'] };
-    // this.cardsList  = new ListHandler({ ...listConfig, listName: 'cardsList' });
+      // Load the list of the cards of the selected deck
+      this.reloadDeckList();
+    }
+  }
 
-    // this.cardsList.filterList = (list: Array<any>, filterText: string = '', filterFields: Array<string>): Array<any> => {
-    //   let filteredList = this.cardsList.defaultFilterList(list, this.filters.searchText, filterFields);
-    //   return filteredList.filter(item => {
-    //     let match = (!this.filters.colorCode || (this.filters.colorCode === item.color));
-    //     match = match && (!this.filters.cardType || (this.filters.cardType === item.type));
-    //     return match;
-    //   });
-    // };
+  public selectCard = (userCard: UserCardExt, list?: 'all' | 'deck') => {
+    console.log(userCard);
+    this.viewCard = userCard;
+    this.viewCard.from = list || 'all';
 
-    // this.cardsList.connectObs(this.cards$);
+    if (this.pageMode === 1 && list === 'all') {
+      if (userCard.isSelected) { // Unselect
+        this.selDeck.cards.removeByProp('ref', userCard.ref);
+        userCard.isSelected = false;
 
+      } else {  // Select (add to deck)
+        this.selDeck.cards.push({
+          id: userCard.id,
+          ref: userCard.ref
+        });
+        userCard.isSelected = true;
+      }
+
+      this.reloadDeckList();
+    }
+  }
+
+  // Reload the list of cards of the deck
+  public reloadDeckList = () => {
+    this.deckCards.load(this.selDeck.cards.map((userCard: UserCard) => {
+      return { ...userCard, card: this.globals.getCardById(userCard.id) };
+    }));
+
+    // Select the cards of the deck on the main list
+    this.selUser.cards.forEach((card: UserCardExt) => {
+      card.isSelected = !!this.selDeck.cards.getByProp('ref', card.ref);
+    });
+  }
+
+  public openAddDeck = () => {
+    const modalRef = this.modal.open(AddDeckModalComponent, { size: 'lg' });
+    modalRef.componentInstance.decksCollection = this.decksCollection;
+    modalRef.result.then((newDeck: UserDeck) => {
+      this.selUser.decks.push(newDeck);
+      this.selectDeck(newDeck); // Select the new deck
+      this.changePageMode(1); // Change to edit mode auto
+    });
+  }
+
+  public openEditDeck = () => {
+    const modalRef = this.modal.open(EditDeckModalComponent, { size: 'lg' });
+    modalRef.componentInstance.selDeck = this.selDeck;
+    modalRef.componentInstance.decksCollection = this.decksCollection;
+    modalRef.result.then((updatedDeck) => {
+      if (!!updatedDeck) {
+        if (!!updatedDeck.id) { // Deck updated
+          this.selDeck = { ...this.selDeck, ...updatedDeck };
+          this.reloadDeckList();
+
+        } else { // Deck was deleted
+          this.selUser.decks.removeById(this.selDeck.id);
+          this.selectDeck(null); // Unselect the new deck
+          this.changePageMode(0); // Change to view mode
+        }
+      }
+    });
+  }
+
+  // Save selected (in editing mode) deck
+  public saveDeck = () => {
+    if (!!this.selDeck) {
+      this.decksCollection.doc(this.selDeck.id).set(this.selDeck);
+
+      // Update the user object in memory
+      let userDeck = this.selUser.decks.getById(this.selDeck.id);
+      userDeck.cards = this.selDeck.cards.map(c => ({ id: c.id, ref: c.ref }));
+      userDeck.name = this.selDeck.name;
+      userDeck.description = this.selDeck.description;
+
+      this.growl.success(`Deck ${this.selDeck.name} updated successfully`);
+      this.changePageMode(0);
+    }
   }
 
 }
+
+
+
+
+// -----------------------------------------------------------------------------------
+@Component({
+  selector: 'add-deck-modal',
+  templateUrl: 'add-deck.modal.html'
+})
+export class AddDeckModalComponent implements OnInit {
+  public newDeck: UserDeck = { name: '', description: '', cards: [] };    // Working object
+  public decksCollection: AngularFirestoreCollection<UserDeck>;
+
+  constructor(
+    private afs: AngularFirestore,
+    public activeModal: NgbActiveModal,
+    private growl: BfGrowlService,
+    private modal: NgbModal,
+    private globals: Globals,
+    private profile: Profile,
+  ) { }
+
+  ngOnInit() {
+  }
+
+  public createDeck = () => {
+    this.decksCollection.add(this.newDeck);
+    this.growl.success(`New deck successfully created`);
+    this.activeModal.close(this.newDeck);
+  }
+}
+
+
+
+// -----------------------------------------------------------------------------------
+@Component({
+  selector: 'edit-deck-modal',
+  templateUrl: 'edit-deck.modal.html'
+})
+export class EditDeckModalComponent implements OnInit {
+  public selDeck: UserDeck; // Reference
+  public deck: UserDeck;    // Working object
+  public decksCollection: AngularFirestoreCollection<UserDeck>;
+
+  constructor(
+    private afs: AngularFirestore,
+    public activeModal: NgbActiveModal,
+    private growl: BfGrowlService,
+    private modal: NgbModal,
+    private globals: Globals,
+    private profile: Profile,
+    private confirm: BfConfirmService,
+  ) { }
+
+  ngOnInit() {
+    this.deck = <UserDeck> this.selDeck.dCopy();
+  }
+
+  public clearDeck = () => {
+    this.deck.cards = [];
+    this.growl.success(`All cards removed from deck ${this.selDeck.name}`);
+  }
+
+  public deleteDeck = () => {
+    this.confirm.open({
+        text             : `Are you sure you want to delete deck ${this.selDeck.name}?`,
+        yesButtonText    : 'Yes, delete it',
+    }).then((res) => {
+      if (res === 'yes') {
+        this.decksCollection.doc(this.selDeck.id).delete();
+        this.growl.success(`Deck ${this.selDeck.name} deleted`);
+        this.activeModal.close({});
+      }
+    }, (res) => {});
+  }
+
+  public updateDeck = () => {
+    // this.cardDoc.update(this.editCard);
+    // const cardId = this.newCard.id;
+    // delete this.newCard.id;
+    // this.decksCollection.add(this.newDeck);
+    // this.growl.success(`Deck ${this.selDeck.name} successfully updated`);
+    this.activeModal.close(this.deck);
+  }
+}
+

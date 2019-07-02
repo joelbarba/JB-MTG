@@ -1,32 +1,10 @@
-import { Injectable } from '@angular/core';
+import { Card, User, UserCard, UserDeck } from 'src/typings';
 import './prototypes';
+import { Injectable } from '@angular/core';
 import { AngularFirestore, AngularFirestoreCollection, AngularFirestoreDocument } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
+import { Globals } from './globals.service';
 import * as RxOp from 'rxjs/operators';
-
-export interface User {
-  username: string;
-  email: string;
-  name: string;
-  cards: Array<UserCard>;
-}
-export interface UserCard {
-  card: string;
-  unit: string;
-}
-export interface Card {
-  id?: string;
-  orderId?: string;
-  units: Array<string>;
-  name: string;
-  type: string;
-  color: string;
-  text: string;
-  image: string;
-  cast: Array<number>;
-  power: number;
-  defence: number;
-}
 
 
 @Injectable({
@@ -42,9 +20,11 @@ export class Profile {
 
   constructor(
     private afs: AngularFirestore,
+    private globals: Globals,
   ) {
 
-    this.userId = 'qINbUCQ3s1GdAzPzaIBH';
+    this.userId = 'qINbUCQ3s1GdAzPzaIBH'; // Joel
+    // this.userId = 'DygcQXEd6YCL0ICiESEq'; // Alice
     this.userDoc = this.afs.doc<User>('/users/' + this.userId);
 
     const subs = this.userDoc.snapshotChanges().subscribe(state => {
@@ -55,10 +35,11 @@ export class Profile {
     this.user$ = this.userDoc.valueChanges();
     this.userCards$ = this.user$.pipe(
       RxOp.map(usr => {
-        return usr.cards.map(card => {
+        return usr.cards.map(usrCard => {
           return {
-            ...card,
-            ref$ : this.afs.doc<Card>('cards/' + card.card).valueChanges()
+            ...usrCard,
+            card: this.globals.getCardById(usrCard.id)
+            // ref$ : this.afs.doc<Card>('cards/' + card.card).valueChanges()
           };
         });
       })
@@ -66,9 +47,8 @@ export class Profile {
   }
 
   addUnitCard = (cardId: string, cardRef: string) => {
-    this.user.cards.push({ card: cardId, unit: cardRef });
+    this.user.cards.push({ id: cardId, ref: cardRef });
     this.userDoc.update(this.user);
-
   }
 
 }

@@ -4,6 +4,7 @@ import { HttpClientModule } from '@angular/common/http';
 import { BfUiLibModule } from 'bf-ui-lib';
 import { Globals } from './globals.service';
 import { Profile } from './profile.service';
+import { GameService } from './game.service';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { AbstractTranslateService } from 'bf-ui-lib';
 import { AsyncFieldPipe } from './asyncField.pipe';
@@ -15,7 +16,7 @@ class TranslateService extends AbstractTranslateService {
 
 @NgModule({
   declarations: [AsyncFieldPipe],
-  providers: [Globals, Profile],
+  providers: [Globals, Profile, GameService],
   imports: [
     CommonModule,
     HttpClientModule,

@@ -1,3 +1,4 @@
+import { Card, User, UserCard, UserDeck } from 'src/typings';
 import { Component, OnInit } from '@angular/core';
 import { Observable } from 'rxjs';
 import { AngularFirestore, AngularFirestoreCollection, AngularFirestoreDocument } from '@angular/fire/firestore';
@@ -10,32 +11,6 @@ import { ListHandler } from 'src/app/globals/listHandler';
 import { Profile } from 'src/app/globals/profile.service';
 
 
-export interface Card {
-  id?: string;
-  orderId?: string;
-  units: Array<{ ref: string; owner?: string }>;
-  name: string;
-  type: string;
-  color: string;
-  text: string;
-  image: string;
-  cast: Array<number>;
-  power: number;
-  defence: number;
-}
-export interface User {
-  username: string;
-  email: string;
-  name: string;
-  cards: Array<UserCard>;
-}
-export interface UserCard {
-  card: string;
-  unit: string;
-}
-
-
-
 @Component({
   selector: 'app-library',
   templateUrl: './library.component.html',
@@ -45,6 +20,7 @@ export class LibraryComponent implements OnInit {
   public cards$: Observable<any[]>;
   public cardsCollection: AngularFirestoreCollection<Card>;
   public selected: Card;
+  public selCard$: Observable<Card>;
   public lastCardId = 1;
 
   public cardsList: ListHandler;
@@ -117,6 +93,14 @@ export class LibraryComponent implements OnInit {
   public openPurchase = (card: Card) => {
     const modalRef = this.modal.open(PurchaseCardModalComponent, { size: 'lg' });
     modalRef.componentInstance.refCard = card;
+  }
+
+  public selectCard = (card: Card) => {
+    this.selected = card;
+    // this.selCard$ = this.cards$.pipe(RxOp.map(cards => {
+    //   if (!this.selected) { return {}; }
+    //   return cards.getById(this.selected.id);
+    // }));
   }
 
   public initDB = () => {
