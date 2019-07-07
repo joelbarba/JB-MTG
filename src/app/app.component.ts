@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { Profile } from 'src/app/globals/profile.service';
 
 @Component({
   selector: 'app-root',
@@ -6,5 +7,5 @@ import { Component } from '@angular/core';
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
-  constructor() {}
+  constructor(private profile: Profile) {}
 }

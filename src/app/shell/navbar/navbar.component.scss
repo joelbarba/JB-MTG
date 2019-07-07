@@ -1,0 +1,13 @@
+.navbar-nav {
+  color: white;
+  cursor: pointer;
+  .user-icon {
+    margin-right: 10px;
+  }
+  &.logout {
+    margin: 0 15px 0 30px;
+  }
+  span[class*="icon-"] {
+    font-size: 20px;
+  }
+}

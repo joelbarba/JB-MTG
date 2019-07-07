@@ -1,5 +1,5 @@
-<div class="row">
-  <h3>Login</h3>
+<div class="row login-page">
+  
 
   <div class="col-12" *ngIf="afAuth.user | async as user">
     <h1>Hello {{ user.displayName }}!</h1>
@@ -13,29 +13,35 @@
     <!--<p>appName = {{ user.appName }}</p>-->
     <!--<p>lastLoginAt = {{ user.lastLoginAt }}</p>-->
     <!--<p>createdAt = {{ user.createdAt }}</p>-->
-
+    
     <!--<pre>{{user | json}}</pre>-->
+    <bf-btn bfText="Send Confirm Email" (bfClick)="sendConfirmEmail()"></bf-btn>
   </div>
   
   <div class="col-12">
-    <form #loginForm autocomplete="off">
-      <bf-input bfLabel="User" [(ngModel)]="username" name="username"></bf-input>
-      <bf-input bfLabel="Pass" [(ngModel)]="password" name="password"></bf-input>
-      <bf-btn bfText="Log Out" (bfClick)="logOut()"></bf-btn>
-      <bf-btn bfText="Log IN"  (bfClick)="logIn()"></bf-btn>
-    </form>
+    <div class="login-box">
+      <h3 class="text-center marB30">Login</h3>
+      <!-- <form #loginForm autocomplete="off"> -->
+      <form #loginForm>
+        <bf-input bfLabel="User (Email)" [(ngModel)]="username" name="username"></bf-input>
+        <bf-input bfLabel="Password"     [(ngModel)]="password" name="password" bfType="password"></bf-input>
+        
+        <div class="marV25">
+          <bf-btn bfText="Log In" class="full-width"  (bfClick)="profile.login(username, password)"></bf-btn>
+        </div>
+        
+        <hr>
+        
+        <div class="marT40 text-center">
+          <p>Or</p>
+          <p class="new-user-link" (click)="openSignIn()">Create a new user account</p>
+          <!-- <bf-btn bfText="New User" bfType="secondary" class=""  (bfClick)="profile.login(username, password)"></bf-btn> -->
+        </div>
+
+      </form>
+    </div>
   </div>
 
-  <div class="col-12">
-    <form #newUserForm autocomplete="off">
-      <hr>
-      <h4>Create New User</h4>
-      <bf-input bfLabel="Email" [(ngModel)]="newUser.email" name="newMail"></bf-input>
-      <bf-input bfLabel="Pass" [(ngModel)]="newUser.password" name="newPass"></bf-input>
-      <bf-input bfLabel="Name" [(ngModel)]="newUser.displayName" name="displayName"></bf-input>
-      <bf-input bfLabel="photo URL" [(ngModel)]="newUser.photoURL" name="photoURL"></bf-input>
-      <bf-btn bfText="Create User" (bfClick)="createUser()"></bf-btn>
-    </form>
-  </div>
+
 
 </div>

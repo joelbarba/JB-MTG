@@ -223,9 +223,12 @@ export class EditCardModalComponent implements OnInit {
   }
 
   public saveCard = () => {
-    this.cardDoc.update(this.editCard);
-    this.growl.success(`Card Updated Successfully`);
-    this.activeModal.close();
+    this.cardDoc.update(this.editCard).then(() => {
+      this.growl.success(`Card Updated Successfully`);
+      this.activeModal.close();
+    }).catch(() => {
+      this.growl.error(`No permission`);
+    });
   }
 
   public deleteCard = () => {
