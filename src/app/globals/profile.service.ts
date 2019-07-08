@@ -7,6 +7,7 @@ import { Globals } from './globals.service';
 import * as RxOp from 'rxjs/operators';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AngularFireAuth } from '@angular/fire/auth';
+import { BfGrowlService, BfConfirmService } from 'bf-ui-lib';
 
 
 @Injectable({
@@ -20,17 +21,25 @@ export class Profile {
   public userId: string;
   public user: User;
   public authUser;
+  public isLoggedIn = false;
 
   constructor(
     private afs: AngularFirestore,
     private afAuth: AngularFireAuth,
     private globals: Globals,
     private router: Router,
+    private growl: BfGrowlService,
   ) {
 
     this.afAuth.user.subscribe((user) => {
-      console.log('Profile ready. User -> ', user);
-      this.authUser = user;
+      if (!!user && user.emailVerified) {
+        console.log('Profile ready. User -> ', user);
+        this.authUser = user;
+        this.isLoggedIn = true;
+
+      } else {
+        if (this.isLoggedIn) { this.logout(); }
+      }
     });
 
 
@@ -61,6 +70,7 @@ export class Profile {
   }
 
   public logout = () => {
+    this.isLoggedIn = false;
     this.afAuth.auth.signOut().then(() => {
       console.log('OUT !!');
       this.router.navigate(['login']);
@@ -68,20 +78,23 @@ export class Profile {
   }
 
   public login = (user, pass) => {
-    this.afAuth.auth.signInWithEmailAndPassword(user, pass).then(() => {
-      console.log('LOOOOOGED in !!!');
-      this.router.navigate(['home']);
+    this.afAuth.auth.signInWithEmailAndPassword(user, pass).then((data) => {
+      if (!data.user.emailVerified) {
+        this.growl.error('User not activated. Please, check you email and use the activation link');
+        this.logout();
 
-    }).catch(function(error) {
-      // Handle Errors here.
-      const errorCode = error.code;
-      const errorMessage = error.message;
-      if (errorCode === 'auth/wrong-password') {
-        alert('Wrong password.');
       } else {
-        alert(errorMessage);
+        this.isLoggedIn = true;
+        window.localStorage.removeItem('jbmtg.emailForSignIn');
+        this.router.navigate(['home']);
       }
-      console.log(error);
+
+    }).catch((error) => {
+      if (error.code === 'auth/wrong-password') {
+        this.growl.error('There is no user record corresponding to this identifier. The user may have been deleted.');
+      } else {
+        this.growl.error(error.message);
+      }
     });
   }
 

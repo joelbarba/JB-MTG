@@ -25,7 +25,12 @@ export class LoginComponent implements OnInit {
     private modal: NgbModal,
   ) { }
 
-  ngOnInit() {}
+  ngOnInit() {
+    const emailForSignIn = window.localStorage.getItem('jbmtg.emailForSignIn');
+    if (!!emailForSignIn) {
+      this.username = emailForSignIn;
+    }
+  }
 
   public openSignIn = () => {
     // @ts-ignore
@@ -33,20 +38,17 @@ export class LoginComponent implements OnInit {
   }
 
 
-  sendConfirmEmail() {
-    const actionCodeSettings = {
-      url: 'http://127.0.0.1:4200/home',
-      handleCodeInApp: true
-    };
-    this.afAuth.auth.currentUser.sendEmailVerification(actionCodeSettings).then(function() {
-      console.log('Ok, email sent');
-    }).catch(function(error) {
-      console.error('Ups, something went wrong', error);
-    });
-  }
-
-
-
+  // sendConfirmEmail() {
+  //   const actionCodeSettings = {
+  //     url: 'http://127.0.0.1:4200/home',
+  //     handleCodeInApp: true
+  //   };
+  //   this.afAuth.auth.currentUser.sendEmailVerification(actionCodeSettings).then(function() {
+  //     console.log('Ok, email sent');
+  //   }).catch(function(error) {
+  //     console.error('Ups, something went wrong', error);
+  //   });
+  // }
 
   // public sendLoginLink = () => {
   //   console.log('eee');
@@ -96,16 +98,28 @@ export class NewUserModalComponent implements OnInit {
 
     this.afAuth.auth.createUserWithEmailAndPassword(this.newUser.email, this.newUser.password1).then((userCredential) => {
 
-      this.status = 2;
-      this.profile.logout();
-      setTimeout(() => { this.activeModal.close(); }, 5000);
-
       // Update profile immediately after
-      // userCredential.user.updateProfile({
-      //   displayName : this.newUser.displayName
-      // }).then(() => {
+      userCredential.user.updateProfile({ displayName : this.newUser.displayName }).then(() => {
+        // Send a confirmation email
+        const actionCodeSettings = {
+          url: 'http://127.0.0.1:4200/login',
+          handleCodeInApp: true
+        };
+        this.afAuth.auth.currentUser.sendEmailVerification(actionCodeSettings).then(() => {
+          window.localStorage.setItem('jbmtg.emailForSignIn', this.newUser.email);
+          this.status = 2;
+          this.profile.logout();
+          setTimeout(() => { this.activeModal.close(); }, 10000);
 
-      // }, (error) => {});
+        }).catch((error) => {
+          this.growl.error('Error sending the confirmation email');
+          this.status = 0;
+        });
+
+      }, (error) => {
+        this.growl.error('Error setting the new profile');
+        this.status = 0;
+      });
 
     }).catch((error) => {
       if (error.code === 'auth/weak-password') {

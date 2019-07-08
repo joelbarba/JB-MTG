@@ -1,13 +1,11 @@
 <div class="row login-page">
-  
-
-  <div class="col-12" *ngIf="afAuth.user | async as user">
-    <h1>Hello {{ user.displayName }}!</h1>
-    <p>User Id = {{ user.uid }}</p>
-    <p>photoURL = {{ user.photoURL }}</p>
-    <p>email = {{ user.email }}</p>
-    <p>emailVerified = {{ user.emailVerified }}</p>
-    <p>phoneNumber = {{ user.phoneNumber }}</p>
+  <!-- <div class="col-12" *ngIf="afAuth.user | async as user"> -->
+    <!-- <h1>Hello {{ user.displayName }}!</h1> -->
+    <!-- <p>User Id = {{ user.uid }}</p> -->
+    <!-- <p>photoURL = {{ user.photoURL }}</p> -->
+    <!-- <p>email = {{ user.email }}</p> -->
+    <!-- <p>emailVerified = {{ user.emailVerified }}</p> -->
+    <!-- <p>phoneNumber = {{ user.phoneNumber }}</p> -->
     <!--<p>providerId = {{ user.providerData[0].providerId }}</p>-->
     <!--<p>apiKey = {{ user.apiKey }}</p>-->
     <!--<p>appName = {{ user.appName }}</p>-->
@@ -15,13 +13,12 @@
     <!--<p>createdAt = {{ user.createdAt }}</p>-->
     
     <!--<pre>{{user | json}}</pre>-->
-    <bf-btn bfText="Send Confirm Email" (bfClick)="sendConfirmEmail()"></bf-btn>
-  </div>
+    <!-- <bf-btn bfText="Send Confirm Email" (bfClick)="sendConfirmEmail()"></bf-btn> -->
+  <!-- </div> -->
   
   <div class="col-12">
     <div class="login-box">
       <h3 class="text-center marB30">Login</h3>
-      <!-- <form #loginForm autocomplete="off"> -->
       <form #loginForm>
         <bf-input bfLabel="User (Email)" [(ngModel)]="username" name="username"></bf-input>
         <bf-input bfLabel="Password"     [(ngModel)]="password" name="password" bfType="password"></bf-input>
@@ -35,13 +32,10 @@
         <div class="marT40 text-center">
           <p>Or</p>
           <p class="new-user-link" (click)="openSignIn()">Create a new user account</p>
-          <!-- <bf-btn bfText="New User" bfType="secondary" class=""  (bfClick)="profile.login(username, password)"></bf-btn> -->
         </div>
 
       </form>
     </div>
   </div>
-
-
 
 </div>
