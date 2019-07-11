@@ -55,7 +55,7 @@ export class LibraryComponent implements OnInit {
     );
 
 
-    const listConfig = { rowsPerPage: 20, orderFields: ['orderId'], filterFields: ['name'] };
+    const listConfig = { rowsPerPage: 44, orderFields: ['orderId'], filterFields: ['name'] };
     this.cardsList  = new ListHandler({ ...listConfig, listName: 'cardsList' });
     // this.cardsList.loadFromObs(this.cards$.pipe(
     //   RxOp.map(content => ({ status: 2, content }))

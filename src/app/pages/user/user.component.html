@@ -1,18 +1,15 @@
 <div class="row" *ngIf="!!selUser && !!selUser?.decks">
   <div class="col-12">
-    <h1 (click)="changePageMode()">My Stuff - mode = {{pageMode}}</h1>
-  </div>
-  
-  <div class="col-12">
-    <h5>User: {{profileUser$ | async | asyncField : 'name'}}</h5> 
+    <!-- <h1 (click)="changePageMode()">My Stuff - mode = {{pageMode}}</h1> -->
+    <h1>User {{profile.authUser.displayName}} Stuff</h1>
     <hr>
   </div>
 </div>
 
-<div class="row">
+<div class="content-view">
 
   <!-- Selected (viewing) Card -->
-  <div class="col-2">
+  <div class="card-detail-box">
     <div *ngIf="!!viewCard">
       <div class="card-box big-size">
         <div class="card-border">
@@ -40,12 +37,9 @@
 
 
   <!-- Selected Deck -->
-  <div *ngIf="!!selDeck" class="deck-box"
-       [class.col-7]="pageMode === 0" 
-       [class.col-5]="pageMode === 1">
-
+  <div *ngIf="!!selDeck" class="main-view-box deck-box">
     <div class="row">
-      <div class="col-5">
+      <div class="col-4">
         <h4 class="padL10">
           <span>Deck {{selDeck?.name}}:</span>
           <bf-btn *ngIf="pageMode === 1" class="marL15"
@@ -53,14 +47,20 @@
                   bfIcon="icon-pencil"
                   bfTooltip="Click to edit deck details">
           </bf-btn>
-        </h4>
+        </h4>        
       </div>
-      <div class="col-7 text-right">
+      <div class="col-8 text-right" *ngIf="deckCards">
+        <div class="marR30" style="display: inline-block" *ngIf="!!deckCards && deckCards.totalPages > 1">
+          <bf-list-paginator [bfCtrl]="deckCards"></bf-list-paginator>
+        </div>
         <bf-btn [hidden]="pageMode === 1" bfType="edit"   bfText="Edit Deck" (bfClick)="changePageMode(1)"></bf-btn>
         
         <!-- <bf-btn [hidden]="pageMode === 0" bfType="delete" bfText="Delete Deck" (bfClick)="changePageMode(1)"></bf-btn> -->
         <bf-btn [hidden]="pageMode === 0" bfType="cancel" bfText="Cancel"      (bfClick)="changePageMode(0)"></bf-btn>
         <bf-btn [hidden]="pageMode === 0" bfType="save"   bfText="Save Deck"   (bfClick)="saveDeck()"></bf-btn>
+      </div>
+      <div class="col-12 padL25">
+        <h6>{{selDeck.description}}</h6>
       </div>
     </div>
 
@@ -80,22 +80,15 @@
       <div class="col-12" *ngIf="!(deckCards.renderList$ | async)?.length">
         <h5 class="no-card-warning" (click)="changePageMode(1)">No Cards at the moment</h5>
       </div>
-      <div class="col-12 pad0 text-right">
-          <bf-btn bfIcon="icon-arrow-left6"  (bfClick)="deckCards.prevPage()"></bf-btn>
-          <span class="spacerL15 spacerR15">{{deckCards.currentPage}} / {{deckCards.totalPages}}</span>
-          <bf-btn bfIcon="icon-arrow-right3" (bfClick)="deckCards.nextPage()"></bf-btn>
-        </div>  
     </div>
   </div>
 
 
   <!-- All Cards -->
-  <div *ngIf="!selDeck || pageMode === 1"
-       [class.col-7]="pageMode === 0" 
-       [class.col-5]="pageMode === 1">
-    <h4 class="padL10">(main) My Cards:</h4>
+  <div *ngIf="!selDeck || pageMode === 1" class="main-view-box">
+    <h4 class="padL10">All My Cards:</h4>
     <div class="row cards-filter">
-      <div class="col-6 padT30">
+      <div class="col-4 padT30">
         <bf-input class="flat" name="searchText"
                   [(ngModel)]="filters.searchText"
                   (ngModelChange)="cardsList.filter($event)"
@@ -112,7 +105,7 @@
                       class="full-width">
         </bf-dropdown>
       </div> -->
-      <div class="col-3">
+      <div class="col-2">
         <bf-dropdown [(ngModel)]="filters.colorCode"
                       (ngModelChange)="cardsList.filter($event)"
                       bfLabel="Color"
@@ -122,7 +115,7 @@
                       class="full-width">
         </bf-dropdown>
       </div>
-      <div class="col-3">
+      <div class="col-2">
         <bf-dropdown [(ngModel)]="filters.cardType"
                       (ngModelChange)="cardsList.filter($event)"
                       bfLabel="Type"
@@ -131,6 +124,9 @@
                       bfRender="name"
                       class="full-width">
         </bf-dropdown>
+      </div>
+      <div class="col-4" style="padding-top: 28px;" *ngIf="!!cardsList && cardsList.totalPages > 1">
+        <bf-list-paginator class="full-width" [bfCtrl]="cardsList"></bf-list-paginator>
       </div>
       <!-- filters.deckId={{filters.deckId | json}} -->
     </div>
@@ -152,17 +148,12 @@
                (bfClick)="filters.deckId = ''">
         </bf-btn>
       </div>
-      <div class="col-12 pad0 text-right">
-          <bf-btn bfIcon="icon-arrow-left6"  (bfClick)="cardsList.prevPage()"></bf-btn>
-          <span class="spacerL15 spacerR15">{{cardsList.currentPage}} / {{cardsList.totalPages}}</span>
-          <bf-btn bfIcon="icon-arrow-right3" (bfClick)="cardsList.nextPage()"></bf-btn>
-        </div>  
     </div>
   </div>
 
     
   <!-- Deck list -->
-  <div class="col-3 padL25 padR25" 
+  <div class="decks-list" 
        *ngIf="!!selUser && !!selUser?.decks" 
        [hidden]="pageMode !== 0">
 
@@ -180,7 +171,7 @@
         <h4 class="marT5 marB10">My Decks:</h4>
       </div>
       <div class="col-6 text-right">
-        <bf-btn bfText="Create New Deck" bfType="add" (bfClick)="openAddDeck()"></bf-btn>
+        <bf-btn bfText="New" bfType="add" (bfClick)="openAddDeck()"></bf-btn>
       </div>
     </div>
     
@@ -189,7 +180,7 @@
            [class.selected]="selDeck?.id === userDeck?.id"
            (click)="selectDeck(userDeck)">
         <span class="icon-stack4 deck-icon"></span>
-        <span class="deck-name">{{userDeck.name}} - {{userDeck.description}}</span>
+        <span class="deck-name">{{userDeck.name}}</span>
       </div>
     </li>
 

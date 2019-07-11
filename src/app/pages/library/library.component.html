@@ -2,16 +2,14 @@
   <div class="col-12">
     <h1>Library</h1>
   </div>
+</div>
 
-
-
-  <div class="col-3">
+<div class="d-flex">
+  <div class="selected-card-col">
     <div>
       <bf-btn class="marT10" bfType="add" bfText="Add Card" (bfClick)="openAdd()"></bf-btn>
       <bf-btn class="marT10" bfType="edit" bfText="Edit" *ngIf="!!selected" (bfClick)="openEdit(selected)"></bf-btn>
     </div>
-
-    selCard$ = {{ selCard$ | async | json }}
 
     <div *ngIf="!!selected">
       <div class="card-box big-size">
@@ -48,7 +46,7 @@
 
   </div>
 
-  <div class="col-9 padT20">
+  <div class="card-list-col">
     <div class="row">
       <div class="col-3 padB20 padL30">
         <bf-input class="flat" name="searchText"
@@ -73,10 +71,8 @@
                      class="marR30">
         </bf-dropdown>
       </div>
-      <div class="col-3 pad0 text-right">
-        <bf-btn bfIcon="icon-arrow-left6"  (bfClick)="cardsList.prevPage()"></bf-btn>
-        <span class="spacerL15 spacerR15">{{cardsList.currentPage}} / {{cardsList.totalPages}}</span>
-        <bf-btn bfIcon="icon-arrow-right3" (bfClick)="cardsList.nextPage()"></bf-btn>
+      <div class="col-3" *ngIf="!!cardsList && cardsList.totalPages > 1">
+        <bf-list-paginator [bfCtrl]="cardsList"></bf-list-paginator>
       </div>
 
 

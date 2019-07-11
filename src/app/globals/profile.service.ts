@@ -23,6 +23,10 @@ export class Profile {
   public authUser;
   public isLoggedIn = false;
 
+  public loadPromise;
+  public loadPromiseResolve;
+  public loadPromiseReject;
+
   constructor(
     private afs: AngularFirestore,
     private afAuth: AngularFireAuth,
@@ -31,42 +35,23 @@ export class Profile {
     private growl: BfGrowlService,
   ) {
 
+    this.loadPromise = new Promise((resolve, reject) => {
+      this.loadPromiseResolve = resolve;
+      this.loadPromiseReject = reject;
+    });
+
+    // React on auth state change
     this.afAuth.user.subscribe((user) => {
       if (!!user && user.emailVerified) {
         console.log('Profile ready. User -> ', user);
         this.authUser = user;
         this.isLoggedIn = true;
+        this.iniProfile();
 
       } else {
         if (this.isLoggedIn) { this.logout(); }
       }
     });
-
-
-
-
-
-    this.userId = 'qINbUCQ3s1GdAzPzaIBH'; // Joel
-    // this.userId = 'DygcQXEd6YCL0ICiESEq'; // Alice
-    this.userDoc = this.afs.doc<User>('/users/' + this.userId);
-
-    const subs = this.userDoc.snapshotChanges().subscribe(state => {
-      const data = state.payload.data();
-      this.user = data;
-    });
-
-    this.user$ = this.userDoc.valueChanges();
-    this.userCards$ = this.user$.pipe(
-      RxOp.map(usr => {
-        return usr.cards.map(usrCard => {
-          return {
-            ...usrCard,
-            card: this.globals.getCardById(usrCard.id)
-            // ref$ : this.afs.doc<Card>('cards/' + card.card).valueChanges()
-          };
-        });
-      })
-    );
   }
 
   public logout = () => {
@@ -98,7 +83,32 @@ export class Profile {
     });
   }
 
+  public iniProfile = () => {
+    this.userId = this.authUser.uid;
+    // this.userId = 'qINbUCQ3s1GdAzPzaIBH'; // Joel
+    // this.userId = 'DygcQXEd6YCL0ICiESEq'; // Alice
+    this.userDoc = this.afs.doc<User>('/users/' + this.userId);
 
+    const subs = this.userDoc.snapshotChanges().subscribe(state => {
+      const data = state.payload.data();
+      this.user = data;
+      this.loadPromiseResolve(this.user);
+      // subs.unsubscribe();
+    });
+
+    this.user$ = this.userDoc.valueChanges();
+    this.userCards$ = this.user$.pipe(
+      RxOp.map(usr => {
+        return usr.cards.map(usrCard => {
+          return {
+            ...usrCard,
+            card: this.globals.getCardById(usrCard.id)
+            // ref$ : this.afs.doc<Card>('cards/' + card.card).valueChanges()
+          };
+        });
+      })
+    );
+  }
 
 
 

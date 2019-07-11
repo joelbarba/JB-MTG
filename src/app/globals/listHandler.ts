@@ -35,10 +35,7 @@ export class ListHandler {
   private setContent;  // Subject to trigger a list content change -----> load()
   private setFilter  = new Rx.Subject();  // Subject to trigger a list filter change ------> filter()
   private setOrder   = new Rx.Subject();  // Subject to trigger a list reorder change -----> order()
-  private setPage    = new Rx.Subject();  // Subject to trigger a list pagination change --> paginate() / nextPate() / prevPage ()
-
-
-
+  private setPage    = new Rx.Subject();  // Subject to trigger a list pagination change --> paginate() / nextPate() / prevPage () / goToPage(numPage)
 
 
 
@@ -89,7 +86,7 @@ export class ListHandler {
     // console.log('constructor', customInit);
     this.listName = customInit.listName;
 
-    // Default values (to be overriden by constructor param if needs be)
+    // Default values (to be overridden by constructor param if needs be)
     const defaultState = {
       loadedList   : [],
       renderedList : [],
@@ -153,6 +150,7 @@ export class ListHandler {
         // paginate ---> action.rowsPerPage
         // nextPage ---> -
         // prevPage ---> -
+        // goToPage ---> action.numPage
 
         switch (action.type) {
           case 'content':   state.loadedList = action.loadedList; break;
@@ -167,12 +165,17 @@ export class ListHandler {
           } else {
             state.orderReverse = !state.orderReverse;
           }
-                            break;
+            break;
           case 'paginate': state.rowsPerPage = action.rowsPerPage;
-                           state.currentPage = 1;
-                           break;
+            state.currentPage = 1;
+            break;
           case 'nextPage': state.currentPage++; break;
           case 'prevPage': state.currentPage--; break;
+          case 'goToPage':
+            state.currentPage = action.numPage;
+            if (state.currentPage < 1) { state.currentPage = 1; }
+            if (state.currentPage > state.totalPages) { state.currentPage = state.totalPages; }
+            break;
         }
 
         // --- Generate output (renderedList) ---
@@ -237,6 +240,7 @@ export class ListHandler {
   public paginate = (rowsPerPage) => this.setPage.next({ rowsPerPage, type: 'paginate' });
   public nextPage = () => this.setPage.next({ type: 'nextPage' });
   public prevPage = () => this.setPage.next({ type: 'prevPage' });
+  public goToPage = (numPage) => this.setPage.next({ numPage, type: 'goToPage' });
 
   public load = (loadedList) => { // Sync loading
     this.setContent.next(loadedList);

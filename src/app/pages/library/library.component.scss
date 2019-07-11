@@ -1,0 +1,15 @@
+.selected-card-col {
+  width: 300px;
+}
+.card-list-col {
+  width: calc(100% - 300px);
+  padding-top: 20px;
+  padding-left: 40px;
+}
+
+.card-box {
+  padding: 0 12px;
+  &.big-size {
+    padding: 20px 0;
+  }
+}

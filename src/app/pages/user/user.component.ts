@@ -25,7 +25,6 @@ export class UserComponent implements OnInit {
   public userDoc: AngularFirestoreDocument<User>;
   public decksCollection: AngularFirestoreCollection<UserDeck>;
 
-  public profileUser$: Observable<User>;
   public userCards$: Observable<UserCardExt[]>;
   public userDecks$: Observable<UserDeck[]>;
 
@@ -46,53 +45,50 @@ export class UserComponent implements OnInit {
     private growl: BfGrowlService,
     private profile: Profile,
   ) {
-    const listConfig = { rowsPerPage: 24, orderFields: ['orderId'], filterFields: ['name'] };
+    const listConfig = { rowsPerPage: 36, orderFields: ['orderId'], filterFields: ['name'] };
     this.cardsList  = new ListHandler({ ...listConfig, listName: 'userCardsList' });
     this.deckCards  = new ListHandler({ ...listConfig, listName: 'deckCardsList' });
   }
 
   async ngOnInit() {
+    await this.profile.loadPromise;
     await this.globals.cardsPromise;  // Wait until all cards are loaded
 
-    this.userDoc = this.afs.doc<User>('/users/qINbUCQ3s1GdAzPzaIBH'); // Joel
-    // this.userDoc = this.afs.doc<User>('/users/DygcQXEd6YCL0ICiESEq'); // Alice
+    this.userDoc = this.profile.userDoc;
     this.decksCollection = this.userDoc.collection<UserDeck>('decks');
 
-    this.profileUser$ = this.userDoc.valueChanges();
+    // Load the user
+    this.selUser = await this.globals.getUser(this.profile.userId);
+    this.selUser.cards = this.profile.user.cards.map((usrCard: UserCard) => {
+      usrCard.card = this.globals.getCardById(usrCard.id);
+      return usrCard;
+    });
+    this.selUser.decks = [];
 
-    // One time subscription
-    const usrSub = this.profileUser$.subscribe((user: User) => {
-      usrSub.unsubscribe();
-
-      this.selUser = user;
-      this.selUser.cards = user.cards.map((usrCard: UserCard) => {
-        usrCard.card = this.globals.getCardById(usrCard.id);
-        return usrCard;
-      });
-      this.selUser.decks = [];
-
-      // Fetch user decks
-      this.userDecks$ = this.decksCollection.snapshotChanges().pipe(
-        RxOp.map(actions => {
-          return actions.map(deck => {
-            const data = deck.payload.doc.data() as UserDeck;
-            const id = deck.payload.doc.id;
-            return { ...data, id };
-          });
-        })
-      );
-      const deckSubs = this.userDecks$.subscribe((decks: UserDeck[]) => {
-        deckSubs.unsubscribe();
-        this.selUser.decks = decks.map((deck: UserDeck) => {
-          return { ...deck, isSelected: false };
+    // Fetch user decks
+    this.userDecks$ = this.decksCollection.snapshotChanges().pipe(
+      RxOp.map(actions => {
+        return actions.map(deck => {
+          const data = deck.payload.doc.data() as UserDeck;
+          const id = deck.payload.doc.id;
+          return { ...data, id };
         });
+      })
+    );
+    const deckSubs = this.userDecks$.subscribe((decks: UserDeck[]) => {
+      deckSubs.unsubscribe();
+      this.selUser.decks = decks.map((deck: UserDeck) => {
+        return { ...deck, isSelected: false };
       });
-
-      this.cardsList.load(this.selUser.cards);
-      this.deckCards.load(this.selUser.cards);
-      this.selectCard(this.selUser.cards[0]);
     });
 
+    this.cardsList.load(this.selUser.cards);
+    this.deckCards.load(this.selUser.cards);
+    if (this.selUser.cards.length) {
+      this.selectCard(this.selUser.cards[0]);
+    }
+
+    // Define list filter
     this.cardsList.filterList = (list: Array<any>, filterText: string = '', filterFields: Array<string>): Array<any> => {
       const filteredList = this.cardsList.defaultFilterList(list, this.filters.searchText, filterFields);
       return filteredList.filter(item => {
@@ -110,6 +106,7 @@ export class UserComponent implements OnInit {
     };
   }
 
+  // newMode --> 0=view, 1=deck edit
   public changePageMode = (newMode?: number) => {
     if (newMode === 0 || newMode === 1) {
       this.pageMode = newMode;
@@ -117,7 +114,7 @@ export class UserComponent implements OnInit {
       this.pageMode = !this.pageMode ? 1 : 0;
     }
 
-    if (this.pageMode === 0) {
+    if (this.pageMode === 0 && !!this.selDeck && !!this.selDeck.id) {
       this.selectDeck(this.selUser.decks.getById(this.selDeck.id));
     }
   }
@@ -200,14 +197,16 @@ export class UserComponent implements OnInit {
 
   // Save selected (in editing mode) deck
   public saveDeck = () => {
-    if (!!this.selDeck) {
+    if (!!this.selDeck && !!this.selDeck.id) {
       this.decksCollection.doc(this.selDeck.id).set(this.selDeck);
 
       // Update the user object in memory
-      let userDeck = this.selUser.decks.getById(this.selDeck.id);
-      userDeck.cards = this.selDeck.cards.map(c => ({ id: c.id, ref: c.ref }));
-      userDeck.name = this.selDeck.name;
-      userDeck.description = this.selDeck.description;
+      const userDeck = this.selUser.decks.getById(this.selDeck.id);
+      if (!!userDeck) {  // If deck update
+        userDeck.cards = this.selDeck.cards.map(c => ({ id: c.id, ref: c.ref }));
+        userDeck.name = this.selDeck.name;
+        userDeck.description = this.selDeck.description;
+      }
 
       this.growl.success(`Deck ${this.selDeck.name} updated successfully`);
       this.changePageMode(0);
@@ -241,9 +240,11 @@ export class AddDeckModalComponent implements OnInit {
   }
 
   public createDeck = () => {
-    this.decksCollection.add(this.newDeck);
-    this.growl.success(`New deck successfully created`);
-    this.activeModal.close(this.newDeck);
+    this.decksCollection.add(this.newDeck).then(deck => {
+      this.newDeck.id = deck.id;
+      this.growl.success(`New deck successfully created`);
+      this.activeModal.close(this.newDeck);
+    });
   }
 }
 

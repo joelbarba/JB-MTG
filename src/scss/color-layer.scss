@@ -96,3 +96,24 @@ div.growl-wrapper {
 }
 
 
+// --- bf-list-paginator Reset --------------------------------------------------
+$page_bg: white;
+$page_color: darken($primary_color, 10%);
+$page_border_color: #d7dade;
+$page_hover_bg: #eeeeee;
+
+div.bf-list-paginator {
+  .page-buttons {
+    .page-btn {
+      border-color: $page_border_color;
+      color: $page_color;
+      background: $page_bg;
+      &:not(.disabled):hover { background: $page_hover_bg; }
+      &.current {
+        color: $page_bg;
+        background: $page_color;
+        &:hover { background: $page_color; }
+      }
+    }
+  }
+}

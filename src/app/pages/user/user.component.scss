@@ -1,5 +1,24 @@
 @import 'src/scss/variables.scss';
 
+
+
+.content-view {
+  display: flex;
+  flex-wrap: nowrap; 
+  .card-detail-box {
+    width: 285px;
+  };
+  .main-view-box {
+    width: calc(100% - 685px);
+    padding: 0 10px;
+  }
+  .decks-list {
+    width : 400px;
+    padding: 0 15px 0 25px;
+  }
+} 
+
+
 .deck-box {
   border-right: 1px solid black;
 }
