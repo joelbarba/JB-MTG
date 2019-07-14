@@ -1,4 +1,19 @@
-.navbar-nav {
+@import 'src/scss/variables.scss';
+
+nav.navbar-dark {
+  position: fixed;
+  z-index: 9999;
+  left: 0;
+  top: 0;
+  right: 0;
+  height: $navbar-height;
+  div.navbar-brand {
+    color: $white;
+    font-size: 26px;
+    font-weight: bold;
+  }
+  border-bottom: 1px solid $white;
+
   color: white;
   cursor: pointer;
   .user-icon {
@@ -10,4 +25,11 @@
   span[class*="icon-"] {
     font-size: 20px;
   }
+  
+
+  transition: transform 0.15s ease-out;
+  &.navbar-collapse {
+    transform: translateY(-$navbar-height);
+  }
+
 }

@@ -1,64 +1,15 @@
 // Styles for the main layout (menu/navbar/view)
 
-$navbar-height: 70px;
-$menu-width: 56px;
+
 $bodyBgColor:#ebeff2;
 
 body {
   background: $bodyBgColor;
 }
 
-nav.navbar-dark {
-  position: fixed;
-  z-index: 9999;
-  left: 0;
-  top: 0;
-  right: 0;
-  height: $navbar-height;
-  div.navbar-brand {
-    color: $white;
-    font-size: 26px;
-    font-weight: bold;
-  }
-  border-bottom: 1px solid $white;
-}
 
-.menu-bar {
-  position: fixed;
-  left: 0;
-  top: $navbar-height;
-  bottom: 0;
-  width: $menu-width;
-  background: $menu-bg;
-  ul {
-    list-style-type: none;
-    margin: 0;
-    padding: 0;
-    li.menu-entry {
-      text-align: center;
-      padding: 3px 0;
-      a.menu-entry-link {
-        display: block;
-        padding: 10px 0;
-        font-size: 25px;
-        color: #797979;
-        cursor: pointer;
-        &:hover {
-          background: lighten($menu-bg, 20%);
-          text-decoration: none;
-        }
-      }
-      &.active {
-        background: $white;
-        border-left: 5px solid $primary_color;
-        padding-left: 0;
-        a.menu-entry-link {
-          color: $primary_color;
-        }
-      }
-    }
-  }
-}
+
+
 
 .route-container {
   padding-top: calc(#{$navbar-height} + 15px);
@@ -66,6 +17,11 @@ nav.navbar-dark {
   padding-left: calc(#{$menu-width} + 40px);
   padding-bottom: 0;
   max-width: none;
+
+  &.is-expanded {
+    padding-top: 0;
+    padding-left: 1px;  
+  }
 }
 
 .page-heading-row {

@@ -38,7 +38,7 @@ export class Globals {
   constructor(
     private afs: AngularFirestore,
   ) {
-    
+    this.collapseBars(false);
 
     this.cardsCollection = afs.collection('cards');
     this.cards$ = this.cardsCollection.snapshotChanges().pipe(
@@ -107,5 +107,19 @@ export class Globals {
         resolve(data);
       });
     });
+  }
+
+
+  // Expand / collapse menu and navbar when game mode
+  public isGameMode = false;     // Whether there is an ongoing game (collapse menu/navbar)
+  public isBarsCollapsed = true;  // Whether menu and navbar are collapsed
+  private delayTimeout;
+  public collapseBars = (value) => {
+    if (!!this.delayTimeout) { clearTimeout(this.delayTimeout); }
+    if (this.isGameMode && value) {
+      this.delayTimeout = setTimeout(() => { this.isBarsCollapsed = true; }, 500);
+    } else {
+      this.isBarsCollapsed = false;
+    }
   }
 }

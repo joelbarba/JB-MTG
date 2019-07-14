@@ -19,12 +19,8 @@ export class GameService {
 
   public gameDoc: AngularFirestoreDocument<IGame>;
   public gamesCollection: AngularFirestoreCollection<IGame>;
-  
-  // public user$: Observable<User>;
-  // public userCards$: Observable<UserCard[]>;
 
-  // public userId: string;
-  // public user: User;
+  public state;
 
   constructor(
     private afs: AngularFirestore,
@@ -42,15 +38,17 @@ export class GameService {
 
   }
 
+
+  // This logic should go to the backend later
   public createNewGame = async () => {
     const gameParams = {
       userA: {
-        user_id: 'qINbUCQ3s1GdAzPzaIBH',  // Joel
-        deck_id: 'mZ1hvocrH197AhUf1awk'   // Red Test
+        user_id: 'zJa8V4puqphDwIl8bvjNQcaDvwF2',  // Joel
+        deck_id: 'LnsXDBvu8IdMJuBK3i3k'           // Test 1
       },
       userB: {
-        user_id: 'DygcQXEd6YCL0ICiESEq',  // Alice
-        deck_id: '2PIjJ4g37SfwY25cIKis'   // Black Magic
+        user_id: 'B2smfxAYD7X1Y4DZth4S5nMv0uC2',  // Bob
+        deck_id: 'I1belIFq6eFvgmLxZDLA'           // Super Black
       },
     };
 
@@ -87,20 +85,20 @@ export class GameService {
     // Suffle User A's deck
     newGame.userA.deck = newGame.deckA.cards
       .map(c => ({ ...c, order: Math.round(Math.random() * 99999) }))
-      .sort((a, b) => a.order > b.order)
+      .sort((a, b) => a.order > b.order ? 1 : -1)
       .map((c, ind) => {
         const order = ind + 1;
         const card = this.globals.getCardById(c.id);
         delete card.units;
         return { ...c, card, order, loc: 'deck' };
       });
-    newGame.userA.deck.filter(c => c.order <= 7).forEach(c => c.loc = 'hand'); // Move 7 first cards on hand
+    newGame.userA.deck.filter(c => c.order <= 9).forEach(c => c.loc = 'hand'); // Move 7 first cards on hand
 
 
     // Suffle User B's deck
     newGame.userB.deck = newGame.deckB.cards
       .map(c => ({ ...c, order: Math.round(Math.random() * 99999) }))
-      .sort((a, b) => a.order > b.order)
+      .sort((a, b) => a.order > b.order ? 1 : -1)
       .map((c, ind) => {
         const order = ind + 1;
         const card = this.globals.getCardById(c.id);
@@ -110,10 +108,10 @@ export class GameService {
     newGame.userB.deck.filter(c => c.order <= 7).forEach(c => c.loc = 'hand'); // Move 7 first cards on hand
 
 
-
+    this.state = newGame;
     console.log(newGame);
 
-
+    return this.state;
     // this.gamesCollection.add(newGame);
   }
 

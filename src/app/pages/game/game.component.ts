@@ -1,6 +1,7 @@
 import { Card, User, UserCard, UserDeck, IGame, IUserGame } from 'src/typings';
 import { Component, OnInit } from '@angular/core';
 import { AngularFirestore, AngularFirestoreCollection, AngularFirestoreDocument } from '@angular/fire/firestore';
+import { Globals } from 'src/app/globals/globals.service';
 import { GameService } from 'src/app/globals/game.service';
 import * as RxOp from 'rxjs/operators';
 import { Observable } from 'rxjs';
@@ -18,17 +19,26 @@ interface IUserGameExt extends IUserGame {
 export class GameComponent implements OnInit {
   public userA: IUserGameExt;
   public userB: IUserGameExt;
+  public game;
+  public viewCard;  // Selected card to display on the big image
+  public handA; // Turn this into pipe from game obs
+  public playA; // Turn this into pipe from game obs
+  public handB;
+  public playB;
 
   constructor(
-    private game: GameService,
+    private globals: Globals,
+    private gameSrv: GameService,
     private afs: AngularFirestore,
   ) {
 
   }
 
   ngOnInit() {
+    this.globals.isGameMode = true;
+    this.globals.collapseBars(true);
 
-    const subs = this.game.gameDoc.snapshotChanges().subscribe(state => {
+    const subs = this.gameSrv.gameDoc.snapshotChanges().subscribe(state => {
       subs.unsubscribe();
       const data = state.payload.data();
       console.log(data);
@@ -40,7 +50,26 @@ export class GameComponent implements OnInit {
       // this.userB = data.user_b;
     });
 
+    this.createNewGame();
   }
+
+  public createNewGame = () => {
+    this.gameSrv.createNewGame().then((game) => {
+      this.game = game;
+      this.handA = this.game.userA.deck.filter(dCard => dCard.loc === 'hand');
+
+      this.handB = this.game.userB.deck.filter(dCard => dCard.loc === 'hand');
+
+
+      // this.game.userA.deck.filter(c => c.order > 9 && c.order <= 15).forEach(c => {
+      //   c.loc = 'play';
+      //   c.posX = ((c.order - 8) * 100) + 10; c.posY = 10;
+      // });
+      // this.playA = this.game.userA.deck.filter(dCard => dCard.loc === 'play');
+
+      this.viewCard = this.handA[0];
+    });
+  };
 
 
 

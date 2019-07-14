@@ -1,6 +1,6 @@
 <app-navbar></app-navbar>
 <app-menu *ngIf="profile.isLoggedIn"></app-menu>
-<div class="container route-container">
+<div class="container route-container" [class.is-expanded]="globals.isBarsCollapsed">
  <div class="row">
    <div class="col-12">
      <router-outlet></router-outlet>

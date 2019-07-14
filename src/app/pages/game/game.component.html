@@ -1,24 +1,131 @@
 <div class="row">
   <div class="col-12">
-    <h1>Game ({{ game.status$ | async }})</h1>
+    <h1>Game ({{ gameSrv.status$ | async }})</h1>
   </div>
 </div>
 
-<div class="row" *ngIf="!(game.status$ | async)">
+<div class="row" *ngIf="!(gameSrv.status$ | async)">
   <div class="col-12">
-    <bf-btn bfText="Create New Game" bfType="add" (bfClick)="game.createNewGame()"></bf-btn>
+    <bf-btn bfText="Create New Game" bfType="add" (bfClick)="createNewGame()"></bf-btn>
   </div>
 </div>
 
-<div class="row" *ngIf="!!(game.status$ | async)">
-  <div class="col-6">
-    <h4>User A</h4>
-    life={{ userA.life }}
-    <!-- , name={{ userA.userName$ | async | json }} -->
-    <!-- <bf-label bfText="Phase" bfValue="aa"></bf-label> -->
-  </div>
-  <div class="col-6">
-    <h4>User B</h4>
-    <!-- {{ userB | json }} -->
-  </div>
+<div *ngIf="!!game">
+  <span class="marR30">Status: {{ game.status }}</span>
+  <span class="marR30">- UserA life: {{ game.userA.life }}, phase: {{ game.userA.phase }}</span>
+  <span class="marR30">- UserB life: {{ game.userB.life }}, phase: {{ game.userB.phase }}</span>
+  <!-- <code>{{ game | json }}</code> -->
 </div>
+
+<div class="game-layout">
+
+  <!-- Left Panel -->
+  <div class="left-panel">
+
+    <div class="player-up">
+      <div class="left">
+        <div class="deck">
+          <img src="assets/card_back.jpg">
+          <img src="assets/card_back.jpg">
+        </div>
+        <div class="life">20</div>
+      </div>
+      <div class="right mana-pool">
+        <div class="mana"> <img src="assets/Xmana.png">    <span>3</span> </div>
+        <div class="mana"> <img src="assets/blueMana.png"> <span>2</span> </div>
+        <div class="mana"> <img src="assets/whiteMana.png"><span>0</span> </div>
+        <div class="mana"> <img src="assets/blackMana.png"><span>0</span> </div>
+        <div class="mana"> <img src="assets/redMana.png">  <span>1</span> </div>
+        <div class="mana"> <img src="assets/greenMana.png"><span>0</span> </div>
+      </div>
+    </div>
+    
+    <!-- Selected (viewing) Card -->
+    <div class="card-detail-box" *ngIf="!!viewCard">
+      <!-- <span>{{viewCard.card.name}}</span> -->
+      <div class="card-box big-size">
+        <div class="card-border">
+          <img [src]="'/assets/cards/' + viewCard.card.image">
+        </div>
+      </div>
+    </div>
+    
+    <div class="player-down">
+      <div class="left">
+        <div class="life">20</div>
+        <div class="deck">
+          <img src="assets/card_back.jpg">
+          <img src="assets/card_back.jpg">
+        </div>
+      </div>
+      <div class="right mana-pool">
+        <div class="mana"> <img src="assets/Xmana.png">    <span>3</span> </div>
+        <div class="mana"> <img src="assets/blueMana.png"> <span>2</span> </div>
+        <div class="mana"> <img src="assets/whiteMana.png"><span>0</span> </div>
+        <div class="mana"> <img src="assets/blackMana.png"><span>0</span> </div>
+        <div class="mana"> <img src="assets/redMana.png">  <span>1</span> </div>
+        <div class="mana"> <img src="assets/greenMana.png"><span>0</span> </div>
+      </div>
+    </div>
+  
+
+  </div>
+
+
+  <div class="board-game-up">
+
+    <!-- Oponents hand -->
+    <div class="hand-box" *ngIf="!!game">
+      <div class="hand-wrapper">
+        <div *ngFor="let handCard of handB" class="card-box">
+          <div class="card-border">
+            <img src="/assets/card_back_no_border.jpg">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="play-box" *ngIf="!!game">
+      <div *ngFor="let playCard of playB" class="card-box" 
+            [style.left.px]="playCard.posX"
+            [style.top.px]="playCard.posY">
+        <div class="card-border" >
+          <img [src]="'/assets/cards/' + playCard.card.image">
+        </div>
+      </div>
+    </div>
+
+  </div>
+  
+  
+  <div class="board-game-down">
+
+    <!-- Your hand -->
+    <!-- handA = {{ handA | json }} -->
+    <div class="hand-box" *ngIf="!!game">
+      <div class="hand-wrapper">
+        <div *ngFor="let handCard of handA" class="card-box">
+          <div class="card-border" >
+            <img [src]="'/assets/cards/' + handCard.card.image">
+            <!-- <img [src]="'/assets/cards/small.' + handCard.card.image"> -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="play-box" *ngIf="!!game">
+      <div *ngFor="let playCard of playA" class="card-box" 
+           [style.left.px]="playCard.posX"
+           [style.top.px]="playCard.posY">
+        <div class="card-border" >
+          <img [src]="'/assets/cards/' + playCard.card.image">
+          <!-- <img [src]="'/assets/cards/small.' + handCard.card.image"> -->
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+
+</div>
+

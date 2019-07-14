@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { Globals } from 'src/app/globals/globals.service';
 import { Profile } from 'src/app/globals/profile.service';
 
 @Component({
@@ -7,9 +8,11 @@ import { Profile } from 'src/app/globals/profile.service';
   styleUrls: ['./navbar.component.scss']
 })
 export class NavbarComponent implements OnInit {
+  public isExpanded = false;
 
   constructor(
-    private profile: Profile
+    private globals: Globals,
+    private profile: Profile,
   ) { }
 
   ngOnInit() {

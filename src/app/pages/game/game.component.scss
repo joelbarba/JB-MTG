@@ -1,0 +1,149 @@
+
+$left-panel-width: 280px;
+
+.game-layout {
+  position: fixed;
+  left: 1px;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  .left-panel {
+    height: 100%;
+    width: $left-panel-width;
+    background: yellow;
+
+    display: flex;
+    flex-direction: column;
+    .card-detail-box {
+      height: 398px;
+      background: black;
+      padding: 3px 0;
+      // color: white;
+      // text-align: center;
+      .card-box.big-size { padding: 0; }
+    }
+    .player-up {
+      background: #3c3c3c;
+      flex: 1;
+    }
+    .player-down, .player-up {
+      flex: 1;
+      background: #3c3c3c;
+      border: 1px solid #757575;
+      display: flex;
+      .left {
+        width: calc(100% - 90px); 
+        // border: 1px solid red;
+        .deck { 
+          // border: 1px solid red;
+          height: 130px;
+          img { 
+            width: 94px;
+            padding: 5px;
+          }
+        }
+        .life { 
+          // border: 1px solid red;
+          height: calc(100% - 130px); 
+          color: white;
+          font-size: 60px;
+          // text-align: center;
+          // padding-top: 5px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+      }
+      .right.mana-pool {
+        width: 90px;
+        background: #3c3c3c;
+        display: flex;
+        flex-direction: column;
+        border-left: 1px solid #757575;
+
+        div.mana {
+          + div.mana { border-top: 1px solid #757575; }
+          padding: 0 10px;
+          flex: 1;
+          display: flex;
+          align-items: center;
+
+          img { 
+            height: 30px;
+            // border: 1px solid black;
+            // border-radius: 100%; 
+          }
+          span { 
+            font-size: 20px;
+            margin-left: 15px;
+            height: 32px;
+            vertical-align: bottom;
+            color: gainsboro;
+            font-weight: bold;
+          }
+        }
+      }
+    }
+
+
+  }
+  .board-game-down, .board-game-up {
+    position: absolute;
+    height: 50%;
+    left: $left-panel-width;
+    right: 0;
+    background: #a1b3b3;
+
+    .hand-box {
+      position: absolute;
+      right: 0;
+      height: 150px;
+      background: #748b8b;
+      border: 1px solid #3c3c3c;
+      max-width: 100%;
+      overflow: auto;
+      overflow-y: hidden;
+
+      // &::-webkit-scrollbar { height: 12px; }
+      // &::-webkit-scrollbar-track { background: #3c3c3c; }
+      // &::-webkit-scrollbar-thumb { background: #a1b3b3; }
+      // &::-webkit-scrollbar-thumb:hover { background: rgb(95, 146, 153); }
+
+      .hand-wrapper {
+        display: flex;
+        padding: 8px 8px 10px;
+        .card-box {
+          display: inline-block;
+          padding: 0;
+        }
+        .card-box + .card-box {
+          margin-left: 8px;
+        }
+      }
+    }
+    .play-box {
+      .card-box {
+        position: absolute;
+        padding: 0;
+      }
+    }
+  }
+
+
+  .board-game-up {
+    top: 0;
+    .hand-box {
+      top: 0;
+      border-top: none;
+    }
+  }
+  .board-game-down {
+    top: 50%;
+    border-top: 2px solid black;
+    .hand-box {
+      bottom: 0;
+      border-bottom: none;
+    }
+  }
+}
+
