@@ -64,3 +64,36 @@
 bf-btn + bf-btn {
   margin-left: 8px;
 }
+
+
+
+// Modal styles in the game
+.game-modal {
+  .modal-content {
+    background-color: #323c3e;
+    background-clip: padding-box;
+    border: 2px solid rgb(230, 230, 230);
+    color: white;
+    box-shadow: 0px 0px 10px 5px #8c8c8c;
+    p {
+      font-size: 15px;
+    }
+    .card-box {
+      margin: 2px;
+      padding: 2px;
+      border-radius: 5px;
+      &:hover {
+        padding: 0;
+        border: 2px solid rgba(yellow, .5);
+      }
+      &.selected {
+        padding: 0;
+        border: 2px solid rgba(yellow, .75);
+        .card-border {
+          border-color: rgba(yellow, .75);
+          background: rgba(yellow, .75);
+        }
+      }
+    }
+  }
+}

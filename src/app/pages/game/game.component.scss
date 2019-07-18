@@ -10,21 +10,13 @@ $left-panel-width: 280px;
   .left-panel {
     height: 100%;
     width: $left-panel-width;
-    background: yellow;
-
     display: flex;
     flex-direction: column;
     .card-detail-box {
       height: 398px;
       background: black;
       padding: 3px 0;
-      // color: white;
-      // text-align: center;
       .card-box.big-size { padding: 0; }
-    }
-    .player-up {
-      background: #3c3c3c;
-      flex: 1;
     }
     .player-down, .player-up {
       flex: 1;
@@ -33,22 +25,24 @@ $left-panel-width: 280px;
       display: flex;
       .left {
         width: calc(100% - 90px); 
-        // border: 1px solid red;
-        .deck { 
-          // border: 1px solid red;
+        .deck {
           height: 130px;
           img { 
             width: 94px;
             padding: 5px;
           }
+          .deck-count {
+            position: relative;
+            top: -80px;
+            left: 25px;
+            font-size: 40px;
+            color: rgba(255, 255, 255, 0.5);
+          }
         }
         .life { 
-          // border: 1px solid red;
           height: calc(100% - 130px); 
           color: white;
           font-size: 60px;
-          // text-align: center;
-          // padding-top: 5px;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -70,8 +64,6 @@ $left-panel-width: 280px;
 
           img { 
             height: 30px;
-            // border: 1px solid black;
-            // border-radius: 100%; 
           }
           span { 
             font-size: 20px;

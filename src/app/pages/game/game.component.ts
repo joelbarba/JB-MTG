@@ -5,6 +5,7 @@ import { Globals } from 'src/app/globals/globals.service';
 import { GameService } from 'src/app/globals/game.service';
 import * as RxOp from 'rxjs/operators';
 import { Observable } from 'rxjs';
+import { NgbModal, NgbActiveModal, ModalDismissReasons } from '@ng-bootstrap/ng-bootstrap';
 
 
 interface IUserGameExt extends IUserGame {
@@ -22,9 +23,12 @@ export class GameComponent implements OnInit {
   public game;
   public viewCard;  // Selected card to display on the big image
   public handA; // Turn this into pipe from game obs
-  public playA; // Turn this into pipe from game obs
+  public playA;
+  public deckA;
+  
   public handB;
   public playB;
+  public deckB;
 
   public isYourHandExp = true;  // Your hand box is expanded
   public isHisHandExp = true;   // Your hand box is expanded
@@ -33,6 +37,7 @@ export class GameComponent implements OnInit {
     private globals: Globals,
     private gameSrv: GameService,
     private afs: AngularFirestore,
+    private modal: NgbModal,
   ) {
 
   }
@@ -76,9 +81,12 @@ export class GameComponent implements OnInit {
   public updateView = () => {
     this.game = this.gameSrv.state;
     this.handA = this.game.userA.deck.filter(dCard => dCard.loc === 'hand');
-    this.handB = this.game.userB.deck.filter(dCard => dCard.loc === 'hand');
     this.playA = this.game.userA.deck.filter(dCard => dCard.loc === 'play').sort((a, b) => a.playOrder > b.playOrder ? 1 : -1);
+    this.deckA = this.game.userA.deck.filter(dCard => dCard.loc === 'deck');
+    
+    this.handB = this.game.userB.deck.filter(dCard => dCard.loc === 'hand');
     this.playB = this.game.userB.deck.filter(dCard => dCard.loc === 'play');
+    this.deckB = this.game.userB.deck.filter(dCard => dCard.loc === 'deck');
     console.log('USER A DECK', this.game.userA.deck);
   }
 
@@ -95,8 +103,79 @@ export class GameComponent implements OnInit {
   }
 
   public finishPhase = () => {
-    this.gameSrv.runEngine();
+    this.gameSrv.runEngine(true);
     this.updateView();
+    this.engineStop();
+  }
+
+
+  // Trigger actions after engine stops
+  public engineStop = () => {
+    if (this.game.status === 2) {
+      const modalRef = this.modal.open(GameSelectHandCardComponent, { 
+        size: 'lg',
+        keyboard: false,
+        backdrop: 'static',
+        windowClass: 'game-modal',
+      });
+      modalRef.componentInstance.modalTitle = 'Discard Phase';
+      modalRef.componentInstance.modalText = `You cannot finish the turn with more than 7 cards on your hand.`;
+      modalRef.componentInstance.modalText += `Please select those you want to discard of`;
+      modalRef.componentInstance.cardList = this.handA;
+      modalRef.componentInstance.maxSel = this.handA.length - 7;
+      modalRef.componentInstance.minSel = this.handA.length - 7;
+
+      modalRef.result.then((newCard) => {
+        this.gameSrv.runEngine(true);
+        this.updateView();
+      });
+    }
   }
 
 }
+
+
+
+
+// -----------------------------------------------------------------------------------
+@Component({
+  selector: 'game-select-hand-card-modal',
+  templateUrl: 'select-hand-card.modal.html'
+})
+export class GameSelectHandCardComponent implements OnInit {
+  public modalTitle: string;
+  public modalText: string;
+  public cardList;
+  public isOkEnabled = false;
+  public maxSel = null;
+  public minSel = null;
+
+  constructor(
+    private globals: Globals,
+    public activeModal: NgbActiveModal,
+  ) { }
+
+  ngOnInit() {
+  }
+
+  public selectCard = (card) => {
+    const sel = this.cardList.filter(c => c.isSelected).length;
+
+    const inc = !card.isSelected;
+    const nextSel =  inc ? sel + 1 : sel - 1;
+
+    if ( inc && this.maxSel !== null && nextSel > this.maxSel) { return false; }
+    // if (!inc && this.minSel !== null && nextSel < this.minSel) { return false; }
+
+    card.isSelected = !card.isSelected;
+
+    this.isOkEnabled = (this.maxSel === null || nextSel <= this.maxSel)
+                    && (this.minSel === null || nextSel >= this.minSel);
+  }
+
+  public clickOk = () => {
+    this.activeModal.close();
+  }
+
+}
+

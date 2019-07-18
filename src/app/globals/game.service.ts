@@ -224,10 +224,36 @@ export class GameService {
     }
   }
 
+  // Returns the next phase code
+  public getNextPhase = (currPhase: number) => {
+    switch (currPhase) {
+      case 10: return 20;
+      case 20: return 30;
+      case 30: return 40;
+      case 40: return 50;
+      case 50: return 60;
+      case 60: return 70;
+      case 70: return 80;
+      case 80: return 110;
+      case 110: return 120;
+      case 120: return 130;
+      case 130: return 140;
+      case 140: return 150;
+      case 150: return 160;
+      case 160: return 170;
+      case 170: return 180;
+      case 180: return 10;
+      default: return this.state.phase;
+    }
+  }
 
 
-  public runEngine = () => {
-    this.state.status = 0;
+  public runEngine = (finishPhase = false) => {
+    this.state.status = 0; // running
+
+    // If you have to finish the current phase, jump to the next one
+    if (finishPhase) { this.state.phase = this.getNextPhase(this.state.phase); }
+
 
     while (this.state.status === 0) {
       let nextPhase = this.state.phase;
@@ -270,20 +296,19 @@ export class GameService {
           console.log('Drawing new card --->', deckCards[0]);
         }
         nextPhase = 40;
-        this.state.status = 1;
       }
 
       // -------------------------------------------
       // Before pre-combat
       if (this.state.phase === 40) {
-        nextPhase = 50;
+        this.state.status = 1;  // Wait for the user to do what he needs
       }
 
       // -------------------------------------------
       // Combat
       if (this.state.phase === 50) {
         if (this.state.userA.deck.filter(c => c.loc === 'play' && c.card.type === 'creature').length) {
-          this.state.status = 1;
+          this.state.status = 1;  // Wait for the user to do what he needs
         } else {
           // If no creatures in play, skip combat and after-combat phase
           nextPhase = 70;
@@ -293,23 +318,27 @@ export class GameService {
       // -------------------------------------------
       // After pre-combat
       if (this.state.phase === 60) {
-        nextPhase = 70;
+        this.state.status = 1;  // Wait for the user to do what he needs
       }
 
       // -------------------------------------------
       //  Discard
       if (this.state.phase === 70) {
         nextPhase = 80;
+        if (this.state.userA.deck.filter(dCard => dCard.loc === 'hand').length > 7) {
+          this.state.status = 2;  // Open select cards to discard modal
+        }
       }
 
       // -------------------------------------------
-      //  End (mana flare)
+      //  End (mana burn)
       if (this.state.phase === 80) {
         const manaLeft = this.state.userA.manaPool[0] + this.state.userA.manaPool[1] + this.state.userA.manaPool[2]
                        + this.state.userA.manaPool[3] + this.state.userA.manaPool[4] + this.state.userA.manaPool[5];
         if (manaLeft > 0) {
           this.state.userA.life = this.state.userA.life - manaLeft;
           this.state.userA.manaPool = [0, 0, 0, 0, 0, 0];
+          this.growl.error(`Mana Burn: The ${manaLeft} mana left on your mana pool damaged you`);
         }
         nextPhase = 110;
       }
