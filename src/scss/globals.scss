@@ -21,7 +21,7 @@
 }
 
 
-.card-box {
+mtg-card, .card-box {
   cursor: pointer;
   display: inline-block;
   padding: 0 20px;
@@ -60,6 +60,7 @@
 }
 
 
+
 // If multiple buttons next to each other, add space between
 bf-btn + bf-btn {
   margin-left: 8px;
@@ -78,7 +79,7 @@ bf-btn + bf-btn {
     p {
       font-size: 15px;
     }
-    .card-box {
+    mtg-card {
       margin: 2px;
       padding: 2px;
       border-radius: 5px;

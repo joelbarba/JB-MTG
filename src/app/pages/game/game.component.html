@@ -25,8 +25,10 @@
     <div class="player-up">
       <div class="left">
         <div class="deck">
-          <img src="assets/card_back.jpg">
-          <img src="assets/card_back.jpg">
+          <mtg-card class="grav-card empty" [class.empty]="!gravB.length" (click)="showGraveyard(userB, gravB)"
+                    [cardImg]="!gravB.length ? 'card_back.jpg' : gravB[gravB.length - 1].card.image">
+          </mtg-card>
+          <mtg-card class="deck-card black-border" [cardImg]="'card_back.jpg'"></mtg-card>
           <div class="deck-count">{{deckB.length}}</div>
         </div>
         <div class="life">{{game.userB.life}}</div>
@@ -55,8 +57,12 @@
       <div class="left">
         <div class="life">{{game.userA.life}}</div>
         <div class="deck">
-          <img src="assets/card_back.jpg">
-          <img src="assets/card_back.jpg">
+
+          <mtg-card class="grav-card empty" [class.empty]="!gravA.length" (click)="showGraveyard(userA, gravA)"
+                    [cardImg]="!gravA.length ? 'card_back.jpg' : gravA[gravA.length - 1].card.image">
+          </mtg-card>
+          <mtg-card class="deck-card black-border" [cardImg]="'card_back.jpg'"></mtg-card>
+          
           <div class="deck-count">{{deckA.length}}</div>
         </div>
       </div>
@@ -83,23 +89,27 @@
       </div>
       <div class="hand-wrapper">
         <div class="hand-scrollable">
-          <div *ngFor="let handCard of handB" class="card-box">
-            <div class="card-border">
-              <img src="/assets/card_back_no_border.jpg">
-            </div>
-          </div>
+          <mtg-card *ngFor="let handCard of handB" class="hand-card black-border"
+                    [cardImg]="'card_back.jpg'"
+                    (click)="clickHandCard(handCard)">
+          </mtg-card>
+                  <!-- [cardImg]="handCard.card.image" -->
         </div>
       </div>
     </div>
 
+    <!-- Opponents play -->
     <div class="play-box" *ngIf="!!game">
-      <div *ngFor="let playCard of playB" class="card-box" 
+      <mtg-card *ngFor="let playCard of playB; index as ind" 
+            class="game-card"
+            [class.is-tap]="playCard.isTap"
+            [cardImg]="playCard.card.image"
+            (mouseenter)="viewCard = playCard"
+            (click)="tapCard(playCard)"
+            [style.z-index]="3500 - playCard.playOrder"
             [style.left.px]="playCard.posX"
             [style.top.px]="playCard.posY">
-        <div class="card-border" >
-          <img [src]="'/assets/cards/' + playCard.card.image">
-        </div>
-      </div>
+      </mtg-card>
     </div>
 
   </div>
@@ -111,42 +121,38 @@
       <bf-btn bfText="Ok" (bfClick)="finishPhase()"></bf-btn>
     </div>
 
+
     <!-- Your hand -->
-    <!-- handA = {{ handA | json }} -->
     <div class="hand-box" *ngIf="!!game" [class.is-collapsed]="!isYourHandExp">
       <div class="box-button" (click)="isYourHandExp = !isYourHandExp">
         <span [ngClass]="isYourHandExp ? 'icon-arrow-down22' : 'icon-arrow-up22'"></span>
       </div>
       <div class="hand-wrapper">
         <div class="hand-scrollable">
-          <div *ngFor="let handCard of handA" class="card-box"
-               (mouseenter)="viewCard = handCard"
-               (click)="clickHandCard(handCard)">
-            <div class="card-border" >
-              <img [src]="'/assets/cards/' + handCard.card.image">
-            </div>
-          </div>
+          <mtg-card *ngFor="let handCard of handA" class="hand-card"
+                    [cardImg]="handCard.card.image"
+                    (mouseenter)="viewCard = handCard"
+                    (click)="clickHandCard(handCard)">
+          </mtg-card>
         </div>
       </div>
     </div>
 
+
+    <!-- Play cards -->
     <div class="play-box" *ngIf="!!game">
-      <div *ngFor="let playCard of playA; index as ind" 
-           class="card-box"  [class.is-tap]="playCard.isTap"
+      <mtg-card *ngFor="let playCard of playA; index as ind" 
+           class="game-card"
+           [class.is-tap]="playCard.isTap"
+           [cardImg]="playCard.card.image"
            (mouseenter)="viewCard = playCard"
            (click)="tapCard(playCard)"
            [style.z-index]="3500 - playCard.playOrder"
            [style.left.px]="playCard.posX"
            [style.top.px]="playCard.posY">
-        <div class="card-border">
-          <img [src]="'/assets/cards/' + playCard.card.image">
-          <!-- <img [src]="'/assets/cards/small.' + handCard.card.image"> -->
-        </div>
-      </div>
+      </mtg-card>
     </div>
 
   </div>
-
-
 </div>
 

@@ -25,10 +25,12 @@ export class GameComponent implements OnInit {
   public handA; // Turn this into pipe from game obs
   public playA;
   public deckA;
+  public gravA;
   
   public handB;
   public playB;
   public deckB;
+  public gravB;
 
   public isYourHandExp = true;  // Your hand box is expanded
   public isHisHandExp = true;   // Your hand box is expanded
@@ -63,14 +65,6 @@ export class GameComponent implements OnInit {
 
   public createNewGame = () => {
     this.gameSrv.createNewGame().then((game) => {
-      
-      
-      // this.game.userA.deck.filter(c => c.order > 9 && c.order <= 15).forEach(c => {
-        //   c.loc = 'play';
-        //   c.posX = ((c.order - 8) * 100) + 10; c.posY = 10;
-        // });
-        // this.playA = this.game.userA.deck.filter(dCard => dCard.loc === 'play');
-        
       this.gameSrv.runEngine();
       this.updateView();
       this.viewCard = this.handA[0];
@@ -83,11 +77,13 @@ export class GameComponent implements OnInit {
     this.handA = this.game.userA.deck.filter(dCard => dCard.loc === 'hand');
     this.playA = this.game.userA.deck.filter(dCard => dCard.loc === 'play').sort((a, b) => a.playOrder > b.playOrder ? 1 : -1);
     this.deckA = this.game.userA.deck.filter(dCard => dCard.loc === 'deck');
+    this.gravA = this.game.userA.deck.filter(dCard => dCard.loc === 'grav');
     
     this.handB = this.game.userB.deck.filter(dCard => dCard.loc === 'hand');
     this.playB = this.game.userB.deck.filter(dCard => dCard.loc === 'play');
     this.deckB = this.game.userB.deck.filter(dCard => dCard.loc === 'deck');
-    console.log('USER A DECK', this.game.userA.deck);
+    this.gravB = this.game.userB.deck.filter(dCard => dCard.loc === 'grav');
+    // console.log('USER A DECK', this.game.userA.deck);
   }
 
   public clickHandCard = (selCard) => {
@@ -102,6 +98,26 @@ export class GameComponent implements OnInit {
     this.updateView();
   }
 
+
+  public showGraveyard = (user, grav) => {
+    if (grav.length) {
+      const modalRef = this.modal.open(GameSelectHandCardComponent, {
+        size: 'lg',
+        keyboard: false,
+        backdrop: 'static',
+        windowClass: 'game-modal',
+      });
+      modalRef.componentInstance.modalTitle = `Graveyard`;
+      modalRef.componentInstance.modalText = `These are the cards in the graveyard`;
+      modalRef.componentInstance.cardList = grav;
+      modalRef.componentInstance.maxSel = 0;
+    }
+  }
+
+
+
+
+
   public finishPhase = () => {
     this.gameSrv.runEngine(true);
     this.updateView();
@@ -112,7 +128,7 @@ export class GameComponent implements OnInit {
   // Trigger actions after engine stops
   public engineStop = () => {
     if (this.game.status === 2) {
-      const modalRef = this.modal.open(GameSelectHandCardComponent, { 
+      const modalRef = this.modal.open(GameSelectHandCardComponent, {
         size: 'lg',
         keyboard: false,
         backdrop: 'static',
@@ -125,7 +141,11 @@ export class GameComponent implements OnInit {
       modalRef.componentInstance.maxSel = this.handA.length - 7;
       modalRef.componentInstance.minSel = this.handA.length - 7;
 
-      modalRef.result.then((newCard) => {
+      modalRef.result.then((cardList) => {
+        // Move selected cards to the graveyard
+        cardList.filter(c => c.isSelected).forEach(card => { card.loc = 'grav'; card.isSelected = false; });
+
+        this.updateView();
         this.gameSrv.runEngine(true);
         this.updateView();
       });
@@ -156,6 +176,9 @@ export class GameSelectHandCardComponent implements OnInit {
   ) { }
 
   ngOnInit() {
+    const sel = this.cardList.filter(c => c.isSelected).length;
+    this.isOkEnabled = (this.maxSel === null || sel <= this.maxSel)
+                    && (this.minSel === null || sel >= this.minSel);
   }
 
   public selectCard = (card) => {
@@ -174,7 +197,7 @@ export class GameSelectHandCardComponent implements OnInit {
   }
 
   public clickOk = () => {
-    this.activeModal.close();
+    this.activeModal.close(this.cardList);
   }
 
 }

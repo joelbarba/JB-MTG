@@ -14,7 +14,7 @@ interface GameCard {
   id    : string;
   ref   : string;
   order : number;
-  loc   : 'deck' | 'hand' | 'play' | 'graveyard';
+  loc   : 'deck' | 'hand' | 'play' | 'grav' | 'disc';
   isTap : boolean;
 }
 

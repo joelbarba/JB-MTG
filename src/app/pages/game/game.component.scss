@@ -27,14 +27,13 @@ $left-panel-width: 280px;
         width: calc(100% - 90px); 
         .deck {
           height: 130px;
-          img { 
-            width: 94px;
-            padding: 5px;
-          }
+          padding-left: 3px;
           .deck-count {
             position: relative;
-            top: -80px;
-            left: 25px;
+            top: -82px;
+            left: 95px;
+            width: 82px;
+            text-align: center;
             font-size: 40px;
             color: rgba(255, 255, 255, 0.5);
           }
@@ -122,35 +121,9 @@ $left-panel-width: 280px;
         }
       }
 
-      .card-box {
-        display: inline-block;
-        padding: 2px;
-        &:hover {
-          padding: 0;
-          border: 2px solid rgba(yellow, .5);
-          border-radius: 5px;
-        }
-      }
-      .card-box + .card-box {
-        margin-left: 6px;
-      }
+      mtg-card + mtg-card { margin-left: 6px; }
     }
-    .play-box {
-      .card-box {
-        position: absolute;
-        padding: 2px;
-        &:hover {
-          padding: 0;
-          border: 2px solid rgba(yellow, .5);
-          border-radius: 5px;
-        }
-        z-index: 3000;
-        transition: transform 0.15s ease-out;
-        &.is-tap {
-          transform: rotate(90deg) translate(19px, -20px);;
-        }
-      }
-    }
+    // .play-box { }
   }
 
 
@@ -168,9 +141,10 @@ $left-panel-width: 280px;
       &.is-collapsed {
         transform: translateY(-145px);
       }
-      .card-box .card-border { background: black; }
     }
   }
+
+  
   .board-game-down {
     top: 50%;
     border-top: 2px solid black;
@@ -183,11 +157,12 @@ $left-panel-width: 280px;
         border-top-left-radius: 4px;
         border-bottom: none;
       }
-
       &.is-collapsed {
         transform: translateY(145px);
       }
     }
   }
 }
+
+
 

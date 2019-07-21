@@ -7,12 +7,21 @@
   <div class="modal-body">
     <p>{{modalText}}</p>
     <div>
-      <div *ngFor="let card of cardList" class="card-box" [class.selected]="card.isSelected"
-            (click)="selectCard(card)">
+      <!-- <div *ngFor="let card of cardList" class="card-box" [class.selected]="card.isSelected"
+        (click)="selectCard(card)">
         <div class="card-border" >
           <img [src]="'/assets/cards/' + card.card.image">
         </div>
-      </div>
+      </div> -->
+
+      <mtg-card *ngFor="let card of cardList"
+                (click)="selectCard(card)"
+                [class.selected]="card.isSelected" 
+                [cardImg]="card.card.image">
+      </mtg-card>
+
+
+
     </div>
   </div>
   

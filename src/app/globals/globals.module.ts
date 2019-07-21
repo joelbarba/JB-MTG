@@ -8,6 +8,7 @@ import { GameService } from './game.service';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { AbstractTranslateService } from 'bf-ui-lib';
 import { AsyncFieldPipe } from './asyncField.pipe';
+import { MtgCardComponent } from './mtg-card/mtg-card.component';
 
 class TranslateService extends AbstractTranslateService {
   constructor() { super(); }
@@ -15,7 +16,7 @@ class TranslateService extends AbstractTranslateService {
 }
 
 @NgModule({
-  declarations: [AsyncFieldPipe],
+  declarations: [AsyncFieldPipe, MtgCardComponent],
   providers: [Globals, Profile, GameService],
   imports: [
     CommonModule,
@@ -27,6 +28,7 @@ class TranslateService extends AbstractTranslateService {
     BfUiLibModule,
     NgbModule,
     AsyncFieldPipe,
+    MtgCardComponent,
   ]
 })
 export class GlobalsModule { }
