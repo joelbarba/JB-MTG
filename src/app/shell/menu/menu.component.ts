@@ -14,7 +14,8 @@ export class MenuComponent implements OnInit {
     { id: 1, name: 'Home',        icon: 'icon-home',      isActive: false, route: 'home' },
     { id: 2, name: 'Library',     icon: 'icon-list',      isActive: false, route: 'library' },
     { id: 3, name: 'User',        icon: 'icon-user-plus', isActive: false, route: 'user' },
-    { id: 4, name: 'Game',        icon: 'icon-finish',    isActive: false, route: 'game' },
+    { id: 4, name: 'Games List',  icon: 'icon-users',     isActive: false, route: 'games-list' },
+    { id: 5, name: 'Game',        icon: 'icon-finish',    isActive: false, route: 'game' },
   ];
 
   constructor(

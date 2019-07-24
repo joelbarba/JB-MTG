@@ -1,4 +1,4 @@
-import { Card, User, UserCard, UserDeck } from 'src/typings';
+import { Card, User, DeckCard, UserDeck } from 'src/typings';
 import './prototypes';
 import { Injectable } from '@angular/core';
 import { AngularFirestore, AngularFirestoreCollection, AngularFirestoreDocument } from '@angular/fire/firestore';
@@ -8,6 +8,12 @@ import * as RxOp from 'rxjs/operators';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AngularFireAuth } from '@angular/fire/auth';
 import { BfGrowlService, BfConfirmService } from 'bf-ui-lib';
+
+// Extended object form user.cards[]
+interface UserCard {
+  ref: string;
+  card: Card;
+}
 
 
 @Injectable({
@@ -43,7 +49,7 @@ export class Profile {
     // React on auth state change
     this.afAuth.user.subscribe((user) => {
       if (!!user && user.emailVerified) {
-        console.log('Profile ready. User -> ', user);
+        // console.log('Profile ready. User -> ', user);
         this.authUser = user;
         this.isLoggedIn = true;
         this.iniProfile();
@@ -99,11 +105,11 @@ export class Profile {
     this.user$ = this.userDoc.valueChanges();
     this.userCards$ = this.user$.pipe(
       RxOp.map(usr => {
-        return usr.cards.map(usrCard => {
+        return usr.cards.map(cardRef => {
+          const cardId = cardRef.split('.')[0];
           return {
-            ...usrCard,
-            card: this.globals.getCardById(usrCard.id)
-            // ref$ : this.afs.doc<Card>('cards/' + card.card).valueChanges()
+            ref: cardRef,
+            card: this.globals.getCardById(cardId)
           };
         });
       })
@@ -114,7 +120,8 @@ export class Profile {
 
 
   addUnitCard = (cardId: string, cardRef: string) => {
-    this.user.cards.push({ id: cardId, ref: cardRef });
+    if (!this.user.cards) { this.user.cards = []; }
+    this.user.cards.push(cardRef);
     this.userDoc.update(this.user);
   }
 

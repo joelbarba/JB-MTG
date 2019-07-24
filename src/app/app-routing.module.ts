@@ -1,3 +1,4 @@
+import { GamesListComponent } from './pages/games-list/games-list.component';
 import { GameComponent } from './pages/game/game.component';
 import { LibraryComponent } from './pages/library/library.component';
 import { UserComponent } from './pages/user/user.component';
@@ -15,7 +16,8 @@ const routes: Routes = [
   { path: 'sign-in-verify', component: SignInVerifyComponent },
   { path: 'user',           component: UserComponent },
   { path: 'library',        component: LibraryComponent },
-  { path: 'game',           component: GameComponent },
+  { path: 'games-list',     component: GamesListComponent },
+  { path: 'game/:id',       component: GameComponent },
 ]; // RouteEnd
 
 @NgModule({

@@ -102,8 +102,17 @@
 
       <div class="row">
         <div class="col-12">
-          <h5>Units: {{editCard.units.length}}</h5>
           <hr>
+        </div>
+        
+        <div class="col-3">
+          <bf-btn class="full-width" bfText="Add unit" bfType="add" (bfClick)="addUnit()"></bf-btn>
+        </div>
+        <div class="col-9 marT5">
+          <h5>Units: {{editCard.units.length}}</h5>
+        </div>
+
+        <div class="col-12 marT20">
           <ul class="list-unstyled table-list">
             <li class="list-header">
               <div class="row">
@@ -125,7 +134,6 @@
               </div>
             </li>
           </ul>
-          <bf-btn class="marL10" bfText="Add unit" bfType="add" (bfClick)="addUnit()"></bf-btn>
         </div>
       </div>
     </form>

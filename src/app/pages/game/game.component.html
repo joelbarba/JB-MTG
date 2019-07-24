@@ -11,9 +11,9 @@
 </div>
 
 <div *ngIf="!!game">
-  <span class="marR30">Status: {{ game.status }}</span>
-  <span class="marR30">- UserA life: {{ game.userA.life }}, phase: {{ game.userA.phase }}</span>
-  <span class="marR30">- UserB life: {{ game.userB.life }}, phase: {{ game.userB.phase }}</span>
+  <span class="marR30">Status: {{ game.status }}, phase = {{ game.phase }}</span>
+  <span class="marR30">- UserA life: {{ game.$userA.life }}</span>
+  <span class="marR30">- UserB life: {{ game.$userB.life }}</span>
   <!-- <code>{{ game | json }}</code> -->
 </div>
 
@@ -26,56 +26,56 @@
       <div class="left">
         <div class="deck">
           <mtg-card class="grav-card empty" [class.empty]="!gravB.length" (click)="showGraveyard(userB, gravB)"
-                    [cardImg]="!gravB.length ? 'card_back.jpg' : gravB[gravB.length - 1].card.image">
+                    [cardImg]="!gravB.length ? 'card_back.jpg' : gravB[gravB.length - 1].$card.image">
           </mtg-card>
           <mtg-card class="deck-card black-border" [cardImg]="'card_back.jpg'"></mtg-card>
           <div class="deck-count">{{deckB.length}}</div>
         </div>
-        <div class="life">{{game.userB.life}}</div>
+        <div class="life">{{game.$userB.life}}</div>
       </div>
       <div class="right mana-pool">
-        <div class="mana"> <img src="assets/Xmana.png">    <span>{{game.userB.manaPool[0]}}</span> </div>
-        <div class="mana"> <img src="assets/blueMana.png"> <span>{{game.userB.manaPool[1]}}</span> </div>
-        <div class="mana"> <img src="assets/whiteMana.png"><span>{{game.userB.manaPool[2]}}</span> </div>
-        <div class="mana"> <img src="assets/blackMana.png"><span>{{game.userB.manaPool[3]}}</span> </div>
-        <div class="mana"> <img src="assets/redMana.png">  <span>{{game.userB.manaPool[4]}}</span> </div>
-        <div class="mana"> <img src="assets/greenMana.png"><span>{{game.userB.manaPool[5]}}</span> </div>
+        <div class="mana"> <img src="assets/Xmana.png">    <span>{{game.$userB.manaPool[0]}}</span> </div>
+        <div class="mana"> <img src="assets/blueMana.png"> <span>{{game.$userB.manaPool[1]}}</span> </div>
+        <div class="mana"> <img src="assets/whiteMana.png"><span>{{game.$userB.manaPool[2]}}</span> </div>
+        <div class="mana"> <img src="assets/blackMana.png"><span>{{game.$userB.manaPool[3]}}</span> </div>
+        <div class="mana"> <img src="assets/redMana.png">  <span>{{game.$userB.manaPool[4]}}</span> </div>
+        <div class="mana"> <img src="assets/greenMana.png"><span>{{game.$userB.manaPool[5]}}</span> </div>
       </div>
     </div>
-    
+
     <!-- Selected (viewing) Card -->
     <div class="card-detail-box" *ngIf="!!viewCard">
-      <!-- <span>{{viewCard.card.name}}</span> -->
+      <!-- <span>{{viewCard.$card.name}}</span> -->
       <div class="card-box big-size">
         <div class="card-border">
-          <img [src]="'/assets/cards/' + viewCard.card.image">
+          <img [src]="'/assets/cards/' + viewCard.$card.image">
         </div>
       </div>
     </div>
-    
+
     <div class="player-down">
       <div class="left">
-        <div class="life">{{game.userA.life}}</div>
+        <div class="life">{{game.$userA.life}}</div>
         <div class="deck">
 
           <mtg-card class="grav-card empty" [class.empty]="!gravA.length" (click)="showGraveyard(userA, gravA)"
-                    [cardImg]="!gravA.length ? 'card_back.jpg' : gravA[gravA.length - 1].card.image">
+                    [cardImg]="!gravA.length ? 'card_back.jpg' : gravA[gravA.length - 1].$card.image">
           </mtg-card>
           <mtg-card class="deck-card black-border" [cardImg]="'card_back.jpg'"></mtg-card>
-          
+
           <div class="deck-count">{{deckA.length}}</div>
         </div>
       </div>
       <div class="right mana-pool">
-        <div class="mana"> <img src="assets/Xmana.png">    <span>{{game.userA.manaPool[0]}}</span> </div>
-        <div class="mana"> <img src="assets/blueMana.png"> <span>{{game.userA.manaPool[1]}}</span> </div>
-        <div class="mana"> <img src="assets/whiteMana.png"><span>{{game.userA.manaPool[2]}}</span> </div>
-        <div class="mana"> <img src="assets/blackMana.png"><span>{{game.userA.manaPool[3]}}</span> </div>
-        <div class="mana"> <img src="assets/redMana.png">  <span>{{game.userA.manaPool[4]}}</span> </div>
-        <div class="mana"> <img src="assets/greenMana.png"><span>{{game.userA.manaPool[5]}}</span> </div>
+        <div class="mana"> <img src="assets/Xmana.png">    <span>{{game.$userA.manaPool[0]}}</span> </div>
+        <div class="mana"> <img src="assets/blueMana.png"> <span>{{game.$userA.manaPool[1]}}</span> </div>
+        <div class="mana"> <img src="assets/whiteMana.png"><span>{{game.$userA.manaPool[2]}}</span> </div>
+        <div class="mana"> <img src="assets/blackMana.png"><span>{{game.$userA.manaPool[3]}}</span> </div>
+        <div class="mana"> <img src="assets/redMana.png">  <span>{{game.$userA.manaPool[4]}}</span> </div>
+        <div class="mana"> <img src="assets/greenMana.png"><span>{{game.$userA.manaPool[5]}}</span> </div>
       </div>
     </div>
-  
+
 
   </div>
 
@@ -93,17 +93,17 @@
                     [cardImg]="'card_back.jpg'"
                     (click)="clickHandCard(handCard)">
           </mtg-card>
-                  <!-- [cardImg]="handCard.card.image" -->
+                  <!-- [cardImg]="handCard.$card.image" -->
         </div>
       </div>
     </div>
 
     <!-- Opponents play -->
     <div class="play-box" *ngIf="!!game">
-      <mtg-card *ngFor="let playCard of playB; index as ind" 
+      <mtg-card *ngFor="let playCard of playB; index as ind"
             class="game-card"
             [class.is-tap]="playCard.isTap"
-            [cardImg]="playCard.card.image"
+            [cardImg]="playCard.$card.image"
             (mouseenter)="viewCard = playCard"
             (click)="tapCard(playCard)"
             [style.z-index]="3500 - playCard.playOrder"
@@ -113,12 +113,13 @@
     </div>
 
   </div>
-  
-  
+
+
   <div class="board-game-down">
     <div *ngIf="!!game">
       <span>Phase: {{game.phase}}</span>
-      <bf-btn bfText="Ok" (bfClick)="finishPhase()"></bf-btn>
+      <bf-btn bfText="Reset Game" (bfClick)="gameSrv.resetGame()"></bf-btn>
+      <bf-btn class="marL50" bfText="Ok" (bfClick)="finishPhase()"></bf-btn>
     </div>
 
 
@@ -130,7 +131,7 @@
       <div class="hand-wrapper">
         <div class="hand-scrollable">
           <mtg-card *ngFor="let handCard of handA" class="hand-card"
-                    [cardImg]="handCard.card.image"
+                    [cardImg]="handCard.$card.image"
                     (mouseenter)="viewCard = handCard"
                     (click)="clickHandCard(handCard)">
           </mtg-card>
@@ -141,10 +142,10 @@
 
     <!-- Play cards -->
     <div class="play-box" *ngIf="!!game">
-      <mtg-card *ngFor="let playCard of playA; index as ind" 
+      <mtg-card *ngFor="let playCard of playA; index as ind"
            class="game-card"
            [class.is-tap]="playCard.isTap"
-           [cardImg]="playCard.card.image"
+           [cardImg]="playCard.$card.image"
            (mouseenter)="viewCard = playCard"
            (click)="tapCard(playCard)"
            [style.z-index]="3500 - playCard.playOrder"

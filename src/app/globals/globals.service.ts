@@ -1,4 +1,4 @@
-import { Card, User, UserCard, UserDeck } from 'src/typings';
+import { Card, User, UserCard, DeckCard, UserDeck } from 'src/typings';
 import './prototypes';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
@@ -49,7 +49,7 @@ export class Globals {
 
           // Find the highest ID (c9999)
           const numId = Number.parseInt(data.id.slice(1));
-          data.orderId = ('00000' + numId).slice(-5).toString();
+          data.orderId = ('000000' + numId).slice(-6).toString();
 
           return data;
         });
@@ -68,6 +68,9 @@ export class Globals {
     return this.cards.getById(cardId);
   }
 
+  public getCardByRef = (cardRef: string): Card => {
+    return this.getCardById(this.getCardIdByRef(cardRef));
+  };
 
   public getColor(code) {
     return this.CardColors.find(c => c.code === code);
@@ -88,6 +91,17 @@ export class Globals {
     if (!!selObj) { return selObj.name; }
     return '';
   }
+
+  public getCardIdByRef = (cardRef: string): string => {
+    if (!cardRef) { return ''; }
+    return cardRef.split('.')[0];
+  };
+
+  public getCardObjByRef = (cardRef: string): UserCard => {
+    if (!cardRef) { return { ref: cardRef, card: null }; }
+    const cardId = cardRef.split('.')[0];
+    return { ref: cardRef, card: this.getCardById(cardId) };
+  };
 
   // Returns a promise that resolves a user (1 time load)
   public getUser = (userId: string): Promise<User> => {

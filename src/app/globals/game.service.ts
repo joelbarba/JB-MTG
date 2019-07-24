@@ -1,4 +1,4 @@
-import { Card, User, UserCard, UserDeck, IGame } from 'src/typings';
+import {Card, User, DeckCard, UserDeck, IGame, IGameCard} from 'src/typings';
 import './prototypes';
 import { Injectable } from '@angular/core';
 import { AngularFirestore, AngularFirestoreCollection, AngularFirestoreDocument } from '@angular/fire/firestore';
@@ -7,53 +7,30 @@ import { Globals } from './globals.service';
 import * as RxOp from 'rxjs/operators';
 import { stringify } from 'querystring';
 import { BfGrowlService, BfConfirmService } from 'bf-ui-lib';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 
-
-interface GameCard {
-  card  : Card;
-  id    : string;
-  ref   : string;
-  order : number;
-  loc   : 'deck' | 'hand' | 'play' | 'grav' | 'disc';
-  isTap : boolean;
-}
-
-interface GameUser {
-  userName : string;
-  user_id  : string;
-  deck_id  : string;
-  life     : number;
-  ready    : boolean;
-  manaPool : [number, number, number, number, number, number];
-  deck     : Array<any>;
-}
-
-interface GameStatus {
-  created: Date;
-  status : 0 | 1 | 2;   // 0=running, 1=paused on userA, 2=paused on user B
-  // 10=untap, 20=maintenance, 30=draw, 40=pre-combat, 50=combat, 60=post-combat, 70=discard, 80=end
-  phase  : 10 | 20 | 30 | 40 | 50 | 60 | 70 | 80 | 110 | 120 | 130 | 140 | 150 | 160 | 170 | 180;
-  deckA: Array<GameCard>;
-  deckB: Array<GameCard>;
-  userA: GameUser;
-  userB: GameUser;
-}
-
-
+const httpOptions = {
+  headers: new HttpHeaders({ 'Content-Type':  'application/json' })
+};
 
 @Injectable({
  providedIn: 'root'
 })
 export class GameService {
   public status = 0;    // 0 = off, 1 = ongoing
-  public currGameId: string;
+
+  public gameId: string;
+  public state: IGame;
+
+  //  'https://us-central1-jb-mtg.cloudfunctions.net';
+  public readonly baseUrl = 'http://localhost:5000/jb-mtg/us-central1';
+
 
   public status$;
 
   public gameDoc: AngularFirestoreDocument<IGame>;
   public gamesCollection: AngularFirestoreCollection<IGame>;
 
-  public state: GameStatus;
   public turnState;
   public phaseState;
 
@@ -61,99 +38,60 @@ export class GameService {
     private afs: AngularFirestore,
     private globals: Globals,
     private growl: BfGrowlService,
+    private http: HttpClient,
   ) {
-
-    this.currGameId = 'vtylhfWVziYsEByeEN6g';
-    this.gameDoc = this.afs.doc<IGame>('/games/' + this.currGameId);
-    // const subs = this.gameDoc.snapshotChanges().subscribe(state => {
-    //   const data = state.payload.data();
-    // });
-    this.status$ = this.gameDoc.valueChanges().pipe(
-      RxOp.map((game: IGame) => game.status)
-    );
-
   }
 
 
   // This logic should go to the backend later
   public createNewGame = async () => {
-    const gameParams = {
-      userA: {
-        user_id: 'zJa8V4puqphDwIl8bvjNQcaDvwF2',  // Joel
-        deck_id: 'LnsXDBvu8IdMJuBK3i3k'           // Test 1
-      },
-      userB: {
-        user_id: 'B2smfxAYD7X1Y4DZth4S5nMv0uC2',  // Bob
-        deck_id: 'I1belIFq6eFvgmLxZDLA'           // Super Black
-      },
-    };
-
-    const userA = await this.globals.getUser(gameParams.userA.user_id);
-    const userB = await this.globals.getUser(gameParams.userB.user_id);
-    const deckA = await this.globals.getUserDeck(gameParams.userA.user_id, gameParams.userA.deck_id);
-    const deckB = await this.globals.getUserDeck(gameParams.userB.user_id, gameParams.userB.deck_id);
-
-    let newGame: any = {
-      created: (new Date()).toString(),
-      status : 0,   // 0=running, 1=paused on userA, 2=paused on user B
-      phase  : 10,  // 10=untap, 20=maintenance, 30=draw, 40=pre-combat, 50=combat, 60=post-combat, 70=discard, 80=end
-                    // User B the same + 100
-      deckA,
-      deckB,
-      userA: {
-        userName : userA.name,
-        user_id  : gameParams.userA.user_id,
-        deck_id  : gameParams.userA.deck_id,
-        life   : 20,
-        manaPool : [0, 0, 0, 0, 0, 0],
-        ready  : false,
-        deck   : []
-      },
-      userB: {
-        userName : userB.name,
-        user_id  : gameParams.userB.user_id,
-        deck_id  : gameParams.userB.deck_id,
-        life   : 20,
-        manaPool : [0, 0, 0, 0, 0, 0],
-        ready  : false,
-        deck   : []
-      }
-    };
-
-    // Suffle User A's deck
-    newGame.userA.deck = newGame.deckA.cards
-      .map(c => ({ ...c, order: Math.round(Math.random() * 99999) }))
-      .sort((a, b) => a.order > b.order ? 1 : -1)
-      .map((c, ind) => {
-        const order = ind + 1;
-        const card = this.globals.getCardById(c.id);
-        delete card.units;
-        return { ...c, card, order, loc: 'deck', isTap: false };
-      });
-    newGame.userA.deck.filter(c => c.order <= 7).forEach(c => c.loc = 'hand'); // Move 7 first cards on hand
-
-
-    // Suffle User B's deck
-    newGame.userB.deck = newGame.deckB.cards
-      .map(c => ({ ...c, order: Math.round(Math.random() * 99999) }))
-      .sort((a, b) => a.order > b.order ? 1 : -1)
-      .map((c, ind) => {
-        const order = ind + 1;
-        const card = this.globals.getCardById(c.id);
-        delete card.units;
-        return { ...c, card, order, loc: 'deck', isTap: false };
-      });
-    newGame.userB.deck.filter(c => c.order <= 7).forEach(c => c.loc = 'hand'); // Move 7 first cards on hand
-
-
-    this.state = newGame;
-    console.log(newGame);
-
-    return this.state;
-    // this.gamesCollection.add(newGame);
+    const user1 = 'zJa8V4puqphDwIl8bvjNQcaDvwF2'; // Joel
+    const deck1 = 'k6NYK31X4RuMoAP0BUaE';         // Red Fire
+    const user2 = 'B2smfxAYD7X1Y4DZth4S5nMv0uC2'; // Bob
+    const deck2 = 'aM0wbWZ26iUow9bSetMF';         // Super Black
+    const url = `${this.baseUrl}/newGameApi?user1=${user1}&deck1=${deck1}&user2=${user2}&deck2=${deck2}`;
+    this.http.post(url, {}, httpOptions).subscribe((data: any) => {
+      console.log('GAME Created!', data.response);
+    });
   }
 
-  public summonCard = (user, selCard) => {
+
+  // This logic should go to the backend later
+  public resetGame = () => {
+    const url = `${this.baseUrl}/resetGameApi?gameId=${this.gameId}`;
+    this.http.post(url, {}, httpOptions).subscribe((data: any) => {
+      this.growl.success('Game reset!');
+    });
+  }
+
+
+
+  public summonCard = (selCard: IGameCard) => {
+    const payload = {
+      gameId: this.gameId,
+      userId: this.state.$userA.userId,
+      action: 'cast',
+      cardRef: selCard.ref,
+    };
+    const url = `${this.baseUrl}/gameActionApi`;
+    this.http.post(url, payload, httpOptions).subscribe((data: any) => {
+      console.log('Action acknowledged', data.response);
+      // selCard.posX = (totalPlay * 100) + 10;
+      // selCard.posY = 50;
+      this.growl.success(`${selCard.$card.name} summoned`);
+    });
+  }
+
+
+
+
+
+
+
+  // ------ All here below should go to the server ------------
+
+
+  public summonCardSrv = (user, selCard) => {
     if (selCard.loc !== 'hand') {
       return false;
     }
@@ -271,7 +209,7 @@ export class GameService {
       // -------------------------------------------
       // Untap all user A cards
       if (this.state.phase === 10) {
-        this.state.userA.deck.filter(dCard => dCard.loc === 'play').forEach(dCard => {
+        this.state.$userA.deck.filter(dCard => dCard.loc === 'play').forEach(dCard => {
           dCard.isTap = false;
         });
         nextPhase = 20;
@@ -286,7 +224,7 @@ export class GameService {
       // -------------------------------------------
       // Draw a card
       if (this.state.phase === 30) {
-        const deckCards = this.state.userA.deck.filter(c => c.loc === 'deck');
+        const deckCards = this.state.$userA.deck.filter(c => c.loc === 'deck');
         if (!deckCards.length) {
           // No cards to draw, user A loses the game :(
           console.error('USER A is dead ------------------------------- No more cards in the deck');
@@ -307,7 +245,7 @@ export class GameService {
       // -------------------------------------------
       // Combat
       if (this.state.phase === 50) {
-        if (this.state.userA.deck.filter(c => c.loc === 'play' && c.card.type === 'creature').length) {
+        if (this.state.$userA.deck.filter(c => c.loc === 'play' && c.$card.type === 'creature').length) {
           this.state.status = 1;  // Wait for the user to do what he needs
         } else {
           // If no creatures in play, skip combat and after-combat phase
@@ -325,7 +263,7 @@ export class GameService {
       //  Discard
       if (this.state.phase === 70) {
         nextPhase = 80;
-        if (this.state.userA.deck.filter(dCard => dCard.loc === 'hand').length > 7) {
+        if (this.state.$userA.deck.filter(dCard => dCard.loc === 'hand').length > 7) {
           this.state.status = 2;  // Open select cards to discard modal
         }
       }
@@ -333,11 +271,11 @@ export class GameService {
       // -------------------------------------------
       //  End (mana burn)
       if (this.state.phase === 80) {
-        const manaLeft = this.state.userA.manaPool[0] + this.state.userA.manaPool[1] + this.state.userA.manaPool[2]
-                       + this.state.userA.manaPool[3] + this.state.userA.manaPool[4] + this.state.userA.manaPool[5];
+        const manaLeft = this.state.$userA.manaPool[0] + this.state.$userA.manaPool[1] + this.state.$userA.manaPool[2]
+                       + this.state.$userA.manaPool[3] + this.state.$userA.manaPool[4] + this.state.$userA.manaPool[5];
         if (manaLeft > 0) {
-          this.state.userA.life = this.state.userA.life - manaLeft;
-          this.state.userA.manaPool = [0, 0, 0, 0, 0, 0];
+          this.state.$userA.life = this.state.$userA.life - manaLeft;
+          this.state.$userA.manaPool = [0, 0, 0, 0, 0, 0];
           this.growl.error(`Mana Burn: The ${manaLeft} mana left on your mana pool damaged you`);
         }
         nextPhase = 110;

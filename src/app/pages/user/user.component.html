@@ -22,7 +22,7 @@
         <bf-btn class="full-width" 
                 bfType="delete" 
                 bfText="Remove from deck"
-                (bfClick)="selectCard(this.selUser.cards.getByProp('ref', viewCard.ref), 'all')">
+                (bfClick)="selectCard(this.selUser.$cards.getByProp('ref', viewCard.ref), 'all')">
         </bf-btn>
       </div>
 

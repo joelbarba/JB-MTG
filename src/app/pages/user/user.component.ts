@@ -59,10 +59,7 @@ export class UserComponent implements OnInit {
 
     // Load the user
     this.selUser = await this.globals.getUser(this.profile.userId);
-    this.selUser.cards = this.profile.user.cards.map((usrCard: UserCard) => {
-      usrCard.card = this.globals.getCardById(usrCard.id);
-      return usrCard;
-    });
+    this.selUser.$cards = this.profile.user.cards.map(this.globals.getCardObjByRef);
     this.selUser.decks = [];
 
     // Fetch user decks
@@ -78,14 +75,15 @@ export class UserComponent implements OnInit {
     const deckSubs = this.userDecks$.subscribe((decks: UserDeck[]) => {
       deckSubs.unsubscribe();
       this.selUser.decks = decks.map((deck: UserDeck) => {
+        deck.$cards = deck.cards.map(this.globals.getCardObjByRef);
         return { ...deck, isSelected: false };
       });
     });
 
-    this.cardsList.load(this.selUser.cards);
-    this.deckCards.load(this.selUser.cards);
-    if (this.selUser.cards.length) {
-      this.selectCard(this.selUser.cards[0]);
+    this.cardsList.load(this.selUser.$cards);
+    this.deckCards.load(this.selUser.$cards);
+    if (this.selUser.$cards.length) {
+      this.selectCard(this.selUser.$cards[0]);
     }
 
     // Define list filter
@@ -98,7 +96,7 @@ export class UserComponent implements OnInit {
         // Check if the card is in the deck
         const deck = this.selUser.decks.getById(this.filters.deckId);
         if (!!deck) {
-          match = match && !!deck.cards.filter((c: UserCard) => c.ref === item.ref).length;
+          match = match && !!deck.cards.filter(cardRef => cardRef === item.ref).length;
         }
 
         return match;
@@ -121,7 +119,7 @@ export class UserComponent implements OnInit {
 
   public selectDeck = (deck: UserDeck) => {
     if (!deck) { // Unselect deck
-      this.selUser.cards.forEach((card: UserCardExt) => card.isSelected = false);
+      this.selUser.$cards.forEach((card: UserCardExt) => card.isSelected = false);
       this.selDeck = null;
 
     } else { // Select deck
@@ -139,14 +137,14 @@ export class UserComponent implements OnInit {
 
     if (this.pageMode === 1 && list === 'all') {
       if (userCard.isSelected) { // Unselect
-        this.selDeck.cards.removeByProp('ref', userCard.ref);
+        this.selDeck.$cards.removeByProp('ref', userCard.ref);
+        this.selDeck.cards.splice(this.selDeck.cards.indexOf(userCard.ref), 1);
         userCard.isSelected = false;
 
       } else {  // Select (add to deck)
-        this.selDeck.cards.push({
-          id: userCard.id,
-          ref: userCard.ref
-        });
+        this.selDeck.cards.push(userCard.ref);
+        const cardId = userCard.ref.split('.')[0];
+        this.selDeck.$cards.push({ card: this.globals.getCardById(cardId), ref: userCard.ref });
         userCard.isSelected = true;
       }
 
@@ -156,13 +154,11 @@ export class UserComponent implements OnInit {
 
   // Reload the list of cards of the deck
   public reloadDeckList = () => {
-    this.deckCards.load(this.selDeck.cards.map((userCard: UserCard) => {
-      return { ...userCard, card: this.globals.getCardById(userCard.id) };
-    }));
+    this.deckCards.load(this.selDeck.cards.map(this.globals.getCardObjByRef));
 
     // Select the cards of the deck on the main list
-    this.selUser.cards.forEach((card: UserCardExt) => {
-      card.isSelected = !!this.selDeck.cards.getByProp('ref', card.ref);
+    this.selUser.$cards.forEach((card: UserCardExt) => {
+      card.isSelected = !!this.selDeck.$cards.getByProp('ref', card.ref);
     });
   }
 
@@ -198,18 +194,25 @@ export class UserComponent implements OnInit {
   // Save selected (in editing mode) deck
   public saveDeck = () => {
     if (!!this.selDeck && !!this.selDeck.id) {
-      this.decksCollection.doc(this.selDeck.id).set(this.selDeck);
+      let selDeckDB = {
+        name: this.selDeck.name,
+        description: this.selDeck.description,
+        cards: this.selDeck.$cards.map(card => card.ref),
+      };
+      this.decksCollection.doc(this.selDeck.id).set(selDeckDB);
 
       // Update the user object in memory
       const userDeck = this.selUser.decks.getById(this.selDeck.id);
       if (!!userDeck) {  // If deck update
-        userDeck.cards = this.selDeck.cards.map(c => ({ id: c.id, ref: c.ref }));
+        userDeck.cards = this.selDeck.cards;
+        userDeck.$cards = this.selDeck.cards.map(this.globals.getCardObjByRef);
         userDeck.name = this.selDeck.name;
         userDeck.description = this.selDeck.description;
       }
 
       this.growl.success(`Deck ${this.selDeck.name} updated successfully`);
       this.changePageMode(0);
+      this.reloadDeckList();
     }
   }
 
@@ -242,6 +245,7 @@ export class AddDeckModalComponent implements OnInit {
   public createDeck = () => {
     this.decksCollection.add(this.newDeck).then(deck => {
       this.newDeck.id = deck.id;
+      this.newDeck.$cards = [];
       this.growl.success(`New deck successfully created`);
       this.activeModal.close(this.newDeck);
     });

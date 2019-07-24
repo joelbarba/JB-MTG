@@ -1,4 +1,4 @@
-import { Card, User, UserCard, UserDeck, IGame, IUserGame } from 'src/typings';
+import { Card, User, DeckCard, UserDeck, IGame, IGameUser, IGameCard } from 'src/typings';
 import { Component, OnInit } from '@angular/core';
 import { AngularFirestore, AngularFirestoreCollection, AngularFirestoreDocument } from '@angular/fire/firestore';
 import { Globals } from 'src/app/globals/globals.service';
@@ -6,11 +6,9 @@ import { GameService } from 'src/app/globals/game.service';
 import * as RxOp from 'rxjs/operators';
 import { Observable } from 'rxjs';
 import { NgbModal, NgbActiveModal, ModalDismissReasons } from '@ng-bootstrap/ng-bootstrap';
+import {ActivatedRoute} from '@angular/router';
 
 
-interface IUserGameExt extends IUserGame {
-  userName$: Observable<string>;
-}
 
 @Component({
   selector: 'app-game',
@@ -18,19 +16,22 @@ interface IUserGameExt extends IUserGame {
   styleUrls: ['./game.component.scss']
 })
 export class GameComponent implements OnInit {
-  public userA: IUserGameExt;
-  public userB: IUserGameExt;
-  public game;
+  public gameId: string;
+  public game$: Observable<IGame>;
+  public game: IGame; // Game snapshot
+
+  public userA: IGameUser;
+  public userB: IGameUser;
   public viewCard;  // Selected card to display on the big image
-  public handA; // Turn this into pipe from game obs
-  public playA;
-  public deckA;
-  public gravA;
-  
-  public handB;
-  public playB;
-  public deckB;
-  public gravB;
+  public handA = []; // Turn this into pipe from game obs
+  public playA = [];
+  public deckA = [];
+  public gravA = [];
+
+  public handB = [];
+  public playB = [];
+  public deckB = [];
+  public gravB = [];
 
   public isYourHandExp = true;  // Your hand box is expanded
   public isHisHandExp = true;   // Your hand box is expanded
@@ -40,6 +41,7 @@ export class GameComponent implements OnInit {
     private gameSrv: GameService,
     private afs: AngularFirestore,
     private modal: NgbModal,
+    private route: ActivatedRoute,
   ) {
 
   }
@@ -48,19 +50,30 @@ export class GameComponent implements OnInit {
     this.globals.isGameMode = true;
     this.globals.collapseBars(true);
 
-    const subs = this.gameSrv.gameDoc.snapshotChanges().subscribe(state => {
-      subs.unsubscribe();
-      const data = state.payload.data();
-      console.log(data);
-      this.userA = <IUserGameExt> data.user_a.keyMap('life, phase, ready');
-      // this.userA.userName$ = this.afs.doc<User>(data.user_a.user_id.path).valueChanges().pipe(RxOp.map((u: User) => u.name));
+    // Get the game id from the url
+    this.gameId = this.route.snapshot.paramMap.get('id');
+    this.gameSrv.gameId = this.gameId;
 
-      // this.userA.user$ = data.user_a.user_id.valueChanges();
-      // this.userA.user_id.valueChanges().pipe()
-      // this.userB = data.user_b;
+    const gameDoc = this.afs.doc<IGame>('/games/' + this.gameId);
+    this.game$ = gameDoc.valueChanges();
+
+    // Subscribe to game changes
+    this.game$.subscribe((game: IGame) => {
+      this.gameSrv.state = game;
+      this.game = game;
+
+      // Decorate the game
+      this.game.$userA = { ...this.game.user1 };
+      this.game.$userB = { ...this.game.user2 };
+      this.game.$userA.deck.forEach((deckCard: IGameCard) => {
+        deckCard.$card = this.globals.getCardByRef(deckCard.ref);
+      });
+      this.game.$userB.deck.forEach((deckCard: IGameCard) => {
+        deckCard.$card = this.globals.getCardByRef(deckCard.ref);
+      });
+
+      this.updateView();
     });
-
-    this.createNewGame();
   }
 
   public createNewGame = () => {
@@ -73,28 +86,25 @@ export class GameComponent implements OnInit {
 
   // Update view elements after running engine
   public updateView = () => {
-    this.game = this.gameSrv.state;
-    this.handA = this.game.userA.deck.filter(dCard => dCard.loc === 'hand');
-    this.playA = this.game.userA.deck.filter(dCard => dCard.loc === 'play').sort((a, b) => a.playOrder > b.playOrder ? 1 : -1);
-    this.deckA = this.game.userA.deck.filter(dCard => dCard.loc === 'deck');
-    this.gravA = this.game.userA.deck.filter(dCard => dCard.loc === 'grav');
-    
-    this.handB = this.game.userB.deck.filter(dCard => dCard.loc === 'hand');
-    this.playB = this.game.userB.deck.filter(dCard => dCard.loc === 'play');
-    this.deckB = this.game.userB.deck.filter(dCard => dCard.loc === 'deck');
-    this.gravB = this.game.userB.deck.filter(dCard => dCard.loc === 'grav');
-    // console.log('USER A DECK', this.game.userA.deck);
+    this.handA = this.game.$userA.deck.filter(dCard => dCard.loc === 'hand');
+    this.playA = this.game.$userA.deck.filter(dCard => dCard.loc === 'play').sort((a, b) => a.playOrder > b.playOrder ? 1 : -1);
+    this.deckA = this.game.$userA.deck.filter(dCard => dCard.loc === 'deck');
+    this.gravA = this.game.$userA.deck.filter(dCard => dCard.loc === 'grav');
+
+    this.handB = this.game.$userB.deck.filter(dCard => dCard.loc === 'hand');
+    this.playB = this.game.$userB.deck.filter(dCard => dCard.loc === 'play');
+    this.deckB = this.game.$userB.deck.filter(dCard => dCard.loc === 'deck');
+    this.gravB = this.game.$userB.deck.filter(dCard => dCard.loc === 'grav');
+    // console.log('USER A DECK', this.game.$userA.deck);
   }
 
   public clickHandCard = (selCard) => {
-    console.log(selCard);
-    this.gameSrv.summonCard(this.game.userA, selCard);
-    this.updateView();
+    this.gameSrv.summonCard(selCard);
   }
 
   public tapCard = (selCard) => {
     console.log(selCard);
-    this.gameSrv.tapCard(this.game.userA, selCard);
+    this.gameSrv.tapCard(this.game.$userA, selCard);
     this.updateView();
   }
 

@@ -103,6 +103,61 @@ export class LibraryComponent implements OnInit {
     // }));
   }
 
+  public fixDB = () => {
+    const cardsCollection = this.afs.collection('cards');
+
+    this.cards$ = cardsCollection.snapshotChanges().pipe(
+      RxOp.map(actions => {
+        return actions.map(a => {
+          let data = a.payload.doc.data() as Card;
+          data.id = a.payload.doc.id;
+
+          // Find the highest ID (c9999)
+          const numId = Number.parseInt(data.id.slice(1));
+          data.orderId = ('000000' + numId).slice(-5).toString();
+
+          return { data, doc: a.payload.doc };
+        });
+      })
+    );
+    const sub = this.cards$.subscribe((cards) => {
+      cards.forEach(cardObj => {
+        const card = cardObj.data;
+        // console.log('FIXING CARD ------', card);
+        // if (cardObj.data.id.length < 4) {
+        //   const newCard = { ...card };
+        //   const numId = Number.parseInt(card.id.slice(1));
+        //   const newId = 'c' + ('000000' + numId).slice(-6).toString();
+        //   delete newCard.id;
+        //   delete newCard.orderId;
+        //   if (!newCard.units) { newCard.units = []; }
+        //   newCard.units.forEach(unit => {
+        //     unit.ref = newId + '.' + unit.ref;
+        //     unit.owner = '';
+        //   });
+
+        //   cardsCollection.doc(newId).set(newCard);
+        //   cardsCollection.doc(card.id).delete();
+        // }
+
+        const newCard = { ...card };
+        newCard.units.forEach(unit => { unit.owner = ''; });
+        delete newCard.id;
+        delete newCard.orderId;
+        cardsCollection.doc(card.id).set(newCard);
+      });
+      sub.unsubscribe();
+    });
+
+    // this.cardDoc.update(this.editCard).then(() => {
+    //   this.growl.success(`Card Updated Successfully`);
+    //   this.activeModal.close();
+    // }).catch(() => {
+    //   this.growl.error(`No permission`);
+    // });
+
+  }
+
   public initDB = () => {
     // this.cardsCollection.doc('c1').set({ name: 'Island',   type: 'land', color: 'none', image: 'island.jpg',   text: 'Add one blue mana to your mana pool'});
     // this.cardsCollection.doc('c2').set({ name: 'Plains',   type: 'land', color: 'none', image: 'plains.jpg',   text: 'Add one white mana to your mana pool'});
@@ -166,15 +221,12 @@ export class AddCardModalComponent implements OnInit {
 
   ngOnInit() {
     // this.newCard = { name: 'Howling Mine', type: 'artifact', image: 'howling mine.jpg', color: 'none',  text: '' };
-    this.newCard.id = 'c' + (this.lastId + 1);
-    this.newCard = { color: 'none',  text: '' };
+    this.newCard = { color: 'none',  text: '', units: [] };
+    this.newCard.id = 'c' + ('000000' + (this.lastId + 1)).slice(-6).toString();
     this.newCard.cast = [0, 0, 0, 0, 0, 0];
-    // this.newCard.power = 5;
-    // this.newCard.defence = 2;
   }
 
   public createCard = () => {
-    // this.cardDoc.update(this.editCard);
     const cardId = this.newCard.id;
     delete this.newCard.id;
     this.cardsCollection.doc(cardId).set(this.newCard);
@@ -194,6 +246,7 @@ export class AddCardModalComponent implements OnInit {
 export class EditCardModalComponent implements OnInit {
   public refCard: Card;     // Reference from the list
   public editCard: Card;    // Working object
+  public cardId: string;  // ref to the doc ID
   private cardDoc: AngularFirestoreDocument<Card>; // Afb reference
 
   constructor(
@@ -212,7 +265,7 @@ export class EditCardModalComponent implements OnInit {
 
     const subs = this.cardDoc.snapshotChanges().subscribe(state => {
       this.editCard = state.payload.data();
-      // this.editCard.id = state.payload.id;
+      this.cardId = state.payload.id;
 
       if (!this.editCard.cast) { this.editCard.cast = [0, 0, 0, 0, 0, 0]; }
       if (!this.editCard.units) { this.editCard.units = []; }
@@ -239,7 +292,7 @@ export class EditCardModalComponent implements OnInit {
 
   public addUnit = () => {
     const newId = this.afs.createId();
-    this.editCard.units.push({ ref: newId, owner: '' });
+    this.editCard.units.push({ ref: this.cardId + '.' + newId, owner: '' });
     // this.confirm.open({
     //     title : `Add New Unit (${newId})`,
     //     text : `Do you confirm you want to add a new unit of "${this.editCard.name}".`,
