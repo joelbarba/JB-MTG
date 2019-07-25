@@ -41,6 +41,12 @@ export interface DeckCard {
 }
 
 
+export interface IGameLog {
+  executed ?: string;
+  userNum: 1 | 2;
+  action: string;
+  params: any;
+}
 
 export interface IGameCard {
   $card  ?: Card;
@@ -60,13 +66,17 @@ export interface IGameUser {
   ready    : boolean;
   manaPool : [number, number, number, number, number, number];
   deck     : Array<IGameCard>;
+  summonedLands : 0;  // Lands summoned during the current turn
 }
 
 export interface IGame {
-  created: Date;
+  created: string;
   status : 0 | 1 | 2;   // 0=running, 1=paused on userA, 2=paused on user B
   // 10=untap, 20=maintenance, 30=draw, 40=pre-combat, 50=combat, 60=post-combat, 70=discard, 80=end
   phase  : 10 | 20 | 30 | 40 | 50 | 60 | 70 | 80 | 110 | 120 | 130 | 140 | 150 | 160 | 170 | 180;
+
+  log: Array<IGameLog>;
+
   user1  : IGameUser;
   user2  : IGameUser;
 

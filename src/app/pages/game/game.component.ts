@@ -1,12 +1,14 @@
 import { Card, User, DeckCard, UserDeck, IGame, IGameUser, IGameCard } from 'src/typings';
 import { Component, OnInit } from '@angular/core';
 import { AngularFirestore, AngularFirestoreCollection, AngularFirestoreDocument } from '@angular/fire/firestore';
+import { AngularFireDatabase, AngularFireList } from '@angular/fire/database';
 import { Globals } from 'src/app/globals/globals.service';
 import { GameService } from 'src/app/globals/game.service';
-import * as RxOp from 'rxjs/operators';
 import { Observable } from 'rxjs';
 import { NgbModal, NgbActiveModal, ModalDismissReasons } from '@ng-bootstrap/ng-bootstrap';
 import {ActivatedRoute} from '@angular/router';
+import {map} from 'rxjs/operators';
+import {AngularFireFunctions} from "@angular/fire/functions";
 
 
 
@@ -36,14 +38,28 @@ export class GameComponent implements OnInit {
   public isYourHandExp = true;  // Your hand box is expanded
   public isHisHandExp = true;   // Your hand box is expanded
 
+  test$: AngularFireList<any[]>;
+
   constructor(
     private globals: Globals,
     private gameSrv: GameService,
     private afs: AngularFirestore,
+    private afd: AngularFireDatabase,
+    private aff: AngularFireFunctions,
     private modal: NgbModal,
     private route: ActivatedRoute,
   ) {
 
+  }
+
+  public gameDoc;
+  public actionsDoc;
+  public game2;
+  public clickTest = () => {
+    console.log(new Date(), 'Calling');
+    // this.gameDoc.update({ newProp: new Date() });
+    this.actionsDoc = this.afs.doc('/actions/1');
+    this.actionsDoc.set({ action: 'cast', cardId: '123', triggered: new Date() });
   }
 
   ngOnInit() {
@@ -59,6 +75,7 @@ export class GameComponent implements OnInit {
 
     // Subscribe to game changes
     this.game$.subscribe((game: IGame) => {
+      console.log('GAME Refresh ---------' , new Date());
       this.gameSrv.state = game;
       this.game = game;
 
@@ -76,13 +93,6 @@ export class GameComponent implements OnInit {
     });
   }
 
-  public createNewGame = () => {
-    this.gameSrv.createNewGame().then((game) => {
-      this.gameSrv.runEngine();
-      this.updateView();
-      this.viewCard = this.handA[0];
-    });
-  }
 
   // Update view elements after running engine
   public updateView = () => {
@@ -99,7 +109,8 @@ export class GameComponent implements OnInit {
   }
 
   public clickHandCard = (selCard) => {
-    this.gameSrv.summonCard(selCard);
+    this.gameSrv.summonCard(this.game.$userA, selCard);
+    this.updateView();
   }
 
   public tapCard = (selCard) => {

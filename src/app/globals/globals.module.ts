@@ -9,11 +9,7 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { AbstractTranslateService } from 'bf-ui-lib';
 import { AsyncFieldPipe } from './asyncField.pipe';
 import { MtgCardComponent } from './mtg-card/mtg-card.component';
-
-class TranslateService extends AbstractTranslateService {
-  constructor() { super(); }
-  doTranslate(label ?: string): string { return label; }
-}
+import {TranslateService} from './translate.service';
 
 @NgModule({
   declarations: [AsyncFieldPipe, MtgCardComponent],

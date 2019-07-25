@@ -1,4 +1,4 @@
-import {Card, User, DeckCard, UserDeck, IGame, IGameCard} from 'src/typings';
+import {Card, User, DeckCard, UserDeck, IGame, IGameCard, IGameLog} from 'src/typings';
 import './prototypes';
 import { Injectable } from '@angular/core';
 import { AngularFirestore, AngularFirestoreCollection, AngularFirestoreDocument } from '@angular/fire/firestore';
@@ -22,7 +22,7 @@ export class GameService {
   public gameId: string;
   public state: IGame;
 
-  //  'https://us-central1-jb-mtg.cloudfunctions.net';
+  // public readonly baseUrl = 'https://us-central1-jb-mtg.cloudfunctions.net';
   public readonly baseUrl = 'http://localhost:5000/jb-mtg/us-central1';
 
 
@@ -66,55 +66,33 @@ export class GameService {
 
 
 
-  public summonCard = (selCard: IGameCard) => {
-    const payload = {
-      gameId: this.gameId,
-      userId: this.state.$userA.userId,
-      action: 'cast',
-      cardRef: selCard.ref,
-    };
-    const url = `${this.baseUrl}/gameActionApi`;
-    this.http.post(url, payload, httpOptions).subscribe((data: any) => {
-      console.log('Action acknowledged', data.response);
-      // selCard.posX = (totalPlay * 100) + 10;
-      // selCard.posY = 50;
-      this.growl.success(`${selCard.$card.name} summoned`);
-    });
-  }
-
-
-
-
-
-
-
-  // ------ All here below should go to the server ------------
-
-
-  public summonCardSrv = (user, selCard) => {
+  public summonCard = (user, selCard) => {
     if (selCard.loc !== 'hand') {
       return false;
     }
     const totalPlay = user.deck.filter(dCard => dCard.loc === 'play').length;
 
     // Summon Land
-    if (selCard.card.type === 'land') {
-      if (this.turnState.summonedLands > 0) {
+    if (selCard.$card.type === 'land') {
+      if (user.summonedLands > 0) {
         this.growl.error('You shall not summon more than one land per turn');
         return false;
       }
       selCard.loc = 'play';
       selCard.playOrder = totalPlay;
-      this.turnState.summonedLands++;
+      user.summonedLands++;
       selCard.posX = (totalPlay * 100) + 10;
       selCard.posY = 50;
-      this.growl.success(`${selCard.card.name} summoned`);
+      this.growl.success(`${selCard.$card.name} summoned`);
+      this.registerAction({ action: 'summon', userNum: 1, params: {
+        cardRef: selCard.ref, type: 'land'
+      }});
     }
 
     // Summon Creature
-    if (selCard.card.type === 'creature') {
-      if (!this.takeMana(user.manaPool, selCard.card.cast)) {
-        this.growl.error(`Not enough mana to summon ${selCard.card.name}`);
+    if (selCard.$card.type === 'creature') {
+      if (!this.takeMana(user.manaPool, selCard.$card.cast)) {
+        this.growl.error(`Not enough mana to summon ${selCard.$card.name}`);
         return false;
       }
       selCard.loc = 'play';
@@ -122,12 +100,12 @@ export class GameService {
       selCard.summoningSickness = true;
       selCard.posX = (totalPlay * 100) + 10;
       selCard.posY = 50;
-      this.growl.success(`${selCard.card.name} summoned`);
+      this.growl.success(`${selCard.$card.name} summoned`);
     }
   }
 
   public tapCard = (user, selCard) => {
-    if (selCard.loc === 'play' && selCard.card.type === 'land' && !selCard.isTap) {
+    if (selCard.loc === 'play' && selCard.$card.type === 'land' && !selCard.isTap) {
       selCard.isTap = true;
       if (selCard.id === 'c4') { user.manaPool[4]++; }  // Mountain
     }
@@ -295,5 +273,15 @@ export class GameService {
     }
   }
 
+
+
+  public registerAction = (log: IGameLog) => {
+    log.executed = (new Date()).toString();
+    this.state.log.push(log);
+    const gameDoc = this.afs.doc('/games/' + this.gameId);
+    gameDoc.set(this.state).then(() => {
+      this.growl.success('Game sync');
+    });
+  }
 
 }

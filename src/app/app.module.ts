@@ -17,6 +17,8 @@ import { UserModule } from './pages/user/user.module';
 import { LibraryModule } from './pages/library/library.module';
 import { GameModule } from './pages/game/game.module';
 import { GamesListModule } from './pages/games-list/games-list.module';
+import {AngularFireDatabaseModule} from "@angular/fire/database";
+import {AngularFireFunctionsModule} from "@angular/fire/functions";
 
 @NgModule({
   declarations: [AppComponent],
@@ -25,6 +27,8 @@ import { GamesListModule } from './pages/games-list/games-list.module';
     AppRoutingModule,
     GlobalsModule,
     AngularFireModule.initializeApp(environment.firebase, 'jb-mtg'), // imports firebase/app needed for everything
+    AngularFireDatabaseModule, // imports realtime database management
+    AngularFireFunctionsModule, // imports realtime database management
     AngularFirestoreModule, // imports firebase/firestore, only needed for database features
     AngularFireAuthModule, // imports firebase/auth, only needed for auth features,
     AngularFireStorageModule,  // imports firebase/storage only needed for storage features

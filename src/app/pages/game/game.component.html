@@ -6,7 +6,8 @@
 
 <div class="row" *ngIf="!(gameSrv.status$ | async)">
   <div class="col-12">
-    <bf-btn bfText="Create New Game" bfType="add" (bfClick)="createNewGame()"></bf-btn>
+    <bf-btn bfText="Create New Game" bfType="add" (bfClick)="gameSrv.createNewGame()"></bf-btn>
+    <bf-btn bfText="TRIGGER TEST" bfType="add" (bfClick)="clickTest()"></bf-btn>
   </div>
 </div>
 
