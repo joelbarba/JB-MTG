@@ -1,5 +1,5 @@
 import { Card, User, DeckCard, UserDeck, IGame, IGameUser, IGameCard } from 'src/typings';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { AngularFirestore, AngularFirestoreCollection, AngularFirestoreDocument } from '@angular/fire/firestore';
 import { AngularFireDatabase, AngularFireList } from '@angular/fire/database';
 import { Globals } from 'src/app/globals/globals.service';
@@ -9,7 +9,7 @@ import { NgbModal, NgbActiveModal, ModalDismissReasons } from '@ng-bootstrap/ng-
 import {ActivatedRoute} from '@angular/router';
 import {map} from 'rxjs/operators';
 import {AngularFireFunctions} from "@angular/fire/functions";
-
+import {Profile} from "../../globals/profile.service";
 
 
 @Component({
@@ -17,10 +17,11 @@ import {AngularFireFunctions} from "@angular/fire/functions";
   templateUrl: './game.component.html',
   styleUrls: ['./game.component.scss']
 })
-export class GameComponent implements OnInit {
+export class GameComponent implements OnInit, OnDestroy {
   public gameId: string;
   public game$: Observable<IGame>;
   public game: IGame; // Game snapshot
+  public gameSub; // Game subscription
 
   public userA: IGameUser;
   public userB: IGameUser;
@@ -38,10 +39,13 @@ export class GameComponent implements OnInit {
   public isYourHandExp = true;  // Your hand box is expanded
   public isHisHandExp = true;   // Your hand box is expanded
 
-  test$: AngularFireList<any[]>;
+  public isMyTurn = false;      // Whether it's your turn (true) or the opponents (false)
+  public isWaitingOp = false;   // Whether waiting for the opponent to finish a manual action
+  public isSkipOn = false;      // Whether the finish phase button is on
 
   constructor(
     private globals: Globals,
+    private profile: Profile,
     private gameSrv: GameService,
     private afs: AngularFirestore,
     private afd: AngularFireDatabase,
@@ -62,9 +66,11 @@ export class GameComponent implements OnInit {
     this.actionsDoc.set({ action: 'cast', cardId: '123', triggered: new Date() });
   }
 
-  ngOnInit() {
+  async ngOnInit() {
     this.globals.isGameMode = true;
     this.globals.collapseBars(true);
+
+    await this.profile.loadPromise;
 
     // Get the game id from the url
     this.gameId = this.route.snapshot.paramMap.get('id');
@@ -73,59 +79,85 @@ export class GameComponent implements OnInit {
     const gameDoc = this.afs.doc<IGame>('/games/' + this.gameId);
     this.game$ = gameDoc.valueChanges();
 
-    // Subscribe to game changes
-    this.game$.subscribe((game: IGame) => {
-      console.log('GAME Refresh ---------' , new Date());
-      this.gameSrv.state = game;
-      this.game = game;
 
-      // Decorate the game
-      this.game.$userA = { ...this.game.user1 };
-      this.game.$userB = { ...this.game.user2 };
-      this.game.$userA.deck.forEach((deckCard: IGameCard) => {
-        deckCard.$card = this.globals.getCardByRef(deckCard.ref);
-      });
-      this.game.$userB.deck.forEach((deckCard: IGameCard) => {
-        deckCard.$card = this.globals.getCardByRef(deckCard.ref);
-      });
+    // -------------------------------------------------------------------------------
+    // Subscribe to game changes
+    this.gameSub = this.game$.subscribe((game: IGame) => {
+      this.gameSrv.myPlayerNum = (game.player1.userId === this.profile.userId ? 1 : 2);
+
+      // If update from me, ignore it
+      if (!!this.gameSrv.game && this.gameSrv.game.lastToken === game.lastToken) {
+        return false;
+      }
+
+      console.log('GAME Refresh --------->' , game);
+      this.gameSrv.game = this.gameSrv.decorateGameIn(game);
+      this.game = this.gameSrv.game;
+
+
+      // Start game
+      if (this.game.status === 0) { // 0=Init, 1=Running
+        if (this.gameSrv.myPlayerNum === 1) {
+          this.gameSrv.runEngine(); // If I am the 1st player, start the game
+        } else {
+          // wait
+          console.log('WATING.....'); // Paused on other player
+        }
+      }
+
+      // Check game paused
+      if (this.game.status >= 100) {
+        if (!this.game.$playerMe.ready) {
+          this.afterEngineStop(); // Paused on me
+        }
+        if (!this.game.$playerOp.ready) {
+          console.log('WATING.....'); // Paused on other player
+        }
+      }
 
       this.updateView();
     });
   }
 
+  ngOnDestroy() {
+    this.gameSub.unsubscribe();
+  }
 
   // Update view elements after running engine
   public updateView = () => {
-    this.handA = this.game.$userA.deck.filter(dCard => dCard.loc === 'hand');
-    this.playA = this.game.$userA.deck.filter(dCard => dCard.loc === 'play').sort((a, b) => a.playOrder > b.playOrder ? 1 : -1);
-    this.deckA = this.game.$userA.deck.filter(dCard => dCard.loc === 'deck');
-    this.gravA = this.game.$userA.deck.filter(dCard => dCard.loc === 'grav');
+    this.handA = this.game.$playerMe.deck.filter(dCard => dCard.loc === 'hand');
+    this.playA = this.game.$playerMe.deck.filter(dCard => dCard.loc === 'play').sort((a, b) => a.playOrder > b.playOrder ? 1 : -1);
+    this.deckA = this.game.$playerMe.deck.filter(dCard => dCard.loc === 'deck');
+    this.gravA = this.game.$playerMe.deck.filter(dCard => dCard.loc === 'grav');
 
-    this.handB = this.game.$userB.deck.filter(dCard => dCard.loc === 'hand');
-    this.playB = this.game.$userB.deck.filter(dCard => dCard.loc === 'play');
-    this.deckB = this.game.$userB.deck.filter(dCard => dCard.loc === 'deck');
-    this.gravB = this.game.$userB.deck.filter(dCard => dCard.loc === 'grav');
-    // console.log('USER A DECK', this.game.$userA.deck);
-  }
+    this.handB = this.game.$playerOp.deck.filter(dCard => dCard.loc === 'hand');
+    this.playB = this.game.$playerOp.deck.filter(dCard => dCard.loc === 'play').sort((a, b) => a.playOrder > b.playOrder ? 1 : -1);
+    this.deckB = this.game.$playerOp.deck.filter(dCard => dCard.loc === 'deck');
+    this.gravB = this.game.$playerOp.deck.filter(dCard => dCard.loc === 'grav');
+
+    this.isMyTurn = (this.gameSrv.myPlayerNum === this.game.$turn);
+    this.isWaitingOp = !this.game.$playerOp.ready;
+    this.isSkipOn = this.isMyTurn && (this.game.status === 100  // play
+                                   || this.game.status === 101  // combat
+    );
+  };
 
   public clickHandCard = (selCard) => {
-    this.gameSrv.summonCard(this.game.$userA, selCard);
+    this.gameSrv.summonCard(this.game.$playerMe, selCard);
     this.updateView();
-  }
+  };
 
   public tapCard = (selCard) => {
     console.log(selCard);
-    this.gameSrv.tapCard(this.game.$userA, selCard);
+    this.gameSrv.tapCard(this.game.$playerMe, selCard);
     this.updateView();
-  }
+  };
 
 
   public showGraveyard = (user, grav) => {
     if (grav.length) {
       const modalRef = this.modal.open(GameSelectHandCardComponent, {
         size: 'lg',
-        keyboard: false,
-        backdrop: 'static',
         windowClass: 'game-modal',
       });
       modalRef.componentInstance.modalTitle = `Graveyard`;
@@ -133,22 +165,23 @@ export class GameComponent implements OnInit {
       modalRef.componentInstance.cardList = grav;
       modalRef.componentInstance.maxSel = 0;
     }
-  }
+  };
 
 
 
 
 
   public finishPhase = () => {
-    this.gameSrv.runEngine(true);
-    this.updateView();
-    this.engineStop();
-  }
+    this.gameSrv.finishPhase(this.game.$playerMe);
+    this.afterEngineStop();
+  };
 
 
   // Trigger actions after engine stops
-  public engineStop = () => {
-    if (this.game.status === 2) {
+  public afterEngineStop = () => {
+    this.updateView();
+
+    if (this.game.status === 102) { // Discard hand (end of turn and more than 7 cards)
       const modalRef = this.modal.open(GameSelectHandCardComponent, {
         size: 'lg',
         keyboard: false,
@@ -164,14 +197,16 @@ export class GameComponent implements OnInit {
 
       modalRef.result.then((cardList) => {
         // Move selected cards to the graveyard
-        cardList.filter(c => c.isSelected).forEach(card => { card.loc = 'grav'; card.isSelected = false; });
+        cardList.filter(c => c.isSelected).forEach(card => {
+          card.loc = 'grav';
+          delete card.isSelected;
+        });
 
-        this.updateView();
-        this.gameSrv.runEngine(true);
+        this.gameSrv.finishPhase(this.game.$playerMe);
         this.updateView();
       });
     }
-  }
+  };
 
 }
 

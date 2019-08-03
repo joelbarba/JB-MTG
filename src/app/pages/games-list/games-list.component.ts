@@ -6,6 +6,7 @@ import { GameService } from 'src/app/globals/game.service';
 import { AngularFirestore } from '@angular/fire/firestore';
 import * as RxOp from "rxjs/operators";
 import {Router} from "@angular/router";
+import {BfGrowlService} from "bf-ui-lib";
 
 @Component({
   selector: 'app-games-list',
@@ -13,6 +14,7 @@ import {Router} from "@angular/router";
   styleUrls: ['./games-list.component.scss']
 })
 export class GamesListComponent implements OnInit {
+  public gamesCol;
   public games$;
 
   constructor(
@@ -20,16 +22,17 @@ export class GamesListComponent implements OnInit {
     private profile: Profile,
     private gameSrv: GameService,
     private afs: AngularFirestore,
-    private router: Router
+    private router: Router,
+    private growl: BfGrowlService,
   ) { }
 
   async ngOnInit() {
     await this.profile.loadPromise;
 
     // Fetch user decks
-    const gamesCol = this.afs.collection<IGame>('games');
-    this.games$ = gamesCol.snapshotChanges().pipe(
-      RxOp.map(actions => {
+    this.gamesCol = this.afs.collection<IGame>('games');
+    this.games$ = this.gamesCol.snapshotChanges().pipe(
+      RxOp.map((actions: any) => {
         return actions.map(game => {
           const data = game.payload.doc.data() as IGame;
           const id = game.payload.doc.id;
@@ -37,6 +40,13 @@ export class GamesListComponent implements OnInit {
         });
       })
     );
+  }
+
+  public deleteGame = (game) => {
+    this.gamesCol.doc(game.id).delete().then(() => {
+      this.growl.success('Game deleted. Id: ' + game.id);
+    });
+    console.log();
   }
 
   public loadGame = (game) => {

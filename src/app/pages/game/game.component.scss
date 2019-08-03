@@ -2,6 +2,7 @@
 $left-panel-width: 280px;
 
 .game-layout {
+  background: #394747;
   position: fixed;
   left: 1px;
   top: 0;
@@ -24,7 +25,7 @@ $left-panel-width: 280px;
       border: 1px solid #757575;
       display: flex;
       .left {
-        width: calc(100% - 90px); 
+        width: calc(100% - 90px);
         .deck {
           height: 130px;
           padding-left: 3px;
@@ -38,8 +39,8 @@ $left-panel-width: 280px;
             color: rgba(255, 255, 255, 0.5);
           }
         }
-        .life { 
-          height: calc(100% - 130px); 
+        .life {
+          height: calc(100% - 130px);
           color: white;
           font-size: 60px;
           display: flex;
@@ -61,10 +62,10 @@ $left-panel-width: 280px;
           display: flex;
           align-items: center;
 
-          img { 
+          img {
             height: 30px;
           }
-          span { 
+          span {
             font-size: 20px;
             margin-left: 15px;
             height: 32px;
@@ -107,7 +108,7 @@ $left-panel-width: 280px;
         font-size: 25px;
         cursor: pointer;
       }
-      
+
       .hand-wrapper {
         overflow: auto;
         overflow-y: hidden;
@@ -133,7 +134,7 @@ $left-panel-width: 280px;
       top: 0;
       border-top: none;
       border-bottom-left-radius: 4px;
-      .box-button { 
+      .box-button {
         top: 151px;
         border-top: none;
         border-bottom-left-radius: 4px;
@@ -144,7 +145,7 @@ $left-panel-width: 280px;
     }
   }
 
-  
+
   .board-game-down {
     top: 50%;
     border-top: 2px solid black;
@@ -152,7 +153,7 @@ $left-panel-width: 280px;
       bottom: 0;
       border-bottom: none;
       border-top-left-radius: 4px;
-      .box-button { 
+      .box-button {
         top: -35px;
         border-top-left-radius: 4px;
         border-bottom: none;

@@ -1,6 +1,9 @@
 {
     "extends": "../tslint.json",
+
     "rules": {
+        "typedef-whitespace": [false],
+        "semicolon": [true, "always", "strict-bound-class-methods"],
         "directive-selector": [
             true,
             "attribute",
