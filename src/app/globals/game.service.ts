@@ -24,8 +24,8 @@ export class GameService {
   public game: IGame;
   public myPlayerNum: null | 1 | 2;
 
-  // public readonly baseUrl = 'https://us-central1-jb-mtg.cloudfunctions.net';
-  public readonly baseUrl = 'http://localhost:5000/jb-mtg/us-central1';
+  public readonly baseUrl = 'https://us-central1-jb-mtg.cloudfunctions.net';
+  // public readonly baseUrl = 'http://localhost:5000/jb-mtg/us-central1';
 
 
   public status$;
@@ -104,19 +104,21 @@ export class GameService {
       this.saveGame();
     }
 
-    // Summon Creature
-    if (selCard.$card.type === 'creature') {
+    // Summon Creature / Artifact
+    if (selCard.$card.type === 'creature' || selCard.$card.type === 'artifact') {
       if (!this.takeMana(user.manaPool, selCard.$card.cast)) {
         this.growl.error(`Not enough mana to summon ${selCard.$card.name}`);
         return false;
       }
       selCard.loc = 'play';
       selCard.playOrder = totalPlay;
-      selCard.summoningSickness = true;
       selCard.posX = (totalPlay * 100) + 10;
       selCard.posY = 50;
+      if (selCard.$card.type === 'creature') { selCard.summoningSickness = true; }
       this.growl.success(`${selCard.$card.name} summoned`);
+      this.saveGame();
     }
+
 
     // Interrupt
     if (selCard.$card.type === 'interrupt') {
@@ -133,21 +135,30 @@ export class GameService {
         selCard.loc = 'grav';
         this.growl.success(`${selCard.$card.name} cast. 3 black mana added`);
       }
-
+      this.saveGame();
     }
+
+
+
   };
 
   public tapCard = (user, selCard) => {
-    if (selCard.loc === 'play' && selCard.$card.type === 'land' && !selCard.isTap) {
+    if (selCard.loc === 'play' && !selCard.isTap) {
       selCard.isTap = true;
-      if (selCard.$card.id === 'c000001') { user.manaPool[1]++; }  // Island
-      if (selCard.$card.id === 'c000002') { user.manaPool[2]++; }  // Plains
-      if (selCard.$card.id === 'c000003') { user.manaPool[3]++; }  // Swamp
-      if (selCard.$card.id === 'c000004') { user.manaPool[4]++; }  // Mountain
-      if (selCard.$card.id === 'c000005') { user.manaPool[5]++; }  // Forest
-      this.registerAction({ action: 'tapLand', player: user.$numPlayer, params: { cardRef: selCard.ref }});
+      if (selCard.$card.id === 'c000001') { user.manaPool[1]++; } // Island
+      if (selCard.$card.id === 'c000002') { user.manaPool[2]++; } // Plains
+      if (selCard.$card.id === 'c000003') { user.manaPool[3]++; } // Swamp
+      if (selCard.$card.id === 'c000004') { user.manaPool[4]++; } // Mountain
+      if (selCard.$card.id === 'c000005') { user.manaPool[5]++; } // Forest
+      if (selCard.$card.id === 'c000006') { user.manaPool[5]++; } // Mox Emerald
+      if (selCard.$card.id === 'c000007') { user.manaPool[3]++; } // Mox Jet
+      if (selCard.$card.id === 'c000008') { user.manaPool[2]++; } // Mox Pearl
+      if (selCard.$card.id === 'c000009') { user.manaPool[4]++; } // Mox Ruby
+      if (selCard.$card.id === 'c000010') { user.manaPool[1]++; } // Mox Sapphire
+      if (selCard.$card.id === 'c000011') { user.manaPool[0] = user.manaPool[0] + 2; } // Sol Ring
+      this.registerAction({ action: 'tap', player: user.$numPlayer, params: { cardRef: selCard.ref }});
+      this.saveGame();
     }
-    this.saveGame();
   };
 
 
