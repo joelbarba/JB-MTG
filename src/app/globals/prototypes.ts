@@ -23,6 +23,7 @@ interface Array<T> {
 interface Object {
   keyMap(propNames:string): Object;
   dCopy(): Object;
+  peel(): Object;
 }
 
 /**
@@ -201,6 +202,25 @@ Object.defineProperty(Object.prototype, 'dCopy', {
         } else {
           newObj[keyName] = this[keyName];
         }
+      }
+    }
+    return newObj;
+  },
+  enumerable: false
+});
+
+
+/**
+ * @ngdoc Object.prototype
+ * @name peel
+ * @description Removes all properties that have the "$" prefix
+ */
+Object.defineProperty(Object.prototype, 'peel', {
+  value: function() {
+    const newObj = {};
+    for (const keyName in this) { // Loop all object properties
+      if (this.hasOwnProperty(keyName) && keyName[0] !== '$') {
+        newObj[keyName] = this[keyName];
       }
     }
     return newObj;

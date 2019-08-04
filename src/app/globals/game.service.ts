@@ -1,4 +1,4 @@
-import {Card, User, DeckCard, UserDeck, IGame, IGameCard, IGameLog, IGameUser} from 'src/typings';
+import {Card, User, DeckCard, UserDeck, IGameTarget, IGame, IGameCard, IGameLog, IGameUser} from 'src/typings';
 import './prototypes';
 import { Injectable } from '@angular/core';
 import { AngularFirestore, AngularFirestoreCollection, AngularFirestoreDocument } from '@angular/fire/firestore';
@@ -80,9 +80,9 @@ export class GameService {
     this.runEngine();
   };
 
-  public summonCard = (user, selCard) => {
+  public summonCard = (user, selCard): any => {
     if (selCard.loc !== 'hand') {
-      return false;
+      return { res: 'cancel' };
     }
     const totalPlay = user.deck.filter(dCard => dCard.loc === 'play').length;
 
@@ -90,7 +90,7 @@ export class GameService {
     if (selCard.$card.type === 'land') {
       if (user.summonedLands > 0) {
         this.growl.error('You shall not summon more than one land per turn');
-        return false;
+        return { res: 'no mana' };
       }
       selCard.loc = 'play';
       selCard.playOrder = totalPlay;
@@ -108,7 +108,7 @@ export class GameService {
     if (selCard.$card.type === 'creature' || selCard.$card.type === 'artifact') {
       if (!this.takeMana(user.manaPool, selCard.$card.cast)) {
         this.growl.error(`Not enough mana to summon ${selCard.$card.name}`);
-        return false;
+        return { res: 'no mana' };
       }
       selCard.loc = 'play';
       selCard.playOrder = totalPlay;
@@ -120,26 +120,31 @@ export class GameService {
     }
 
 
-    // Interrupt
-    if (selCard.$card.type === 'interrupt') {
+    // Instant / Interrupt
+    if (selCard.$card.type === 'instant' || selCard.$card.type === 'interrupt') {
       if (!this.takeMana(user.manaPool, selCard.$card.cast)) {
         this.growl.error(`Not enough mana to cast ${selCard.$card.name}`);
-        return false;
+        return { res: 'no mana' };
       }
       selCard.loc = 'play';
       selCard.playOrder = totalPlay;
       selCard.posX = (totalPlay * 100) + 10;
       selCard.posY = 50;
+
       if (selCard.$card.id === 'c000027') { // Dark Ritual
         user.manaPool[3] = user.manaPool[3] + 3;
         selCard.loc = 'grav';
         this.growl.success(`${selCard.$card.name} cast. 3 black mana added`);
       }
+
+      if (selCard.$card.id === 'c000032') { // Lightning Bolt
+        return { res: 'action', action: 'sel target' };
+      }
       this.saveGame();
     }
 
 
-
+    return { res: 'done' };
   };
 
   public tapCard = (user, selCard) => {
@@ -161,7 +166,26 @@ export class GameService {
     }
   };
 
-
+  public applyAction = (selCard, targets: Array<IGameTarget>) => {
+    if (selCard.$card.id === 'c000032') { // Lightning Bolt
+      const target = targets[0];
+      if (target.type === 'card' && target.card.$card.type === 'creature') {
+        target.card.damage = (target.card.damage || 0) + 3;
+        if (target.card.damage >= target.card.$card.defence) {
+          target.card.loc = 'grav';
+          this.growl.success(`3 damage to ${target.card.$card.name}. Creature is dead`);
+        } else {
+          this.growl.success(`3 damage to ${target.card.$card.name}`);
+        }
+      }
+      if (target.type === 'player' && !!target.player) {
+        target.player.life = target.player.life - 3;
+        this.growl.success(`3 damage to ${target.player.userName}`);
+      }
+      selCard.loc = 'grav'; // Send lightning bolt to graveyard
+    }
+    this.saveGame();
+  };
 
 
   public runEngine = () => {
@@ -272,7 +296,15 @@ export class GameService {
       player.manaPool = [0, 0, 0, 0, 0, 0];
       this.growl.error(`Mana Burn: The ${manaLeft} mana left on your mana pool damaged you`);
     }
-    this.getToNextPhase(this.game.phase);
+
+    // Check if someone is dead
+    if (this.game.$playerMe.life <= 0 || this.game.$playerOp.life <= 0) {
+      this.game.status = 900;
+      this.game.player1.ready = false;
+      this.game.player2.ready = false;
+    } else {
+      this.getToNextPhase(this.game.phase);
+    }
   };
 
 
@@ -359,9 +391,13 @@ export class GameService {
     }
     $game.player1.deck.forEach((deckCard: IGameCard) => {
       deckCard.$card = this.globals.getCardByRef(deckCard.ref);
+      deckCard.$player = 1;
+      deckCard.$owner = $game.$playerMe.$numPlayer === 1 ? 'me' : 'op';
     });
     $game.player2.deck.forEach((deckCard: IGameCard) => {
       deckCard.$card = this.globals.getCardByRef(deckCard.ref);
+      deckCard.$player = 1;
+      deckCard.$owner = $game.$playerMe.$numPlayer === 2 ? 'me' : 'op';
     });
     $game.$turn = $game.phase < 100 ? 1 : 2;
     return $game;
@@ -372,8 +408,8 @@ export class GameService {
     const game = <IGame>$game.dCopy();
     delete game.$playerMe;
     delete game.$playerOp;
-    game.player1.deck.forEach((deckCard: IGameCard) => { delete deckCard.$card; });
-    game.player2.deck.forEach((deckCard: IGameCard) => { delete deckCard.$card; });
+    game.player1.deck.forEach((deckCard: IGameCard) => { deckCard.peel(); });
+    game.player2.deck.forEach((deckCard: IGameCard) => { deckCard.peel(); });
     delete game.player1.$numPlayer;
     delete game.player2.$numPlayer;
     console.log('Update GAME', game);

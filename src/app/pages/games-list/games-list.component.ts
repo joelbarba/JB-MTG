@@ -47,9 +47,9 @@ export class GamesListComponent implements OnInit {
       this.growl.success('Game deleted. Id: ' + game.id);
     });
     console.log();
-  }
+  };
 
   public loadGame = (game) => {
     this.router.navigate(['/game/' + game.id]);
-  }
+  };
 }

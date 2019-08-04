@@ -27,7 +27,7 @@ export interface UserCard {
   card: Card;
 }
 export interface UserDeck {
-  id         ?: string
+  id         ?: string;
   name        : string;
   description : string;
   cards       : Array<string>; // refs
@@ -48,6 +48,12 @@ export interface IGameLog {
   params: any;
 }
 
+export interface IGameTarget {
+  type  : 'card' | 'player';
+  card  ?: IGameCard;
+  player?: IGameUser;
+}
+
 export interface IGameCard {
   $card  ?: Card;
   ref     : string;
@@ -55,6 +61,9 @@ export interface IGameCard {
   playOrder : number;
   loc     : 'deck' | 'hand' | 'play' | 'grav' | 'disc';
   isTap   : boolean;
+  damage  : number; // For creatures: Temp damage during the current turn
+  $owner  : 'me' | 'op';
+  $player : 1 | 2;
 }
 
 export interface IGameUser {

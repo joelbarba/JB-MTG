@@ -1,4 +1,4 @@
-import { Card, User, DeckCard, UserDeck, IGame, IGameUser, IGameCard } from 'src/typings';
+import {Card, User, DeckCard, UserDeck, IGame, IGameUser, IGameCard, IGameTarget} from 'src/typings';
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { AngularFirestore, AngularFirestoreCollection, AngularFirestoreDocument } from '@angular/fire/firestore';
 import { AngularFireDatabase, AngularFireList } from '@angular/fire/database';
@@ -6,10 +6,11 @@ import { Globals } from 'src/app/globals/globals.service';
 import { GameService } from 'src/app/globals/game.service';
 import { Observable } from 'rxjs';
 import { NgbModal, NgbActiveModal, ModalDismissReasons } from '@ng-bootstrap/ng-bootstrap';
-import {ActivatedRoute} from '@angular/router';
+import {ActivatedRoute, Router} from '@angular/router';
 import {map} from 'rxjs/operators';
 import {AngularFireFunctions} from "@angular/fire/functions";
 import {Profile} from "../../globals/profile.service";
+import {BfConfirmService, BfGrowlService} from "bf-ui-lib";
 
 
 @Component({
@@ -25,7 +26,7 @@ export class GameComponent implements OnInit, OnDestroy {
 
   public userA: IGameUser;
   public userB: IGameUser;
-  public viewCard;  // Selected card to display on the big image
+  public viewCard = { $card: { image: 'card_back.jpg' }};  // Selected card to display on the big image
   public handA = []; // Turn this into pipe from game obs
   public playA = [];
   public deckA = [];
@@ -35,6 +36,9 @@ export class GameComponent implements OnInit, OnDestroy {
   public playB = [];
   public deckB = [];
   public gravB = [];
+
+  public targetRes;  // To resolve the select target promise
+  public targetCond; // Conditions for the selectable target
 
   public isYourHandExp = true;  // Your hand box is expanded
   public isHisHandExp = true;   // Your hand box is expanded
@@ -47,11 +51,14 @@ export class GameComponent implements OnInit, OnDestroy {
     private globals: Globals,
     private profile: Profile,
     private gameSrv: GameService,
+    private growl: BfGrowlService,
     private afs: AngularFirestore,
     private afd: AngularFireDatabase,
     private aff: AngularFireFunctions,
     private modal: NgbModal,
     private route: ActivatedRoute,
+    private router: Router,
+    private confirm: BfConfirmService,
   ) {
 
   }
@@ -64,7 +71,7 @@ export class GameComponent implements OnInit, OnDestroy {
     // this.gameDoc.update({ newProp: new Date() });
     this.actionsDoc = this.afs.doc('/actions/1');
     this.actionsDoc.set({ action: 'cast', cardId: '123', triggered: new Date() });
-  }
+  };
 
   async ngOnInit() {
     this.globals.isGameMode = true;
@@ -117,6 +124,7 @@ export class GameComponent implements OnInit, OnDestroy {
 
       this.updateView();
     });
+
   }
 
   ngOnDestroy() {
@@ -143,12 +151,24 @@ export class GameComponent implements OnInit, OnDestroy {
   };
 
   public clickHandCard = (selCard) => {
-    this.gameSrv.summonCard(this.game.$playerMe, selCard);
+    if (this.game.status === 103) { // If selecting a target
+      this.selTarget({ type: 'card', card: selCard });
+      return false;
+    }
+
+    const summon = this.gameSrv.summonCard(this.game.$playerMe, selCard);
     this.updateView();
+    if (summon.res === 'action') {
+      if (summon.action === 'sel target') { this.iniSelTarget(selCard); }
+    }
   };
 
   public tapCard = (selCard) => {
-    console.log(selCard);
+    if (this.game.status === 103) { // If selecting a target
+      this.selTarget({ type: 'card', card: selCard });
+      return false;
+    }
+
     this.gameSrv.tapCard(this.game.$playerMe, selCard);
     this.updateView();
   };
@@ -167,13 +187,55 @@ export class GameComponent implements OnInit, OnDestroy {
     }
   };
 
-
+  public selectPlayer = (player) => {
+    if (this.game.status === 103) { // If selecting a target
+      this.selTarget({ type: 'player', player });
+    }
+  };
 
 
 
   public finishPhase = () => {
     this.gameSrv.finishPhase(this.game.$playerMe);
     this.afterEngineStop();
+  };
+
+
+  // Freeze and force to select a target
+  public iniSelTarget = (selCard) => {
+    const prevStatus = this.game.status;
+    this.game.status = 103;
+    this.updateView();
+    this.growl.success(`${selCard.$card.name}: Select a target to apply it`);
+
+    this.targetCond = {
+      playerA: { loc: ['play'], type: ['creature'], player: true },
+      playerB: { loc: ['play'], type: ['creature'], player: true },
+    };
+
+    const targetPromise = new Promise((resolve, reject) => {
+      this.targetRes = resolve; // Expose resolver
+    }).then((target: IGameTarget) => {
+      this.game.status = prevStatus; // Rollback status
+      this.gameSrv.applyAction(selCard, [target]);
+      this.updateView();
+    });
+  };
+  public selTarget = (target: IGameTarget) => {
+    if (target.type === 'card') {
+      const playerCond = (target.card.$owner === 'me') ? this.targetCond.playerA : this.targetCond.playerB;
+      const card = target.card;
+      if (playerCond.loc.indexOf(card.loc) >= 0 && playerCond.type.indexOf(card.$card.type) >= 0) {
+        return this.targetRes(target);
+      }
+    }
+    if (target.type === 'player') {
+      if (target.player.$numPlayer === this.gameSrv.myPlayerNum && this.targetCond.playerA.player
+       || target.player.$numPlayer !== this.gameSrv.myPlayerNum && this.targetCond.playerB.player) {
+        return this.targetRes(target);
+      }
+    }
+    this.growl.error(`Target not valid`);
   };
 
 
@@ -204,6 +266,21 @@ export class GameComponent implements OnInit, OnDestroy {
 
         this.gameSrv.finishPhase(this.game.$playerMe);
         this.updateView();
+      });
+    }
+
+    if (this.game.status === 900) { // Game End
+      const msg = this.game.$playerMe.life > 0 ? 'You won the game!' : 'You lost the game';
+      this.confirm.open({
+          title            : 'Game Over',
+          htmlContent      : `<h4 class="marT20">${msg}</h4>`,
+          yesButtonText    : 'Ok',
+          showNo           : false,
+          showCancel       : false,
+      }).then((res) => {
+        this.router.navigate(['/games-list']);
+      }, (res) => {
+        this.router.navigate(['/games-list']);
       });
     }
   };
