@@ -55,7 +55,8 @@ export interface IGameTarget {
 }
 
 export interface IGameCard {
-  $card  ?: Card;
+  $card  ?: Partial<Card>;
+  id     ?: string;
   ref     : string;
   deckOrder : number;
   playOrder : number;
@@ -82,8 +83,7 @@ export interface IGameUser {
 export interface IGame {
   created: string;
   status : number;   // 0=Init, 1=Running, 100=Paused on player1, 200=Paused on player2
-  // 10=untap, 20=maintenance, 30=draw, 40=pre-combat, 50=combat, 60=post-combat, 70=discard, 80=end
-  phase: number;
+  phase: number; // 10=untap, 20=maintenance, 30=draw, 40=pre-combat, 50=combat, 60=post-combat, 70=discard, 80=end
   lastPlayer: null | 1 | 2; // Last player to update the game
   lastToken: string; // Reference to the client that sent the last update
 
@@ -92,8 +92,4 @@ export interface IGame {
   player1: IGameUser;
   player2: IGameUser;
 
-  $playerMe ?: IGameUser;
-  $playerOp ?: IGameUser;
-
-  $turn ?: 1 | 2; // Current turn (phase > 100 or not)
 }

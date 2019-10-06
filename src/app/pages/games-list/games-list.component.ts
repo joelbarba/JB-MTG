@@ -30,7 +30,7 @@ export class GamesListComponent implements OnInit {
     await this.profile.loadPromise;
 
     // Fetch user decks
-    this.gamesCol = this.afs.collection<IGame>('games');
+    this.gamesCol = this.afs.collection<IGame>('users/' + this.profile.userId + '/games');
     this.games$ = this.gamesCol.snapshotChanges().pipe(
       RxOp.map((actions: any) => {
         return actions.map(game => {

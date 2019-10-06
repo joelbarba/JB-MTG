@@ -2,13 +2,15 @@ import {Card, User, DeckCard, UserDeck, IGameTarget, IGame, IGameCard, IGameLog,
 import './prototypes';
 import { Injectable } from '@angular/core';
 import { AngularFirestore, AngularFirestoreCollection, AngularFirestoreDocument } from '@angular/fire/firestore';
-import { Observable, BehaviorSubject } from 'rxjs';
+import {Observable, BehaviorSubject, Subject} from 'rxjs';
 import { Globals } from './globals.service';
 import * as RxOp from 'rxjs/operators';
 import { stringify } from 'querystring';
 import { BfGrowlService, BfConfirmService } from 'bf-ui-lib';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import {Profile} from './profile.service';
+import {webSocket, WebSocketSubject} from "rxjs/webSocket";
+import {filter} from "rxjs/operators";
 
 const httpOptions = {
   headers: new HttpHeaders({ 'Content-Type':  'application/json' })
@@ -18,23 +20,36 @@ const httpOptions = {
  providedIn: 'root'
 })
 export class GameService {
-  public status = 0;    // 0 = off, 1 = ongoing
-
   public gameId: string;
-  public game: IGame;
-  public myPlayerNum: null | 1 | 2;
+  public game: IGame;            // Game status object
+  public gameDocSub;             // Firebase doc subscription
+  public game$: Subject<IGame> = new Subject();  // Game observable to react externally
 
-  public readonly baseUrl = 'https://us-central1-jb-mtg.cloudfunctions.net';
-  // public readonly baseUrl = 'http://localhost:5000/jb-mtg/us-central1';
+  public myPlayerNum: null | 1 | 2; // PlayerA is always you. But it may be 1 or 2 in DB
+  public playerA: IGameUser;
+  public deckA = [];  // Cards on the deck (unknown)
+  public handA = [];  // Cards on the hand
+  public playA = [];  // Cards on play
+  public gravA = [];  // Cards on graveyard
+
+  public playerB: IGameUser;
+  public deckB = [];  // Cards on the deck (unknown)
+  public handB = [];  // Cards on the hand (unknown)
+  public playB = [];  // Cards on play
+  public gravB = [];  // Cards on graveyard
+
+  public turn ?: 1 | 2;     // Current turn (phase > 100 or not)
+  public isMyTurn = false;  // Whether it's your turn (true) or the opponents (false)
 
 
-  public status$;
 
-  public gameDoc: AngularFirestoreDocument<IGame>;
-  public gamesCollection: AngularFirestoreCollection<IGame>;
+  // public readonly baseUrl = 'https://us-central1-jb-mtg.cloudfunctions.net';
+  public readonly baseUrl = 'http://localhost:5000/jb-mtg/us-central1'; // Run "firebase serve"
 
-  public turnState;
-  public phaseState;
+  private socket$: WebSocketSubject<any>;
+  private resolveWS;  // Promise resolver to wait WS response
+
+
 
   constructor(
     private afs: AngularFirestore,
@@ -45,6 +60,147 @@ export class GameService {
   ) {
   }
 
+
+  // Connect to WSS
+  public connectWS = () => {
+    const wsUrl = 'ws://127.0.0.1:8001';
+    // this.socket$ = new WebSocketSubject(wsUrl);
+    if (!!this.socket$) { this.socket$.complete(); }
+    this.socket$ = webSocket(wsUrl);
+    this.socket$.subscribe(
+      (message) => {
+        console.log('Response from WSS:', message);
+        // if (this.resolveWS) {
+        //   this.resolveWS();
+        //   this.resolveWS = null;
+        // }
+      },
+      (err) => console.error(err),
+      () => console.warn('Completed!')
+    );
+  };
+
+  public sendWS = (data) => {
+    return new Promise((resolve, reject) => {
+      const token = this.afs.createId();
+      this.socket$.next({ ...data, token });
+      const subs = this.socket$.pipe(filter(msg => msg.token === token)).subscribe(message => {
+        resolve(message);
+        subs.unsubscribe();
+      });
+    });
+  };
+
+  // --------------------- Join a current game ----------------------------
+  public  joinGame = async (gameId) => {
+    console.log('Joining game');
+    if (!!this.gameDocSub) { this.gameDocSub.unsubscribe(); }
+
+    this.connectWS();
+
+    console.warn('SENDING COMMAND --> login');
+    await this.sendWS({ method: 'login', data: {
+        userId: this.profile.userId, token: '', gameId
+      }
+    });
+
+    this.gameId = gameId;
+    const gameDoc = this.afs.doc<IGame>('users/' + this.profile.userId + '/games/' + this.gameId);
+
+    // Subscribe to game changes
+    this.gameDocSub = gameDoc.valueChanges().subscribe(async (game: IGame) => {
+      this.myPlayerNum = (game.player1.userId === this.profile.userId ? 1 : 2);
+
+      console.log('GAME Refresh --------->' , game);
+      this.game = this.decorateGameIn(game); // Extend game
+
+
+      // Start game
+      if (this.game.status === 0) { // 0=Init
+        if (this.isMyTurn) {
+          // this.runEngine(); // If I am the 1st player, start the game
+          // TODO: CALL API TO START THE GAME
+          console.warn('SENDING COMMAND --> go');
+          await this.sendWS({ method: 'go' });
+        } else {
+          console.log('WATING.....'); // Waiting playerB to start the game
+        }
+      }
+
+      // Check game paused
+      if (this.game.status >= 100) {
+        if (this.playerA.ready) {
+          // this.afterEngineStop(); // Paused on me
+        } else {
+          console.log('WATING.....'); // Paused on other player
+        }
+      }
+
+      this.updateCards();
+      this.game$.next(this.game); // Notify views to update
+    });
+  };
+
+
+  // Get the game from DB (Firestore) and adds $ extended values
+  public decorateGameIn = (game: IGame): IGame => {
+    const unknownCard = { image: 'card_back.jpg' };
+    const $game = <IGame>game.dCopy();
+    if ($game.player1.userId === this.profile.userId) {
+      this.playerA = $game.player1;
+      this.playerB = $game.player2;
+      this.playerA.$numPlayer = 1;
+      this.playerA.$numPlayer = 2;
+    } else {
+      this.playerA = $game.player2;
+      this.playerB = $game.player1;
+      this.playerA.$numPlayer = 2;
+      this.playerA.$numPlayer = 1;
+    }
+    $game.player1.deck.forEach((deckCard: IGameCard) => {
+      deckCard.$card = deckCard.ref ? this.globals.getCardByRef(deckCard.ref) : unknownCard;
+      deckCard.$player = 1;
+      deckCard.$owner = this.playerA.$numPlayer === 1 ? 'me' : 'op';
+    });
+    $game.player2.deck.forEach((deckCard: IGameCard) => {
+      deckCard.$card = deckCard.ref ? this.globals.getCardByRef(deckCard.ref) : unknownCard;
+      deckCard.$player = 2;
+      deckCard.$owner = this.playerA.$numPlayer === 2 ? 'me' : 'op';
+    });
+
+    this.turn = $game.phase < 100 ? 1 : 2;
+    this.isMyTurn = (this.myPlayerNum === this.turn);
+
+    return $game;
+  };
+
+  // Update deck cards subArrays
+  public updateCards = () => {
+    this.handA = this.playerA.deck.filter(dCard => dCard.loc === 'hand');
+    this.playA = this.playerA.deck.filter(dCard => dCard.loc === 'play').sort((a, b) => a.playOrder > b.playOrder ? 1 : -1);
+    this.deckA = this.playerA.deck.filter(dCard => dCard.loc === 'deck');
+    this.gravA = this.playerA.deck.filter(dCard => dCard.loc === 'grav');
+
+    this.handB = this.playerB.deck.filter(dCard => dCard.loc === 'hand');
+    this.playB = this.playerB.deck.filter(dCard => dCard.loc === 'play').sort((a, b) => a.playOrder > b.playOrder ? 1 : -1);
+    this.deckB = this.playerB.deck.filter(dCard => dCard.loc === 'deck');
+    this.gravB = this.playerB.deck.filter(dCard => dCard.loc === 'grav');
+  };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  // --------------------------------------------------------
 
   // This logic should go to the backend later
   public createNewGame = () => {
@@ -193,7 +349,7 @@ export class GameService {
 
     game.status = 1; // running
     while (game.status === 1) {
-      const turnPlayer = this.myPlayerNum === game.$turn ? this.game.$playerMe : this.game.$playerOp;
+      const turnPlayer = this.myPlayerNum === this.turn ? this.playerA : this.playerB;
       switch (game.phase) {
         case  10: this.unTapPhase10(      turnPlayer, 1); break;
         case  20: this.maintenancePhase20(turnPlayer, 1); break;
@@ -298,7 +454,7 @@ export class GameService {
     }
 
     // Check if someone is dead
-    if (this.game.$playerMe.life <= 0 || this.game.$playerOp.life <= 0) {
+    if (this.playerA.life <= 0 || this.playerB.life <= 0) {
       this.game.status = 900;
       this.game.player1.ready = false;
       this.game.player2.ready = false;
@@ -360,7 +516,7 @@ export class GameService {
       case 180: nextPhase = 10;  break;
       default: nextPhase = this.game.phase;
     }
-    this.game.$turn = nextPhase < 100 ? 1 : 2;
+    this.turn = nextPhase < 100 ? 1 : 2;
     this.game.phase = nextPhase;
     return nextPhase;
   };
@@ -375,45 +531,22 @@ export class GameService {
     this.game.lastPlayer = this.myPlayerNum;
     this.game.lastToken = this.afs.createId();
     const gameDoc = this.afs.doc('/games/' + this.gameId);
-    return gameDoc.set(this.decorateGameOut(this.game));
+    // return gameDoc.set(this.decorateGameOut(this.game));
   };
 
 
-  // Get the game from DB (Firestore) and adds $ extended values
-  public decorateGameIn = (game: IGame): IGame => {
-    const $game = <IGame>game.dCopy();
-    if ($game.player1.userId === this.profile.userId) {
-      $game.$playerMe = $game.player1; $game.$playerMe.$numPlayer = 1;
-      $game.$playerOp = $game.player2; $game.$playerOp.$numPlayer = 2;
-    } else {
-      $game.$playerMe = $game.player2; $game.$playerMe.$numPlayer = 2;
-      $game.$playerOp = $game.player1; $game.$playerOp.$numPlayer = 1;
-    }
-    $game.player1.deck.forEach((deckCard: IGameCard) => {
-      deckCard.$card = this.globals.getCardByRef(deckCard.ref);
-      deckCard.$player = 1;
-      deckCard.$owner = $game.$playerMe.$numPlayer === 1 ? 'me' : 'op';
-    });
-    $game.player2.deck.forEach((deckCard: IGameCard) => {
-      deckCard.$card = this.globals.getCardByRef(deckCard.ref);
-      deckCard.$player = 1;
-      deckCard.$owner = $game.$playerMe.$numPlayer === 2 ? 'me' : 'op';
-    });
-    $game.$turn = $game.phase < 100 ? 1 : 2;
-    return $game;
-  };
 
   // Stripe out the game extended values to get the raw DB version
-  public decorateGameOut = ($game: IGame): IGame => {
-    const game = <IGame>$game.dCopy();
-    delete game.$playerMe;
-    delete game.$playerOp;
-    game.player1.deck.forEach((deckCard: IGameCard) => { deckCard.peel(); });
-    game.player2.deck.forEach((deckCard: IGameCard) => { deckCard.peel(); });
-    delete game.player1.$numPlayer;
-    delete game.player2.$numPlayer;
-    console.log('Update GAME', game);
-    return game;
-  };
+  // public decorateGameOut = ($game: IGame): IGame => {
+  //   const game = <IGame>$game.dCopy();
+  //   delete game.$playerMe;
+  //   delete game.$playerOp;
+  //   game.player1.deck.forEach((deckCard: IGameCard) => { deckCard.peel(); });
+  //   game.player2.deck.forEach((deckCard: IGameCard) => { deckCard.peel(); });
+  //   delete game.player1.$numPlayer;
+  //   delete game.player2.$numPlayer;
+  //   console.log('Update GAME', game);
+  //   return game;
+  // };
 
 }

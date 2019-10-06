@@ -20,22 +20,11 @@ import {BfConfirmService, BfGrowlService} from "bf-ui-lib";
 })
 export class GameComponent implements OnInit, OnDestroy {
   public gameId: string;
-  public game$: Observable<IGame>;
-  public game: IGame; // Game snapshot
+  public game: IGame; // Game snapshot - From this.gameSrv.game$()
   public gameSub; // Game subscription
 
-  public userA: IGameUser;
-  public userB: IGameUser;
   public viewCard = { $card: { image: 'card_back.jpg' }};  // Selected card to display on the big image
-  public handA = []; // Turn this into pipe from game obs
-  public playA = [];
-  public deckA = [];
-  public gravA = [];
 
-  public handB = [];
-  public playB = [];
-  public deckB = [];
-  public gravB = [];
 
   public targetRes;  // To resolve the select target promise
   public targetCond; // Conditions for the selectable target
@@ -43,14 +32,14 @@ export class GameComponent implements OnInit, OnDestroy {
   public isYourHandExp = true;  // Your hand box is expanded
   public isHisHandExp = true;   // Your hand box is expanded
 
-  public isMyTurn = false;      // Whether it's your turn (true) or the opponents (false)
+  // public isMyTurn = false;      // Whether it's your turn (true) or the opponents (false)
   public isWaitingOp = false;   // Whether waiting for the opponent to finish a manual action
   public isSkipOn = false;      // Whether the finish phase button is on
 
   constructor(
     private globals: Globals,
     private profile: Profile,
-    private gameSrv: GameService,
+    public playBoard: GameService,
     private growl: BfGrowlService,
     private afs: AngularFirestore,
     private afd: AngularFireDatabase,
@@ -63,16 +52,6 @@ export class GameComponent implements OnInit, OnDestroy {
 
   }
 
-  public gameDoc;
-  public actionsDoc;
-  public game2;
-  public clickTest = () => {
-    console.log(new Date(), 'Calling');
-    // this.gameDoc.update({ newProp: new Date() });
-    this.actionsDoc = this.afs.doc('/actions/1');
-    this.actionsDoc.set({ action: 'cast', cardId: '123', triggered: new Date() });
-  };
-
   async ngOnInit() {
     this.globals.isGameMode = true;
     this.globals.collapseBars(true);
@@ -80,50 +59,14 @@ export class GameComponent implements OnInit, OnDestroy {
     await this.profile.loadPromise;
 
     // Get the game id from the url
-    this.gameId = this.route.snapshot.paramMap.get('id');
-    this.gameSrv.gameId = this.gameId;
+    await this.playBoard.joinGame(this.route.snapshot.paramMap.get('id'));
 
-    const gameDoc = this.afs.doc<IGame>('/games/' + this.gameId);
-    this.game$ = gameDoc.valueChanges();
-
-
-    // -------------------------------------------------------------------------------
-    // Subscribe to game changes
-    this.gameSub = this.game$.subscribe((game: IGame) => {
-      this.gameSrv.myPlayerNum = (game.player1.userId === this.profile.userId ? 1 : 2);
-
-      // If update from me, ignore it
-      if (!!this.gameSrv.game && this.gameSrv.game.lastToken === game.lastToken) {
-        return false;
-      }
-
-      console.log('GAME Refresh --------->' , game);
-      this.gameSrv.game = this.gameSrv.decorateGameIn(game);
-      this.game = this.gameSrv.game;
-
-
-      // Start game
-      if (this.game.status === 0) { // 0=Init, 1=Running
-        if (this.gameSrv.myPlayerNum === 1) {
-          this.gameSrv.runEngine(); // If I am the 1st player, start the game
-        } else {
-          // wait
-          console.log('WATING.....'); // Paused on other player
-        }
-      }
-
-      // Check game paused
-      if (this.game.status >= 100) {
-        if (!this.game.$playerMe.ready) {
-          this.afterEngineStop(); // Paused on me
-        }
-        if (!this.game.$playerOp.ready) {
-          console.log('WATING.....'); // Paused on other player
-        }
-      }
-
+    this.gameSub = this.playBoard.game$.subscribe((game: IGame) => {
+      console.log('Update view controller');
+      this.game = game;
       this.updateView();
     });
+
 
   }
 
@@ -133,20 +76,10 @@ export class GameComponent implements OnInit, OnDestroy {
 
   // Update view elements after running engine
   public updateView = () => {
-    this.handA = this.game.$playerMe.deck.filter(dCard => dCard.loc === 'hand');
-    this.playA = this.game.$playerMe.deck.filter(dCard => dCard.loc === 'play').sort((a, b) => a.playOrder > b.playOrder ? 1 : -1);
-    this.deckA = this.game.$playerMe.deck.filter(dCard => dCard.loc === 'deck');
-    this.gravA = this.game.$playerMe.deck.filter(dCard => dCard.loc === 'grav');
-
-    this.handB = this.game.$playerOp.deck.filter(dCard => dCard.loc === 'hand');
-    this.playB = this.game.$playerOp.deck.filter(dCard => dCard.loc === 'play').sort((a, b) => a.playOrder > b.playOrder ? 1 : -1);
-    this.deckB = this.game.$playerOp.deck.filter(dCard => dCard.loc === 'deck');
-    this.gravB = this.game.$playerOp.deck.filter(dCard => dCard.loc === 'grav');
-
-    this.isMyTurn = (this.gameSrv.myPlayerNum === this.game.$turn);
-    this.isWaitingOp = !this.game.$playerOp.ready;
-    this.isSkipOn = this.isMyTurn && (this.game.status === 100  // play
-                                   || this.game.status === 101  // combat
+    this.isWaitingOp = this.playBoard.playerB.ready;
+    this.isSkipOn = this.playBoard.isMyTurn && (
+             this.game.status === 100  // play
+          || this.game.status === 101  // combat
     );
   };
 
@@ -156,7 +89,7 @@ export class GameComponent implements OnInit, OnDestroy {
       return false;
     }
 
-    const summon = this.gameSrv.summonCard(this.game.$playerMe, selCard);
+    const summon = this.playBoard.summonCard(this.playBoard.playerA, selCard);
     this.updateView();
     if (summon.res === 'action') {
       if (summon.action === 'sel target') { this.iniSelTarget(selCard); }
@@ -169,7 +102,7 @@ export class GameComponent implements OnInit, OnDestroy {
       return false;
     }
 
-    this.gameSrv.tapCard(this.game.$playerMe, selCard);
+    this.playBoard.tapCard(this.playBoard.playerA, selCard);
     this.updateView();
   };
 
@@ -196,7 +129,7 @@ export class GameComponent implements OnInit, OnDestroy {
 
 
   public finishPhase = () => {
-    this.gameSrv.finishPhase(this.game.$playerMe);
+    this.playBoard.finishPhase(this.playBoard.playerA);
     this.afterEngineStop();
   };
 
@@ -217,7 +150,7 @@ export class GameComponent implements OnInit, OnDestroy {
       this.targetRes = resolve; // Expose resolver
     }).then((target: IGameTarget) => {
       this.game.status = prevStatus; // Rollback status
-      this.gameSrv.applyAction(selCard, [target]);
+      this.playBoard.applyAction(selCard, [target]);
       this.updateView();
     });
   };
@@ -230,8 +163,8 @@ export class GameComponent implements OnInit, OnDestroy {
       }
     }
     if (target.type === 'player') {
-      if (target.player.$numPlayer === this.gameSrv.myPlayerNum && this.targetCond.playerA.player
-       || target.player.$numPlayer !== this.gameSrv.myPlayerNum && this.targetCond.playerB.player) {
+      if (target.player.$numPlayer === this.playBoard.myPlayerNum && this.targetCond.playerA.player
+       || target.player.$numPlayer !== this.playBoard.myPlayerNum && this.targetCond.playerB.player) {
         return this.targetRes(target);
       }
     }
@@ -253,9 +186,9 @@ export class GameComponent implements OnInit, OnDestroy {
       modalRef.componentInstance.modalTitle = 'Discard Phase';
       modalRef.componentInstance.modalText = `You cannot finish the turn with more than 7 cards on your hand.`;
       modalRef.componentInstance.modalText += `Please select those you want to discard of`;
-      modalRef.componentInstance.cardList = this.handA;
-      modalRef.componentInstance.maxSel = this.handA.length - 7;
-      modalRef.componentInstance.minSel = this.handA.length - 7;
+      modalRef.componentInstance.cardList = this.playBoard.handA;
+      modalRef.componentInstance.maxSel = this.playBoard.handA.length - 7;
+      modalRef.componentInstance.minSel = this.playBoard.handA.length - 7;
 
       modalRef.result.then((cardList) => {
         // Move selected cards to the graveyard
@@ -264,13 +197,13 @@ export class GameComponent implements OnInit, OnDestroy {
           delete card.isSelected;
         });
 
-        this.gameSrv.finishPhase(this.game.$playerMe);
+        this.playBoard.finishPhase(this.playBoard.playerA);
         this.updateView();
       });
     }
 
     if (this.game.status === 900) { // Game End
-      const msg = this.game.$playerMe.life > 0 ? 'You won the game!' : 'You lost the game';
+      const msg = this.playBoard.playerA.life > 0 ? 'You won the game!' : 'You lost the game';
       this.confirm.open({
           title            : 'Game Over',
           htmlContent      : `<h4 class="marT20">${msg}</h4>`,
@@ -327,11 +260,11 @@ export class GameSelectHandCardComponent implements OnInit {
 
     this.isOkEnabled = (this.maxSel === null || nextSel <= this.maxSel)
                     && (this.minSel === null || nextSel >= this.minSel);
-  }
+  };
 
   public clickOk = () => {
     this.activeModal.close(this.cardList);
-  }
+  };
 
 }
 
