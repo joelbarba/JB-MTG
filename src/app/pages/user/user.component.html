@@ -19,14 +19,14 @@
 
       <!-- Remove from deck -->
       <div class="marB20" *ngIf="pageMode === 1 && viewCard.from === 'deck'">
-        <bf-btn class="full-width" 
-                bfType="delete" 
+        <bf-btn class="full-width"
+                bfType="delete"
                 bfText="Remove from deck"
                 (bfClick)="selectCard(this.selUser.$cards.getByProp('ref', viewCard.ref), 'all')">
         </bf-btn>
       </div>
 
-      <bf-label class="value-list-3" bfText="Name"  [bfValue]="viewCard.id + ' - ' + viewCard.card.name"></bf-label>
+      <bf-label class="value-list-3" bfText="Name"  [bfValue]="viewCard.card.id + ' - ' + viewCard.card.name"></bf-label>
       <bf-label class="value-list-3" bfText="Ref"   [bfValue]="viewCard.ref"></bf-label>
       <bf-label class="value-list-3" bfText="Color" [bfValue]="viewCard.card.color"></bf-label>
       <bf-label class="value-list-3" bfText="Type"  [bfValue]="viewCard.card.type"></bf-label>
@@ -47,14 +47,14 @@
                   bfIcon="icon-pencil"
                   bfTooltip="Click to edit deck details">
           </bf-btn>
-        </h4>        
+        </h4>
       </div>
       <div class="col-8 text-right" *ngIf="deckCards">
         <div class="marR30" style="display: inline-block" *ngIf="!!deckCards && deckCards.totalPages > 1">
           <bf-list-paginator [bfCtrl]="deckCards"></bf-list-paginator>
         </div>
         <bf-btn [hidden]="pageMode === 1" bfType="edit"   bfText="Edit Deck" (bfClick)="changePageMode(1)"></bf-btn>
-        
+
         <!-- <bf-btn [hidden]="pageMode === 0" bfType="delete" bfText="Delete Deck" (bfClick)="changePageMode(1)"></bf-btn> -->
         <bf-btn [hidden]="pageMode === 0" bfType="cancel" bfText="Cancel"      (bfClick)="changePageMode(0)"></bf-btn>
         <bf-btn [hidden]="pageMode === 0" bfType="save"   bfText="Save Deck"   (bfClick)="saveDeck()"></bf-btn>
@@ -66,7 +66,7 @@
 
     <div class="row marT20">
       <div class="col-12">
-        <div *ngFor="let deckCard of deckCards.renderList$ | async" 
+        <div *ngFor="let deckCard of deckCards.renderList$ | async"
               class="card-box" [class.selected]="deckCard.isSelected"
             (click)="selectCard(deckCard, 'deck')">
           <!-- <h5>{{deckCard.ref}}</h5> -->
@@ -132,7 +132,7 @@
     </div>
     <div class="row marT20">
       <div class="col-12">
-        <div *ngFor="let userCard of cardsList.renderList$ | async" 
+        <div *ngFor="let userCard of cardsList.renderList$ | async"
               class="card-box" [class.selected]="userCard.isSelected"
             (click)="selectCard(userCard, 'all')">
           <!-- <h5>{{userCard.ref}}</h5> -->
@@ -144,21 +144,21 @@
         </div>
       </div>
       <div class="col-12" *ngIf="!(cardsList.renderList$ | async)?.length">
-        <bf-btn bfType="add" bfText="Select Cards to Add" 
+        <bf-btn bfType="add" bfText="Select Cards to Add"
                (bfClick)="filters.deckId = ''">
         </bf-btn>
       </div>
     </div>
   </div>
 
-    
+
   <!-- Deck list -->
-  <div class="decks-list" 
-       *ngIf="!!selUser && !!selUser?.decks" 
+  <div class="decks-list"
+       *ngIf="!!selUser && !!selUser?.decks"
        [hidden]="pageMode !== 0">
 
     <div class="row">
-      <div class="col-12 deck-row d-flex align-items-center" 
+      <div class="col-12 deck-row d-flex align-items-center"
            [class.selected]="!selDeck"
            (click)="selectDeck(null)">
         <span class="icon-stack4 deck-icon"></span>
@@ -174,9 +174,9 @@
         <bf-btn bfText="New" bfType="add" (bfClick)="openAddDeck()"></bf-btn>
       </div>
     </div>
-    
+
     <li class="row" *ngFor="let userDeck of selUser.decks">
-      <div class="col-12 deck-row d-flex align-items-center" 
+      <div class="col-12 deck-row d-flex align-items-center"
            [class.selected]="selDeck?.id === userDeck?.id"
            (click)="selectDeck(userDeck)">
         <span class="icon-stack4 deck-icon"></span>
@@ -191,4 +191,4 @@
   <!-- <pre>
     this.selUser={{ selUser | json }}
   </pre> -->
-</div>  
+</div>

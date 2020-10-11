@@ -1,10 +1,9 @@
 <h1>Home</h1>
 
 <div>
-  data = {{data$ | async | json }}
-
-  <bf-btn bfText="Add" (bfClick)="add()"></bf-btn>
-  <bf-btn bfText="Call api" (bfClick)="callApi()"></bf-btn>
-  <bf-btn bfText="Connect WS" (bfClick)="connectWS()"></bf-btn>
-  <bf-btn bfText="Send Ping" (bfClick)="sendPing()"></bf-btn>
+  Auth user = {{ profile.authUser | json }}
+</div>
+<div>
+    <hr>
+    DB user = {{ profile.user | json }}
 </div>

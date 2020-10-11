@@ -1,4 +1,4 @@
-export interface Card {
+export interface ICard {
   id?: string;
   name: string;
   type: string;
@@ -12,32 +12,32 @@ export interface Card {
   orderId ?: string;
   units   ?: Array<{ ref: string; owner?: string }>;
 }
-export interface User {
+export interface IUser {
   username  : string;
   email     : string;
   name      : string;
   cards     : Array<string>;  // refs
   decks    ?: Array<UserDeck>;
-  $cards   ?: Array<UserCard>;  // Extended cards (card obj inc)
+  $cards   ?: Array<IUserCard>;  // Extended cards (card obj inc)
 }
 
 // Extended object form user.cards[]
-export interface UserCard {
+export interface IUserCard {
   ref: string;
-  card: Card;
+  card: ICard;
 }
 export interface UserDeck {
   id         ?: string;
   name        : string;
   description : string;
   cards       : Array<string>; // refs
-  $cards     ?: Array<UserCard>; // Extended cards (card obj inc)
+  $cards     ?: Array<IUserCard>; // Extended cards (card obj inc)
 }
 
-export interface DeckCard {
+export interface IDeckCard {
   id : string;  // Pointer to /cards/<id> (c1)
   ref: string;  // Pointer to card.units[ref]
-  card ?: Card; // Copy of the card object (from /cards)
+  card ?: ICard; // Copy of the card object (from /cards)
 }
 
 
@@ -55,7 +55,7 @@ export interface IGameTarget {
 }
 
 export interface IGameCard {
-  $card  ?: Partial<Card>;
+  $card  ?: Partial<ICard>;
   id     ?: string;
   ref     : string;
   deckOrder : number;

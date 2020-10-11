@@ -8,14 +8,14 @@
 <div class="modal-body">
   <div class="row">
     <div class="col-12" *ngIf="status === 0">
-      <form #myNgForm="ngForm" autocomplete="off">
-        <bf-input bfLabel="Name"      [(ngModel)]="newUser.displayName" name="displayName"></bf-input>
-        <bf-input bfLabel="Email"     [(ngModel)]="newUser.email" name="newMail"></bf-input>
-        <bf-input bfLabel="Password"  [(ngModel)]="newUser.password1" name="newPass"></bf-input>
-        <bf-input bfLabel="Repeat Password" [(ngModel)]="newUser.password2" name="newPass2"></bf-input>
-        <p class="marB30" style="font-style: italic; font-size: 14px;">Please provide a valid email. A verification email with a confirmation link will be sent through to activate your new account.</p>
+      <!-- <form #myNgForm="ngForm" autocomplete="off"> -->
+        <bf-input bfLabel="Name" [(ngModel)]="newUser.displayName" name="displayName"></bf-input>
+        <bf-input bfLabel="Email" [(ngModel)]="newUser.email" bfRequired="true" name="newMail"></bf-input>
+        <bf-input bfLabel="Password" [(ngModel)]="newUser.password1" bfRequired="true" name="newPass"></bf-input>
+        <bf-input bfLabel="Repeat Password" [(ngModel)]="newUser.password2" bfRequired="true" name="newPass2"></bf-input>
+        <p class="marB30" style="font-style: italic; font-size: 14px;">Please provide a valid email address. A verification email with a confirmation link will be sent through to activate your new account.</p>
         <bf-checkbox  bfLabel="Accept terms and conditions" [(ngModel)]="newUser.acceptTerms" name="termsAndConds"></bf-checkbox>
-      </form>
+      <!-- </form> -->
     </div>
 
     <div class="col-12" *ngIf="status === 1">

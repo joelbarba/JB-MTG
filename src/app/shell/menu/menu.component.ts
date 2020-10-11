@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Location } from '@angular/common';
-import { Globals } from 'src/app/globals/globals.service';
-import { Profile } from 'src/app/globals/profile.service';
+import { Globals } from 'src/app/core/globals.service';
+import { Profile } from 'src/app/core/profile.service';
 
 @Component({
   selector: 'app-menu',
@@ -19,11 +19,11 @@ export class MenuComponent implements OnInit {
   ];
 
   constructor(
-    private globals: Globals,
+    public globals: Globals,
     private router: Router,
     private activatedRoute: ActivatedRoute,
     private location: Location,
-    private profile: Profile,
+    public profile: Profile,
   ) { }
   ngOnInit() {}
 }

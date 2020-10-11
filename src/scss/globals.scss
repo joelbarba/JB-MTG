@@ -21,54 +21,13 @@
 }
 
 
-mtg-card, .card-box {
-  cursor: pointer;
-  display: inline-block;
-  padding: 0 20px;
-  h5 {
-    margin: 0 0 1px;
-    font-size: 10px;
-    max-width: 96px;
-    text-align: center;
-    min-height: 12px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .card-border {
-    border: 1px solid black;
-    background: white;
-    border-radius: 3px;
-    padding: 2px 2px 2px 2px;
-    height: 134px;
-    width: 96px;
-    img { width: 90px; height: 128px; }
-  }
-}
-
-.card-box.big-size {
-  padding: 20px 0;
-  .card-border {
-    width: 278px;
-    height: 392px;
-    padding: 3px;
-    background: white;
-    border-radius: 5px;
-    img { width: 270px; height: 384px; }
-  }
-}
-
-
-
-// If multiple buttons next to each other, add space between
-bf-btn + bf-btn {
-  margin-left: 8px;
-}
-
-
 
 // Modal styles in the game
+.modal-header {
+  flex-direction: row;
+  button.close { padding: 5px; }
+}
+
 .game-modal {
   .modal-content {
     background-color: #323c3e;

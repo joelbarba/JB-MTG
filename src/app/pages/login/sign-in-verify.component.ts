@@ -15,22 +15,19 @@ export class SignInVerifyComponent implements OnInit {
   ) { }
 
   ngOnInit() {
-    console.log('app', this.afAuth.auth.app);
-    console.log('currentUser', this.afAuth.auth.currentUser);
-
-
-
+    console.log('app', this.afAuth.app);
+    console.log('currentUser', this.afAuth.currentUser);
   }
 
   public validateUser = () => {
     console.log('eee');
     // Confirm the link is a sign-in with email link.
-    if (this.afAuth.auth.isSignInWithEmailLink(window.location.href)) {
+    if (this.afAuth.isSignInWithEmailLink(window.location.href)) {
 
       this.userEmail = window.localStorage.getItem('jb-mtg-user-pending-confirmation');
 
       // The client SDK will parse the code from the link for you.
-      this.afAuth.auth.signInWithEmailLink(this.userEmail, window.location.href)
+      this.afAuth.signInWithEmailLink(this.userEmail, window.location.href)
         .then(function(result) {
           // Clear email from storage.
           console.log('aaaa', result);

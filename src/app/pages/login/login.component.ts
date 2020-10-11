@@ -1,9 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { AngularFireAuth } from '@angular/fire/auth';
-import { Globals } from 'src/app/globals/globals.service';
-import { BfGrowlService, BfConfirmService } from 'bf-ui-lib';
+import { Globals } from 'src/app/core/globals.service';
+import { BfGrowlService, BfConfirmService } from '@blueface_npm/bf-ui-lib';
 import { auth } from 'firebase/app';
-import { Profile } from 'src/app/globals/profile.service';
+import { Profile } from 'src/app/core/profile.service';
 import { NgbModal, NgbActiveModal, ModalDismissReasons } from '@ng-bootstrap/ng-bootstrap';
 import { FormGroup, FormControl, NgForm } from '@angular/forms';
 
@@ -13,15 +13,12 @@ import { FormGroup, FormControl, NgForm } from '@angular/forms';
   styleUrls: ['./login.component.scss']
 })
 export class LoginComponent implements OnInit {
-
   public username: string;
   public password: string;
 
-
-
   constructor(
     public afAuth: AngularFireAuth,
-    private profile: Profile,
+    public profile: Profile,
     private modal: NgbModal,
   ) { }
 
@@ -32,10 +29,11 @@ export class LoginComponent implements OnInit {
     }
   }
 
+  public login = (user, pass) => this.profile.login(user, pass);
+
   public openSignIn = () => {
-    // @ts-ignore
     const modalRef = this.modal.open(NewUserModalComponent, { size: 'md' });
-  }
+  };
 
 
   // sendConfirmEmail() {
@@ -66,6 +64,7 @@ export class LoginComponent implements OnInit {
 }
 
 
+// enum NUStatus { NEW = 0, WAITING = 1, READY = 2};
 
 // -----------------------------------------------------------------------------------
 @Component({
@@ -73,6 +72,7 @@ export class LoginComponent implements OnInit {
   templateUrl: 'new-user-modal.html'
 })
 export class NewUserModalComponent implements OnInit {
+  public 
   public status = 0; // 0=filling, 1=sent, 2=ok
   public newUser = {
     email: '',
@@ -96,7 +96,7 @@ export class NewUserModalComponent implements OnInit {
     this.growl.success('New account requested');
     this.status = 1;
 
-    this.afAuth.auth.createUserWithEmailAndPassword(this.newUser.email, this.newUser.password1).then((userCredential) => {
+    this.afAuth.createUserWithEmailAndPassword(this.newUser.email, this.newUser.password1).then(userCredential => {
 
       // Update profile immediately after
       userCredential.user.updateProfile({ displayName : this.newUser.displayName }).then(() => {
@@ -105,7 +105,7 @@ export class NewUserModalComponent implements OnInit {
           url: 'http://127.0.0.1:4200/login',
           handleCodeInApp: true
         };
-        this.afAuth.auth.currentUser.sendEmailVerification(actionCodeSettings).then(() => {
+        userCredential.user.sendEmailVerification(actionCodeSettings).then(() => {
           window.localStorage.setItem('jbmtg.emailForSignIn', this.newUser.email);
           this.status = 2;
           this.profile.logout();

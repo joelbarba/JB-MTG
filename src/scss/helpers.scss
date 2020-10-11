@@ -1,44 +1,10 @@
 
-// Generate classes: spacer5, spacer10, spacer15, ... spacer100
-@for $ind from 1 through 20 {
-  .spacer#{$ind * 5} {
-    height: #{$ind * 5}px;
-    display: block;
-    width: 100%;
-    margin: 0;
-    padding: 0;
-    border: 0;
-  }
-}
-
-// Generate classes: spacerL1, spacerL2, spacerL3, spacerL4, spacerL5
-//                   spacerR1, spacerR2, spacerR3, spacerR4, spacerR5
-@for $ind from 1 through 5 {
-  .spacerL#{$ind}     { margin-left: #{$ind}px; }
-  .spacerR#{$ind}     { margin-right: #{$ind}px; }
-}
-
-// Generate classes: spacerL10, spacerL15, spacerL20, ... spacerL50
-//                   spacerR10, spacerR15, spacerR20, ... spacerR50
-@for $ind from 2 through 10 {
-  .spacerL#{$ind * 5} { margin-left: #{$ind * 5}px; }
-  .spacerR#{$ind * 5} { margin-right: #{$ind * 5}px; }
-}
-
-
 // ----------------------------------------------------------------------------
 // Bootstrap offers classes p-1,... p-5, m-1, mt-2, etc
 // We define our own here (we do not override bootstrap, so both can be used)
 
 // Generate padding classes (pad, padL, padR, padT, padB, padH, padV)
-//  pad5,  10, ... pad50     (all)
-//  padH5, 10, ... padH50    (left + right)
-//  padV5, 10, ... padV50    (top + bottom)
-//  padT5, 10, ... padT50    (top)
-//  padB5, 10, ... padB50    (bottom)
-//  padL5, 10, ... padL50    (left)
-//  padR5, 10, ... padR50    (right)
-@for $ind from 0 through 10 {
+@for $ind from 0 through 20 {
   .pad#{$ind * 5}  { padding: #{$ind * 5}px; }
   .padL#{$ind * 5} { padding-left   : #{$ind * 5}px; }
   .padR#{$ind * 5} { padding-right  : #{$ind * 5}px; }
@@ -49,14 +15,7 @@
 }
 
 // Generate margin classes (mar, marL, marR, marT, marB, marH, marV)
-//  mar5,  10, ... mar50     (all)
-//  marH5, 10, ... marH50    (left + right)
-//  marV5, 10, ... marV50    (top + bottom)
-//  marT5, 10, ... marT50    (top)
-//  marB5, 10, ... marB50    (bottom)
-//  marL5, 10, ... marL50    (left)
-//  marR5, 10, ... marR50    (right)
-@for $ind from 0 through 10 {
+@for $ind from 0 through 20 {
   .mar#{$ind * 5}  { margin: #{$ind * 5}px; }
   .marL#{$ind * 5} { margin-left   : #{$ind * 5}px; }
   .marR#{$ind * 5} { margin-right  : #{$ind * 5}px; }

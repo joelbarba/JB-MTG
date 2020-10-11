@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
-import { Profile } from 'src/app/globals/profile.service';
-import { Globals } from 'src/app/globals/globals.service';
+import { Profile } from './core/profile.service';
+import { Globals } from './core/globals.service';
 
 @Component({
   selector: 'app-root',
@@ -9,7 +9,7 @@ import { Globals } from 'src/app/globals/globals.service';
 })
 export class AppComponent {
   constructor(
-    private globals: Globals,
-    private profile: Profile,
+    public profile: Profile,
+    public globals: Globals,
   ) {}
 }

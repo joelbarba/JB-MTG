@@ -4,16 +4,14 @@ import { SignInVerifyComponent } from './sign-in-verify.component';
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms'; // <-- NgModel lives here
-import { GlobalsModule } from 'src/app/globals/globals.module';
+import { CoreModule } from 'src/app/core/core.module';
 
 
 @NgModule({
   declarations: [LoginComponent, NewUserModalComponent, SignInVerifyComponent],
   entryComponents: [NewUserModalComponent],
   imports: [
-    CommonModule,
-    GlobalsModule,
-    FormsModule,
+    CoreModule,
   ],
   exports: [LoginComponent, SignInVerifyComponent]
 })

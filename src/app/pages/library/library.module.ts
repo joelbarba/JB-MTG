@@ -1,21 +1,22 @@
 import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { LibraryComponent, AddCardModalComponent, EditCardModalComponent, PurchaseCardModalComponent } from './library.component';
-import { GlobalsModule } from 'src/app/globals/globals.module';
-import { FormsModule } from '@angular/forms'; // <-- NgModel lives here
+import { LibraryComponent } from './library.component';
+import {CoreModule} from '../../core/core.module';
+import { EditCardModalComponent } from './edit-card-modal/edit-card-modal.component';
 
 @NgModule({
   declarations: [
     LibraryComponent,
-    AddCardModalComponent,
+    // AddCardModalComponent,
     EditCardModalComponent,
-    PurchaseCardModalComponent,
+    // PurchaseCardModalComponent,
   ],
-  entryComponents: [AddCardModalComponent, EditCardModalComponent, PurchaseCardModalComponent],
+  entryComponents: [
+    // AddCardModalComponent,
+    // EditCardModalComponent,
+    // PurchaseCardModalComponent
+  ],
   imports: [
-    CommonModule,
-    GlobalsModule,
-    FormsModule,
+    CoreModule,
   ]
 , exports: [LibraryComponent]
 })
