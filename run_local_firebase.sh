@@ -1,0 +1,2 @@
+cd FireBase
+firebase serve
