@@ -1,6 +1,7 @@
 <bf-app-navbar></bf-app-navbar>
-<bf-app-menu></bf-app-menu>
+<bf-app-menu [class.hide]="!shell.showMenu"></bf-app-menu>
 
-<div class="container-fluid route-container">
+<div class="container-fluid route-container"
+     [class.show-menu]="shell.showMenu">
   <router-outlet/>
 </div>

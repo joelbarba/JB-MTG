@@ -1,6 +1,6 @@
 {
-  "name": "JB-NOTES-WEB",
-  "version": "0.0.0",
+  "name": "JB-MTG",
+  "version": "0.0.2",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
@@ -20,7 +20,7 @@
     "@angular/platform-browser-dynamic": "^17.3.0",
     "@angular/router": "^17.3.0",
     "@blueface_npm/bf-icomoon": "^1.0.3",
-    "@blueface_npm/bf-ui-lib": "^0.36.0",
+    "@blueface_npm/bf-ui-lib": "^0.37.0",
     "@ng-bootstrap/ng-bootstrap": "^16.0.0",
     "@ngx-translate/core": "^15.0.0",
     "@popperjs/core": "^2.11.8",

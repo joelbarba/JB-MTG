@@ -1,11 +1,15 @@
 .route-container {
-    position: fixed;
-    top: 72px;
+  position: fixed;
+  top: 72px;
+  left: 0;  
+  bottom: 0;
+  right: 0;
+  // right: 50%;
+  // border: 1px solid black;
+  // background: aquamarine;
+  width: unset;
+
+  &.show-menu {
     left: 70px;
-    bottom: 0;
-    right: 0;
-    // right: 50%;
-    // border: 1px solid black;
-    // background: aquamarine;
-    width: unset;
   }
+}

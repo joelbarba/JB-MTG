@@ -1,0 +1,299 @@
+$gray-dark: #3c3c3c;
+$gray-light: #616161;
+// $gray-light2: #757575;
+$white-dark: gainsboro;
+
+.game {
+
+  .left-panel {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 430px;
+    background: $gray-light;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+
+    .full-card {
+      padding: 10px;
+      .card-border {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        img { 
+          height: 100%;
+          width: 100%;
+          max-width: 410px;
+          border: 10px solid white;
+          border-radius: 14px;
+        }
+      }
+    }
+
+    .player-A, .player-B {
+      background: $gray-dark;
+      border: 1px solid $gray-light;
+      display: flex;
+
+      .left {
+        flex: 1 0 auto;
+        .deck {
+          padding: 5px;
+          background-color: $gray-light;
+          display: flex;
+          justify-content: space-between;
+          .deck-card, .grav-card {
+            padding: 3px;
+            position: relative;
+            border: 1px solid black;
+            background: white;
+            border-radius: 5px;
+            img { max-height: 200px; }
+            &.empty { background-color: black; }
+            &.deck-card { background-color: black; }
+            &.grav-card { opacity: 0.5; }
+            .deck-count {
+              position: absolute;
+              bottom: 32px;
+              left: 0;
+              right: 0;
+              text-align: center;
+              font-size: 30px;
+              color: rgba(255, 255, 255, 0.5);
+            }
+          }
+        }
+        .life {
+          color: $white-dark;
+          font-size: 60px;
+          display: flex;
+          justify-content: center;
+        }
+      }
+
+      .mana-pool {
+        flex: 0 1 113px;
+        background: $gray-dark;
+        border-left: 1px solid $gray-light;
+        display: flex;
+        flex-direction: column;
+        .mana {
+          flex: 1;
+          border-top: 1px solid $gray-light;
+          &:first-child { margin-top: -1px; }
+          padding: 0 2px;
+          display: flex;
+          align-items: center;
+          img { 
+            flex: 0 1 auto;
+            height: 30px;
+            padding: 0 8px;
+          }
+          span {
+            flex: 1 0 auto; 
+            text-align: center;
+            font-size: 30px;
+            color: $white-dark;
+            font-weight: bold;
+            // margin-right: 4px;
+          }
+        }
+      }
+
+    }
+  }
+
+  // --------------------------------------------------------------
+
+  .board-panel {
+    position: absolute;
+    left: 430px;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background-color: azure;
+
+    display: flex;
+    flex-direction: column;
+    .player-A, .player-B {
+      flex: 1;
+      position: relative;      
+      .phases-box {
+        background-color: $gray-dark;
+        position: absolute;
+        width: 60px;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 2.5px 5px;
+        .phase {
+          flex: 1;
+          font-size: 40px;
+          text-align: center;
+          border: 1px solid $gray-light;
+          border-radius: 3px;
+          margin: 2.5px 0;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          &.post-combat { transform: rotate(180deg); }
+          &.discard { transform: rotate(180deg); }
+          &.selected { background-color: $white-dark; }
+        }
+      }
+
+      .hand-box {
+        z-index: 1000;
+        border: 1px solid $gray-dark;
+        position: absolute;
+        left: 65px;
+        padding: 5px;
+        background: #9ba5a5;
+        transform-origin: top;
+        transition: transform 350ms cubic-bezier(.05,.5,.2,.9);
+
+        .box-button {
+          position: absolute;
+          background-color: #9ba5a5;
+          border: 1px solid black;          
+          left: -1px;
+          width: 80px;
+          height: 30px;
+          text-align: center;
+          font-size: 20px;
+          cursor: pointer;
+        }
+        display: flex;
+        .hand-card {
+          flex: 1;
+          margin: 2.5px 4px;
+          padding: 3px;
+          border: 1px solid black;
+          background: white;
+          border-radius: 5px;
+          &.back-card { background-color: black; border: none; margin: 3.5px 5px; }
+          cursor: pointer;
+          img { max-height: 200px; }
+          transition-duration: 150ms;
+          &:hover {
+            background-color: #00ff2d75;
+            border-color: #00ff2d75;
+          }
+        }
+      }
+
+      .play-box {
+        position: absolute;
+        left: 60px;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        padding: 15px;
+        // background-color: red;
+        .play-card {
+          position: absolute;
+          // display: inline-block;
+          margin: 2.5px 4px;
+          padding: 3px;
+          border: 1px solid black;
+          background: white;
+          border-radius: 5px;
+          cursor: pointer;
+          img { max-height: 160px; }
+          &:hover {
+            border: 3px solid #00ff2d;
+            padding: 1px;
+          }
+        }
+      }
+
+    }
+    .player-B {
+      border-bottom: 2px solid $gray-light;
+    }
+    .info-box {
+      height: 30px;
+      background-color: $gray-dark;
+    }
+
+    .player-B {
+      .hand-box {
+        top: -201px;
+        &.expanded { transform: translateY(200px); }
+        border-bottom-right-radius: 5px;
+        .box-button {
+          bottom: -30px;
+          border-top: none;
+          border-bottom-left-radius: 5px;
+          border-bottom-right-radius: 5px;
+        }
+      }
+      .play-box {
+        bottom: 0;
+      }
+    }
+
+    .player-A {
+      // background-color: floralwhite;
+      // background-color: aliceblue;
+      // background-color: ghostwhite;
+      // background-color: honeydew;
+      background-color: ivory;
+      .hand-box {
+        bottom: -201px;
+        &.expanded { transform: translateY(-200px); }
+        border-top-right-radius: 5px;
+        .box-button {
+          top: -30px;
+          padding-top: 2px;
+          border-bottom: none;
+          border-top-left-radius: 5px;
+          border-top-right-radius: 5px;
+        }
+      }
+    }
+
+  }
+}
+
+
+.play-card.is-dragging {
+  opacity: 0;
+}
+.bf-drag-ghost {
+  .play-card {
+    padding: 3px;
+    border: 1px solid black;
+    background: white;
+    border-radius: 5px;
+    img { max-height: 160px; }
+  }
+}
+
+
+
+
+// ----- Smaller resolutions resize -----------
+.game.md {
+  .left-panel {
+    width: 300px;
+    .full-card .card-border img { max-width: 270px; border-width: 8px; border-radius: 12px; }
+    .player-A, .player-B {
+      .left {
+        .deck img { max-height: 130px; }
+        .life { font-size: 40px; }
+      }
+      .mana-pool .mana {
+        img { height: 24px; }
+        span { font-size: 18px; }
+      }
+    }
+  }
+  .board-panel { left: 300px; }
+}

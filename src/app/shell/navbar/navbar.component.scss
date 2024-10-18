@@ -1,5 +1,7 @@
 @import 'variables';
 
+$nav-bg-color: #313131;
+
 nav.navbar {
   display: flex;
   flex-wrap: nowrap;
@@ -17,10 +19,11 @@ nav.navbar {
   top: 0;
   right: 0;
   height: $navbar-height;
-  border-bottom: 1px darken($primary_color, 3%) solid;
-  box-shadow: 0 2px 3px rgba(34,36,38,.15);
+  border-bottom: 1px solid white;
+  // border-bottom: 1px darken($primary_color, 3%) solid;
+  // box-shadow: 0 2px 3px rgba(34,36,38,.15);
 
-  .app-title { margin: 0; }
+  .app-title { margin: 0; letter-spacing: 5px; }
 
   .navbar-content {
     flex: 1;

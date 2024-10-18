@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { NavbarComponent } from './shell/navbar/navbar.component';
 import { MenuComponent } from './shell/menu/menu.component';
+import { ShellService } from './shell/shell.service';
 
 
 @Component({
@@ -18,6 +19,7 @@ import { MenuComponent } from './shell/menu/menu.component';
 export class AppComponent {
 
   constructor(
+    public shell: ShellService,
   ) {}
   
   ngOnInit() {

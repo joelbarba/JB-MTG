@@ -1,6 +1,6 @@
 
 // Local colors
-$primary_color    : #1abc9c;
+$primary_color    : royalblue;
 $secondary_color  : #046F5A;
 $tertiary_color   : #BC451A;
 $quaternary_color : #2E4856;
@@ -9,4 +9,5 @@ $extra_color      : #6F1E00;
 
 
 @import "./default-vars.scss";
+@import "./globals.scss";
 

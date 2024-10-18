@@ -1,0 +1,158 @@
+<div class="game">
+  <div class="left-panel">
+    <div class="player-B">
+
+      <div class="left">
+        <div class="deck">
+          <div class="deck-card">
+            <img [src]="'/assets/images/cards/card_back.jpg'">
+            <div class="deck-count">60</div>
+          </div>
+          <div class="grav-card empty">
+            <img [src]="'/assets/images/cards/empty.png'">
+          </div>
+        </div>
+  
+        <div class="life">20</div>
+      </div>
+
+      <div class="mana-pool">
+        <div class="mana"> <img src="assets/images/Xmana.png">    <span>0</span> </div>
+        <div class="mana"> <img src="assets/images/blueMana.png"> <span>0</span> </div>
+        <div class="mana"> <img src="assets/images/whiteMana.png"><span>0</span> </div>
+        <div class="mana"> <img src="assets/images/blackMana.png"><span>0</span> </div>
+        <div class="mana"> <img src="assets/images/redMana.png">  <span>0</span> </div>
+        <div class="mana"> <img src="assets/images/greenMana.png"><span>0</span> </div>
+      </div>
+
+    </div>
+
+
+
+    <div class="full-card">
+      <div class="card-border">
+        <img [src]="'assets/images/cards/' + fullCardImg"/>
+      </div>
+    </div>
+
+    <div class="player-A">
+      <div class="left">
+        <div class="life">20</div>
+
+        <div class="deck">
+          <div class="deck-card">
+            <img [src]="'/assets/images/cards/card_back.jpg'">
+            <div class="deck-count">60</div>
+          </div>
+          <div class="grav-card">
+            <img [src]="'/assets/images/cards/fork.jpg'">
+          </div>
+        </div>
+
+      </div>
+
+      <div class="mana-pool">
+        <div class="mana"> <img src="assets/images/Xmana.png">    <span>0</span> </div>
+        <div class="mana"> <img src="assets/images/blueMana.png"> <span>0</span> </div>
+        <div class="mana"> <img src="assets/images/whiteMana.png"><span>0</span> </div>
+        <div class="mana"> <img src="assets/images/blackMana.png"><span>0</span> </div>
+        <div class="mana"> <img src="assets/images/redMana.png">  <span>0</span> </div>
+        <div class="mana"> <img src="assets/images/greenMana.png"><span>0</span> </div>
+      </div>
+    </div>
+
+  </div>
+
+
+  <div class="board-panel">
+    <div class="player-B">
+      <div class="phases-box">
+        <div class="phase untap">       <span class="icon-undo2"></span></div>
+        <div class="phase maintenance"> <span class="icon-hammer"></span></div>
+        <div class="phase draw selected">        <span class="icon-hand"></span></div>
+        <div class="phase pre-combat">  <span class="icon-moon"></span></div>
+        <div class="phase combat">      <span class="icon-sword"></span></div>
+        <div class="phase post-combat"> <span class="icon-moon"></span></div>
+        <div class="phase discard">     <span class="icon-hand"></span></div>
+        <div class="phase end">         <span class="icon-fire"></span></div>
+      </div>
+
+      <div class="hand-box" [class.expanded]="isHandBExp">
+        <div class="box-button" (click)="isHandBExp = !isHandBExp">
+          <span [class.hide]="isHandBExp" class="icon-arrow-down22"></span>
+          <span [class.hide]="!isHandBExp" class="icon-arrow-up22"></span>
+        </div>
+        <div *ngFor="let card of handA;" class="hand-card" [class.back-card]="true">
+          <img [src]="'/assets/images/cards/card_back.jpg'">
+        </div>
+      </div>
+
+      <div class="play-box"
+           bfDropContainer
+          (bfDrop)="moveCardPosition($event)" 
+          (dblclick)="autoPositionGameCards()">
+        <div *ngFor="let card of playB;"
+              class="play-card"
+              [style.left.px]="card.posX"
+              [style.top.px]="card.posY"
+              [style.z-index]="card.zInd"
+              [bfDraggable]="card"
+              (dragstart)="dragStart($event, card)"
+              (click)="focusPlayCard(card)"
+              (mouseover)="fullCardImg = card.img">
+          <img [src]="'/assets/images/cards/' + card.img">
+        </div>
+      </div>
+
+    </div>
+
+    <!-- <div class="info-box">
+
+    </div> -->
+
+    <div class="player-A">
+
+      <div class="phases-box">
+        <div class="phase untap">       <span class="icon-undo2"></span></div>
+        <div class="phase maintenance"> <span class="icon-hammer"></span></div>
+        <div class="phase draw">        <span class="icon-hand"></span></div>
+        <div class="phase pre-combat">  <span class="icon-moon"></span></div>
+        <div class="phase combat">      <span class="icon-sword"></span></div>
+        <div class="phase post-combat"> <span class="icon-moon"></span></div>
+        <div class="phase discard">     <span class="icon-hand"></span></div>
+        <div class="phase end">         <span class="icon-fire"></span></div>
+      </div>
+
+      <div class="hand-box" [class.expanded]="isHandAExp">
+        <div class="box-button" (click)="isHandAExp = !isHandAExp">
+          <span [class.hide]="isHandAExp" class="icon-arrow-down22"></span>
+          <span [class.hide]="!isHandAExp" class="icon-arrow-up22"></span>
+        </div>
+        <div *ngFor="let card of handA;" class="hand-card" (mouseover)="fullCardImg = card.img">
+          <img [src]="'/assets/images/cards/' + card.img">
+        </div>
+      </div>
+
+      <div class="play-box"
+           bfDropContainer
+           (bfDrop)="moveCardPosition($event)" 
+           (dblclick)="autoPositionGameCards()">
+
+        <!-- isDragging={{bfDnD.isDragging}} -->
+        <!-- activeContainer={{bfDnD.activeContainer | json}} -->
+        <div *ngFor="let card of playA;" 
+             class="play-card"
+             [style.left.px]="card.posX"
+             [style.top.px]="card.posY"
+             [style.z-index]="card.zInd"
+             [bfDraggable]="card"
+             (dragstart)="dragStart($event, card)"
+             (click)="focusPlayCard(card)"
+             (mouseover)="fullCardImg = card.img">
+          <img [src]="'/assets/images/cards/' + card.img">
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
