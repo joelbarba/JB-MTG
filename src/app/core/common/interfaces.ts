@@ -1,11 +1,9 @@
 export interface IProfile {
-  user_id: string;
-  username: string;
+  userId: string;
+  displayName: string;
   email: string;
-  first_name: string;
-  last_name: string;
-  avatar_id: string;
-  country_code: string;
-  time_zone: string;
+  photoURL: string;
+  // countryCode: string;
+  // timeZone: string;
 }
 

@@ -4,7 +4,7 @@ import { RouterModule } from '@angular/router';
 import { BfUiLibModule } from '@blueface_npm/bf-ui-lib';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AppTranslateService } from '../../core/common/app-translate.service';
-import { OAuthService } from '../../core/common/oauth.service';
+import { AuthService } from '../../core/common/auth.service';
 
 @Component({
   selector: 'bf-app-menu',
@@ -22,6 +22,6 @@ export class MenuComponent {
   constructor(
     private translate: TranslateService,
     private appTranslate: AppTranslateService,
-    public oauth: OAuthService,
+    public auth: AuthService,
   ) {}
 }

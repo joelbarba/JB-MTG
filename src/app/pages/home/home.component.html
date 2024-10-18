@@ -49,15 +49,13 @@ bfIcon="icon-plus">
 </div>
 
 
-<ul class="mt-4" *ngIf="languages">
-  <li class="row mb-2" *ngFor="let lang of languages">
-    <bf-btn class="col-2 secondary full-width"
+<ul class="mt-4" *ngIf="!!notes$">
+  <li class="row mb-2" *ngFor="let note of notes$ | async">
+    <bf-btn class="col-3 secondary full-width"
       bfIcon="icon-plus"
-      bfText="Select"
-      [bfDisabled]="isSelected(lang)"
-      (bfClick)="selectLang(lang.code)">
+      bfText="Select">
     </bf-btn>
-    <div class="col-3">{{ lang.code }}</div>
-    <div class="col">{{ lang.name }}</div>
+    <div class="col-3">{{ note.notebookId }}</div>
+    <div class="col">{{ note.title }}</div>
   </li>
 </ul>

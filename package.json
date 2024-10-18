@@ -1,5 +1,5 @@
 {
-  "name": "jb-notes-web",
+  "name": "JB-NOTES-WEB",
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
@@ -14,6 +14,7 @@
     "@angular/common": "^17.3.0",
     "@angular/compiler": "^17.3.0",
     "@angular/core": "^17.3.0",
+    "@angular/fire": "^17.0.1",
     "@angular/forms": "^17.3.0",
     "@angular/platform-browser": "^17.3.0",
     "@angular/platform-browser-dynamic": "^17.3.0",
@@ -24,6 +25,7 @@
     "@ngx-translate/core": "^15.0.0",
     "@popperjs/core": "^2.11.8",
     "bootstrap": "^4.6.2",
+    "firebase": "^10.11.0",
     "rxjs": "~7.8.0",
     "subsink": "^1.0.2",
     "tslib": "^2.3.0",

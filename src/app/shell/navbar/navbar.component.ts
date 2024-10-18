@@ -1,10 +1,10 @@
 import { Component, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
-import { OAuthService } from '../../core/common/oauth.service';
 import { TranslateModule } from '@ngx-translate/core';
 import { CommonModule } from '@angular/common';
 import { BfLangList, AppTranslateService } from '../../core/common/app-translate.service';
 import { BfUiLibModule } from '@blueface_npm/bf-ui-lib';
 import { BfAvatarComponent } from '../../core/common/internal-lib/bf-avatar/bf-avatar.component';
+import { AuthService } from '../../core/common/auth.service';
 // import { SubSink } from 'subsink';
 
 @Component({
@@ -29,26 +29,29 @@ export class NavbarComponent implements OnInit, OnDestroy {
   localeId$ = this.appTranslate.localeId$;
   language$ = this.appTranslate.language$;
   lang = '';
+  displayName = '';
 
 
   constructor(
-    public readonly oauth: OAuthService,
+    public readonly auth: AuthService,
     public readonly appTranslate: AppTranslateService,
   ) {
   }
 
   ngOnInit() {
     // const customer$ = this.bfStore.selectedCustomer$.pipe(filter(customer => !!customer));
-    this.oauth.profilePromise.then(profile => {
+    this.auth.profilePromise.then(profile => {
       console.log('PROFILE PROMISE', profile);
-    })
+      this.displayName = profile.displayName;
+    });
 
-    this.oauth.profile$.subscribe(profile => {
+    this.auth.profile$.subscribe(profile => {
       this.isLoggedIn = !!profile;
-      console.log('PROFILE OBSERVABLE', this.oauth.profileUserName);
+      console.log('PROFILE OBSERVABLE', this.auth.profileUserName);
 
-      const userId = this.oauth.profile?.user_id;
-      this.profileImageUrl = !!userId && !!this.oauth.profile?.avatar_id ? `api/v1/users/${userId}/avatar` : '';
+      const userId = this.auth.profileUserId;
+      this.profileImageUrl = '';
+      // this.profileImageUrl = !!userId && !!this.auth.profile?.avatar_id ? `api/v1/users/${userId}/avatar` : '';
     });
 
     this.appTranslate.languagesPromise.then(langs => {
@@ -66,8 +69,11 @@ export class NavbarComponent implements OnInit, OnDestroy {
   }
 
 
-
   toggleProfile() {
     this.isProfileExpanded = !this.isProfileExpanded;
+  }
+
+  updateProfile() {
+    this.auth.updateProfile({ displayName: this.displayName });
   }
 }

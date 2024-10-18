@@ -10,21 +10,25 @@
     <bf-avatar *ngIf="isLoggedIn" 
       class="profile-avatar white-border sm"
       defaultText="JB"
-      [hasAvatar]="!!oauth.profile?.avatar_id"
       [imgUrl]="profileImageUrl"
       (click)="toggleProfile()">
     </bf-avatar>
+    <!-- [hasAvatar]="!!auth.profile?.avatar_id" -->
   </div>
 
 </nav>
 
-<div class="profile-box" [class.expanded]="isProfileExpanded" *ngIf="!!oauth?.profile">
+<div class="profile-box" [class.expanded]="isProfileExpanded" *ngIf="!!auth?.profile">
   <div class="row">
-    <h2 class="col-12 mt-2 mb-4">{{oauth.profileUserName}}</h2>
+    <h2 class="col-12 mt-2 mb-4">{{auth.profileUserName}}</h2>
+    <div class="col-12">
+      <bf-input bfLabel="Name" [(ngModel)]="displayName"></bf-input>
+      <bf-btn bfText="Save Profile" (bfClick)="updateProfile()"></bf-btn>
+    </div>
 
-    <p class="col-4"><b translate>view.common.username</b>:</p>   <p class="col-8">{{oauth.profile?.username}}</p>
-    <p class="col-4"><b translate>view.common.email</b>:</p>      <p class="col-8">{{oauth.profile?.email}}</p>
-    <p class="col-4"><b>time_zone:</b></p>                        <p class="col-8">{{oauth.profile?.time_zone}}</p>
+    <!-- <p class="col-4"><b translate>view.common.username</b>:</p>   <p class="col-8">{{auth.profile?.username}}</p> -->
+    <p class="col-4"><b translate>view.common.email</b>:</p>      <p class="col-8">{{auth.profile?.email}}</p>
+    <!-- <p class="col-4"><b>time_zone:</b></p>                        <p class="col-8">{{auth.profile?.time_zone}}</p> -->
     <!-- <div class="col-12">Selected language: {{ language$ | async }}</div> -->
     <!-- <div class="col-12">Selected localeId: {{ localeId$ | async }}</div>     -->
 
@@ -41,7 +45,7 @@
       bfRender="name"
       bfPlaceholder="views.dropdown.placeholder">
     </bf-dropdown>
-    <bf-btn class="col-5" bfIcon="icon-switch" bfText="views.common.logout" (bfClick)="oauth.requestLogout()"></bf-btn>
+    <bf-btn class="col-5" bfIcon="icon-switch" bfText="views.common.logout" (bfClick)="auth.requestLogout()"></bf-btn>
   </div>
 
 </div>

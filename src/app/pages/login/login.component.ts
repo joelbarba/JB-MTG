@@ -5,7 +5,8 @@ import { FormsModule } from '@angular/forms';
 import { BfUiLibModule } from '@blueface_npm/bf-ui-lib';
 import { TranslateModule } from '@ngx-translate/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { OAuthService } from '../../core/common/oauth.service';
+import { AuthService } from '../../core/common/auth.service';
+import { userAuth } from '../../../../secrets';
 
 @Component({
   selector: 'app-login',
@@ -25,12 +26,12 @@ export class LoginComponent {
   language$ = this.appTranslate.language$;
   lang = '';
 
-  user = '';
-  pass = '';
+  user = userAuth.user;
+  pass = userAuth.pass;
 
   constructor(
     private appTranslate: AppTranslateService,
-    public oauth: OAuthService,
+    public auth: AuthService,
     private router: Router,
   ) {}
 
@@ -46,7 +47,7 @@ export class LoginComponent {
 
   login() {
     if (!!this.user &&  this.pass) {
-      this.oauth.requestLogin(this.user, this.pass).then(profile => {
+      this.auth.requestLogin(this.user, this.pass).then(profile => {
         console.log('LOG IN', profile);
         this.router.navigate(['/home']);
       });
@@ -54,6 +55,6 @@ export class LoginComponent {
   }
 
   logout() {
-    this.oauth.requestLogout();
+    this.auth.requestLogout();
   }
 }

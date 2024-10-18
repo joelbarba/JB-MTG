@@ -1,4 +1,4 @@
-<div class="form-signin" *ngIf="!oauth.profile">
+<div class="form-signin" *ngIf="!auth.profile">
   <h1 style="text-align: center; margin-bottom: 60px;">{{ 'view.title' | translate }}</h1>
   <bf-input [(ngModel)]="user" bfLabel="view.common.user" [bfRequired]="true" [bfAutoFocus]="true"></bf-input>
   <bf-input [(ngModel)]="pass" bfLabel="view.common.password" [bfRequired]="true" (bfOnEnter)="login()" bfType="password"></bf-input>
