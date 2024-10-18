@@ -2,10 +2,10 @@ import { ApplicationConfig } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { TranslateModule, TranslateLoader} from '@ngx-translate/core';
 import { routes } from './app.routes';
-import { BfTranslateLoader } from './core/common/bf-translate-loader.service';
+import { AppTranslateLoader } from './core/common/app-translate-loader.service';
 import { provideHttpClient } from '@angular/common/http';
 import { BfUiLibModule } from "@blueface_npm/bf-ui-lib";
-import { BfTranslateService } from './core/common/bf-translate.service';
+import { AppTranslateService } from './core/common/app-translate.service';
 
 // Initialize prototypes
 import { BfPrototypes } from '@blueface_npm/bf-ui-lib';
@@ -17,8 +17,8 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(),
     TranslateModule.forRoot({
       // defaultLanguage: 'en-ie',
-      loader: { provide: TranslateLoader, useClass: BfTranslateLoader }
+      loader: { provide: TranslateLoader, useClass: AppTranslateLoader }
     }).providers!,
-    BfUiLibModule.forRoot({ trans: { useExisting: BfTranslateService }}).providers!
+    BfUiLibModule.forRoot({ trans: { useExisting: AppTranslateService }}).providers!
   ]
 };

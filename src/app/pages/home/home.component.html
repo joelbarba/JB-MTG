@@ -1,0 +1,63 @@
+<h1 translate>view.title</h1>
+<p translate>view.untranslated.label</p>
+
+<div>{{ 'view.title.hello' | translate: { param1: 'AAA' } }}</div>
+
+
+<span class="icon-cross"></span>
+
+<bf-btn class="secondary"
+(bfClick)="myFunc($event)"
+bfText="Click Me"
+bfIcon="icon-plus">
+</bf-btn>
+
+<bf-label class="block value-mar-15 value-inline"
+        bfText="view.common.username"
+        bfValue="view.title.hello"
+        [bfRequired]="true"
+        bfTooltip="view.tooltip.message"
+        [bfTooltipBody]="true">
+</bf-label>
+
+<bf-input [(ngModel)]="myVariable"
+        bfLabel="view.common.name"
+        bfIcon="icon-search"
+        [bfRequired]="true"
+        [bfAutocomplete]="true"
+        bfErrorText="Hello world">
+</bf-input>
+
+<h2>Languages:</h2>
+<div class="row">
+  <div class="col-12">Selected language: {{ language$ | async }}</div>
+  <div class="col-12">Selected localeId: {{ localeId$ | async }}</div>    
+</div>
+<!-- <pre>{{ languages | json }}</pre> -->
+
+<div class="mt-4 row" *ngIf="languages">
+  <bf-dropdown 
+    class="col-6"
+    bfLabel="view.common.language"
+    [(ngModel)]="lang"
+    (ngModelChange)="selectLang($event)"
+    [bfList]="languages"
+    bfSelect="code"
+    bfRender="name"
+    bfPlaceholder="views.dropdown.placeholder">
+  </bf-dropdown>
+</div>
+
+
+<ul class="mt-4" *ngIf="languages">
+  <li class="row mb-2" *ngFor="let lang of languages">
+    <bf-btn class="col-2 secondary full-width"
+      bfIcon="icon-plus"
+      bfText="Select"
+      [bfDisabled]="isSelected(lang)"
+      (bfClick)="selectLang(lang.code)">
+    </bf-btn>
+    <div class="col-3">{{ lang.code }}</div>
+    <div class="col">{{ lang.name }}</div>
+  </li>
+</ul>

@@ -1,0 +1,37 @@
+@import 'variables';
+
+:host {
+  position: fixed;
+  top: 72px;
+  bottom: 0;
+  left: 0;
+  width: 70px;
+  background-color: $secondary_color;
+}
+
+nav.menu {
+  ul.menu-nav {
+    list-style-type: none;
+    margin: 0;
+    padding: 10px 0 0;
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    li.menu-item {
+      font-size: 26px;
+      flex: 1;
+      width: 100%;
+      justify-content: center;
+      display: flex;
+      &:hover { background: $primary_color; }
+      a.menu-link {
+        padding: 12px 0;
+        color: $white;
+        width: 100%;
+        text-align: center;
+        text-decoration: none;
+        // &:hover { color: $primary_color; }
+      }
+    }
+  }
+}

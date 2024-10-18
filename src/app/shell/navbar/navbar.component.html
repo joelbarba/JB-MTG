@@ -1,0 +1,47 @@
+<nav class="navbar" [class.logged-out]="!isLoggedIn">
+  <div class="navbar-brand" [class.logged-in]="isLoggedIn">
+    <h1 class="app-title">The App</h1>
+    <!-- <a class="d-block" routerLink="/home" tabIndex="0">
+      <img src="assets/images/brand/logo.png?v=8.1" alt="{{ 'navbar.logo.alt_text' | translate : { brand: 'brand.name' | translate } }}">
+    </a> -->
+  </div>
+
+  <div class="navbar-content">
+    <bf-avatar *ngIf="isLoggedIn" 
+      class="profile-avatar white-border sm"
+      defaultText="JB"
+      [hasAvatar]="!!oauth.profile?.avatar_id"
+      [imgUrl]="profileImageUrl"
+      (click)="toggleProfile()">
+    </bf-avatar>
+  </div>
+
+</nav>
+
+<div class="profile-box" [class.expanded]="isProfileExpanded" *ngIf="!!oauth?.profile">
+  <div class="row">
+    <h2 class="col-12 mt-2 mb-4">{{oauth.profileUserName}}</h2>
+
+    <p class="col-4"><b translate>view.common.username</b>:</p>   <p class="col-8">{{oauth.profile?.username}}</p>
+    <p class="col-4"><b translate>view.common.email</b>:</p>      <p class="col-8">{{oauth.profile?.email}}</p>
+    <p class="col-4"><b>time_zone:</b></p>                        <p class="col-8">{{oauth.profile?.time_zone}}</p>
+    <!-- <div class="col-12">Selected language: {{ language$ | async }}</div> -->
+    <!-- <div class="col-12">Selected localeId: {{ localeId$ | async }}</div>     -->
+
+  </div>
+
+  <div class="row profile-bottom">
+    <bf-dropdown *ngIf="languages"
+      class="col-7 full-width"
+      bfLabel="view.common.language"
+      [(ngModel)]="lang"
+      (ngModelChange)="appTranslate.changeLanguage($event)"
+      [bfList]="languages"
+      bfSelect="code"
+      bfRender="name"
+      bfPlaceholder="views.dropdown.placeholder">
+    </bf-dropdown>
+    <bf-btn class="col-5" bfIcon="icon-switch" bfText="views.common.logout" (bfClick)="oauth.requestLogout()"></bf-btn>
+  </div>
+
+</div>

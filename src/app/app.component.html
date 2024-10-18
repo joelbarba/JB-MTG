@@ -1,49 +1,6 @@
-<h1>Jb Notes Web</h1>
-<p translate>view.untranslated.label</p>
+<bf-app-navbar></bf-app-navbar>
+<bf-app-menu></bf-app-menu>
 
-<div>{{ 'view.title' | translate }}</div>
-<div>{{ 'view.title.hello' | translate: { param1: 'AAA' } }}</div>
-
-
-<span class="icon-cross"></span>
-
-<bf-btn class="secondary"
-(bfClick)="myFunc($event)"
-bfText="Click Me"
-bfIcon="icon-plus">
-</bf-btn>
-
-<bf-label class="block value-mar-15 value-inline"
-        bfText="view.common.username"
-        bfValue="change_password.body.password_strength_weak"
-        [bfRequired]="true"
-        bfTooltip="view.tooltip.message"
-        [bfTooltipBody]="true">
-</bf-label>
-
-<bf-input [(ngModel)]="myVariable"
-        bfLabel="view.common.name"
-        bfIcon="icon-search"
-        [bfRequired]="true"
-        [bfAutocomplete]="true"
-        bfErrorText="Hello world">
-</bf-input>
-
-<h2>Languages:</h2>
-<p>
-  Selected language: {{ language$ | async }}<br>
-  Selected localeId: {{ localeId$ | async }}
-</p>
-<!-- <pre>{{ languages | json }}</pre> -->
-<ul *ngIf="languages">
-  <li *ngFor="let lang of languages">
-    <button (click)="selectLang(lang)" [disabled]="isSelected(lang)">Select</button>
-    <span style="margin-left: 10px;">{{ lang.code }}</span>
-    <span> - </span>
-    <span>{{ lang.name }}</span>
-  </li>
-</ul>
-
-
-
-<router-outlet/>
+<div class="container-fluid route-container">
+  <router-outlet/>
+</div>

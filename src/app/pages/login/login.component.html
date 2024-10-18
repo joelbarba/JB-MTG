@@ -1,0 +1,19 @@
+<div class="form-signin" *ngIf="!oauth.profile">
+  <h1 style="text-align: center; margin-bottom: 60px;">{{ 'view.title' | translate }}</h1>
+  <bf-input [(ngModel)]="user" bfLabel="view.common.user" [bfRequired]="true" [bfAutoFocus]="true"></bf-input>
+  <bf-input [(ngModel)]="pass" bfLabel="view.common.password" [bfRequired]="true" (bfOnEnter)="login()" bfType="password"></bf-input>
+  <bf-btn class="mt-3 full-width" bfText="view.common.login" [bfDisabled]="!user || !pass" (bfClick)="login()"></bf-btn>
+
+  <div style="margin-top: 65px;" *ngIf="languages">
+      <bf-dropdown
+        bfLabel="view.common.language"
+        [(ngModel)]="lang"
+        (ngModelChange)="selectLang($event)"
+        [bfList]="languages"
+        bfSelect="code"
+        bfRender="name"
+        bfPlaceholder="views.dropdown.placeholder">
+      </bf-dropdown>
+  </div>
+
+</div>

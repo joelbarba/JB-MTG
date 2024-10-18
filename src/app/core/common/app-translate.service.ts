@@ -51,7 +51,7 @@ export interface BfLang {
  * DOC: https://github.com/ngx-translate/core
 ********************************************************/
 @Injectable({ providedIn: 'root' })
-export class BfTranslateService extends AbstractTranslateService {
+export class AppTranslateService extends AbstractTranslateService {
   readonly storageLocaleKey = 'NG_TRANSLATE_LANG_KEY';
   supportedLanguages: Array<BfLang> = [];    // List of supported languages
   languagesPromise: Promise<Array<BfLang>>;  // Resolves once the dynamic list of locales is loaded
@@ -88,13 +88,15 @@ export class BfTranslateService extends AbstractTranslateService {
       transReadyDef.resolve();
       this.isReady = true;
       const locale: BfLang = this.supportedLanguages.getByProp('code', event.lang) as BfLang;
+      this.currentLanguage = locale.code;
+      this.currentLocale = locale.localeId;
       this.language$.next(locale.code);
       this.localeId$.next(locale.localeId);
     });
 
     // Load the list of supported languages
     this.languagesPromise = this.getSupportedLanguages();
-    // this.loadingBar.run(this.languagesPromise);
+    this.loadingBar.run(this.languagesPromise);
 
     // Select NG_TRANSLATE_LANG_KEY
     const storedLanguage = localStorage.getItem(this.storageLocaleKey);
@@ -129,6 +131,8 @@ export class BfTranslateService extends AbstractTranslateService {
 
   // Change the current locale and reload the translations dictionary
   changeLanguage = (newLang = this.currentLocale) => {
+    if (!newLang) { return; }
+
     // console.log('CHANGING LANGUAGE TO ----> ', newLang);
     this.translate.use(newLang);
     localStorage.setItem(this.storageLocaleKey, newLang);

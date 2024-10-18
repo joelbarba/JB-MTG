@@ -1,0 +1,29 @@
+<div class="bf-avatar" [style.background]="color">
+
+  <div class="bf-avatar-inner">
+    <img *ngIf="!!avatarUrl && showImg"
+         [attr.aria-hidden]="isLoading"
+         [alt]="'view.common.profile-alt' | translate"
+         [hidden]="isLoading"
+         [src]="avatarUrl"
+         (load)="loadOk()"
+         (error)="errorLoading()"
+    />
+
+    <ng-container *ngIf="!isLoading && (!showImg || !avatarUrl)">
+      <div *ngIf="!defaultText"
+           [ngClass]="defaultIcon"
+           [style.color]="color"
+           class="default">
+      </div>
+      <div *ngIf="defaultText" class="initials">
+        <span>{{defaultText}}</span>
+      </div>
+    </ng-container>
+
+    <div *ngIf="isLoading" class="loading-spinner">
+      <div class="spinner-inner" [style.border-right-color]="color" [style.border-bottom-color]="color"></div>
+    </div>
+    
+  </div>
+</div>

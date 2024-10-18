@@ -1,0 +1,158 @@
+@import 'variables';
+
+$bf-avatar-border: $primary_color;
+$bf-avatar-bg: $white;
+$bf-avatar-color: $primary_color;
+$bf-avatar-initials-bg: lighten($grey, 20%);
+$bf-avatar-initials-color: $white;
+
+.bf-avatar {
+  display: inline-block;
+  border-radius: 100%;
+  background: $bf-avatar-border;
+  transition-property: background;
+  transition-duration: 500ms;
+
+  .bf-avatar-inner {
+    position: relative;
+    border: 6px solid transparent;
+    border-radius: 100%;
+    height: 100%;
+    overflow: hidden;
+    img {
+      max-width: 100%;
+      max-height: 100%;
+      width: 100%;
+      background: $bf-avatar-bg;
+    }
+
+    .default {
+      height: 100%;
+      text-align: center;
+      background: $bf-avatar-bg;
+      color: $bf-avatar-color;
+      transition-property: color;
+      transition-duration: 500ms;
+    }
+
+    .initials {
+      height: 100%;
+      text-align: center;
+      background: $bf-avatar-initials-bg;
+      color: $bf-avatar-initials-color;
+      transition-property: color;
+      transition-duration: 500ms;
+    }
+
+    .loading-spinner {
+      background: $nav-avatar-bg;
+      color: $nav-avatar-color;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      .spinner-inner {
+        width: 55%;
+        height: 55%;
+        border-radius: 100%;
+        border: 4px solid rgba($nav-avatar-color, .5);
+        border-top-color: transparent;
+        border-left-color: transparent;
+        animation-name: bfSpinAround;
+        animation-iteration-count: infinite;
+        animation-duration: 500ms;
+        animation-timing-function: linear;
+      }
+    }
+
+    .picker-overlay {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      display: flex;
+      justify-content: space-evenly;
+      align-items: center;
+      .overlay-action {
+        opacity: 0;
+        display: flex;
+        border: 1px dashed $white;
+        border-radius: 100%;
+        width: 40%;
+        height: 40%;
+        color: $white;
+        span { margin: auto; }
+        &:hover, &.focus-visible {
+          background: rgba($white, 0.4);
+          color: $primary_color; // <-- I don't think that's a good idea, but to keep consistency with old portal
+        }
+      }
+
+      background: rgba(90, 90, 90, 0);
+      transition: background 0.3s;
+      &:hover, &:focus-within {
+        background: rgba(90, 90, 90, 0.5);
+        .overlay-action { opacity: 1; }
+      }
+    }
+  }
+}
+
+
+bf-avatar {
+  @mixin bf-avatar-size($size) {
+    max-height: $size;
+    .bf-avatar {
+      width: $size;
+      height: $size;
+      min-width: $size;
+      max-width: $size;
+      min-height: $size;
+      max-height: $size;
+    }
+  }
+
+  display: inline-block;
+  &.xs  { @include bf-avatar-size(30px);  .bf-avatar-inner { border-width: 2px; .default { font-size: 15px; line-height: 26px;  } .initials { font-size: 10px; line-height: 26px;  } } }
+  &.sm  { @include bf-avatar-size(55px);  .bf-avatar-inner { border-width: 3px; .default { font-size: 30px; line-height: 49px;  } .initials { font-size: 23px; line-height: 49px;  } } }
+  /*md */ @include bf-avatar-size(90px);  .bf-avatar-inner { border-width: 4px; .default { font-size: 50px; line-height: 82px;  } .initials { font-size: 40px; line-height: 78px;  } }
+  &.lg  { @include bf-avatar-size(120px); .bf-avatar-inner { border-width: 7px; .default { font-size: 70px; line-height: 104px; } .initials { font-size: 57px; line-height: 104px;  } } }
+  &.xl  { @include bf-avatar-size(160px); .bf-avatar-inner { border-width: 8px; .default { font-size: 90px; line-height: 146px; } .initials { font-size: 70px; line-height: 146px;  } } }
+
+
+  // Sizes of the icons for the overlay picker
+  &.xs .overlay-action { &.upload { font-size:  5px; } &.delete { font-size:  5px; } }
+  &.sm .overlay-action { &.upload { font-size:  9px; } &.delete { font-size: 10px; } }
+ /*md*/.overlay-action { &.upload { font-size: 17px; } &.delete { font-size: 17px; } }
+  &.lg .overlay-action { &.upload { font-size: 20px; } &.delete { font-size: 20px; } }
+  &.xl .overlay-action { &.upload { font-size: 25px; } &.delete { font-size: 28px; } }
+
+
+  &.white-border      .bf-avatar { background: $white;            }
+  &.primary-border    .bf-avatar { background: $primary_color;    }
+  &.secondary-border  .bf-avatar { background: $secondary_color;  }
+  &.tertiary-border   .bf-avatar { background: $tertiary_color;   }
+  &.quaternary-border .bf-avatar { background: $quaternary_color; }
+  &.grey .bf-avatar {
+    background: $grey;
+  }
+
+  &.bf-color-colleague {
+    .bf-avatar {
+      background: $primary_color;
+    }
+  }
+  &.bf-color-company {
+    .bf-avatar {
+      background: darken($primary_color, 10%);
+    }
+  }
+  &.bf-color-personal {
+    .bf-avatar {
+      background: $quaternary_color;
+    }
+  }
+}
+
