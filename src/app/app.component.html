@@ -7,6 +7,28 @@
 
 <span class="icon-cross"></span>
 
+<bf-btn class="secondary"
+(bfClick)="myFunc($event)"
+bfText="Click Me"
+bfIcon="icon-plus">
+</bf-btn>
+
+<bf-label class="block value-mar-15 value-inline"
+        bfText="view.common.username"
+        bfValue="change_password.body.password_strength_weak"
+        [bfRequired]="true"
+        bfTooltip="view.tooltip.message"
+        [bfTooltipBody]="true">
+</bf-label>
+
+<bf-input [(ngModel)]="myVariable"
+        bfLabel="view.common.name"
+        bfIcon="icon-search"
+        [bfRequired]="true"
+        [bfAutocomplete]="true"
+        bfErrorText="Hello world">
+</bf-input>
+
 <h2>Languages:</h2>
 <p>
   Selected language: {{ language$ | async }}<br>

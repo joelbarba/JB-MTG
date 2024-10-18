@@ -3,6 +3,7 @@ import { RouterOutlet } from '@angular/router';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { BfLang, BfLangList, BfTranslateService } from './core/common/bf-translate.service';
 import { CommonModule } from '@angular/common';
+import { BfUiLibModule } from '@blueface_npm/bf-ui-lib';
 
 @Component({
   selector: 'app-root',
@@ -11,6 +12,7 @@ import { CommonModule } from '@angular/common';
     RouterOutlet,
     TranslateModule,
     CommonModule,
+    BfUiLibModule,
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
@@ -21,6 +23,7 @@ export class AppComponent {
   language$ = this.bfTranslate.language$;
   
   title = 'JB-NOTES-WEB';
+  myVariable = 'HEY';
 
 
   constructor(
@@ -51,5 +54,9 @@ export class AppComponent {
   selectLang(lang: BfLang) {
     // console.log(lang);
     this.bfTranslate.changeLanguage(lang.code);
+  }
+
+  myFunc(e: any) {
+    console.log(e);
   }
 }

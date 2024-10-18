@@ -3,52 +3,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { LangChangeEvent, TranslateService} from '@ngx-translate/core';
 import { BehaviorSubject, firstValueFrom, Observable, of } from 'rxjs';
 import { map } from 'rxjs/operators';
-// import { AbstractTranslateService, BfDefer, BfLoadingBarService } from '@blueface_npm/bf-ui-lib';
-// import { wSettings } from '../../../environments/whitelabel-settings';
-
-// -------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------
-// TO BE REMOVED ONCE bf-ui-lib is present:
-
-export enum IBfDeferStatus { pending = 0, resolved = 1, rejected = 2, cancelled = 3 }
-export class BfDefer {
-  public promise: Promise<any>;   // Native Promise
-  public resolve!: Function;       // Promise resolver function
-  public reject!: Function;        // Promise rejector function
-  public status: IBfDeferStatus;
-
-  constructor() {
-    this.status = 0;
-    this.promise = new Promise((resolve, reject) => {
-      this.resolve = resolve;
-      this.reject = reject;
-    });
-
-    // Set status once resolve/rejected
-    this.promise.then(
-      () => { if (this.status === 0) { this.status = 1; }},
-      () => { if (this.status === 0) { this.status = 2; }}
-    );
-  }
-}
-
-const getByProp = function(array: Array<any>, property: string, value: any) {
-  return array.find(item => !!item && item[property] === value);
-};
-
-const getKeyByProp = function(array: Array<any>, keyName: string, property: string, value: any) {
-  const obj = array.find(item => !!item && item[property] === value);
-  if (!keyName) { return obj; }
-  if (!!obj && obj.hasOwnProperty(keyName)) {
-    return obj[keyName];
-  } else {
-    return undefined;
-  }
-};
-
-// -------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------
+import { AbstractTranslateService, BfDefer, BfLoadingBarService } from '@blueface_npm/bf-ui-lib';
 
 
 
@@ -96,7 +51,7 @@ export interface BfLang {
  * DOC: https://github.com/ngx-translate/core
 ********************************************************/
 @Injectable({ providedIn: 'root' })
-export class BfTranslateService { // extends AbstractTranslateService {
+export class BfTranslateService extends AbstractTranslateService {
   readonly storageLocaleKey = 'NG_TRANSLATE_LANG_KEY';
   supportedLanguages: Array<BfLang> = [];    // List of supported languages
   languagesPromise: Promise<Array<BfLang>>;  // Resolves once the dynamic list of locales is loaded
@@ -109,17 +64,17 @@ export class BfTranslateService { // extends AbstractTranslateService {
   language$ = new BehaviorSubject('en-ie');
   localeId$ = new BehaviorSubject('en-IE');
 
-  onLangChange$: Observable<{lang: string; translations: any}>;
+  override onLangChange$: Observable<{lang: string; translations: any}>;
   transReady;      // 1st load promise. You can use it to wait on loading for instant translations
   isReady = false; // True once transReady promise is resolved
 
   // Watch the DIs here --> This will be injected in bf-ui-lib
   constructor(
     private translate: TranslateService,
-    // private loadingBar: BfLoadingBarService,
+    private loadingBar: BfLoadingBarService,
     private http: HttpClient,
   ) {
-    // super();
+    super();
 
     // Initialize the internationalization configuration
     this.onLangChange$ = this.translate.onLangChange.pipe(
@@ -132,7 +87,7 @@ export class BfTranslateService { // extends AbstractTranslateService {
     this.translate.onLangChange.subscribe((event: LangChangeEvent) => {
       transReadyDef.resolve();
       this.isReady = true;
-      const locale: BfLang = getByProp(this.supportedLanguages, 'code', event.lang);
+      const locale: BfLang = this.supportedLanguages.getByProp('code', event.lang) as BfLang;
       this.language$.next(locale.code);
       this.localeId$.next(locale.localeId);
     });
@@ -147,7 +102,7 @@ export class BfTranslateService { // extends AbstractTranslateService {
 
     // If there is no valid stored language, determine a default one
     this.languagesPromise.then(() => {
-      if (!getByProp(this.supportedLanguages, 'code', storedLanguage)) {
+      if (!this.supportedLanguages.getByProp('code', storedLanguage)) {
         this.changeLanguage(this.determineDefaultLang());
       }
     });
@@ -179,7 +134,7 @@ export class BfTranslateService { // extends AbstractTranslateService {
     localStorage.setItem(this.storageLocaleKey, newLang);
 
     // Set current locale from the language
-    const currentLang = getByProp(languageSettings, 'lang', newLang);
+    const currentLang = languageSettings.getByProp('lang', newLang);
     this.currentLocale = (currentLang ? currentLang.localeId : this.fallbackLocaleId) || this.fallbackLocaleId;
   };
 

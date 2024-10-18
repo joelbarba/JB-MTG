@@ -1,0 +1,339 @@
+/*****************************************************************************************************
+* Default variable set (generic for all whitelabels)
+* This is imported into every whitelabel _variables.scss, so it's accessible when using "variables"
+*
+* It should not use static values unless they will be always the same for all whitelabels.
+* Ideally, they should be relative to the main variables "$primary_color", "$secondary_"...
+*****************************************************************************************************/
+
+// ********* Main Colors ***********
+$primary_color    : #1abc9c !default;
+$secondary_color  : #046F5A !default;
+$tertiary_color   : #BC451A !default;
+$quaternary_color : #2E4856 !default;
+$warning_color    : #BC451A !default;
+$extra_color      : #6F1E00 !default;
+
+$white          : #fff !default;
+$black          : #000 !default;
+$grey           : #929292 !default;
+$light-gray     : #e3e3e3 !default;
+$lighter-gray   : #f5f5f5 !default;
+$text-color     : #525254 !default;
+$optional-color : #ccc !default;       // (bootstrap default - $input-border)
+$disabled-color : #a0a0a0 !default;
+$focused-color  : darken($primary_color, 20%) !default;
+$required-color : $primary_color !default;
+$valid-color    : $primary_color !default;
+$invalid-color  : $warning_color !default;
+$input-placeholder-color: #c0c0c0 !default;
+$special-link-color: $primary_color !default;
+
+// ********* Shell ***********
+$navbar-height  : 72px !default;      // Height of the header
+$menu-width     : 55px !default;      // Width of the collapsed menu
+$menu-exp-width : 200px !default;     // Width of the expanded menu (total = $menu-width + $menu-exp-width)
+
+// ********* Header Navbar ***********
+$nav-bg-color      : $primary_color !default;      // Background color of the navbar
+$nav-color         : $white !default;              // Color of the navbar text
+$nav-link-color    : $white !default;              // Color of the navbar text of the links
+$nav-hover-color   : darken($white, 10%) !default; // Color of the navbar icons when hovering
+$nav-avatar-border : $white !default;              // Color of the border of the profile avatar
+$nav-avatar-color  : $primary_color !default;      // Color of the default user icon of the profile avatar
+$nav-avatar-bg     : $white !default;              // Background color of the default image of the profile avatar
+$max-logo-width    : 300px !default;               // Max size of the logo in the navbar
+
+// ********* Special Switches ***********
+$clir-on: $extra_color !default;
+$clir-off: darken($primary_color, 15%) !default;
+
+$dnd-on-color: $extra-color !default;
+$dnd-off-color: darken($primary_color, 15%) !default;
+
+
+// ********** Dashboard ************
+$counter-link-users      : $primary_color !default;
+$counter-link-contacts   : $secondary_color !default;
+$counter-link-voicemails : $tertiary_color !default;
+$counter-link-devices    : $quaternary_color !default;
+
+$total-calls: $extra_color !default;
+$incoming-calls: $primary_color !default;
+$outgoing-calls: $secondary_color !default;
+
+
+// ********** Device/Line Status ************
+$device-waiting-color : #ffcc66 !default;           // (old $waiting_color)
+$line-active-color    : $primary_color !default;    // (old $active_color)
+$line-inactive-color  : $tertiary_color !default;   // (old $inactive_color)
+$line-disabled-color  : $quaternary_color !default;
+$line-dnd-color       : $dnd-on-color !default;
+$line-enabled-color   : $primary_color !default;
+
+// ********* Tickets Colors ***********
+$ticket-status-new :    #FFB648 !default;
+$ticket-status-open:    #E34F32 !default;
+$ticket-status-pending: #3091EC !default;
+$ticket-status-hold:    #2F3941 !default;
+$ticket-status-solved:  #87929D !default;
+$ticket-status-closed:  #D8DCDE !default;
+
+// ********* Orders Colors ***********
+$order-color-pending    : $quaternary_color;              // 0=pending payment (Not Paid)
+$order-color-partially  : $secondary_color;               // 1=partially paid
+$order-color-paid       : $primary_color;                 // 2=paid
+$order-color-cancelled  : $warning_color;                 // 3=cancelled
+$order-color-waiting    : $extra_color;                   // 4=processing (Waiting)
+$order-color-refunded   : darken($secondary_color, 15);   // 5=refunded
+$order-color-submitted  : darken($tertiary_color, 15);    // 6=submitted
+
+// ********* Payments Colors ***********
+$payment-color-paid      : $primary_color;
+$payment-color-reversed  : $secondary_color;
+$payment-color-pending   : $quaternary_color;
+$payment-color-failed    : $warning_color;
+$payment-color-cancelled : $extra_color;
+$payment-color-3ds       : darken($secondary_color, 15);
+$payment-color-submitted : darken($tertiary_color, 15);
+
+
+/************************  Bootstrap theme overwrite ***************************/
+/***** https://github.com/twbs/bootstrap/blob/master/scss/_variables.scss ******/
+$primary        : $primary_color;
+$secondary      : $secondary_color;
+$success        : $primary_color;
+$info           : $quaternary_color;
+$warning        : $extra_color;
+$danger         : $warning_color;
+$light          : $primary_color;
+$dark           : $primary_color;
+$error-color    : $warning_color;
+$success-color  : $primary_color;
+$link-color     : $primary_color;
+$link-hover-color: darken($primary_color, 5%);
+$body-color     : $text-color;
+$body-bg        : #ebeff2 !default;
+
+$navbar-dark-color              : $white;
+$navbar-dark-hover-color        : rgba($white, .75);
+$navbar-dark-active-color       : rgba($white, .80);
+$navbar-dark-disabled-color     : rgba($white, .25);
+$navbar-dark-brand-color        : $primary_color;
+$navbar-dark-brand-hover-color  : $white;
+
+// ------ Globals ------
+//$font-family-base:  "Helvetica Neue", Helvetica, Arial, sans-serif;
+$font-family-base: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+$font-size-base: 0.875rem; // 14px; (default 1rem = 16px)
+$font-weight-base: 400; // 400;
+$line-height-base: 1.5; // 1.428571429; (old portal)
+// Taken from Bootstrap's default value
+$font-family-monospace: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+
+
+
+// Emulate old grid breakpoints - https://getbootstrap.com/docs/4.1/layout/overview/?source=post_page#responsive-breakpoints
+// To use it add: @import '~bootstrap/scss/mixins';
+// and use the mixins: @include media-breakpoint-up(md) { ... }     applies for md,lg,xl
+//                     @include media-breakpoint-down(lg) { ... }   applies for xs,sm,md,lg
+//$container-max-widths: (sm: 540px, md: 720px, lg: 960px, xl: 1140px)
+//$grid-breakpoints: (xs: 0,sm: 576px,md: 768px,lg: 992px,xl: 1200px);
+$grid-breakpoints: (xs: 0, sm: 768px, md: 992px, lg: 1200px, xl: 1600px);
+
+// Modal sizes
+//$modal-xl:  1140px !default;
+$modal-lg:  900px; // Default=800
+$modal-md:  600px; // Default=500
+$modal-sm:  400px; // Default=300
+$modal-header-padding: 25px;
+$modal-header-padding-y: 0;
+$modal-header-padding-x: 0;
+
+
+// Z position for modals
+$zindex-modal-backdrop: 1040; // 1040 !default;
+$zindex-modal:          1050; // 1050 !default;
+
+// Bootstrap Tooltips (+ ngb Tooltips)
+$zindex-tooltip: 5100;  // Show tooltips over navbar and menu
+$tooltip-bg: darken($quaternary_color, 5%) !default;
+$tooltip-opacity: 0.9 !default;
+//$tooltip-font-size:                 $font-size-sm !default;
+//$tooltip-max-width:                 200px !default;
+//$tooltip-color:                     $white !default;
+//$tooltip-border-radius:             $border-radius !default;
+//$tooltip-padding-y:                 .25rem !default;
+//$tooltip-padding-x:                 .5rem !default;
+//$tooltip-margin:                    0 !default;
+//$tooltip-arrow-width:               .8rem !default;
+//$tooltip-arrow-height:              .4rem !default;
+//$tooltip-arrow-color:               $tooltip-bg !default;
+
+// Bootstrap Popovers
+$popover-bg: darken($quaternary_color, 5%) !default;
+//$popover-font-size:                 $font-size-sm !default;
+//$popover-max-width:                 276px !default;
+//$popover-border-width:              $border-width !default;
+//$popover-border-color:              rgba($black, .2) !default;
+//$popover-border-radius:             $border-radius-lg !default;
+//$popover-box-shadow:                0 .25rem .5rem rgba($black, .2) !default;
+//$popover-header-bg:                 darken($popover-bg, 3%) !default;
+//$popover-header-color:              $headings-color !default;
+//$popover-header-padding-y:          .5rem !default;
+//$popover-header-padding-x:          .75rem !default;
+//$popover-body-color:                $body-color !default;
+//$popover-body-padding-y:            $popover-header-padding-y !default;
+//$popover-body-padding-x:            $popover-header-padding-x !default;
+//$popover-arrow-width:               1rem !default;
+//$popover-arrow-height:              .5rem !default;
+//$popover-arrow-color:               $popover-bg !default;
+//$popover-arrow-outer-color:         fade-in($popover-border-color, .05) !default;
+
+
+/********************** bf-ui-lib **********************/
+//$bf-ui-lib-colors: (
+//  'primary'     : $primary_color,
+//  'secondary'   : $secondary_color,
+//  'tertiary'    : $tertiary_color,
+//  'quaternary'  : $quaternary_color,
+//  'warning'     : $warning_color,
+//  'extra'       : $extra_color,
+//  'white'       : $white,
+//  'disabled'    : $disabled-color
+//);
+
+// ---------- bf-btn -------------------
+//$default-btn-text-color: $white !default;
+//@import '~@blueface_npm/bf-ui-lib/scss/bf-btn.scss';
+//bf-btn.yellow-btn { @include custom-btn-color(green, black); }
+
+// ---------- bf-checkbox --------------
+//$checkbox-uncheck-bg: $white !default;
+//$checkbox-uncheck-border: $primary_color !default;
+//$checkbox-check-bg: $primary_color !default;
+//$checkbox-check-border: darken($primary_color, 3%) !default;
+//$checkbox-check-color: $white !default;
+//$checkbox-disabled-bg: $disabled-color !default;
+//$checkbox-disabled-border: darken($disabled-color, 3%) !default;
+
+// ---------- bf-dropdown --------------
+//$dropdown-selection-bg: $quaternary_color !default;
+//$dropdown-selection-hover: $primary_color !default;
+//$dropdown-valid-color: $valid-color !default;
+
+// ---------- bf-growl -----------------
+//$growl-border: rgba($white, 0.4) !default;
+//$growl-success: $white !default;
+//$growl-success-bg: darken($primary_color, 15%) !default;
+//$growl-error: $white !default;
+//$growl-error-bg: $warning_color !default;
+
+// ---------- bf-input -----------------
+//$input-optional-color  : $optional-color !default;  // <-- this is a bootstrap default
+//$input-focused-color   : $focused-color !default;
+//$input-disabled-color  : $disabled-color !default;
+//$input-required-color  : $required-color !default;
+//$input-invalid-color   : $invalid-color !default;
+//$input-valid-color     : $valid-color !default;
+
+// ---------- bf-list-paginator --------
+//$page_bg: $white !default;
+//$page_color: darken($primary_color, 10%) !default;
+//$page_border_color: #d7dade !default;
+//$page_hover_bg: #eeeeee !default;
+
+// ---------- bf-loading ---------------
+//$locker-bg: rgba($white, 0.8) !default;   // Background color when blocking
+//$bar-bg: darken($white, 83%) !default;    // Header loading bar
+//$bar-color: $quaternary_color !default;
+//$spinner-color: rgba($primary_color, 0.7) !default; // Round spinner
+//$spinner-size: 60 !default;
+//$menu-size: 35 !default;
+//$ani-time: 8 !default; // Animation time for BF loading spinner
+
+// ---------- bf-loading-spinner -------
+//$loading-spinner-color: $primary_color !default;
+
+// ---------- bf-no-data ---------------
+//$no-data-bg: darken($primary_color, 20%) !default;
+//$no-data-color: $white !default;
+
+// ---------- bf-progress-bar ----------
+//$progress-bar-bg: $primary_color !default;
+//$progress-bar-color: $white !default;
+//$progress-bar-used-label: $secondary_color !default;
+//$progress-bar-left-label: $primary_color !default;
+//$progress-bar-per-outside: $primary_color !default;
+
+// ---------- bf-quantity-input --------
+//$quantity-input-bg: $white !default;
+//$quantity-input-border: $valid-color !default;
+//$quantity-input-left-btn: $valid-color !default;
+//$quantity-input-right-btn: $valid-color !default;
+//$quantity-input-blocked-btn: darken($primary_color, 8%) !default;
+
+// ---------- bf-radio -----------------
+//$radio-color: $text-color !default;  // Default radio background color (when not required)
+//$radio-check-color: $white !default;
+
+// ---------- bf-status-badge ----------
+//$bf-status-badge-text-color : $white !default;
+//$bf-status-badge-border     : #f8f8f8 !default;
+//$bf-status-font-size        : 12px !default;
+//$bf-status-font-weight      : 600 !default;
+//$bf-status-active   : $primary_color !default;
+//$bf-status-inactive : $warning_color !default;
+//$bf-status-pending  : $quaternary_color !default;
+//$bf-status-other    : $secondary_color !default;
+//$bf-status-other2   : $extra_color !default;
+//$bf-status-other3   : darken($secondary_color, 15) !default;
+//$bf-status-other4   : darken($bf_color3_shadow2, 20%) !default;
+//$bf-status-submitted: darken($tertiary_color, 15) !default;
+
+// ---------- bf-switch ----------------
+//$switch-bar-bg: #fff !default;
+//$switch-bar-color: #ccc !default;
+//$switch-lever-bg: #f3f3f3 !default;
+//$switch-color-on: $valid-color !default;
+//$switch-color-off: $switch-lever-bg !default;
+
+// ---------- bf-textarea --------------
+//$textarea-optional-color  : $optional-color !default;  // <-- this is a bootstrap default
+//$textarea-focused-color   : $focused-color !default;
+//$textarea-disabled-color  : $disabled-color !default;
+//$textarea-required-color  : $required-color !default;
+//$textarea-invalid-color   : $invalid-color !default;
+
+
+// UI CALLFLOW COLORS
+$cf-designer-header-bg  : #2d3134;  // Black header background and border of the design box
+$cf-toolbox-border      : #2d3134;  // #ddd;     // Border color of the toolbox
+$cf-item-btn-border     : #cecece;  // Border color for item buttons
+$cf-item-warning-bg     : #FFDC6A;  // Warning badge when elements are not properly set in the designer
+$cf-error-item-color    : #ff3f3b;  // #a94442;  // Color of the elements when they are invalid
+$cf-error-item-bg       : #ffd7d6;  // Background of containers that are invalid
+
+
+// Element colors
+$ring_color             : $primary_color !default;
+$voicemail_color        : darken($primary_color, 5%) !default;
+$tod_color              : darken($primary_color, 10%) !default;
+$menu_color             : darken($primary_color, 15%) !default;
+$voicemail_check_color  : darken($primary_color, 20%) !default;
+$switch_color           : $tertiary_color !default;
+$switch_menu_color      : darken($tertiary_color, 10%) !default;
+$hotdesk_color          : darken($tertiary_color, 20%) !default;
+$conf_color             : $secondary_color !default;
+$video_conference_color : darken($secondary_color, 5%) !default;
+$paging_color           : darken($secondary_color, 10%) !default;
+$play_color             : darken($secondary_color, 20%) !default;
+$park_color             : $extra_color !default;
+$cf_color               : darken($extra_color, 5%) !default;
+$moh_color              : darken($extra_color, 10%) !default;
+$echo_color             : darken($extra_color, 20%) !default;
+$queue_color            : $quaternary_color !default;
+$whitelist_color        : darken($quaternary_color, 5%) !default;
+
+// Callflow editor variables
+$cf-container-max-with : calc(100vw - 575px); // Max with for containers into callflow designer
