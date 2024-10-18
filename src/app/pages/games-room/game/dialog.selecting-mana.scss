@@ -1,0 +1,44 @@
+.selecting-mana {
+  .panel-card {
+    padding: 3px;
+    border: 1px solid black;
+    background: white;
+    border-radius: 5px;
+    img { max-height: 200px; }
+  }
+  .mana-count { 
+    padding: 0 30px;
+    display: flex;
+    justify-content: space-between;
+    .selected-mana-count { text-align: left; }
+    .total-mana-needed { text-align: right; }
+   }
+  .mana { margin-left: 5px; img { border-radius: 100%; padding: 1px; background: black; }}
+  .btns-box {
+    // display: flex;
+    // justify-content: space-between;
+    text-align: right;
+    bf-btn { margin-left: 15px; }
+  }
+  .min-btn {
+    position: absolute;
+    top: 0;
+    right: 0;
+    font-size: 30px;
+    background: mediumaquamarine;
+    padding: 0 20px;
+    line-height: 30px;
+    border-top-right-radius: 9px;
+    cursor: pointer;
+  }
+  &.minimized {
+    height: 40px;
+    width: 300px;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+    top: unset;
+    left: unset;
+    .min-btn { left: 0; line-height: 38px; }
+  }
+}

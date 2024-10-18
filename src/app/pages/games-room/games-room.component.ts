@@ -37,6 +37,20 @@ export class GamesRoomComponent {
   }
 
   createNewGame() {
+    const newGame = this.generateGame();
+    addDoc(collection(this.firestore, 'games'), newGame).then(docRef => {
+      console.log('New Game Created', newGame);
+      this.goToGame(docRef.id);
+    });
+  }
+
+  async resetGame(gameId: string) {
+    const newGame = this.generateGame();
+    await setDoc(doc(this.firestore, 'games', gameId), newGame);
+    // this.goToGame(gameId);
+  }
+
+  generateGame() {
     const getCardById = (id: string): TGameCard => this.gameState.library.find(c => c.id === id) as TGameCard;
     const generateId = (ind: number) => 'g' + (ind + '').padStart(3, '000');
     const generateOrder = () => Math.round(Math.random() * 9999);
@@ -49,6 +63,8 @@ export class GamesRoomComponent {
         controller: playerNum, 
         // posX: 100, posY: 30, zInd: 100,
         isTapped: false, isSelectable: false,
+        summonStatus: null,
+        selectableAction: null,
       };
     }
 
@@ -62,6 +78,15 @@ export class GamesRoomComponent {
       getCardById('c000002'), // plains
       getCardById('c000002'), // plains
       getCardById('c000002'), // plains
+      getCardById('c000001'), // island
+      getCardById('c000001'), // island
+      getCardById('c000001'), // island
+      getCardById('c000003'), // swamp
+      getCardById('c000003'), // swamp
+      getCardById('c000003'), // swamp
+      getCardById('c000005'), // forest
+      getCardById('c000005'), // forest
+      getCardById('c000005'), // forest
       getCardById('c000036'), // gray ogre
       getCardById('c000036'), // gray ogre
       getCardById('c000036'), // gray ogre
@@ -86,6 +111,15 @@ export class GamesRoomComponent {
       getCardById('c000002'), // plains
       getCardById('c000002'), // plains
       getCardById('c000002'), // plains
+      getCardById('c000001'), // island
+      getCardById('c000001'), // island
+      getCardById('c000001'), // island
+      getCardById('c000003'), // swamp
+      getCardById('c000003'), // swamp
+      getCardById('c000003'), // swamp
+      getCardById('c000005'), // forest
+      getCardById('c000005'), // forest
+      getCardById('c000005'), // forest
       getCardById('c000036'), // gray ogre
       getCardById('c000036'), // gray ogre
       getCardById('c000036'), // gray ogre
@@ -113,6 +147,7 @@ export class GamesRoomComponent {
 
     
     const defaultPlayerValues = {
+      help: '',
       life: 20,
       manaPool: [0,0,0,0,0,0],
       drawnCards: 0,
@@ -137,19 +172,15 @@ export class GamesRoomComponent {
     const newGame: TGameState = {
       created: new Date() + '',
       status: 'created',
-      currentPlayerNum: '1',
+      turn: '1',
       phase: EPhase.untap,
       player1,
       player2,
       cards,
-      options: [],
+      options: [{ player: '1', action: 'start-game' }],
     };
 
-    addDoc(collection(this.firestore, 'games'), newGame).then(docRef => {
-      console.log('New Game Created', newGame);
-      this.goToGame(docRef.id);
-    });
-
+    return newGame;
   }
 
 }

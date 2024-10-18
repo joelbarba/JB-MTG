@@ -1,0 +1,36 @@
+<div class="selecting-mana" [class.minimized]="summonOp.minimized">
+  <div class="min-btn" (click)="summonOp.minimized = !summonOp.minimized">{{summonOp.minimized ? summonOp.title : '-'}}</div>
+  <h2>{{summonOp.title}}</h2>
+  <div class="center">
+    <div class="panel-card">
+      <img [src]="'/assets/images/cards/' + summonOp.card?.image">
+    </div>    
+  </div>
+  <div>{{summonOp.text}}</div>
+  <div class="mana-count">      
+    <div class="v-align selected-mana-count">
+      <span style="margin-right: 15px;">Selected Mana:</span>
+      <span *ngFor="let m of numArr(summonOp.manaReserved[0])" class="mana"> <img src="assets/images/oneMana.png">  </span>
+      <span *ngFor="let m of numArr(summonOp.manaReserved[1])" class="mana"> <img src="assets/images/blueMana.png"> </span>
+      <span *ngFor="let m of numArr(summonOp.manaReserved[2])" class="mana"> <img src="assets/images/whiteMana.png"></span>
+      <span *ngFor="let m of numArr(summonOp.manaReserved[3])" class="mana"> <img src="assets/images/blackMana.png"></span>
+      <span *ngFor="let m of numArr(summonOp.manaReserved[4])" class="mana"> <img src="assets/images/redMana.png">  </span>
+      <span *ngFor="let m of numArr(summonOp.manaReserved[5])" class="mana"> <img src="assets/images/greenMana.png"></span>
+    </div>
+    <div class="v-align total-mana-needed">
+      <span style="margin-right: 15px;">Total Mana Needed:</span>
+      <span *ngFor="let m of numArr(summonOp.cast[0])" class="mana"> <img src="assets/images/oneMana.png">  </span>
+      <span *ngFor="let m of numArr(summonOp.cast[1])" class="mana"> <img src="assets/images/blueMana.png"> </span>
+      <span *ngFor="let m of numArr(summonOp.cast[2])" class="mana"> <img src="assets/images/whiteMana.png"></span>
+      <span *ngFor="let m of numArr(summonOp.cast[3])" class="mana"> <img src="assets/images/blackMana.png"></span>
+      <span *ngFor="let m of numArr(summonOp.cast[4])" class="mana"> <img src="assets/images/redMana.png">  </span>
+      <span *ngFor="let m of numArr(summonOp.cast[5])" class="mana"> <img src="assets/images/greenMana.png"></span>
+    </div>
+  </div>
+  <div class="btns-box">
+    <bf-btn bfText="Cancel" bfIcon="icon-cross" (bfClick)="summonOp.cancel()"></bf-btn>
+    <bf-btn bfText="Summon Creature" bfIcon="icon-arrow-right3"
+            [bfDisabled]="!summonOp.showSummonBtn" (bfClick)="summonOp.summonWithSelection()">
+    </bf-btn>
+  </div>
+</div>

@@ -14,18 +14,22 @@ export enum EPhase {
 }
 
 export type TCard = {
-  id    : string; // C000000
-  cast  : TCast;
-  color : TColor;
-  name  : string;
-  image : string;
-  text  : string;
-  type  : TCardType;
+  id      : string; // C000000
+  cast    : TCast;
+  color   : TColor;
+  name    : string;
+  image   : string;
+  text    : string;
+  type    : TCardType;
+  attack  : number;
+  defense : number;
 };
 
 export type TCardLocation = 'off'
   | 'deck1' | 'hand1' | 'tble1' | 'grav1'
   | 'deck2' | 'hand2' | 'tble2' | 'grav2';
+export type TCardSemiLocation = 'off' | 'deck' | 'hand' | 'tble' | 'grav';
+export type TCardAnyLocation = TCardSemiLocation & TCardSemiLocation;
 
 export type TGameCard = TCard & {
   gId: string;
@@ -34,6 +38,8 @@ export type TGameCard = TCard & {
   order: number;
   location: TCardLocation;
   isTapped: boolean;
+  summonStatus: null | 'waitingMana' | 'selectingMana' | 'summoning' | 'sickness';
+  summonTime: number,
   selectableAction: null | { text: string; action: TAction };
 }
 export type TGameCards = Array<TGameCard>;
@@ -41,11 +47,13 @@ export type TExtGameCard = TGameCard & {
   posX: number;
   posY: number;
   zInd: number;
+  isSelectable?: boolean;
 }
 
 export type TPlayer = {
   userId: string;
   name: string;
+  help: string;
   life: number;
   manaPool: TCast;
   drawnCards: number;  // Only 1 per turn
@@ -55,7 +63,7 @@ export type TPlayer = {
 export type TGameState = {
   created: string;
   status: 'created' | 'playing' | 'player1win' | 'player2win' | 'error';
-  currentPlayerNum: '1' | '2';
+  turn: '1' | '2';
   phase: EPhase;
   player1: TPlayer;
   player2: TPlayer;
@@ -63,13 +71,17 @@ export type TGameState = {
   options: Array<TGameOption>;
 }
 
-export type TAction = 
-'start-game' |
-'draw' |
-'summon-land' |
-'select-card-to-discard' |
-'tap-land' |
-'skip-phase';
+export type TAction = 'start-game' 
+| 'skip-phase'
+| 'untap-card'
+| 'draw' 
+| 'summon-land' 
+| 'tap-land'
+| 'cast-spell'
+| 'summon-creature'
+| 'cancel-summon-creature'
+| 'select-card-to-discard' 
+| 'burn-mana';
 
 export type TGameOption = { 
   player: '1' | '2';

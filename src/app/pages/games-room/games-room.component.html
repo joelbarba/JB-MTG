@@ -7,6 +7,7 @@
 <ul>
   <li *ngFor="let game of games$ | async" class="d-flex">
     <button class="flex-1 mr-5" (click)="goToGame(game.id)">GO TO THE GAME</button>
+    <button class="flex-1 mr-5" (click)="resetGame(game.id)">RESET GAME</button>
     <div class="flex-1">{{game.id}}</div>
     <div class="flex-3">Created: {{game['created']}}</div>
     <div class="flex-1">Status: {{game['status']}}</div>

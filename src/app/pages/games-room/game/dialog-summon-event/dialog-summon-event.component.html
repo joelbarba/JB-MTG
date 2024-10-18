@@ -1,0 +1,20 @@
+<div class="selecting-mana" [class.minimized]="summonOp.minimized">
+  <div class="min-btn" (click)="summonOp.minimized = !summonOp.minimized">{{summonOp.minimized ? summonOp.title : '-'}}</div>
+  <h2>{{summonOp.title}}</h2>
+  <div class="center">
+    <div class="panel-card">
+      <img [src]="'/assets/images/cards/' + summonOp.card?.image">
+    </div>    
+  </div>
+  <div>{{summonOp.text}}</div>
+  
+  <div class="wating-progress-bar">
+    <div class="time" [style.width.px]="progress"></div>
+  </div>
+
+  <div class="pause-btn">
+    <bf-btn *ngIf="!isPaused" (bfClick)="pause()" bfText="PAUSE" bfIcon="icon-pause2"></bf-btn>
+    <bf-btn *ngIf="isPaused" (bfClick)="continue()" bfText="PAUSE" bfIcon="icon-play3"></bf-btn>
+  </div>
+  
+</div>

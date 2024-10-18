@@ -79,7 +79,7 @@ $white-dark: gainsboro;
         background: $gray-dark;
         border-left: 1px solid $gray-light;
         display: flex;
-        flex-direction: column;
+        flex-direction: column;        
         .mana {
           flex: 1;
           border-top: 1px solid $gray-light;
@@ -101,6 +101,7 @@ $white-dark: gainsboro;
             // margin-right: 4px;
           }
         }
+        &.selectable .mana { cursor: pointer; }
       }
 
     }
@@ -217,8 +218,21 @@ $white-dark: gainsboro;
       border-bottom: 2px solid $gray-light;
     }
     .info-box {
-      height: 30px;
-      background-color: $gray-dark;
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      // right: 0;
+      padding: 5px;
+      background: rgba(179, 179, 179, 0.3);
+      display: flex;
+      align-items: center;
+      border-top-right-radius: 6px;
+      z-index: 600;
+      box-shadow: 3px -4px 5px 1px rgb(97 97 97 / 18%);
+      background: rgb(235 235 235);
+      .main-info {
+        margin: 0 15px;
+      }
     }
 
     .player-B {
@@ -271,6 +285,20 @@ $white-dark: gainsboro;
   }
 }
 
+.play-card.is-tapped {
+  // transform-origin: center;
+  margin-left: 30px !important;
+  transform: rotate(90deg);
+}
+.play-card.is-sick { // for summon sickness (creatures)
+  opacity: 0.35;
+}
+
+.hand-card.is-summoning {
+  opacity: 0.5;
+  transform: translateY(-20px);
+}
+
 
 
 
@@ -283,6 +311,7 @@ $white-dark: gainsboro;
     background: white;
     border-radius: 5px;
     img { max-height: 160px; }
+    &.is-tapped { max-width: 122px; }
   }
 }
 
@@ -299,9 +328,55 @@ $white-dark: gainsboro;
       }
       .mana-pool .mana {
         img { height: 24px; }
-        span { font-size: 18px; }
-      }
+        span { font-size: 18px; }        
+      }      
     }
   }
   .board-panel { left: 300px; }
 }
+
+
+.dialog-box {
+  position: fixed;
+  z-index: 1000;
+  &.lg {
+    top: 100px;
+    left: 550px;
+    right: 50px;
+    bottom: 150px;
+  }
+  &.md {
+    top: calc(50% - 300px);
+    left: calc(50% - 400px);
+    right: calc(50% - 400px);
+    bottom: calc(50% - 200px);
+  }
+  &.sm {
+    top: calc(50% - 200px);
+    left: calc(50% - 300px);
+    right: calc(50% - 300px);
+    bottom: calc(50% - 100px);
+  }
+  background: honeydew;
+  border: 1px solid #737373;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 11px 9px 15px 2px #676767;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  h2 { font-size: 35px; } // title
+  h3 { font-size: 60px; } // icon
+  .dialog-btn-box {
+    text-align: right;
+  }
+}
+
+
+
+
+
+.center { display: flex; justify-content: center; }
+.v-align { display: flex; align-items: center; }
+.flex-1 { flex: 1; }

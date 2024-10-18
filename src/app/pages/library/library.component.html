@@ -16,12 +16,54 @@
     <div *ngIf="selectedCard">
       <h3>Details: {{selectedCard.id}}</h3>
       <img [src]="'/assets/images/cards/' + selectedCard.image">
-      <p><b>Name:</b>  {{selectedCard.name}}</p>
-      <p><b>Color:</b> {{selectedCard.color}}</p>
-      <p><b>Type:</b>  {{selectedCard.type}}</p>
-      <p><b>Cast:</b>  {{selectedCard.cast | json}}</p>
-      <p><b>Text:</b>  {{selectedCard.text}}</p>
-      <p><b>Image:</b> {{selectedCard.image}}</p>
+      <div *ngIf="!isEdit">
+        <p><b>Name:</b>  {{selectedCard.name}}</p>
+        <p><b>Color:</b> {{selectedCard.color}}</p>
+        <p><b>Type:</b>  {{selectedCard.type}}</p>
+        <p><b>Cast:</b>  {{selectedCard.cast | json}}</p>
+        <p><b>Image:</b> {{selectedCard.image}}</p>
+        <p><b>Text:</b>  {{selectedCard.text}}</p>
+        <bf-btn bfText="Edit" (bfClick)="isEdit = true"></bf-btn>
+      </div>
+
+      <div *ngIf="isEdit">
+        <div style="display: flex;">
+          <bf-input bfLabel="Name"  [(ngModel)]="selectedCard.name" style="margin-right: 15px;"></bf-input>
+          <bf-input bfLabel="Image" [(ngModel)]="selectedCard.image"></bf-input>
+        </div>
+        <div style="display: flex;">
+          <bf-dropdown bfLabel="Color" style="margin-right: 15px;"
+               [(ngModel)]="selectedCard.color"
+               bfRender="value"
+               bfSelect="value"
+               [bfRequired]="true"
+               [bfList]="colors">
+          </bf-dropdown>
+          <bf-dropdown bfLabel="Type"
+               [(ngModel)]="selectedCard.type"
+               bfRender="value"
+               bfSelect="value"
+               [bfRequired]="true"
+               [bfList]="cardTypes">
+          </bf-dropdown>
+          <bf-input *ngIf="selectedCard.type === 'creature'" style="margin-left: 15px;" bfLabel="Attack" [(ngModel)]="selectedCard.attack"></bf-input>
+          <bf-input *ngIf="selectedCard.type === 'creature'" style="margin-left: 15px;" bfLabel="Defense" [(ngModel)]="selectedCard.defense"></bf-input>
+        </div>
+
+        <bf-label bfText="Cast" class="block"></bf-label>
+        <div style="display: flex;">
+          <bf-input bfLabel="X"      [(ngModel)]="selectedCard.cast[0]"></bf-input>
+          <bf-input bfLabel="Blue"   [(ngModel)]="selectedCard.cast[1]"></bf-input>
+          <bf-input bfLabel="White"  [(ngModel)]="selectedCard.cast[2]"></bf-input>
+          <bf-input bfLabel="Black"  [(ngModel)]="selectedCard.cast[3]"></bf-input>
+          <bf-input bfLabel="Red"    [(ngModel)]="selectedCard.cast[4]"></bf-input>
+          <bf-input bfLabel="Green"  [(ngModel)]="selectedCard.cast[5]"></bf-input>
+        </div>
+        
+        <bf-input bfLabel="Text"  [(ngModel)]="selectedCard.text"></bf-input>
+
+        <bf-btn bfText="Save Details" (bfClick)="saveCard(selectedCard)"></bf-btn>
+      </div>
     </div>
   </div>
 </div>
