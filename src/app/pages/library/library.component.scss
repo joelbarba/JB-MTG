@@ -1,0 +1,31 @@
+.page {
+  display: flex;
+  .list {
+    padding: 15px;
+    flex: 4;
+  
+    .card-wrapper {
+      display: inline-block;
+      margin: 2.5px 4px;
+      text-align: center;
+      .card {
+        padding: 3px;
+        border: 1px solid black;
+        background: white;
+        border-radius: 5px;
+        cursor: pointer;
+        img { max-height: 160px; }
+        &:hover {
+          border: 3px solid #00ff2d;
+          padding: 1px;
+        }
+      }
+    }
+  }
+  
+  .details {
+    flex: 1;
+    border-left: 1px solid black;
+    padding: 15px;
+  }
+}

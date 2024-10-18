@@ -63,7 +63,7 @@ export class AuthService {
       // This observable fires every time there is an Auth profile change (log in/out/app load)
       onAuthStateChanged(auth, (user) => {
         if (user) {
-          console.log('Auth Session Detected');
+          console.log('Auth Session Detected. You are:', user.displayName);
           this.firebaseUser = user;
           const profile = this.mapProfile(user);
           this.profile$.next(profile);
@@ -78,7 +78,7 @@ export class AuthService {
           });
         }        
       });
-    })
+    });
 
     this.loadingBar.run(this.profilePromise); // Run the loading spinner until profile ready
   }

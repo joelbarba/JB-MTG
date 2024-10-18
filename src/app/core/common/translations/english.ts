@@ -12,5 +12,10 @@ export const DICTIONARY_EN_IE = {
   'view.common.user': 'User',
   'view.common.password': 'Password',
   'view.common.login': 'Login',
-  'views.common.logout': 'Logout'
+  'views.common.logout': 'Logout',
+  'view.common.yes': 'Yes',
+  'view.common.no': 'No',
+  'view.common.cancel': 'Cancel',
+  'view.common.ok': 'Ok',
+  'view.common.save': 'Save',
 };

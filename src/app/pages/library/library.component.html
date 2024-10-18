@@ -1,0 +1,27 @@
+<h2>Library</h2>
+<!-- cards$ = {{ cards$ | async | json }} -->
+<div class="page">
+  <div class="list" *ngIf="cards.length">
+  <!-- <div class="list" *ngIf="cards$ | async as cards"> -->
+    <div class="card-wrapper" *ngFor="let card of cards" (click)="selectedCard = card">
+      {{card.id}}
+      <div class="card">
+        <img [src]="'/assets/images/cards/' + card.image">
+      </div>
+    </div>
+  
+  </div>
+  
+  <div class="details">
+    <div *ngIf="selectedCard">
+      <h3>Details: {{selectedCard.id}}</h3>
+      <img [src]="'/assets/images/cards/' + selectedCard.image">
+      <p><b>Name:</b>  {{selectedCard.name}}</p>
+      <p><b>Color:</b> {{selectedCard.color}}</p>
+      <p><b>Type:</b>  {{selectedCard.type}}</p>
+      <p><b>Cast:</b>  {{selectedCard.cast | json}}</p>
+      <p><b>Text:</b>  {{selectedCard.text}}</p>
+      <p><b>Image:</b> {{selectedCard.image}}</p>
+    </div>
+  </div>
+</div>

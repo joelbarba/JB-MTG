@@ -1,4 +1,4 @@
-<div class="game">
+<div class="game" *ngIf="!!state">
   <div class="left-panel">
     <div class="player-B">
 
@@ -6,7 +6,7 @@
         <div class="deck">
           <div class="deck-card">
             <img [src]="'/assets/images/cards/card_back.jpg'">
-            <div class="deck-count">60</div>
+            <div class="deck-count">{{deckBCount}}</div>
           </div>
           <div class="grav-card empty">
             <img [src]="'/assets/images/cards/empty.png'">
@@ -40,9 +40,9 @@
         <div class="life">20</div>
 
         <div class="deck">
-          <div class="deck-card">
+          <div class="deck-card" [class.selectable-card]="canIDraw" (click)="drawCard()">
             <img [src]="'/assets/images/cards/card_back.jpg'">
-            <div class="deck-count">60</div>
+            <div class="deck-count">{{deckACount}}</div>
           </div>
           <div class="grav-card">
             <img [src]="'/assets/images/cards/fork.jpg'">
@@ -64,17 +64,22 @@
   </div>
 
 
+  <!-- --------------------------------------------------------------------------------------------- -->
+  <!-- --------------------------------------------------------------------------------------------- -->
+  <!-- --------------------------------------------------------------------------------------------- -->
+
+
   <div class="board-panel">
     <div class="player-B">
       <div class="phases-box">
-        <div class="phase untap">       <span class="icon-undo2"></span></div>
-        <div class="phase maintenance"> <span class="icon-hammer"></span></div>
-        <div class="phase draw selected">        <span class="icon-hand"></span></div>
-        <div class="phase pre-combat">  <span class="icon-moon"></span></div>
-        <div class="phase combat">      <span class="icon-sword"></span></div>
-        <div class="phase post-combat"> <span class="icon-moon"></span></div>
-        <div class="phase discard">     <span class="icon-hand"></span></div>
-        <div class="phase end">         <span class="icon-fire"></span></div>
+        <div class="phase untap"       [class.selected]="phase === 'B.untap'">       <span class="icon-undo2"> </span></div>
+        <div class="phase maintenance" [class.selected]="phase === 'B.maintenance'"> <span class="icon-hammer"></span></div>
+        <div class="phase draw"        [class.selected]="phase === 'B.draw'">        <span class="icon-hand">  </span></div>
+        <div class="phase pre-combat"  [class.selected]="phase === 'B.pre'">         <span class="icon-moon">  </span></div>
+        <div class="phase combat"      [class.selected]="phase === 'B.combat'">      <span class="icon-sword"> </span></div>
+        <div class="phase post-combat" [class.selected]="phase === 'B.post'">        <span class="icon-moon">  </span></div>
+        <div class="phase discard"     [class.selected]="phase === 'B.discard'">     <span class="icon-hand">  </span></div>
+        <div class="phase end"         [class.selected]="phase === 'B.end'">         <span class="icon-fire">  </span></div>
       </div>
 
       <div class="hand-box" [class.expanded]="isHandBExp">
@@ -82,7 +87,7 @@
           <span [class.hide]="isHandBExp" class="icon-arrow-down22"></span>
           <span [class.hide]="!isHandBExp" class="icon-arrow-up22"></span>
         </div>
-        <div *ngFor="let card of handA;" class="hand-card" [class.back-card]="true">
+        <div *ngFor="let card of handB" class="hand-card" [class.back-card]="true">
           <img [src]="'/assets/images/cards/card_back.jpg'">
         </div>
       </div>
@@ -91,7 +96,7 @@
            bfDropContainer
           (bfDrop)="moveCardPosition($event)" 
           (dblclick)="autoPositionGameCards()">
-        <div *ngFor="let card of playB;"
+        <div *ngFor="let card of tableB"
               class="play-card"
               [style.left.px]="card.posX"
               [style.top.px]="card.posY"
@@ -99,28 +104,40 @@
               [bfDraggable]="card"
               (dragstart)="dragStart($event, card)"
               (click)="focusPlayCard(card)"
-              (mouseover)="fullCardImg = card.img">
-          <img [src]="'/assets/images/cards/' + card.img">
+              (mouseover)="fullCardImg = card.image">
+          <img [src]="'/assets/images/cards/' + card.image">
         </div>
+      </div>
+
+      <div style="position: absolute; left: 100px; bottom: 30px;">
+        INFO = {{ info }}
+        <br/>
+        <button (click)="skipPhase()">SKIP PHASE</button>
+        <br/>
+        phase$={{phase}}
+        <br/>
+        options = {{state.options | json}}
+        <br/>
       </div>
 
     </div>
 
     <!-- <div class="info-box">
-
+      ---------------------------------------------------------------------------------------------
     </div> -->
 
     <div class="player-A">
 
+
       <div class="phases-box">
-        <div class="phase untap">       <span class="icon-undo2"></span></div>
-        <div class="phase maintenance"> <span class="icon-hammer"></span></div>
-        <div class="phase draw">        <span class="icon-hand"></span></div>
-        <div class="phase pre-combat">  <span class="icon-moon"></span></div>
-        <div class="phase combat">      <span class="icon-sword"></span></div>
-        <div class="phase post-combat"> <span class="icon-moon"></span></div>
-        <div class="phase discard">     <span class="icon-hand"></span></div>
-        <div class="phase end">         <span class="icon-fire"></span></div>
+        <div class="phase untap"       [class.selected]="phase === 'A.untap'">       <span class="icon-undo2"> </span></div>
+        <div class="phase maintenance" [class.selected]="phase === 'A.maintenance'"> <span class="icon-hammer"></span></div>
+        <div class="phase draw"        [class.selected]="phase === 'A.draw'">        <span class="icon-hand">  </span></div>
+        <div class="phase pre-combat"  [class.selected]="phase === 'A.pre'">         <span class="icon-moon">  </span></div>
+        <div class="phase combat"      [class.selected]="phase === 'A.combat'">      <span class="icon-sword"> </span></div>
+        <div class="phase post-combat" [class.selected]="phase === 'A.post'">        <span class="icon-moon">  </span></div>
+        <div class="phase discard"     [class.selected]="phase === 'A.discard'">     <span class="icon-hand">  </span></div>
+        <div class="phase end"         [class.selected]="phase === 'A.end'">         <span class="icon-fire">  </span></div>
       </div>
 
       <div class="hand-box" [class.expanded]="isHandAExp">
@@ -128,8 +145,13 @@
           <span [class.hide]="isHandAExp" class="icon-arrow-down22"></span>
           <span [class.hide]="!isHandAExp" class="icon-arrow-up22"></span>
         </div>
-        <div *ngFor="let card of handA;" class="hand-card" (mouseover)="fullCardImg = card.img">
-          <img [src]="'/assets/images/cards/' + card.img">
+        <div *ngIf="!handA.length" class="no-cards">No Cards</div>
+        <div *ngFor="let card of handA" 
+              class="hand-card" [class.selectable-card]="!!card.selectableAction"
+             (click)="selectCardFromYourHand(card)"
+             (mouseover)="hoverHandCard(card)"
+             (mouseleave)="info=''">
+          <img [src]="'/assets/images/cards/' + card.image">
         </div>
       </div>
 
@@ -140,7 +162,7 @@
 
         <!-- isDragging={{bfDnD.isDragging}} -->
         <!-- activeContainer={{bfDnD.activeContainer | json}} -->
-        <div *ngFor="let card of playA;" 
+        <div *ngFor="let card of tableA" 
              class="play-card"
              [style.left.px]="card.posX"
              [style.top.px]="card.posY"
@@ -148,8 +170,12 @@
              [bfDraggable]="card"
              (dragstart)="dragStart($event, card)"
              (click)="focusPlayCard(card)"
-             (mouseover)="fullCardImg = card.img">
-          <img [src]="'/assets/images/cards/' + card.img">
+             (mouseover)="fullCardImg = card.image">
+          <img [src]="'/assets/images/cards/' + card.image">
+          <div style="position: absolute;">
+            order={{card.order}}
+            <br>x={{card.posX}}, y={{card.posY}}, z={{card.zInd}}
+          </div>
         </div>
       </div>
 

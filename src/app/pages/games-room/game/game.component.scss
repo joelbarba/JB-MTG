@@ -151,9 +151,10 @@ $white-dark: gainsboro;
       .hand-box {
         z-index: 1000;
         border: 1px solid $gray-dark;
-        position: absolute;
+        position: absolute;        
         left: 65px;
         padding: 5px;
+        min-width: 160px;        
         background: #9ba5a5;
         transform-origin: top;
         transition: transform 350ms cubic-bezier(.05,.5,.2,.9);
@@ -169,6 +170,16 @@ $white-dark: gainsboro;
           font-size: 20px;
           cursor: pointer;
         }
+
+        .no-cards {
+          width: 100%;
+          text-align: center;
+          color: $gray-light;
+          font-size: 20px;
+          padding: 30% 0;
+          min-height: 220px;
+        }
+
         display: flex;
         .hand-card {
           flex: 1;
@@ -178,13 +189,8 @@ $white-dark: gainsboro;
           background: white;
           border-radius: 5px;
           &.back-card { background-color: black; border: none; margin: 3.5px 5px; }
-          cursor: pointer;
           img { max-height: 200px; }
           transition-duration: 150ms;
-          &:hover {
-            background-color: #00ff2d75;
-            border-color: #00ff2d75;
-          }
         }
       }
 
@@ -195,21 +201,14 @@ $white-dark: gainsboro;
         top: 0;
         bottom: 0;
         padding: 15px;
-        // background-color: red;
         .play-card {
           position: absolute;
-          // display: inline-block;
           margin: 2.5px 4px;
           padding: 3px;
           border: 1px solid black;
           background: white;
           border-radius: 5px;
-          cursor: pointer;
           img { max-height: 160px; }
-          &:hover {
-            border: 3px solid #00ff2d;
-            padding: 1px;
-          }
         }
       }
 
@@ -224,8 +223,8 @@ $white-dark: gainsboro;
 
     .player-B {
       .hand-box {
-        top: -201px;
-        &.expanded { transform: translateY(200px); }
+        top: -221px;
+        &.expanded { transform: translateY(220px); }
         border-bottom-right-radius: 5px;
         .box-button {
           bottom: -30px;
@@ -246,8 +245,8 @@ $white-dark: gainsboro;
       // background-color: honeydew;
       background-color: ivory;
       .hand-box {
-        bottom: -201px;
-        &.expanded { transform: translateY(-200px); }
+        bottom: -221px;
+        &.expanded { transform: translateY(-220px); }
         border-top-right-radius: 5px;
         .box-button {
           top: -30px;
@@ -262,10 +261,21 @@ $white-dark: gainsboro;
   }
 }
 
-
-.play-card.is-dragging {
-  opacity: 0;
+.selectable-card {
+  cursor: pointer;
+  box-shadow: 0px 0px 3px 3px #009688;
+  &:hover {
+    // background-color: #00ff2d75 !important;
+    // border-color: #00ff2d75 !important;
+    box-shadow: 0px 0px 3px 3px #FFEB3B;
+  }
 }
+
+
+
+
+// ---------------- Dragging Styles ---------------
+.play-card.is-dragging { opacity: 0; }
 .bf-drag-ghost {
   .play-card {
     padding: 3px;
@@ -275,8 +285,6 @@ $white-dark: gainsboro;
     img { max-height: 160px; }
   }
 }
-
-
 
 
 // ----- Smaller resolutions resize -----------

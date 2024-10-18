@@ -41,13 +41,13 @@ export class NavbarComponent implements OnInit, OnDestroy {
   ngOnInit() {
     // const customer$ = this.bfStore.selectedCustomer$.pipe(filter(customer => !!customer));
     this.auth.profilePromise.then(profile => {
-      console.log('PROFILE PROMISE', profile);
+      // console.log('PROFILE PROMISE', profile);
       this.displayName = profile.displayName;
     });
 
     this.auth.profile$.subscribe(profile => {
       this.isLoggedIn = !!profile;
-      console.log('PROFILE OBSERVABLE', this.auth.profileUserName);
+      // console.log('PROFILE OBSERVABLE', this.auth.profileUserName);
 
       const userId = this.auth.profileUserId;
       this.profileImageUrl = '';
@@ -57,7 +57,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
     this.appTranslate.languagesPromise.then(langs => {
       this.languages = langs;
       this.lang = this.appTranslate.currentLanguage;
-      console.log(langs);
+      // console.log(langs);
     });
   }
 
