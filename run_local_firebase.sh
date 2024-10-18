@@ -1,2 +1,0 @@
-cd FireBase
-firebase serve

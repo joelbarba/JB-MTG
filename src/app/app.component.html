@@ -1,0 +1,26 @@
+<h1>Jb Notes Web</h1>
+<p translate>view.untranslated.label</p>
+
+<div>{{ 'view.title' | translate }}</div>
+<div>{{ 'view.title.hello' | translate: { param1: 'AAA' } }}</div>
+
+
+
+<h2>Languages:</h2>
+<p>
+  Selected language: {{ language$ | async }}<br>
+  Selected localeId: {{ localeId$ | async }}
+</p>
+<!-- <pre>{{ languages | json }}</pre> -->
+<ul *ngIf="languages">
+  <li *ngFor="let lang of languages">
+    <button (click)="selectLang(lang)" [disabled]="isSelected(lang)">Select</button>
+    <span style="margin-left: 10px;">{{ lang.code }}</span>
+    <span> - </span>
+    <span>{{ lang.name }}</span>
+  </li>
+</ul>
+
+
+
+<router-outlet/>
