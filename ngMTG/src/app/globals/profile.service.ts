@@ -1,33 +1,37 @@
-import { ICard, IUser, IDeckCard, UserDeck } from 'src/typings';
+import { Card, User, DeckCard, UserDeck } from 'src/typings';
+import './prototypes';
 import { Injectable } from '@angular/core';
 import { AngularFirestore, AngularFirestoreCollection, AngularFirestoreDocument } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
 import { Globals } from './globals.service';
+import * as RxOp from 'rxjs/operators';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AngularFireAuth } from '@angular/fire/auth';
-import { BfGrowlService, BfConfirmService, BfDefer } from '@blueface_npm/bf-ui-lib';
-import {map, take} from 'rxjs/operators';
+import { BfGrowlService, BfConfirmService } from 'bf-ui-lib';
 
 // Extended object form user.cards[]
-interface IUserCard {
+interface UserCard {
   ref: string;
-  card: ICard;
+  card: Card;
 }
 
 
-@Injectable({ providedIn: 'root' })
+@Injectable({
+ providedIn: 'root'
+})
 export class Profile {
-  public userDoc: AngularFirestoreDocument<IUser>;
-  public user$: Observable<IUser>;
-  public userCards$: Observable<IUserCard[]>;
+  public userDoc: AngularFirestoreDocument<User>;
+  public user$: Observable<User>;
+  public userCards$: Observable<UserCard[]>;
 
   public userId: string;
-  public user: IUser;
+  public user: User;
   public authUser;
   public isLoggedIn = false;
 
-  public loadingDefer = new BfDefer();
-  public loadPromise = this.loadingDefer.promise;
+  public loadPromise;
+  public loadPromiseResolve;
+  public loadPromiseReject;
 
   constructor(
     private afs: AngularFirestore,
@@ -37,11 +41,15 @@ export class Profile {
     private growl: BfGrowlService,
   ) {
 
+    this.loadPromise = new Promise((resolve, reject) => {
+      this.loadPromiseResolve = resolve;
+      this.loadPromiseReject = reject;
+    });
+
     // React on auth state change
-    this.afAuth.user.subscribe(user => {
-      console.log('Profile ready. User -> ', user);
+    this.afAuth.user.subscribe((user) => {
       if (!!user && user.emailVerified) {
-        console.log('auth', user);
+        // console.log('Profile ready. User -> ', user);
         this.authUser = user;
         this.isLoggedIn = true;
         this.iniProfile();
@@ -54,14 +62,14 @@ export class Profile {
 
   public logout = () => {
     this.isLoggedIn = false;
-    this.afAuth.signOut().then(() => {
+    this.afAuth.auth.signOut().then(() => {
       console.log('OUT !!');
       this.router.navigate(['login']);
     });
   }
 
   public login = (user, pass) => {
-    this.afAuth.signInWithEmailAndPassword(user, pass).then(data => {
+    this.afAuth.auth.signInWithEmailAndPassword(user, pass).then((data) => {
       if (!data.user.emailVerified) {
         this.growl.error('User not activated. Please, check you email and use the activation link');
         this.logout();
@@ -85,16 +93,18 @@ export class Profile {
     this.userId = this.authUser.uid;
     // this.userId = 'qINbUCQ3s1GdAzPzaIBH'; // Joel
     // this.userId = 'DygcQXEd6YCL0ICiESEq'; // Alice
-    this.userDoc = this.afs.doc<IUser>('/users/' + this.userId);
+    this.userDoc = this.afs.doc<User>('/users/' + this.userId);
 
-    this.userDoc.snapshotChanges().pipe(take(1)).subscribe(state => {
-      this.user = state.payload.data();
-      this.loadingDefer.resolve(this.user);
+    const subs = this.userDoc.snapshotChanges().subscribe(state => {
+      const data = state.payload.data();
+      this.user = data;
+      this.loadPromiseResolve(this.user);
+      // subs.unsubscribe();
     });
 
     this.user$ = this.userDoc.valueChanges();
     this.userCards$ = this.user$.pipe(
-      map(usr => {
+      RxOp.map(usr => {
         return usr.cards.map(cardRef => {
           const cardId = cardRef.split('.')[0];
           return {

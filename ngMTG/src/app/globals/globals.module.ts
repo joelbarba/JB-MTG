@@ -1,0 +1,32 @@
+import { NgModule } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { HttpClientModule } from '@angular/common/http';
+import { BfUiLibModule } from 'bf-ui-lib';
+import { Globals } from './globals.service';
+import { Profile } from './profile.service';
+import { GameService } from './game.service';
+import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
+import { AbstractTranslateService } from 'bf-ui-lib';
+import { AsyncFieldPipe } from './asyncField.pipe';
+import { MtgCardComponent } from './mtg-card/mtg-card.component';
+import {TranslateService} from './translate.service';
+
+@NgModule({
+  declarations: [AsyncFieldPipe, MtgCardComponent],
+  providers: [Globals, Profile, GameService],
+  imports: [
+    CommonModule,
+    HttpClientModule,
+    NgbModule,
+    BfUiLibModule.forRoot({ TranslateService: TranslateService  })
+  ],
+  exports: [
+    BfUiLibModule,
+    NgbModule,
+    AsyncFieldPipe,
+    MtgCardComponent,
+  ]
+})
+export class GlobalsModule { }
+
+

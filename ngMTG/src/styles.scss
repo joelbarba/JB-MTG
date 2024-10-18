@@ -1,8 +1,7 @@
-@import 'src/scss/variables.scss';
-@import '~@blueface_npm/bf-ui-lib/scss/index';
-@import "~@blueface_npm/bf-icomoon/css/icomoon.css";
+@import "scss/variables.scss";
 @import "~bootstrap/scss/bootstrap.scss";
-@import 'src/scss/bf-ui-lib.scss';
-@import 'src/scss/globals.scss';
-@import 'src/scss/layout.scss';
-@import 'src/scss/helpers.scss';
+@import "~bf-icomoon/css/icomoon.css";
+@import "scss/layout.scss";
+@import "scss/helpers.scss";
+@import "scss/color-layer.scss";
+@import "scss/globals.scss";

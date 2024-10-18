@@ -3,8 +3,6 @@ import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
 
 import { AppModule } from './app/app.module';
 import { environment } from './environments/environment';
-import { BfPrototypes } from '@blueface_npm/bf-ui-lib';
-BfPrototypes.run();
 
 if (environment.production) {
   enableProdMode();

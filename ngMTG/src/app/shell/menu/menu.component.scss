@@ -1,9 +1,5 @@
 @import 'src/scss/variables.scss';
 
-$menu-bg    : lighten($grey, 20%);
-$menu-hover : darken($menu-bg, 20%);
-$menu-text  : $text-color;
-
 .menu-bar {
   position: fixed;
   left: 0;
@@ -24,10 +20,10 @@ $menu-text  : $text-color;
         display: block;
         padding: 10px 0;
         font-size: 25px;
-        color: $menu-text;
+        color: #797979;
         cursor: pointer;
         &:hover {
-          background: $menu-hover;
+          background: lighten($menu-bg, 20%);
           text-decoration: none;
         }
       }

@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { Globals } from 'src/app/core/globals.service';
-import { Profile } from 'src/app/core/profile.service';
+import { Globals } from 'src/app/globals/globals.service';
+import { Profile } from 'src/app/globals/profile.service';
 
 @Component({
   selector: 'app-navbar',
@@ -8,10 +8,11 @@ import { Profile } from 'src/app/core/profile.service';
   styleUrls: ['./navbar.component.scss']
 })
 export class NavbarComponent implements OnInit {
+  public isExpanded = false;
 
   constructor(
-    public globals: Globals,
-    public profile: Profile,
+    private globals: Globals,
+    private profile: Profile,
   ) { }
 
   ngOnInit() {

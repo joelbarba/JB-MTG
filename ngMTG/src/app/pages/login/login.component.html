@@ -19,10 +19,12 @@
   <div class="col-12">
     <div class="login-box">
       <h3 class="text-center marB30">Login</h3>
-        <bf-input bfLabel="User (Email)" [(ngModel)]="username" name="username" bfRequired="true"></bf-input>
-        <bf-input bfLabel="Password"     [(ngModel)]="password" name="password" bfRequired="true" bfType="password"></bf-input>
+      <form #loginForm>
+        <bf-input bfLabel="User (Email)" [(ngModel)]="username" name="username"></bf-input>
+        <bf-input bfLabel="Password"     [(ngModel)]="password" name="password" bfType="password"></bf-input>
+        
         <div class="marV25">
-          <bf-btn bfText="Log In" class="full-width" (bfClick)="login(username, password)"></bf-btn>
+          <bf-btn bfText="Log In" class="full-width"  (bfClick)="profile.login(username, password)"></bf-btn>
         </div>
         
         <hr>
@@ -31,6 +33,8 @@
           <p>Or</p>
           <p class="new-user-link" (click)="openSignIn()">Create a new user account</p>
         </div>
+
+      </form>
     </div>
   </div>
 

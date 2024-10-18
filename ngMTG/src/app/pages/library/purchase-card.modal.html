@@ -1,64 +1,64 @@
-<!--<div class="modal-header">-->
-<!--    <h4 class="modal-title">Purchase ICard: {{refCard.id}} - {{refCard.name}}</h4>-->
-<!--    <button type="button" class="close" aria-label="Close" (click)="activeModal.dismiss('Cross click')">-->
-<!--      <span aria-hidden="true">&times;</span>-->
-<!--    </button>-->
-<!--  </div>-->
-<!--  <div class="modal-body" *ngIf="!!editCard">-->
-<!--    <form novalidate autocomplete="off">-->
-<!--      <div class="row">-->
-<!--        <div class="col-3">-->
+<div class="modal-header">
+    <h4 class="modal-title">Purchase Card: {{refCard.id}} - {{refCard.name}}</h4>
+    <button type="button" class="close" aria-label="Close" (click)="activeModal.dismiss('Cross click')">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+  <div class="modal-body" *ngIf="!!editCard">
+    <form novalidate autocomplete="off">
+      <div class="row">
+        <div class="col-3">
 
-<!--          <div class="card-box">-->
-<!--            <div class="card-border" >-->
-<!--              <img [src]="'/assets/cards/' + refCard.image">-->
-<!--            </div>-->
-<!--          </div>-->
-<!--          <div class="marT30">-->
-<!--            <bf-label class="value-inline" bfText="Name" [bfValue]="refCard.name"></bf-label>-->
-<!--            &lt;!&ndash; <br>-->
-<!--            <bf-label class="value-inline" bfText="Id" [bfValue]="refCard.id"></bf-label> &ndash;&gt;-->
-<!--            <br>-->
-<!--            <bf-label class="value-inline" bfText="Type" [bfValue]="refCard.type"></bf-label>-->
-<!--            <br>-->
-<!--            <bf-label class="value-inline" bfText="Color" [bfValue]="refCard.color"></bf-label>-->
-<!--            <br>-->
-<!--            <bf-label class="value-inline" bfText="Units" [bfValue]="!!refCard.units ? refCard.units.length : 0"></bf-label>-->
-<!--          </div>-->
+          <div class="card-box">
+            <div class="card-border" >
+              <img [src]="'/assets/cards/' + refCard.image">
+            </div>
+          </div>
+          <div class="marT30">
+            <bf-label class="value-inline" bfText="Name" [bfValue]="refCard.name"></bf-label>
+            <!-- <br>
+            <bf-label class="value-inline" bfText="Id" [bfValue]="refCard.id"></bf-label> -->
+            <br>
+            <bf-label class="value-inline" bfText="Type" [bfValue]="refCard.type"></bf-label>
+            <br>
+            <bf-label class="value-inline" bfText="Color" [bfValue]="refCard.color"></bf-label>
+            <br>
+            <bf-label class="value-inline" bfText="Units" [bfValue]="!!refCard.units ? refCard.units.length : 0"></bf-label>
+          </div>
 
-<!--        </div>-->
-<!--        <div class="col-9">-->
-<!--          <h5>Units:</h5>-->
-<!--          <hr>-->
-<!--          <ul class="list-unstyled table-list">-->
-<!--            <li class="list-header">-->
-<!--              <div class="row">-->
-<!--                <bf-list-header-col class="col-5" colTitle="Reference" fieldName="red"   [orderConf]="orderConf"></bf-list-header-col>-->
-<!--                <bf-list-header-col class="col-4" colTitle="Owner"     fieldName="owner" [orderConf]="owner"></bf-list-header-col>-->
-<!--              </div>-->
-<!--            </li>-->
-<!--          -->
-<!--            <li *ngFor="let unit of editCard.units" class="list-row">-->
-<!--              <div class="row">-->
-<!--                <div class="col-5 padT5">{{unit.ref}}</div>-->
-<!--                <div class="col-4 padT5">-->
-<!--                  <div [hidden]="unit.owner === profile.userId">{{unit.owner}}</div>-->
-<!--                  <div [hidden]="unit.owner !== profile.userId">Yours</div>-->
-<!--                </div>-->
-<!--                <div class="col-3" [hidden]="unit.owner === profile.userId">-->
-<!--                  <bf-btn class="marL10" bfText="Select" bfType="add" (bfClick)="selectUnit(unit)"></bf-btn>        -->
-<!--                </div>-->
-<!--              </div>-->
-<!--            </li>-->
-<!--          </ul>-->
-<!--          -->
-<!--        </div>-->
-<!--      </div>-->
-<!--    </form>-->
-<!--  </div>-->
+        </div>
+        <div class="col-9">
+          <h5>Units:</h5>
+          <hr>
+          <ul class="list-unstyled table-list">
+            <li class="list-header">
+              <div class="row">
+                <bf-list-header-col class="col-5" colTitle="Reference" fieldName="red"   [orderConf]="orderConf"></bf-list-header-col>
+                <bf-list-header-col class="col-4" colTitle="Owner"     fieldName="owner" [orderConf]="owner"></bf-list-header-col>
+              </div>
+            </li>
+          
+            <li *ngFor="let unit of editCard.units" class="list-row">
+              <div class="row">
+                <div class="col-5 padT5">{{unit.ref}}</div>
+                <div class="col-4 padT5">
+                  <div [hidden]="unit.owner === profile.userId">{{unit.owner}}</div>
+                  <div [hidden]="unit.owner !== profile.userId">Yours</div>
+                </div>
+                <div class="col-3" [hidden]="unit.owner === profile.userId">
+                  <bf-btn class="marL10" bfText="Select" bfType="add" (bfClick)="selectUnit(unit)"></bf-btn>        
+                </div>
+              </div>
+            </li>
+          </ul>
+          
+        </div>
+      </div>
+    </form>
+  </div>
 
-<!--  <div class="modal-footer">-->
-<!--    <bf-btn bfType="cancel" bfText="Close" (bfClick)="activeModal.close()"></bf-btn>-->
-<!--    &lt;!&ndash; <bf-btn bfType="delete" bfText="Remove" (bfClick)="deleteCard()"> </bf-btn> &ndash;&gt;-->
-<!--    &lt;!&ndash; <bf-btn bfType="update" bfText="Save Changes" (bfClick)="saveCard()"> </bf-btn> &ndash;&gt;-->
-<!--  </div>-->
+  <div class="modal-footer">
+    <bf-btn bfType="cancel" bfText="Close" (bfClick)="activeModal.close()"></bf-btn>
+    <!-- <bf-btn bfType="delete" bfText="Remove" (bfClick)="deleteCard()"> </bf-btn> -->
+    <!-- <bf-btn bfType="update" bfText="Save Changes" (bfClick)="saveCard()"> </bf-btn> -->
+  </div>
