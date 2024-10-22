@@ -1,20 +1,44 @@
-<div class="selecting-mana" [class.minimized]="summonOp.minimized">
-  <div class="min-btn" (click)="summonOp.minimized = !summonOp.minimized">{{summonOp.minimized ? summonOp.title : '-'}}</div>
-  <h2>{{summonOp.title}}</h2>
-  <div class="center">
+<div class="selecting-mana" [class.minimized]="minimized">
+  <div class="min-btn" (click)="minimized = !minimized">{{minimized ? title : '-'}}</div>
+  <h2>{{title}}</h2>
+
+  <div class="center origin-and-target">
     <div class="panel-card">
-      <img [src]="'/assets/images/cards/' + summonOp.card?.image">
-    </div>    
+      <img [src]="'/assets/images/cards/' + card?.image">
+    </div>
+
+    <div *ngIf="target"><span class="icon-arrow-right6"></span></div>
+
+    <div class="panel-card" *ngIf="target && target !== 'playerA' && target !== 'playerB'">
+      <img [src]="'/assets/images/cards/' + target.image">
+    </div>
+
+    <div class="panel-user" *ngIf="target === 'playerA'">
+      <span class="icon-user3"></span>
+      <span>Target: Yourself</span>
+    </div>
+
+    <div class="panel-user" *ngIf="target === 'playerB'">
+      <span class="icon-user3"></span>
+      <span>Target: Opponent</span>
+    </div>
   </div>
-  <div>{{summonOp.text}}</div>
+
+  <!-- target={{target | json}} -->
+  <div *ngIf="summoner === 'A'">Waiting for the opponent to play any interruptions</div>
+  <div *ngIf="summoner === 'B'">You can play some interruptions now</div>
   
   <div class="wating-progress-bar">
-    <div class="time" [style.width.px]="progress"></div>
+    <div class="time" [style.width.px]="progressBar"></div>
   </div>
 
   <div class="pause-btn">
-    <bf-btn *ngIf="!isPaused" (bfClick)="pause()" bfText="PAUSE" bfIcon="icon-pause2"></bf-btn>
-    <bf-btn *ngIf="isPaused" (bfClick)="continue()" bfText="PAUSE" bfIcon="icon-play3"></bf-btn>
+    <!-- <bf-btn *ngIf="summoner === 'A'" (bfClick)="complete()" bfText="Summon" bfIcon="icon-arrow-right3"></bf-btn> -->
+    <bf-btn *ngIf="summoner === 'B'" (bfClick)="pause()" bfText="Wait" bfIcon="icon-pause2"></bf-btn>
+    <bf-btn *ngIf="summoner === 'B'" (bfClick)="endInterrupting()" bfText="Skip" bfIcon="icon-arrow-right3" [bfDisabled]="progress < 200"></bf-btn>
+
+    <!-- <bf-btn *ngIf="!isPaused" (bfClick)="pause()" bfText="PAUSE" bfIcon="icon-pause2"></bf-btn>
+    <bf-btn *ngIf="isPaused" (bfClick)="continue()" bfText="PAUSE" bfIcon="icon-play3"></bf-btn> -->
   </div>
   
 </div>

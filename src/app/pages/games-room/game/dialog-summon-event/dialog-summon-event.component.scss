@@ -19,11 +19,25 @@
   right: calc(50% - 400px);
   bottom: calc(50% - 200px);
 
+  .origin-and-target {
+    display: flex;
+    align-items: center;
+    .icon-arrow-right6 { font-size: 70px; }
+    .panel-user { 
+      display: flex;
+      flex-direction: column;
+      align-items: center; 
+      margin: 0 25px;
+      .icon-user3 { font-size: 140px; }
+    }
+  }
+
   .panel-card {
     padding: 3px;
     border: 1px solid black;
     background: white;
     border-radius: 5px;
+    margin: 0 25px;
     img { max-height: 200px; }
   }
 

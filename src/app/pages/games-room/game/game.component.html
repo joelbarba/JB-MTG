@@ -13,7 +13,9 @@
           </div>
         </div>
   
-        <div class="life">Life: {{playerB.life}}</div>
+        <div class="life" [class.is-selectable]="canSelectPlayerB" (click)="selectPlayer('B')">
+          Life: {{playerB.life}}
+        </div>
       </div>
 
       <div class="mana-pool">
@@ -37,7 +39,9 @@
 
     <div class="player-A">
       <div class="left">
-        <div class="life">Life: {{playerA.life}}</div>
+        <div class="life" [class.is-selectable]="canSelectPlayerA" (click)="selectPlayer('A')">
+          Life: {{playerA.life}}
+        </div>
 
         <div class="deck">
           <div class="deck-card" [class.selectable-card]="canIDraw" (click)="drawCard()">
@@ -84,9 +88,11 @@
 
       <div class="hand-box" [class.expanded]="isHandBExp">
         <div class="box-button" (click)="isHandBExp = !isHandBExp">
+          <span>{{handB.length}}<span class="icon-hand"></span></span>
           <span [class.hide]="isHandBExp" class="icon-arrow-down22"></span>
           <span [class.hide]="!isHandBExp" class="icon-arrow-up22"></span>
         </div>
+        <div *ngIf="!handB.length" class="no-cards">No Cards on the Hand</div>
         <div *ngFor="let card of handB" class="hand-card" [class.back-card]="true">
           <img [src]="'/assets/images/cards/card_back.jpg'">
         </div>
@@ -98,17 +104,23 @@
           (dblclick)="autoPositionGameCards()">
         <div *ngFor="let card of tableB"
               class="play-card"
+              [class.selectable-card]="!!card.selectableAction || !!card.selectableTarget"
               [class.is-tapped]="card.isTapped"
-              [class.is-sick]="card.summonStatus === 'sickness'"
+              [class.is-sick]="card.status === 'sickness'"
               [style.left.px]="card.posX"
               [style.top.px]="card.posY"
               [style.z-index]="card.zInd"
               [bfDraggable]="card"
               (dragstart)="dragStart($event, card)"
-              (click)="focusPlayCard(card)"
+              (click)="selectCardFromTable('B', card)"
               (mouseover)="hoverTableCard(card)"
               (mouseleave)="clearHover()">
           <img [src]="'/assets/images/cards/' + card.image">
+          <div style="position: absolute; bottom: 60px; margin-left: 5px; color: white;">
+            <br/>gId={{card.gId}}
+            <!-- <br/>status={{card.status}} -->
+            <br/>damage={{card.damage}}
+          </div>
         </div>
 
 
@@ -119,10 +131,8 @@
                   (mouseover)="itemInfo = skipPhase.enabled ? skipPhase.help : skipPhase.whyNot"
                   (mouseleave)="itemInfo = ''">
           </bf-btn>
-          <bf-btn *ngIf="summonOp.status === 'waitingMana' || summonOp.status === 'selectingMana'"
-                  style="margin-left: 15px;"
-                  bfText="Cancel Summon" bfIcon="icon-cross" class="primary"
-                  (bfClick)="summonOp.cancel()">
+          <bf-btn *ngFor="let gBtn of globalButtons" style="margin-left: 15px;"
+                  [bfText]="gBtn.text" [bfIcon]="gBtn.icon" (bfClick)="gBtn.clickFn()">
           </bf-btn>
           <span [hidden]="!mainInfo || itemInfo" class="main-info">{{mainInfo}}</span>
           <span [hidden]="!itemInfo" class="main-info">{{itemInfo}}</span>
@@ -155,20 +165,22 @@
 
       <div class="hand-box" [class.expanded]="isHandAExp">
         <div class="box-button" (click)="isHandAExp = !isHandAExp">
+          <span>{{handA.length}}<span class="icon-hand"></span></span>
           <span [class.hide]="isHandAExp" class="icon-arrow-down22"></span>
           <span [class.hide]="!isHandAExp" class="icon-arrow-up22"></span>
         </div>
-        <div *ngIf="!handA.length" class="no-cards">No Cards</div>
+        <div *ngIf="!handA.length" class="no-cards">No Cards on your Hand</div>
         <div *ngFor="let card of handA" 
               class="hand-card" [class.selectable-card]="isHandCardSelectable(card)"
-              [class.is-summoning]="!!card.summonStatus"
+              [class.is-summoning]="!!card.status"
              (click)="selectCardFromYourHand(card)"
              (mouseover)="hoverHandCard(card)"
              (mouseleave)="clearHover()">
           <img [src]="'/assets/images/cards/' + card.image">
           <div style="position: absolute; bottom: 60px; margin-left: 5px; color: white;">
-            a={{card.selectableAction?.action}}
-            <br/>s={{card.summonStatus}}
+            <br/>gId={{card.gId}}
+            <br/>action={{card.selectableAction?.action}}
+            <br/>status={{card.status}}            
           </div>
         </div>
       </div>
@@ -182,18 +194,23 @@
         <!-- activeContainer={{bfDnD.activeContainer | json}} -->
         <div *ngFor="let card of tableA" 
              class="play-card"
-             [class.selectable-card]="!!card.selectableAction"
+             [class.selectable-card]="!!card.selectableAction || !!card.selectableTarget"
              [class.is-tapped]="card.isTapped"
-             [class.is-sick]="card.summonStatus === 'sickness'"
+             [class.is-sick]="card.status === 'sickness'"
              [style.left.px]="card.posX"
              [style.top.px]="card.posY"
              [style.z-index]="card.zInd"
              [bfDraggable]="card"
              (dragstart)="dragStart($event, card)"
-             (click)="selectCardFromYourTable(card)"
+             (click)="selectCardFromTable('A', card)"
              (mouseover)="hoverTableCard(card)"
              (mouseleave)="clearHover()">
           <img [src]="'/assets/images/cards/' + card.image">
+          <div style="position: absolute; bottom: 60px; margin-left: 5px; color: white;">
+            <br/>gId={{card.gId}}
+            <!-- <br/>status={{card.status}} -->
+            <br/>damage={{card.damage}}
+          </div>
           <!-- <div style="position: absolute;">
             order={{card.order}}, gId={{card.gId}}
             <br>x={{card.posX}}, y={{card.posY}}, z={{card.zInd}}
@@ -219,7 +236,8 @@
 
   <!-- Dialog: Selecting Mana (cherry pick on summoning) -->
   <dialog-selecting-mana *ngIf="panel === 'selecting-mana'" [summonOp]="summonOp"></dialog-selecting-mana>
-  <dialog-summon-event *ngIf="panel === 'summon-event'" [summonOp]="summonOp"></dialog-summon-event>
+  <dialog-summon-event *ngIf="panel === 'summon-event-A'" summoner="A" (end)="panel = null"></dialog-summon-event>
+  <dialog-summon-event *ngIf="panel === 'summon-event-B'" summoner="B" (end)="panel = null"></dialog-summon-event>
   <!-- panel={{panel}} -->
 
 
@@ -228,7 +246,8 @@
 
 
 <div style="position: fixed; top: 10%; left: 70%; background: lightgray; padding: 10px; z-index: 10000; width: 50%; height: 300px;">
-  <bf-btn (bfClick)="skipPhase.skip()" bfText="SKIP PHASE" bfIcon="icon-arrow-right3"></bf-btn>
+  <bf-btn (bfClick)="game.action('refresh')" bfText="REFRESH" bfIcon="icon-arrow-right3"></bf-btn>
+  <bf-btn (bfClick)="skipPhase.skip()" bfText="SKIP PHASE" bfIcon="icon-arrow-right3" style="margin-left: 30px;"></bf-btn>
   <!-- <br/>HELP = {{ playerA.help }} -->
   <!-- <br/>cardActionHelp = {{ cardActionHelp }} -->
   <br/>phase$={{phase}}
@@ -237,12 +256,13 @@
   <br/>
   <div *ngIf="summonOp.status !== 'off'">
     summonOp - status = {{summonOp.status}}
+    <br/>action={{summonOp.action | json}}
+    <br/>params={{summonOp.params | json}}
     <br/>text = {{summonOp.text}}
-    <br/>manaForUncolor={{summonOp.manaForUncolor | json}}
     <br/>manaReserved={{summonOp.manaReserved | json}}
     <br/>manaLeft={{summonOp.manaLeft | json}}
     <br/><bf-btn (bfClick)="summonOp.cancel()" bfText="Cancel"></bf-btn>
-    <bf-btn style="margin-left: 15px;" (bfClick)="summonOp.summonWithSelection()" bfText="Summon Creature"
+    <bf-btn style="margin-left: 15px;" (bfClick)="summonOp.tryToSummon()" bfText="tryToSummon"
             [bfDisabled]="!summonOp.showSummonBtn"></bf-btn>
   </div>
   

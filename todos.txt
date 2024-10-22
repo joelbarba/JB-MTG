@@ -1,10 +1,7 @@
-- Add a button next to "Skip Phase" when untaping, to untap all (actions stack / untap-all action?)
 - Add graveyard panel to see graveyard cards
 - Show last card image on graveyard
 
-- Your Summon event panel (for effects / interruptions)
-- Opponents Summon event panel (for effects / interruptions)
+- Opponents Summon event panel (for interruptions / instants)
 
-- Cast Spells (lightning bolt)
 - Combat operation
 - Add chat

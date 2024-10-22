@@ -31,6 +31,18 @@ export type TCardLocation = 'off'
 export type TCardSemiLocation = 'off' | 'deck' | 'hand' | 'tble' | 'grav';
 export type TCardAnyLocation = TCardSemiLocation & TCardSemiLocation;
 
+export type TGameState = {
+  created: string;
+  status: 'created' | 'playing' | 'player1win' | 'player2win' | 'error';
+  turn: '1' | '2';
+  control: '1' | '2';
+  phase: EPhase;
+  player1: TPlayer;
+  player2: TPlayer;
+  cards: Array<TGameCard>;
+  options: Array<TGameOption>;
+}
+
 export type TGameCard = TCard & {
   gId: string;
   owner: '1' | '2';       // player 1 | player 2
@@ -38,9 +50,11 @@ export type TGameCard = TCard & {
   order: number;
   location: TCardLocation;
   isTapped: boolean;
-  summonStatus: null | 'waitingMana' | 'selectingMana' | 'summoning' | 'sickness';
-  summonTime: number,
-  selectableAction: null | { text: string; action: TAction };
+  status: null | 'summon:waitingMana' | 'summon:selectingMana' | 'summon:selectingTargets' | 'summoning' | 'sickness';
+  selectableAction?: null | TGameOption;
+  selectableTarget?: null | { text: string, value: string };
+  targets?: Array<string>;
+  damage?: number;
 }
 export type TGameCards = Array<TGameCard>;
 export type TExtGameCard = TGameCard & {
@@ -58,33 +72,39 @@ export type TPlayer = {
   manaPool: TCast;
   drawnCards: number;  // Only 1 per turn
   summonedLands: number;  // Only 1 per turn
+  controlTime: number;
 }
 
-export type TGameState = {
-  created: string;
-  status: 'created' | 'playing' | 'player1win' | 'player2win' | 'error';
-  turn: '1' | '2';
-  phase: EPhase;
-  player1: TPlayer;
-  player2: TPlayer;
-  cards: Array<TGameCard>;
-  options: Array<TGameOption>;
-}
+export type TGameOption = { action: TAction, params: TActionParams, text?: string };
 
 export type TAction = 'start-game' 
+| 'refresh'
 | 'skip-phase'
 | 'untap-card'
+| 'untap-all'
 | 'draw' 
 | 'summon-land' 
-| 'tap-land'
-| 'cast-spell'
 | 'summon-creature'
-| 'cancel-summon-creature'
+| 'summon-instant-spell'
+| 'cancel-summon'
 | 'select-card-to-discard' 
-| 'burn-mana';
+| 'tap-land'
+| 'burn-mana'
+| 'cancel-instant-spell'
+| 'select-target-creature'
+| 'select-target-player'
+| 'cancel-target-selection'
+| 'complete-target-selection'
+| 'select-attacking-creature'
+| 'unselect-attacking-creature'
+| 'submit-attack'
+| 'select-defending-creature'
+| 'submit-defense'
+| 'end-interrupting'
+;
 
-export type TGameOption = { 
-  player: '1' | '2';
-  action: TAction;
+export type TActionParams = { 
   gId?: string;
-};
+  manaForUncolor?: TCast,
+  targets?: Array<string> 
+}

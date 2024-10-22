@@ -71,6 +71,13 @@ $white-dark: gainsboro;
           font-size: 60px;
           display: flex;
           justify-content: center;
+          &.is-selectable {
+            cursor: pointer;
+            transition-duration: 0.4s;
+            // box-shadow: 0px 0px 5px 3px #009688;
+            background: #00968852;            
+            &:hover { background: #009688; }
+          }
         }
       }
 
@@ -170,6 +177,11 @@ $white-dark: gainsboro;
           text-align: center;
           font-size: 20px;
           cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0 10px 0 5px;
+          .icon-hand { margin-left: 3px; font-size: 16px; }
         }
 
         .no-cards {
@@ -179,6 +191,7 @@ $white-dark: gainsboro;
           font-size: 20px;
           padding: 30% 0;
           min-height: 220px;
+          max-width: 135px;
         }
 
         display: flex;
@@ -236,6 +249,8 @@ $white-dark: gainsboro;
     }
 
     .player-B {
+      // background-color: ivory;
+      background-color: azure;
       .hand-box {
         top: -221px;
         &.expanded { transform: translateY(220px); }
@@ -257,7 +272,8 @@ $white-dark: gainsboro;
       // background-color: aliceblue;
       // background-color: ghostwhite;
       // background-color: honeydew;
-      background-color: ivory;
+      // background-color: ivory;
+      background-color: honeydew;      
       .hand-box {
         bottom: -221px;
         &.expanded { transform: translateY(-220px); }

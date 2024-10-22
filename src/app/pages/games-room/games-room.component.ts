@@ -54,16 +54,16 @@ export class GamesRoomComponent {
     const getCardById = (id: string): TGameCard => this.gameState.library.find(c => c.id === id) as TGameCard;
     const generateId = (ind: number) => 'g' + (ind + '').padStart(3, '000');
     const generateOrder = () => Math.round(Math.random() * 9999);
-    const defaultCardFields = (playerNum: string) => {      
+    const defaultCardFields = (playerNum: string, order: number) => {      
       return {
         gId: '',
-        order: generateOrder(), 
+        order, // : generateOrder(), 
         location: 'deck' + playerNum, 
         owner: playerNum, 
         controller: playerNum, 
         // posX: 100, posY: 30, zInd: 100,
         isTapped: false, isSelectable: false,
-        summonStatus: null,
+        status: null,
         selectableAction: null,
       };
     }
@@ -71,14 +71,28 @@ export class GamesRoomComponent {
     const deck1 = [
       getCardById('c000004'), // mountain
       getCardById('c000004'), // mountain
-      getCardById('c000004'), // mountain
-      getCardById('c000004'), // mountain
-      getCardById('c000004'), // mountain
-      getCardById('c000002'), // plains
-      getCardById('c000002'), // plains
-      getCardById('c000002'), // plains
       getCardById('c000002'), // plains
       getCardById('c000001'), // island
+      getCardById('c000005'), // forest
+      getCardById('c000036'), // gray ogre
+      getCardById('c000036'), // gray ogre
+      getCardById('c000032'), // lightning bolt
+      getCardById('c000032'), // lightning bolt
+      getCardById('c000032'), // lightning bolt
+      getCardById('c000036'), // gray ogre
+      getCardById('c000036'), // gray ogre
+      getCardById('c000036'), // gray ogre
+      getCardById('c000032'), // lightning bolt
+      getCardById('c000032'), // lightning bolt
+      getCardById('c000032'), // lightning bolt
+      getCardById('c000004'), // mountain
+      getCardById('c000004'), // mountain
+      getCardById('c000004'), // mountain
+      getCardById('c000004'), // mountain
+      getCardById('c000004'), // mountain
+      getCardById('c000002'), // plains
+      getCardById('c000002'), // plains
+      getCardById('c000002'), // plains
       getCardById('c000001'), // island
       getCardById('c000001'), // island
       getCardById('c000003'), // swamp
@@ -98,12 +112,28 @@ export class GamesRoomComponent {
       getCardById('c000032'), // lightning bolt
       getCardById('c000032'), // lightning bolt
       getCardById('c000032'), // lightning bolt
-    ].map((card, ind) => ({ ...card, ...defaultCardFields('1') }))
+    ].map((card, ind) => ({ ...card, ...defaultCardFields('1', ind) }))
      .sort((a, b) => a.order > b.order ? 1 : -1);     
 
     const deck2 = [
       getCardById('c000004'), // mountain
       getCardById('c000004'), // mountain
+      getCardById('c000002'), // plains
+      getCardById('c000001'), // island
+      getCardById('c000005'), // forest
+      getCardById('c000036'), // gray ogre
+      getCardById('c000036'), // gray ogre
+      getCardById('c000032'), // lightning bolt
+      getCardById('c000032'), // lightning bolt
+      getCardById('c000032'), // lightning bolt
+      getCardById('c000036'), // gray ogre
+      getCardById('c000036'), // gray ogre
+      getCardById('c000036'), // gray ogre
+      getCardById('c000032'), // lightning bolt
+      getCardById('c000032'), // lightning bolt
+      getCardById('c000032'), // lightning bolt
+      getCardById('c000004'), // mountain
+      getCardById('c000004'), // mountain
       getCardById('c000004'), // mountain
       getCardById('c000004'), // mountain
       getCardById('c000004'), // mountain
@@ -131,7 +161,7 @@ export class GamesRoomComponent {
       getCardById('c000032'), // lightning bolt
       getCardById('c000032'), // lightning bolt
       getCardById('c000032'), // lightning bolt
-    ].map((card, ind) => ({ ...card, ...defaultCardFields('2') }))
+    ].map((card, ind) => ({ ...card, ...defaultCardFields('2', ind) }))
      .sort((a, b) => a.order > b.order ? 1 : -1);
 
     deck1.forEach((c, ind) => c.order = ind);
@@ -177,7 +207,8 @@ export class GamesRoomComponent {
       player1,
       player2,
       cards,
-      options: [{ player: '1', action: 'start-game' }],
+      control: '1', // Player1 starts
+      options: [{ action: 'start-game', params: {} }],
     };
 
     return newGame;
