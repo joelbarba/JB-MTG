@@ -27,18 +27,27 @@
   <!-- target={{target | json}} -->
   <div *ngIf="summoner === 'A'">Waiting for the opponent to play any interruptions</div>
   <div *ngIf="summoner === 'B'">You can play some interruptions now</div>
+
+  <div>CONTROL = {{game.state.control}}</div>
   
   <div class="wating-progress-bar">
     <div class="time" [style.width.px]="progressBar"></div>
   </div>
 
   <div class="pause-btn">
-    <!-- <bf-btn *ngIf="summoner === 'A'" (bfClick)="complete()" bfText="Summon" bfIcon="icon-arrow-right3"></bf-btn> -->
-    <bf-btn *ngIf="summoner === 'B'" (bfClick)="pause()" bfText="Wait" bfIcon="icon-pause2"></bf-btn>
-    <bf-btn *ngIf="summoner === 'B'" (bfClick)="endInterrupting()" bfText="Skip" bfIcon="icon-arrow-right3" [bfDisabled]="progress < 200"></bf-btn>
+    <bf-btn *ngIf="summoner === 'B' && !isPaused" (bfClick)="pause()" bfText="Wait" bfIcon="icon-pause2"></bf-btn>
+    <!-- <bf-btn *ngIf="summoner === 'A'" (bfClick)="pause()" bfText="Wait" bfIcon="icon-pause2"></bf-btn> -->
+  </div>
 
+  <div class="skip-btn">
+    <bf-btn *ngIf="summoner === 'B'" (bfClick)="endInterrupting()" bfText="Ok, go on" bfIcon="icon-arrow-right3"></bf-btn>
+    <bf-btn *ngIf="summoner === 'A'" (bfClick)="endSummoning()" bfText="Continue" bfIcon="icon-arrow-right3"
+            [bfDisabled]="progressBar < 200">
+    </bf-btn>
+  </div>
+
+    <!-- <bf-btn *ngIf="summoner === 'A'" (bfClick)="complete()" bfText="Summon" bfIcon="icon-arrow-right3"></bf-btn> -->
     <!-- <bf-btn *ngIf="!isPaused" (bfClick)="pause()" bfText="PAUSE" bfIcon="icon-pause2"></bf-btn>
     <bf-btn *ngIf="isPaused" (bfClick)="continue()" bfText="PAUSE" bfIcon="icon-play3"></bf-btn> -->
-  </div>
   
 </div>

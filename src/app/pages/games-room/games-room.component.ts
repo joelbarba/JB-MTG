@@ -4,7 +4,7 @@ import { AuthService } from '../../core/common/auth.service';
 import { ShellService } from '../../shell/shell.service';
 import { CommonModule } from '@angular/common';
 import { Observable } from 'rxjs';
-import { EPhase, TGameCard, TGameState, TPlayer } from '../../core/types';
+import { EPhase, TGameCard, TGameDBState, TGameState, TPlayer } from '../../core/types';
 import { Router } from '@angular/router';
 import { GameStateService } from './game-state.service';
 
@@ -19,7 +19,7 @@ import { GameStateService } from './game-state.service';
 })
 export class GamesRoomComponent {
   gamesCol = collection(this.firestore, 'games');
-  games$ = collectionData(this.gamesCol, { idField: 'id'}) as Observable<Array<TGameState & { id: string }>>;
+  games$ = collectionData(this.gamesCol, { idField: 'id'}) as Observable<Array<TGameDBState & { id: string }>>;
 
   constructor(
     public auth: AuthService,
@@ -36,12 +36,13 @@ export class GamesRoomComponent {
     // this.gameState.startGame(gameId);
   }
 
-  createNewGame() {
+  async createNewGame() {
     const newGame = this.generateGame();
-    addDoc(collection(this.firestore, 'games'), newGame).then(docRef => {
-      console.log('New Game Created', newGame);
-      this.goToGame(docRef.id);
-    });
+    const docRef = await addDoc(collection(this.firestore, 'games'), newGame);
+    await setDoc(doc(this.firestore, 'gamesHistory', docRef.id), newGame);
+
+    console.log('New Game Created', newGame);
+    this.goToGame(docRef.id);
   }
 
   async resetGame(gameId: string) {
@@ -62,9 +63,9 @@ export class GamesRoomComponent {
         owner: playerNum, 
         controller: playerNum, 
         // posX: 100, posY: 30, zInd: 100,
-        isTapped: false, isSelectable: false,
+        // selectableAction: null,
+        isTapped: false,
         status: null,
-        selectableAction: null,
       };
     }
 
@@ -199,7 +200,7 @@ export class GamesRoomComponent {
     //   player2 = playerYou;
     // }
 
-    const newGame: TGameState = {
+    const newGame: TGameDBState = {
       created: new Date() + '',
       status: 'created',
       turn: '1',
@@ -208,7 +209,7 @@ export class GamesRoomComponent {
       player2,
       cards,
       control: '1', // Player1 starts
-      options: [{ action: 'start-game', params: {} }],
+      id: 0,
     };
 
     return newGame;

@@ -5,3 +5,6 @@
 
 - Combat operation
 - Add chat
+
+- Performance improvement: Do not save the static card properties (c0000) on the state.card[] objects
+  Merge those properties in memory every state change

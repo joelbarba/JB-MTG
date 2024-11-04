@@ -1,4 +1,4 @@
-export type TColor = 'uncolored' | 'blue' | 'black' | 'white' | 'red' | 'green';
+export type TColor = 'uncolored' | 'blue' | 'white' | 'black' | 'red' | 'green';
 export type TCast = [number, number, number, number, number, number];
 export type TCardType = 'land' | 'creature' | 'instant' | 'artifact';
 
@@ -31,7 +31,7 @@ export type TCardLocation = 'off'
 export type TCardSemiLocation = 'off' | 'deck' | 'hand' | 'tble' | 'grav';
 export type TCardAnyLocation = TCardSemiLocation & TCardSemiLocation;
 
-export type TGameState = {
+export type TGameDBState = {
   created: string;
   status: 'created' | 'playing' | 'player1win' | 'player2win' | 'error';
   turn: '1' | '2';
@@ -40,8 +40,11 @@ export type TGameState = {
   player1: TPlayer;
   player2: TPlayer;
   cards: Array<TGameCard>;
-  options: Array<TGameOption>;
+  lastAction?: TGameOption & { time: string, player: '1' | '2' };
+  id: number; // sequential order
 }
+export type TGameState = TGameDBState & { options: Array<TGameOption> };
+export type TGameHistory = TGameState & { history: Array<TGameOption & { time: string, player: '1' | '2' }>; }
 
 export type TGameCard = TCard & {
   gId: string;
@@ -61,8 +64,8 @@ export type TExtGameCard = TGameCard & {
   posX: number;
   posY: number;
   zInd: number;
-  isSelectable?: boolean;
 }
+
 
 export type TPlayer = {
   userId: string;

@@ -251,8 +251,12 @@
   <!-- <br/>HELP = {{ playerA.help }} -->
   <!-- <br/>cardActionHelp = {{ cardActionHelp }} -->
   <br/>phase$={{phase}}
+  <br/>You are player={{game.playerANum}}
+  <br/><span *ngIf="game.state">
+    control={{game.state.control}} ====>
+    {{(game.state.control === game.playerANum ? 'YOU' : 'Opponent') + ' (player ' + game.state.control + ') got control'}}
+  </span>
   <!-- <br/>options = {{state.options | json}} -->
-  <br/><bf-btn (bfClick)="game.rollbackState()" bfText="ROLLBACK to previous STATE"></bf-btn>
   <br/>
   <div *ngIf="summonOp.status !== 'off'">
     summonOp - status = {{summonOp.status}}

@@ -3,7 +3,7 @@ import { Subject, map } from 'rxjs';
 import { AuthService } from '../../core/common/auth.service';
 import { ShellService } from '../../shell/shell.service';
 import { DocumentReference, Firestore, QuerySnapshot, collection, doc, getDoc, getDocs, onSnapshot, query, setDoc, DocumentData } from '@angular/fire/firestore';
-import { EPhase, TAction, TCard, TCardLocation, TGameState, TGameCard, TGameCards, TActionParams, TPlayer, TCardType, TCardSemiLocation, TCardAnyLocation, TCast, TGameOption } from '../../core/types';
+import { EPhase, TAction, TCard, TCardLocation, TGameState, TGameDBState, TGameCard, TGameCards, TActionParams, TPlayer, TCardType, TCardSemiLocation, TCardAnyLocation, TCast, TGameOption } from '../../core/types';
 
 
 
@@ -15,8 +15,10 @@ export class GameStateService {
 
   gameDocRef: any;
   gameDocSub: any;
+  gameHistoryRef: any;
 
-  state$ = new Subject<TGameState>();
+  state$ = new Subject<TGameDBState>();
+  stateExt$ = this.state$.pipe(map(state => this.extendState(state)));
   state!: TGameState;
 
   prevState!: TGameState; // Snapshot of the previous state
@@ -43,7 +45,6 @@ export class GameStateService {
     public shell: ShellService,
     public firestore: Firestore,
   ) {
-    this.state$.subscribe(state => this.state = state);
     this.loadLibrary();
   }
 
@@ -68,20 +69,52 @@ export class GameStateService {
     await this.initPromise; // wait to have all the cards loaded
 
     this.currentGameId = gameId;
-    this.gameDocRef = doc(this.firestore, 'games', gameId);
+    this.gameDocRef = doc(this.firestore, 'games', gameId);    
 
     if (this.gameDocSub) { this.gameDocSub(); } // unsubscribe if previous detected
 
     // Changes on the game document from Firebase
     this.gameDocSub = onSnapshot(this.gameDocRef, (docQuery: any) => {
       const source = docQuery.metadata.hasPendingWrites ? 'local' : 'server';
-      const nextState = docQuery.data();
+      const dbState = docQuery.data();
       // console.log('DB onSnapshot() from -->', source, nextState);
+      
+      if (!this.state) { this.initState(dbState); } // First load of the game
+      
+      // Propagate changes from DB
+      if (source === 'server') { 
+        console.log('DB onSnapshot() from -->', source);
+        
+        if (!this.state || this.state.id === dbState.id - 1) {
+          console.log('DB onSnapshot() --> New state from remote ACTION: ', dbState.lastAction);
+          this.state$.next(dbState);
 
-      if (!this.state) { this.initState(nextState); } // First load of the game
-      if (source === 'server') { this.state$.next(nextState); } // Propagate changes from DB
+          // Find if there are future updates that came before this one
+          let nextId = dbState.id + 1;
+          for (let t = 0; t < this.dbFutureStates.length; t++) {
+            const futureState = this.dbFutureStates[t];
+            if (futureState.id === nextId) {
+              console.warn('DB onSnapshot() --> New state from (stacked) ACTION: ', dbState.lastAction);
+              this.state$.next(futureState); nextId++;
+              delete this.dbFutureStates[t];
+            }            
+          }
+          this.dbFutureStates = this.dbFutureStates.filter(v => !!v);
+        }
+        else if (this.state.id < dbState.id - 1) { // If there's more than 1 new state / action
+          this.dbFutureStates.push(dbState); // This is a future update, we are missing previous updates (stack it and wait)
+          this.dbFutureStates.sort((a, b) => a.id < b.id ? 1: -1);
+          console.warn('DB onSnapshot() --> Disordered (not executed, stacked) ACTION:: ', dbState.lastAction);
+
+        } else {
+          console.error('THAT SHOULD NOT HAPPEN. state.id=', this.state.id, 'dbState.id=', dbState.id);
+        }
+      }
     });
   }
+  dbFutureStates: Array<TGameState> = [];
+
+
 
   private initState(nextState: TGameState) { // Initialize internal vars for the first time
     if (this.auth.profileUserId === nextState.player1.userId) {
@@ -95,15 +128,14 @@ export class GameStateService {
     }
   }
 
-  // Purely debuggin option
-  rollbackState() {
-    const nextState = JSON.parse(JSON.stringify(this.prevState)) as TGameState;
-    this.setNextOptions(nextState);
-    this.state$.next(nextState);
-    setDoc(this.gameDocRef, nextState).then(_ => {});
+  private extendState(dbState: TGameDBState): TGameState {
+    const state = this.calculateOptions(dbState);
+    // console.log('New State - Options =', state.options.map(o => `${o.action}:${o.params?.gId}`), state);
+    // history.map(h => `${h.time} - player${h.player}:${h.action}`)
+    console.log('New State. Last action =', `${dbState.lastAction?.action}`, state);
+    this.state = state;
+    return state;
   }
-
-
 
 
 
@@ -113,6 +145,18 @@ export class GameStateService {
   getTurnPlayerLetter(): 'A' | 'B' { return this.state.turn === this.playerANum ? 'A' : 'B'; }
   isYourTurn(): boolean { return this.getTurnPlayerLetter() === 'A'; }
   doYouHaveControl(): boolean { return this.state.control === this.playerANum; }
+
+  getTime() {
+    const time = new Date();
+    let timeStr = (time.getFullYear() + '').padStart(4, '0') + '-';
+    timeStr += ((time.getMonth() + 1) + '').padStart(2, '0') + '-';
+    timeStr += (time.getDay() + '').padStart(2, '0') + ' ';
+    timeStr += (time.getHours() + '').padStart(2, '0') + ':';
+    timeStr += (time.getMinutes() + '').padStart(2, '0') + ':';
+    timeStr += (time.getSeconds() + '').padStart(2, '0') + '.';
+    timeStr += (time.getMilliseconds() + '').padStart(3, '0');
+    return timeStr
+  }
 
   // Shortcut for state objects (relative players)
   getPlayers(state: TGameState = this.state) {
@@ -191,11 +235,21 @@ export class GameStateService {
 // submit-defense
     }
 
-    this.setNextOptions(nextState);
+    // this.setNextOptions(nextState);
+    nextState.id += 1;
+    nextState.lastAction = { action, params, player: this.playerANum, time: this.getTime() };
 
     // Update the state
     this.state$.next(nextState); // Local update of the state (before it's saved to DB)
-    setDoc(this.gameDocRef, nextState).then(_ => {});
+
+    // Stripe out properties that do not need to be on DB
+    const dbState = nextState.keyFilter((v,k) => k !== 'options') as TGameDBState;
+    dbState.cards = dbState.cards.map(card => card.keyFilter((v,k) => k !== 'selectableAction' && k !== 'selectableTarget')) as Array<TGameCard>;
+    setDoc(this.gameDocRef, dbState).then(_ => {});
+
+    // Save history
+    const hActionId = 'action-' + (nextState.id + '').padStart(4, '0');
+    setDoc(doc(this.firestore, 'gamesHistory', this.currentGameId, 'history', hActionId), nextState.lastAction).then(_ => {});
   }
 
   // Verifies that the given action is possible, being into the options[] array
@@ -290,6 +344,7 @@ export class GameStateService {
           card.status = 'summoning';
           nextState.control = this.playerBNum; // Switch control
           playerB.controlTime = (new Date()).getTime();
+          console.log('SERVICE - Summoning creature and setting CONTROL to opponent => control = ', nextState.control);
         }
 
       } else if (card.status === 'summoning') {
@@ -344,6 +399,7 @@ export class GameStateService {
               card.targets = params.targets;
               nextState.control = this.playerBNum; // Switch control
               playerB.controlTime = (new Date()).getTime();
+              console.log('SERVICE - Summoning instant and setting CONTROL to opponent => control = ', nextState.control);
              }
           }
         }        
@@ -384,7 +440,8 @@ export class GameStateService {
 
   // Mark the end of the interruption break
   private endInterrupting(nextState: TGameState) {
-    nextState.control = this.playerANum; // Switch back control
+    nextState.control = this.playerBNum; // Switch back control
+    console.log('SERVICE - End Interrupting - Switching back control to opponent => control = ', nextState.control);
   }
 
 
@@ -403,158 +460,6 @@ export class GameStateService {
 
 
 
-
-
-
-
-  // --------------------------- NEXT OPTIONS CALCULATIONS ----------------------------------
-  
-  // Calculates the next possible options given the current changed state
-  private setNextOptions(nextState: TGameState) {
-    if (nextState.status !== 'playing') { return; } // in case someone's won
-    const { playerA, playerB, turnPlayer } = this.getPlayers(nextState);
-
-    // Remove all actions (from prev state)
-    nextState.cards.forEach(card => { card.selectableAction = null; card.selectableTarget = null });
-    nextState.options = [];
-    playerA.help = '';
-    playerB.help = '';
-
-    // Shortcut to check if the current phase is any of the given
-    const isPhase = (...phases: string[]) => phases.indexOf(nextState.phase) >= 0
-
-
-    // If you lost control during your turn (opponent playing interruptions), let him play
-    // Or you have control during your opponent's turn (he gave you control to play interruptions)
-    if ((nextState.turn === this.playerANum && nextState.control !== this.playerANum)
-       ||
-        (nextState.turn !== this.playerANum && nextState.control === this.playerANum)) {
-      const { table } = this.getCards(nextState, 'playerB');
-      
-      // Other turn's player may tap lands to produce mana
-      table.filter(c => c.type === 'land' && !c.isTapped).forEach(card => {
-        const option: TGameOption = { action: 'tap-land', params: { gId: card.gId }, text: `Tap ${card.name}` };
-        nextState.options.push(option);
-        card.selectableAction = option;
-      });
-      
-      nextState.options.push({ action: 'end-interrupting', params: {}, text: `Skip` });
-
-      return; // You can't do ordinary actions during the other's turn
-    }
-
-
-
-    // --- Generic options for whoever is the turn's player ---
-    const { hand, table } = this.getCards(nextState, 'turn');
-    let canSkipPhase = true;
-    let spellsAvailable = hand.filter(c => c.type === 'instant').length > 0;
-    const summonCard = hand.find(c => c.status?.slice(0, 7) === 'summon:');
-
-
-    // If turn's player has a summoning operation, let it cancel
-    if (summonCard) {
-      nextState.options.push({ action: 'cancel-summon', params: {}, text: 'Cancel ' + summonCard.name });
-    }
-
-
-    // Selecting target
-    const playingCard = nextState.cards.find(c => c.status === 'summon:selectingTargets');
-    if (playingCard?.id === 'c000032') { // Lightning Bolt
-      nextState.options.push({ action: 'summon-instant-spell', params: { gId: playingCard.gId, targets: ['player1'] }});
-      nextState.options.push({ action: 'summon-instant-spell', params: { gId: playingCard.gId, targets: ['player2'] }});
-      nextState.cards.filter(c => c.location.slice(0,4) === 'tble' && c.type === 'creature').forEach(card => {
-        card.selectableTarget = { text: `Select target ${card.name}`, value: card.gId };
-        nextState.options.push({ action: 'summon-instant-spell', params: { gId: playingCard.gId, targets: [card.gId] } });
-      });
-      return; // <---- Avoid any other action when selecting a target
-    }
-
-
-    // Casting / Summoning:
-
-    // Turn's player may summon lands on hand
-    if (isPhase('pre', 'post') && playerA.summonedLands === 0) {
-      hand.filter(c => c.type === 'land').forEach(card => {
-        const option: TGameOption = { action: 'summon-land', params: { gId: card.gId }, text: `Summon ${card.name}` };
-        nextState.options.push(option);
-        card.selectableAction = option;
-      });
-    }
-
-    // Turn's player may summon creatures
-    if (isPhase('pre', 'post')) {
-      hand.filter(c => c.type === 'creature').forEach(card => {
-        const option: TGameOption = { action: 'summon-creature', params: { gId: card.gId }, text: `Summon ${card.name}` };
-        nextState.options.push(option);
-        if (!card.status) { card.selectableAction = option; }
-      });
-    }
-
-    // Turn's player may cast a spell
-    if (isPhase('maintenance', 'draw', 'pre', 'combat', 'post')) {
-      hand.filter(c => c.type === 'instant').forEach(card => {
-        const option: TGameOption = { action: 'summon-instant-spell', params: { gId: card.gId }, text: `Cast ${card.name}` };
-        nextState.options.push(option);
-        if (!card.status) { card.selectableAction = option; }
-      });
-    }
-
-    
-
-    // Tapping habilities:
-
-    // Turn's player may tap lands to produce mana
-    if (isPhase('pre', 'post') || spellsAvailable) {
-      table.filter(c => c.type === 'land' && !c.isTapped).forEach(card => {
-        const option: TGameOption = { action: 'tap-land', params: { gId: card.gId }, text: `Tap ${card.name}` };
-        nextState.options.push(option);
-        card.selectableAction = option;
-      });
-    }
-
-    // Common turn actions:
-    
-    // Turn's player may untap cards
-    if (isPhase('untap')) {
-      nextState.options.push({ action: 'untap-all', params: {}, text: `Untap all your cards` });
-      table.filter(c => c.isTapped).forEach(card => {
-        const option: TGameOption = { action: 'untap-card', params: { gId: card.gId }, text: `Untap ${card.name}` };
-        nextState.options.push(option);
-        card.selectableAction = option;
-      });    
-    }
-
-    // Turn's player may draw a card
-    if (isPhase('draw') && playerA.drawnCards < 1) {
-      nextState.options.push({ action: 'draw', params: {}, text: `Draw a card from your library` });
-      // canSkipPhase = false; // Player must draw   TODO: UNCOMMENT !!!!!!!!!!!!!!!!!!!!!!!!!!!
-    }
-
-    // Turn's player may discard a card
-    if (isPhase('discard') && hand.length > 7) {
-      canSkipPhase = false; // Player must discard if more than 7 cards on the hand
-      playerA.help = `You cannot have more than 7 cards on your hand. Please discard`;
-      playerB.help = `Waiting for the opponent to discard`;
-      hand.forEach(card => {
-        const option: TGameOption = { action: 'select-card-to-discard', params: { gId: card.gId }, text: `Discard ${card.name}` };
-        nextState.options.push(option);
-        card.selectableAction = option;
-      });
-    }
-
-    // Turn's player may burn unspent mana
-    if (isPhase('end') && playerA.manaPool.some(m => m > 0)) {
-      canSkipPhase = false;  // Player must burn unspent mana
-      playerA.help = `You have to burn unspent mana`;
-      nextState.options.push({ action: 'burn-mana', params: {} });
-    }
-
-    // Turn's player may do nothing (skip phase)
-    if (canSkipPhase) {
-      nextState.options.push({ action: 'skip-phase', params: {} });
-    }
-  }
 
 
   // ----------------------------------------------------------------------------------
@@ -675,6 +580,169 @@ export class GameStateService {
     for (let t = 0; t <= 5; t++) { manaPool[t] -= manaForUncolor[t]; }  // Subtract uncolored mana
   }
 
+
+
+
+
+
+
+
+
+
+  // --------------------------- NEXT OPTIONS CALCULATIONS ----------------------------------
+
+  // Calculates your possible options for a current state
+  // It modifies/extends:
+  //  - state.options[]
+  //  - state.cards[].selectableAction    - state.player1/2.help
+  //  - state.cards[].selectableTarget
+  private calculateOptions(dbState: TGameDBState): TGameState {
+    const state: TGameState = { ...dbState, options: [] };
+    state.cards.forEach(card => { card.selectableAction = null; card.selectableTarget = null });  // Remove all actions (from prev state)
+
+    const { playerA, playerB, turnPlayer } = this.getPlayers(state);
+    const { hand, table } = this.getCards(state, 'playerA'); // Your cards
+    
+
+    let canSkipPhase = true;
+    playerA.help = '';
+
+    if (state.control !== this.playerANum) { return state; } // If you don't have control, you have no options
+
+    // If the game is not running
+    if (state.status === 'created') { state.options.push({ action: 'start-game', params: {} }); return state; }
+    if (state.status !== 'playing') { return state; } // in case someone's won
+
+
+
+    // If it's not your turn, yet you have control (casting interruptions)
+    if (state.turn !== this.playerANum) {
+      const { table } = this.getCards(state, 'playerB');
+      
+      // You may tap lands to produce mana
+      table.filter(c => c.type === 'land' && !c.isTapped).forEach(card => {
+        const option: TGameOption = { action: 'tap-land', params: { gId: card.gId }, text: `Tap ${card.name}` };
+        state.options.push(option);
+        card.selectableAction = option;
+      });      
+
+      state.options.push({ action: 'end-interrupting', params: {}, text: `Skip` });
+
+      return state; // <---- Skip generic options (it's not your turn)
+    }
+
+
+
+    
+    // If you have a summoning operation, let it cancel
+    const summonCard = hand.find(c => c.status?.slice(0, 7) === 'summon:');
+    if (summonCard) { state.options.push({ action: 'cancel-summon', params: {}, text: 'Cancel ' + summonCard.name }); }
+
+
+    // Selecting target
+    const playingCard = state.cards.find(c => c.status === 'summon:selectingTargets');
+    if (playingCard?.id === 'c000032') { // Lightning Bolt
+      state.options.push({ action: 'summon-instant-spell', params: { gId: playingCard.gId, targets: ['player1'] }});
+      state.options.push({ action: 'summon-instant-spell', params: { gId: playingCard.gId, targets: ['player2'] }});
+      state.cards.filter(c => c.location.slice(0,4) === 'tble' && c.type === 'creature').forEach(card => {
+        card.selectableTarget = { text: `Select target ${card.name}`, value: card.gId };
+        state.options.push({ action: 'summon-instant-spell', params: { gId: playingCard.gId, targets: [card.gId] } });
+      });
+      return state; // <---- Avoid any other action when selecting a target
+    }
+
+
+
+
+    // Shortcut to check if the current phase is any of the given
+    const isPhase = (...phases: string[]) => phases.indexOf(state.phase) >= 0
+
+    // Casting / Summoning:
+
+    // You may summon lands on hand
+    if (isPhase('pre', 'post') && playerA.summonedLands === 0) {
+      hand.filter(c => c.type === 'land').forEach(card => {
+        const option: TGameOption = { action: 'summon-land', params: { gId: card.gId }, text: `Summon ${card.name}` };
+        state.options.push(option);
+        card.selectableAction = option;
+      });
+    }
+
+    // You may summon creatures
+    if (isPhase('pre', 'post')) {
+      hand.filter(c => c.type === 'creature').forEach(card => {
+        const option: TGameOption = { action: 'summon-creature', params: { gId: card.gId }, text: `Summon ${card.name}` };
+        state.options.push(option);
+        if (!card.status) { card.selectableAction = option; }
+      });
+    }
+
+    // You may summon/cast an instant spell
+    if (isPhase('maintenance', 'draw', 'pre', 'combat', 'post')) {
+      hand.filter(c => c.type === 'instant').forEach(card => {
+        const option: TGameOption = { action: 'summon-instant-spell', params: { gId: card.gId }, text: `Cast ${card.name}` };
+        state.options.push(option);
+        if (!card.status) { card.selectableAction = option; }
+      });
+    }
+
+    
+
+    // Tapping habilities:
+
+    // You may tap lands to produce mana
+    const spellsAvailable = hand.filter(c => c.type === 'instant').length > 0;
+    if (isPhase('pre', 'post') || spellsAvailable) {
+      table.filter(c => c.type === 'land' && !c.isTapped).forEach(card => {
+        const option: TGameOption = { action: 'tap-land', params: { gId: card.gId }, text: `Tap ${card.name}` };
+        state.options.push(option);
+        card.selectableAction = option;
+      });
+    }
+
+    // Common turn actions:
+    
+    // You may untap cards
+    if (isPhase('untap')) {
+      state.options.push({ action: 'untap-all', params: {}, text: `Untap all your cards` });
+      table.filter(c => c.isTapped).forEach(card => {
+        const option: TGameOption = { action: 'untap-card', params: { gId: card.gId }, text: `Untap ${card.name}` };
+        state.options.push(option);
+        card.selectableAction = option;
+      });    
+    }
+
+    // You may draw a card
+    if (isPhase('draw') && playerA.drawnCards < 1) {
+      state.options.push({ action: 'draw', params: {}, text: `Draw a card from your library` });
+      canSkipPhase = false; // Player must draw
+    }
+
+    // You may discard a card
+    if (isPhase('discard') && hand.length > 7) {
+      canSkipPhase = false; // Player must discard if more than 7 cards on the hand
+      playerA.help = `You cannot have more than 7 cards on your hand. Please discard`;
+      hand.forEach(card => {
+        const option: TGameOption = { action: 'select-card-to-discard', params: { gId: card.gId }, text: `Discard ${card.name}` };
+        state.options.push(option);
+        card.selectableAction = option;
+      });
+    }
+
+    // You may burn unspent mana
+    if (isPhase('end') && playerA.manaPool.some(m => m > 0)) {
+      canSkipPhase = false;  // Player must burn unspent mana
+      playerA.help = `You have to burn unspent mana`;
+      state.options.push({ action: 'burn-mana', params: {} });
+    }
+
+    // You may do nothing (skip phase)
+    if (canSkipPhase) {
+      state.options.push({ action: 'skip-phase', params: {} });
+    }
+
+    return state;
+  }
 
 
 }

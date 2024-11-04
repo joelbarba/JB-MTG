@@ -119,16 +119,15 @@ export class GameComponent {
     console.log('Entering Game ID', gameId);
     await this.game.activateGame(gameId);
 
-    this.subs.push(this.game.state$.subscribe(state => { // React on state changes
+    this.subs.push(this.game.stateExt$.subscribe(state => { // React on state changes
       this.stateTime = new Date();
       this.mainInfo = '';
       this.itemInfo = '';
       this.globalButtons = [];
 
-      // console.log('New State:', state);
-      console.log('Options', state.options.map(o => `${o.action}:${o.params?.gId}`));
+      // console.log('New State:', state);      
       this.state = state;
-      this.calcStateChanges(this.game.prevState, state);
+      // this.calcStateChanges(this.game.prevState, state);
 
       // Threat Special statuses - status: 'created' | 'playing' | 'player1win' | 'player2win' | 'error';
       if (state.status === 'error') { console.error('STATUS ERROR'); }
@@ -217,7 +216,7 @@ export class GameComponent {
           // console.log('Auto advancing phase', this.state.phase);
           this.skipPhase.skip();
         }
-      }, 500);
+      }, 100);
     }
 
     // If you can only skip phase, do it
@@ -527,15 +526,15 @@ export class GameComponent {
 
   
 
-  stateChanges: Array<{ field: string, value: any, prev: any }> = [];
-  calcStateChanges(prevState: TGameState, state: TGameState) {
-    this.stateChanges = [];
-    if (!prevState) { return; }
-    state.player1.manaPool.forEach((value, i) => {
-      const prev = prevState.player1.manaPool[i];
-      if (prev !== value) { this.stateChanges.push({ field: 'player1.manaPool.' + i, value, prev }); }
-    });
-  }
+  // stateChanges: Array<{ field: string, value: any, prev: any }> = [];
+  // calcStateChanges(prevState: TGameState, state: TGameState) {
+  //   this.stateChanges = [];
+  //   if (!prevState) { return; }
+  //   state.player1.manaPool.forEach((value, i) => {
+  //     const prev = prevState.player1.manaPool[i];
+  //     if (prev !== value) { this.stateChanges.push({ field: 'player1.manaPool.' + i, value, prev }); }
+  //   });
+  // }
 
 
 

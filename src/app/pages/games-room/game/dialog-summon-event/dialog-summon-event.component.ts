@@ -35,6 +35,7 @@ export class DialogSummonEventComponent {
   interval!: ReturnType<typeof setInterval>;
   stateSub!: Subscription;
   isPaused = false;
+  isRemotePaused = false;
   minimized = false;
 
   target?: TGameCard | 'playerA' | 'playerB';
@@ -46,22 +47,21 @@ export class DialogSummonEventComponent {
     // Find the summoning card
     const { hand } = this.game.getCards(this.game.state, 'player' + this.summoner as 'playerA' | 'playerB');
     this.card = hand.find(c => c.status === 'summoning');
-    if (!this.card) { this.end.emit(); return; }
+    if (!this.card) { this.close(); return; }
     
-    const controlPlayer = this.game.state.control === '1' ? this.game.state.player1 : this.game.state.player2;
-    const summonerPlayer      = this.summoner === 'A' ? this.game.playerA() : this.game.playerB();
-    const interruptingPlayer  = this.summoner === 'A' ? this.game.playerB() : this.game.playerA();
-    controlPlayer.controlTime = (new Date()).getTime(); // TODO: REMOVE THISSSSSSSSSSS!!!!!!!!!!!!!!!!!!!!!!!
-
-    console.log('Summoning Event', this.card);
+    // const controlPlayer = this.game.state.control === '1' ? this.game.state.player1 : this.game.state.player2;
+    // const summonerPlayer      = this.summoner === 'A' ? this.game.playerA() : this.game.playerB();
+    // const interruptingPlayer  = this.summoner === 'A' ? this.game.playerB() : this.game.playerA();
+    // controlPlayer.controlTime = (new Date()).getTime(); // TODO: REMOVE THISSSSSSSSSSS!!!!!!!!!!!!!!!!!!!!!!!
+    // console.log('Summoning Event', this.card);
     
     if (this.summoner === 'A') {
       this.title = `Summoning ${this.card.name}`;
-      console.log(`You are player A = player${this.game.playerANum} (summoner). Waiting for player B = player${this.game.playerBNum} to play interruptions`);
+      console.log(`SUMMON EVENT PANEL - You are player A = player${this.game.playerANum} (summoner). Waiting for player B = player${this.game.playerBNum} to play interruptions`);
       
     } else { // summoner === B
       this.title = `Opponent is summoning ${this.card.name}`;
-      console.log(`You are player A = player${this.game.playerANum}. Your opponent player B = player${this.game.playerBNum} (summoned) is waiting you playing interruptions`);
+      console.log(`SUMMON EVENT PANEL - You are player A = player${this.game.playerANum}. Your opponent player B = player${this.game.playerBNum} (summoner) is waiting you playing interruptions`);
     }
 
    
@@ -86,7 +86,7 @@ export class DialogSummonEventComponent {
         this.progress = Math.min(200, ((new Date()).getTime() - ctrlTime) * 200 / waitingMs);
         if (!this.isPaused) { this.progressBar = this.progress; }
   
-        if (this.progressBar >= 200) { this.endInterrupting(); } // Automatically skip
+        // if (this.progressBar >= 200) { this.endInterrupting(); } // Automatically skip
         if (this.progress >= 200) { clearInterval(this.interval); } // Max reach
       }, 25);
     }
@@ -97,15 +97,17 @@ export class DialogSummonEventComponent {
       const ctrlTime = this.game.playerB().controlTime;
       this.interval = setInterval(() => {
         this.progress = Math.min(200, ((new Date()).getTime() - ctrlTime) * 200 / waitingMs);
-        if (!this.isPaused) { this.progressBar = this.progress; }
+        if (!this.isPaused && !this.isRemotePaused) { this.progressBar = this.progress; }
         if (this.progress >= 200) { clearInterval(this.interval); } // Max reach
       }, 25);
 
-      this.stateSub = this.game.state$.subscribe(state => { // React on state changes
-        console.log('CONTROL =', state.control);
-        if (state.control === this.game.playerANum) { // Interruptions finished. You are taking control back
-          console.log('Now you can finish the summoning');
-          // this.endSummoning();
+      // React on state changes, to know when you get control back (from playerB -> playerA)
+      this.stateSub = this.game.stateExt$.subscribe(state => {
+        const playerB = this.game.playerANum === '1' ? state.player2 : state.player1;
+        if (!playerB.controlTime) { this.isRemotePaused = true; }
+        if (state.control === this.game.playerANum) {
+          if (this.stateSub) { this.stateSub.unsubscribe(); }
+          this.endSummoning();
         }
       });
     }
@@ -115,6 +117,7 @@ export class DialogSummonEventComponent {
   ngOnChanges() {}
   ngOnDestroy() {
     if (this.stateSub) { this.stateSub.unsubscribe(); }
+    if (this.interval) { clearInterval(this.interval); }
   }
 
 
@@ -127,12 +130,12 @@ export class DialogSummonEventComponent {
   }
 
   endInterrupting() { // When you are done interrupting (summoner === 'B')
+    console.log('Ok, you are done interrupting. summoner=', this.summoner, 'control=', this.game.state.control, 'playerA=', this.game.playerANum);
     if (this.interval) { clearInterval(this.interval); }
-    if (this.summoner === 'B') {
-      console.log('Ok, you are done interrupting');
+    if (this.summoner === 'B' && this.game.state.control === this.game.playerANum) {
       this.game.action('end-interrupting'); 
-      this.end.emit();
     }
+    this.close();
   }
 
   endSummoning() { // When the waiting for the opponent is over, end your summoning (summoner === 'A')
@@ -144,9 +147,15 @@ export class DialogSummonEventComponent {
         if (this.card.targets?.length) { params.targets = this.card.targets; }
         if (this.card.type === 'creature') { this.game.action('summon-creature', params); }
         if (this.card.type === 'instant')  { this.game.action('summon-instant-spell', params); }
-        this.end.emit();
+        this.close();
       }
     }
+  }
+
+  close() {
+    if (this.stateSub) { this.stateSub.unsubscribe(); }
+    if (this.interval) { clearInterval(this.interval); }
+    this.end.emit();
   }
 
 }
