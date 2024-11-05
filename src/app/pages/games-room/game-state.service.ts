@@ -3,7 +3,7 @@ import { Subject, map } from 'rxjs';
 import { AuthService } from '../../core/common/auth.service';
 import { ShellService } from '../../shell/shell.service';
 import { DocumentReference, Firestore, QuerySnapshot, collection, doc, getDoc, getDocs, onSnapshot, query, setDoc, DocumentData } from '@angular/fire/firestore';
-import { EPhase, TAction, TCard, TCardLocation, TGameState, TGameDBState, TGameCard, TGameCards, TActionParams, TPlayer, TCardType, TCardSemiLocation, TCardAnyLocation, TCast, TGameOption } from '../../core/types';
+import { EPhase, TAction, TCard, TCardLocation, TGameState, TGameDBState, TGameCard, TGameCards, TActionParams, TPlayer, TCardType, TCardSemiLocation, TCardAnyLocation, TCast, TGameOption, ESubPhase } from '../../core/types';
 
 
 
@@ -184,6 +184,28 @@ export class GameStateService {
     return { deck, hand, table, graveyard };
   }
 
+  // Shortcut for state objects (cards split on locations)
+  getGroups(state: TGameState) {
+    const deck        = state.cards.filter(c => c.location.slice(0,4) === 'deck').sort((a, b) => a.order > b.order ? 1 : -1);
+    const hand        = state.cards.filter(c => c.location.slice(0,4) === 'hand').sort((a, b) => a.order > b.order ? 1 : -1);
+    const table       = state.cards.filter(c => c.location.slice(0,4) === 'tble').sort((a, b) => a.order > b.order ? 1 : -1);
+    const play        = state.cards.filter(c => c.location.slice(0,4) === 'play').sort((a, b) => a.order > b.order ? 1 : -1);
+    const graveyard   = state.cards.filter(c => c.location.slice(0,4) === 'grav').sort((a, b) => a.order > b.order ? 1 : -1);
+    const deckA       = state.cards.filter(c => c.location === 'deck' + this.playerANum).sort((a, b) => a.order > b.order ? 1 : -1);
+    const deckB       = state.cards.filter(c => c.location === 'deck' + this.playerBNum).sort((a, b) => a.order > b.order ? 1 : -1);
+    const handA       = state.cards.filter(c => c.location === 'hand' + this.playerANum).sort((a, b) => a.order > b.order ? 1 : -1);
+    const handB       = state.cards.filter(c => c.location === 'hand' + this.playerBNum).sort((a, b) => a.order > b.order ? 1 : -1);
+    const tableA      = state.cards.filter(c => c.location === 'tble' + this.playerANum).sort((a, b) => a.order > b.order ? 1 : -1);
+    const tableB      = state.cards.filter(c => c.location === 'tble' + this.playerBNum).sort((a, b) => a.order > b.order ? 1 : -1);
+    const playA       = state.cards.filter(c => c.location === 'play' + this.playerANum).sort((a, b) => a.order > b.order ? 1 : -1);
+    const playB       = state.cards.filter(c => c.location === 'play' + this.playerBNum).sort((a, b) => a.order > b.order ? 1 : -1);
+    const graveyardA  = state.cards.filter(c => c.location === 'grav' + this.playerANum).sort((a, b) => a.order > b.order ? 1 : -1);
+    const graveyardB  = state.cards.filter(c => c.location === 'grav' + this.playerBNum).sort((a, b) => a.order > b.order ? 1 : -1);
+    return { deck,  hand,  table,  play,  graveyard,
+             deckA, handA, tableA, playA, graveyardA, 
+             deckB, handB, tableB, playB, graveyardB };
+  }
+
 
 
 
@@ -210,29 +232,32 @@ export class GameStateService {
     const gId = params?.gId || '';
     const manaForUncolor = params.manaForUncolor || [0,0,0,0,0,0];
     switch (action) {
-      case 'start-game':              nextState.status = 'playing'; break;
-      case 'skip-phase':              this.endPhase(nextState); break;
-      case 'draw':                    this.draw(nextState);  break;
-      case 'tap-land':                this.tapLand(nextState, gId); break;
-      case 'untap-card':              this.untapCard(nextState, gId); break;
-      case 'untap-all':               this.untapAll(nextState); break;
-      case 'select-card-to-discard':  this.discardCard(nextState, gId); break;
-      case 'burn-mana':               this.burnMana(nextState); break;
-      case 'summon-land':             this.summonLand(nextState, gId); break;
-      case 'summon-creature':         this.summonCreature(nextState, gId, manaForUncolor); break;
-      case 'summon-instant-spell':    this.summonInstantSpell(nextState, params); break;
-      case 'cancel-summon':           this.cancelSummonOperations(nextState); break;
-      case 'end-interrupting':        this.endInterrupting(nextState); break;
+      case 'start-game':                nextState.status = 'playing'; break;
+      case 'skip-phase':                this.endPhase(nextState); break;
+      case 'draw':                      this.draw(nextState);  break;
+      case 'tap-land':                  this.tapLand(nextState, gId); break;
+      case 'untap-card':                this.untapCard(nextState, gId); break;
+      case 'untap-all':                 this.untapAll(nextState); break;
+      case 'select-attacking-creature': this.selectAttackingCreature(nextState, gId); break;
+      case 'cancel-attack':             this.cancelAttack(nextState); break;
+      case 'submit-attack':             this.submitAttack(nextState); break;
+      case 'select-defending-creature': this.selectDefendingCreature(nextState, params); break;
+      case 'cancel-defense':            this.cancelDefense(nextState); break;
+      case 'submit-defense':            this.submitDefense(nextState); break;
+      case 'end-combat':                this.endCombat(nextState); break;
+      case 'select-card-to-discard':    this.discardCard(nextState, gId); break;
+      case 'burn-mana':                 this.burnMana(nextState); break;
+      case 'summon-land':               this.summonLand(nextState, gId); break;
+      case 'summon-creature':           this.summonCreature(nextState, gId, manaForUncolor); break;
+      case 'summon-instant-spell':      this.summonInstantSpell(nextState, params); break;
+      case 'cancel-summon':             this.cancelSummonOperations(nextState); break;
+      case 'end-interrupting':          this.endInterrupting(nextState); break;
 
-// select-target-creature
-// select-target-player
-// cancel-target-selection
-// complete-target-selection
-// select-attacking-creature
-// unselect-attacking-creature
-// submit-attack
-// select-defending-creature
-// submit-defense
+    }
+
+    // TODO: DELETE THIS
+    if (nextState.phase !== 'combat') {
+      nextState.cards.filter(c => c.status?.slice(0,6) === 'combat').forEach(c => c.status = null);
     }
 
     // this.setNextOptions(nextState);
@@ -274,7 +299,7 @@ export class GameStateService {
   }
 
   private draw(nextState: TGameState) {
-    const card = this.getCards(nextState, 'playerA').deck.at(-1);
+    const card = this.getCards(nextState, 'playerA').deck[0];
     if (card) {
       card.location = this.yourHand();
       this.getPlayers(nextState).playerA.drawnCards += 1;
@@ -445,19 +470,89 @@ export class GameStateService {
   }
 
 
-  // Check the amount of damage for every creature, and destroys them if needed
-  private checkCreatureDamage(nextState: TGameState) {
-    const table = nextState.cards.filter(c => c.type === 'creature' && c.location.slice(0, 4) === 'tble');
-    table.forEach(card => {
-      if ((card.defense || 0) <= (card.damage || 0)) {
-        this.moveCard(nextState, card.gId, 'grav');
-      }
+
+
+  private selectAttackingCreature(nextState: TGameState, gId: string) {
+    const { table } = this.getCards(nextState, 'playerA');
+    const creature = table.find(c => c.gId === gId);
+    if (creature) { creature.status = 'combat:attacking'; creature.isTapped = true; }
+  }
+
+  private cancelAttack(nextState: TGameState) {
+    const attackingCreatures = nextState.cards.filter(c => c.status === 'combat:attacking');
+    attackingCreatures.forEach(card => {
+      card.status = null;
+      card.isTapped = false;
     });
   }
 
+  private submitAttack(nextState: TGameState) {
+    const { playerA, playerB } = this.getPlayers(nextState);
+    // nextState.subPhase = ESubPhase.attacking;
+    nextState.subPhase = ESubPhase.selectDefense;
+    nextState.control = this.playerBNum; // Switch control
+    playerB.controlTime = (new Date()).getTime();
+    console.log('SERVICE - Submitting Atack. Switching CONTROL to opponent => control = ', nextState.control);
+  }
 
+  private selectDefendingCreature(nextState: TGameState, params: TActionParams) {
+    const { table } = this.getCards(nextState, 'playerA');
+    const gId = params.gId || '';
+    const creature = table.find(c => c.gId === gId);
+    if (creature) {
+      if (params.targets && params.targets.length) {
+        creature.status = 'combat:defending';
+        creature.targets = params.targets;
+      } else {
+        nextState.cards.filter(c => c.status === 'combat:selectingTarget').forEach(c => c.status = null); // unselect previous (if any)
+        creature.status = 'combat:selectingTarget';
+      }
+    }
+  }
 
+  private cancelDefense(nextState: TGameState) {
+    const defendingCreatures = nextState.cards.filter(c => c.status === 'combat:defending' || c.status === 'combat:selectingTarget');
+    defendingCreatures.forEach(card => card.status = null);
+  }
 
+  private submitDefense(nextState: TGameState) {
+    const { playerA, playerB, turnPlayer } = this.getPlayers(nextState);
+
+    const attackingCreatures = nextState.cards.filter(c => c.status === 'combat:attacking');
+    const defendingCreatures = nextState.cards.filter(c => c.status === 'combat:defending');
+    nextState.subPhase = ESubPhase.afterCombat;
+
+    let totalDamage = 0;
+    attackingCreatures.forEach(attackingCard => {
+      const defendingCard = defendingCreatures.find(c => c.targets?.includes(attackingCard.gId));
+      const attackerTxt = `Attacking ${attackingCard.gId} (${attackingCard.attack}/${attackingCard.defense})`;
+
+      if (defendingCard) { // Blocking
+        defendingCard.damage = attackingCard.attack;
+        attackingCard.damage = defendingCard.attack;
+        
+        const defenserTxt = `Defending ${defendingCard.gId} (${attackingCard.attack}/${attackingCard.defense})`;
+
+        console.log(`${attackerTxt} -----> deals ${attackingCard.attack} points of damage to ${defenserTxt}`);
+        console.log(`${defenserTxt} -----> deals ${defendingCard.attack} points of damage to ${attackerTxt}`);
+
+        // Wait for instants before this.....
+        if ((attackingCard.defense || 0) <= (attackingCard.damage || 0)) { console.log('attacking', attackingCard.gId, 'dies'); }
+        if ((defendingCard.defense || 0) <= (attackingCard.damage || 0)) { console.log('defending', defendingCard.gId, 'dies'); }
+        
+      } else {
+        console.log(`${attackerTxt} -----> deals ${attackingCard.attack} points of damage to player${this.playerANum}`); // You are the defender
+        totalDamage += attackingCard.attack; 
+      } // No block
+    });
+
+    playerA.life -= totalDamage; // None blocked creatures damage defending player
+  }
+
+  private endCombat(nextState: TGameState) {
+    // this.checkCreatureDamage(nextState);  // Check those creatures that received more damage than defense, and kill them    
+    this.endPhase(nextState);
+  }
 
 
 
@@ -465,7 +560,8 @@ export class GameStateService {
   // ----------------------------------------------------------------------------------
 
   // Advances the phase for the given state, or ends the turn
-  private jumpToNextPhase(nextState: TGameState) {
+  private endPhase(nextState: TGameState) {
+    this.cancelSummonOperations(nextState);
     switch (nextState.phase) {
       case EPhase.untap:        nextState.phase = EPhase.maintenance; break;
       case EPhase.maintenance:  nextState.phase = EPhase.draw; break;
@@ -476,24 +572,23 @@ export class GameStateService {
       case EPhase.discard:      nextState.phase = EPhase.end; break;
       case EPhase.end:          this.endTurn(nextState); break;
     }
-  }
 
-  // End the phase
-  private endPhase(nextState: TGameState) {
-    this.cancelSummonOperations(nextState);
-    this.jumpToNextPhase(nextState);
+    // If starting combat phase, init sub-phase
+    nextState.subPhase = null;
+    if (nextState.phase === EPhase.combat) { nextState.subPhase = ESubPhase.selectAttack; }
   }
 
   // End the turn and reset all turn counters and values
   private endTurn(nextState: TGameState) {
     const { turnPlayer } = this.getPlayers(nextState);
-    const { table } = this.getCards(nextState, 'turn');
+    const { table, tableA } = this.getGroups(nextState);
     turnPlayer.drawnCards = 0;
     turnPlayer.summonedLands = 0;
     nextState.turn = nextState.turn === '1' ? '2' : '1';  // change current player
     nextState.control = nextState.turn; // give control to the other player
     nextState.phase = EPhase.untap;
-    table.filter(c => c.status === 'sickness').forEach(c => c.status = null); // Summon sickness ends
+    tableA.filter(c => c.status === 'sickness').forEach(c => c.status = null); // Summon sickness ends
+    table.filter(c => c.type === 'creature').forEach(c => c.damage = 0); // Damage on creatures is reset
 
     // if (nextState.turn)
     if (turnPlayer.life <= 0) { this.endGame(nextState, nextState.turn); return; }
@@ -580,6 +675,16 @@ export class GameStateService {
     for (let t = 0; t <= 5; t++) { manaPool[t] -= manaForUncolor[t]; }  // Subtract uncolored mana
   }
 
+  // Check the amount of damage for every creature, and destroys them if needed
+  private checkCreatureDamage(nextState: TGameState) {
+    const table = nextState.cards.filter(c => c.type === 'creature' && c.location.slice(0, 4) === 'tble');
+    table.forEach(card => {
+      if ((card.defense || 0) <= (card.damage || 0)) {
+        this.moveCard(nextState, card.gId, 'grav');
+      }
+    });
+  }
+
 
 
 
@@ -602,7 +707,9 @@ export class GameStateService {
 
     const { playerA, playerB, turnPlayer } = this.getPlayers(state);
     const { hand, table } = this.getCards(state, 'playerA'); // Your cards
-    
+
+    // Shortcut to check if the current phase is any of the given
+    const isPhase = (...phases: string[]) => phases.includes(state.phase);    
 
     let canSkipPhase = true;
     playerA.help = '';
@@ -615,18 +722,48 @@ export class GameStateService {
 
 
 
-    // If it's not your turn, yet you have control (casting interruptions)
+    // If it's not your turn, yet you have control (casting interruptions, defend from atack, ...)
     if (state.turn !== this.playerANum) {
-      const { table } = this.getCards(state, 'playerB');
-      
-      // You may tap lands to produce mana
-      table.filter(c => c.type === 'land' && !c.isTapped).forEach(card => {
-        const option: TGameOption = { action: 'tap-land', params: { gId: card.gId }, text: `Tap ${card.name}` };
-        state.options.push(option);
-        card.selectableAction = option;
-      });      
+      const tableA = state.cards.filter(c => c.location === 'tble' + this.playerANum).sort((a, b) => a.order > b.order ? 1 : -1);
+      const tableB = state.cards.filter(c => c.location === 'tble' + this.playerBNum).sort((a, b) => a.order > b.order ? 1 : -1);
 
-      state.options.push({ action: 'end-interrupting', params: {}, text: `Skip` });
+      // Combat - Defending from an atack
+      if (isPhase('combat')) {
+        if (state.subPhase === 'selectDefense') {
+          state.options.push({ action: 'cancel-defense', params: {}, text: 'Reset you defending selection' });
+          state.options.push({ action: 'submit-defense', params: {}, text: 'Defend with selected creatures' });
+  
+          // You may select a creature to defend your opponents attack
+          tableA.filter(c => c.type === 'creature' && !c.isTapped && c.status !== 'combat:defending').forEach(card => {
+            const option: TGameOption = { action: 'select-defending-creature', params: { gId: card.gId }, text: `Defend with ${card.name}` };
+            state.options.push(option);
+            card.selectableAction = option;
+          });
+  
+          // You may select the opponent's attacking creature as a target of your defending creature
+          const defenderToAssign = state.cards.find(c => c.status === 'combat:selectingTarget');
+          if (defenderToAssign) {
+            tableB.filter(c => c.status === 'combat:attacking').forEach(card => {
+              const params = { gId: defenderToAssign.gId, targets: [card.gId] };
+              const option: TGameOption = { action: 'select-defending-creature', params, text: `Defend ${card.name} with ${defenderToAssign.name}` };
+              state.options.push(option);
+              card.selectableAction = option;
+            });
+          }
+        } else if (state.subPhase === 'afterCombat') {
+          state.options.push({ action: 'end-interrupting', params: {}, text: `Skip` });
+        }
+
+      } else { // Opponent is not on the combat phase
+        state.options.push({ action: 'end-interrupting', params: {}, text: `Skip` });
+
+        // You may tap lands to produce mana
+        tableA.filter(c => c.type === 'land' && !c.isTapped).forEach(card => {
+          const option: TGameOption = { action: 'tap-land', params: { gId: card.gId }, text: `Tap ${card.name}` };
+          state.options.push(option);
+          card.selectableAction = option;
+        });
+      }
 
       return state; // <---- Skip generic options (it's not your turn)
     }
@@ -654,8 +791,7 @@ export class GameStateService {
 
 
 
-    // Shortcut to check if the current phase is any of the given
-    const isPhase = (...phases: string[]) => phases.indexOf(state.phase) >= 0
+
 
     // Casting / Summoning:
 
@@ -698,6 +834,34 @@ export class GameStateService {
         state.options.push(option);
         card.selectableAction = option;
       });
+    }
+
+
+    // Combat
+    if (isPhase('combat')) {
+      const isAttackOn = !!table.filter(c => c.status === 'combat:attacking').length; // Are you leading an attack?
+
+      if (state.subPhase === 'selectAttack') {
+        table.filter(c => c.type === 'creature' && !c.isTapped && c.status !== 'sickness').forEach(card => {
+          if (card.status !== 'combat:attacking') {
+            const option: TGameOption = { action: 'select-attacking-creature', params: { gId: card.gId }, text: `Attack with ${card.name}` };
+            state.options.push(option);
+            card.selectableAction = option;
+          }
+        });
+
+        // If you have selected attacking creatures, you may submit the attack
+        if (isAttackOn) { 
+          state.options.push({ action: 'cancel-attack', params: {}, text: 'Cancel the current attacking selection' });
+          state.options.push({ action: 'submit-attack', params: {}, text: 'Attack with selected creatures' });
+        }
+      }
+
+      // You may finish the combat and end the spell-stack after the combat
+      if (state.subPhase === 'afterCombat') { state.options.push({ action: 'end-combat', params: {}, text: 'Continue with the game' }); }
+
+      // If ongoing combat, you can't skip to the next phase, you need to finish with the combat
+      if (isAttackOn) { canSkipPhase = false; }
     }
 
     // Common turn actions:

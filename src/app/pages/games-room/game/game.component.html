@@ -116,6 +116,10 @@
               (mouseover)="hoverTableCard(card)"
               (mouseleave)="clearHover()">
           <img [src]="'/assets/images/cards/' + card.image">
+          <span class="damage-points" *ngIf="card.damage">
+            <span>{{card.damage}}</span>
+            <span class="icon-power"></span>
+          </span>
           <div style="position: absolute; bottom: 60px; margin-left: 5px; color: white;">
             <br/>gId={{card.gId}}
             <!-- <br/>status={{card.status}} -->
@@ -197,6 +201,8 @@
              [class.selectable-card]="!!card.selectableAction || !!card.selectableTarget"
              [class.is-tapped]="card.isTapped"
              [class.is-sick]="card.status === 'sickness'"
+             [class.is-selected-attack]="card.status === 'combat:attacking'"
+             [class.is-selected-defense]="card.status === 'combat:defending'"
              [style.left.px]="card.posX"
              [style.top.px]="card.posY"
              [style.z-index]="card.zInd"
@@ -206,9 +212,13 @@
              (mouseover)="hoverTableCard(card)"
              (mouseleave)="clearHover()">
           <img [src]="'/assets/images/cards/' + card.image">
+          <span class="damage-points" *ngIf="card.damage">
+            <span>{{card.damage}}</span>
+            <span class="icon-power"></span>
+          </span>
           <div style="position: absolute; bottom: 60px; margin-left: 5px; color: white;">
             <br/>gId={{card.gId}}
-            <!-- <br/>status={{card.status}} -->
+            <br/>status={{card.status}}
             <br/>damage={{card.damage}}
           </div>
           <!-- <div style="position: absolute;">
@@ -236,9 +246,12 @@
 
   <!-- Dialog: Selecting Mana (cherry pick on summoning) -->
   <dialog-selecting-mana *ngIf="panel === 'selecting-mana'" [summonOp]="summonOp"></dialog-selecting-mana>
+
   <dialog-summon-event *ngIf="panel === 'summon-event-A'" summoner="A" (end)="panel = null"></dialog-summon-event>
-  <dialog-summon-event *ngIf="panel === 'summon-event-B'" summoner="B" (end)="panel = null"></dialog-summon-event>
-  <!-- panel={{panel}} -->
+  <dialog-summon-event *ngIf="panel === 'summon-event-B'" summoner="B" (end)="panel = null"></dialog-summon-event>B
+  <dialog-combat *ngIf="panel === 'combat-A'" attacker="A" (end)="panel = null" (hoverCard)="hoverCard($event)" (clearHover)="clearHover()"></dialog-combat>
+  <dialog-combat *ngIf="panel === 'combat-B'" attacker="B" (end)="panel = null" (hoverCard)="hoverCard($event)" (clearHover)="clearHover()"></dialog-combat>
+  panel={{panel}}
 
 
 </div>

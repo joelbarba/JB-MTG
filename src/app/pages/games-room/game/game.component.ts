@@ -5,12 +5,13 @@ import { CommonModule } from '@angular/common';
 import { BfConfirmService, BfDnDModule, BfDnDService, BfUiLibModule } from '@blueface_npm/bf-ui-lib';
 import { GameStateService } from '../game-state.service';
 import { filter, map, Subscription, timeout } from 'rxjs';
-import { EPhase, TGameState, TGameCard, TExtGameCard, TPlayer, TAction, TCast, TActionParams } from '../../../core/types';
+import { EPhase, TGameState, TGameCard, TExtGameCard, TPlayer, TAction, TCast, TActionParams, ESubPhase } from '../../../core/types';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { DialogSelectingManaComponent } from './dialog-selecting-mana/dialog-selecting-mana.component';
 import { DialogSummonEventComponent } from './dialog-summon-event/dialog-summon-event.component';
+import { DialogCombatComponent } from './dialog-combat/dialog-combat.component';
 
 export interface ICard {
   img: string;
@@ -41,7 +42,9 @@ export type TPanel =
   'selecting-mana'
 | 'selecting-discard'
 | 'summon-event-A'
-| 'summon-event-B';
+| 'summon-event-B'
+| 'combat-A'
+| 'combat-B';
 
 
 @Component({
@@ -55,6 +58,7 @@ export type TPanel =
     BfUiLibModule,
     DialogSelectingManaComponent,
     DialogSummonEventComponent,
+    DialogCombatComponent,
   ],
   templateUrl: './game.component.html',
   styleUrls: ['./game.component.scss'],
@@ -219,6 +223,8 @@ export class GameComponent {
       }, 100);
     }
 
+    if (this.state.phase === 'combat') { return; } // For now, avoid autoadvance during combat
+
     // If you can only skip phase, do it
     if (yourOptions.length === 1 && yourOptions[0].action === 'skip-phase') { return advancePhase(); }
 
@@ -232,8 +238,8 @@ export class GameComponent {
     if (this.state.phase === 'draw' && !yourOptions.find(o => o.action === 'draw')) { return advancePhase(); }
 
     // Don't stop at the combat phase if you don't have creatures to attack
-    const combatCreatures = this.tableA.filter(c => c.type === 'creature' && !c.status && !c.isTapped);
-    if (this.state.phase === 'combat' && combatCreatures.length === 0) { return advancePhase(); }
+    // const combatCreatures = this.tableA.filter(c => c.type === 'creature' && c.status !== 'sickness' && !c.isTapped);
+    // if (this.state.phase === 'combat' && combatCreatures.length === 0) { return advancePhase(); }
 
     // Don't stop at the discard phase, if you don't have to discard
     if (this.state.phase === 'discard' && !yourOptions.find(o => o.action === 'select-card-to-discard')) { return advancePhase(); }
@@ -374,19 +380,7 @@ export class GameComponent {
     // }
 
     this.updateSummonOperation();
-    if (this.summonOp.status === 'selectingMana') {
-      // this.dialog = {
-      //   type: 'medium',
-      //   title: this.summonOp.title,
-      //   text: this.summonOp.text,
-      //   icon: 'icon-fire',
-      //   // background: 'crimson',
-      //   // color: 'white',
-      //   buttons: [
-      //     { text: 'Cancel', action: 'burn-mana' }
-      //   ]
-      // };
-    }
+    this.updateCombatOperation();
   }
 
 
@@ -536,6 +530,39 @@ export class GameComponent {
   //   });
   // }
 
+
+
+  // On state change, detect and update the status of a combat operation
+  updateCombatOperation() {
+
+    if (this.state.phase === 'combat') {
+      this.panel = null;
+      
+      // If you have attacking creatures (you are leading an attack)
+      const attackingCreatures = this.tableA.find(c => c.status === 'combat:attacking');
+      if (attackingCreatures) {
+        this.panel = 'combat-A';
+        if (this.game.state.subPhase === 'selectAttack')  { this.mainInfo = 'Selecting creatures to attack'; }
+        if (this.game.state.subPhase === 'selectDefense') { this.mainInfo = 'Waiting for the opponent to select a defense'; }
+
+      }
+  
+      // If the opponent is attacking you
+      const opponentAttack = this.tableB.find(c => c.status === 'combat:attacking');
+      const defendingCreatures = this.tableA.find(c => c.status === 'combat:defending');
+      if (opponentAttack || defendingCreatures) {
+        this.panel = 'combat-B';
+        if (this.game.state.subPhase === 'selectAttack')  { this.mainInfo = 'Waiting for the opponent to attack'; }
+        if (this.game.state.subPhase === 'selectDefense') { this.mainInfo = 'Selecting creatures to defend'; }
+      }
+
+    } else {
+      if (this.panel === 'combat-A') { this.panel = null; }
+      if (this.panel === 'combat-B') { this.panel = null; }
+    }
+
+
+  }
 
 
 

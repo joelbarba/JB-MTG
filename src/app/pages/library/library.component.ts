@@ -51,7 +51,14 @@ export class LibraryComponent {
     { value: 'red'},
     { value: 'green'},
   ];
-  cardTypes = [{ value: 'land'}, { value: 'creature'}, { value:  'instant'}, { value:  'artifact'}];
+  cardTypes = [
+    { value: 'land'}, 
+    { value: 'creature'}, 
+    { value: 'instant'}, 
+    { value: 'artifact'},
+    { value: 'sorcery'},
+    { value: 'enchantment'},
+  ];
 
   constructor(
     public auth: AuthService,
@@ -64,9 +71,16 @@ export class LibraryComponent {
   async ngOnInit() {
     const allDocs: QuerySnapshot<DocumentData> = await getDocs(collection(this.firestore, 'cards'));
     allDocs.forEach((doc: QueryDocumentSnapshot<DocumentData>) => this.cards.push({ id: doc.id, ...doc.data() } as TCard));
+    this.cards.sort((a,b) => a.id > b.id ? 1 : -1);
     console.log(this.cards);
   }
 
+
+
+  selectCard(card: TCard) {
+    this.selectedCard = card;
+    this.isEdit = true;
+  }
 
   async saveCard(card: TCard) {
     card.cast = card.cast.map((v: number | string) => Number.parseInt(v as string, 10)) as TCast;
@@ -76,4 +90,27 @@ export class LibraryComponent {
     this.isEdit = false;
   }
 
+
+  async newCard() {
+    const lastId = this.cards.at(-1)?.id;
+    if (!lastId) { return; }
+    const id = 'c' + ((Number.parseInt(lastId.slice(1)) + 1) + '').padStart(6, '0');
+    const card: TCard = {
+      id,
+      name    : 'New Card',
+      image   : 'image',
+      color   : 'uncolored',
+      cast    : [0,0,0,0,0,0],
+      text    : '',
+      type    : 'land',
+      attack  : 0,
+      defense : 0,
+    };
+    console.log('New Card:', card);
+    await setDoc(doc(this.firestore, 'cards', id), card);
+    this.cards.push(card);
+    this.selectCard(card);
+  }
+
+  numArr(num: number): Array<number> { return Array.from(Array(num).keys()) }
 }

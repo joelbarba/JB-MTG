@@ -223,6 +223,16 @@ $white-dark: gainsboro;
           background: white;
           border-radius: 5px;
           img { max-height: 160px; }
+          .damage-points {
+            position: absolute;
+            left: calc(50% - 30px);
+            top: 20px;
+            font-size: 60px;
+            font-weight: 600;
+            -webkit-text-stroke: 2px #fff;
+            color: red;
+            .icon-power { font-size: 30px; }
+          }
         }
       }
 
@@ -308,6 +318,9 @@ $white-dark: gainsboro;
 }
 .play-card.is-sick { // for summon sickness (creatures)
   opacity: 0.35;
+}
+.play-card.is-selected-attack, .play-card.is-selected-defending { // when combat
+  opacity: 1;
 }
 
 .hand-card.is-summoning {

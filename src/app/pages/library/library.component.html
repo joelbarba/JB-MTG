@@ -1,28 +1,46 @@
-<h2>Library</h2>
+<h2>
+  Library  
+</h2>
 <!-- cards$ = {{ cards$ | async | json }} -->
 <div class="page">
   <div class="list" *ngIf="cards.length">
   <!-- <div class="list" *ngIf="cards$ | async as cards"> -->
-    <div class="card-wrapper" *ngFor="let card of cards" (click)="selectedCard = card">
+    <div class="card-wrapper" *ngFor="let card of cards" (click)="selectCard(card)">
       {{card.id}}
       <div class="card">
         <img [src]="'/assets/images/cards/' + card.image">
       </div>
     </div>
   
+
+    <div style="margin: 30px 0;">
+      <bf-btn bfText="New Card" (bfClick)="newCard()"></bf-btn>
+    </div>
   </div>
   
   <div class="details">
     <div *ngIf="selectedCard">
       <h3>Details: {{selectedCard.id}}</h3>
       <img [src]="'/assets/images/cards/' + selectedCard.image">
-      <div *ngIf="!isEdit">
-        <p><b>Name:</b>  {{selectedCard.name}}</p>
-        <p><b>Color:</b> {{selectedCard.color}}</p>
-        <p><b>Type:</b>  {{selectedCard.type}}</p>
-        <p><b>Cast:</b>  {{selectedCard.cast | json}}</p>
-        <p><b>Image:</b> {{selectedCard.image}}</p>
-        <p><b>Text:</b>  {{selectedCard.text}}</p>
+      <div *ngIf="!isEdit" style="margin-top: 15px;">
+        <div style="display: flex; margin: 5px 0;">
+          <div style="flex: 1"><b>Name:</b>  {{selectedCard.name}}</div>
+          <div style="flex: 1"><b>Image:</b> {{selectedCard.image}}</div>
+        </div>
+        <div style="display: flex; margin: 5px 0;">
+          <div style="flex: 1"><b>Color:</b> {{selectedCard.color}}</div>
+          <div style="flex: 1"><b>Type:</b>  {{selectedCard.type}}</div>
+        </div>
+        <p><b>Cast:</b>  {{selectedCard.cast | json}} <span> = </span>
+          <span *ngFor="let m of numArr(selectedCard.cast[0])" class="mana"> <img src="assets/images/oneMana.png">  </span>
+          <span *ngFor="let m of numArr(selectedCard.cast[1])" class="mana"> <img src="assets/images/blueMana.png"> </span>
+          <span *ngFor="let m of numArr(selectedCard.cast[2])" class="mana"> <img src="assets/images/whiteMana.png"></span>
+          <span *ngFor="let m of numArr(selectedCard.cast[3])" class="mana"> <img src="assets/images/blackMana.png"></span>
+          <span *ngFor="let m of numArr(selectedCard.cast[4])" class="mana"> <img src="assets/images/redMana.png">  </span>
+          <span *ngFor="let m of numArr(selectedCard.cast[5])" class="mana"> <img src="assets/images/greenMana.png"></span>        
+        </p>
+        <p *ngIf="selectedCard.type === 'creature'"><b>Force:</b> {{selectedCard.attack}} / {{selectedCard.defense}}</p>
+        <p><b>Text:</b> {{selectedCard.text}}</p>
         <bf-btn bfText="Edit" (bfClick)="isEdit = true"></bf-btn>
       </div>
 
@@ -62,8 +80,11 @@
         
         <bf-input bfLabel="Text"  [(ngModel)]="selectedCard.text"></bf-input>
 
+        <bf-btn bfText="Cancel" (bfClick)="isEdit = false" class="secondary" style="margin-right: 15px;"></bf-btn>
         <bf-btn bfText="Save Details" (bfClick)="saveCard(selectedCard)"></bf-btn>
       </div>
     </div>
   </div>
+
+  
 </div>

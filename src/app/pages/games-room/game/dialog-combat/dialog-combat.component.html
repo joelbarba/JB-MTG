@@ -1,0 +1,110 @@
+<div class="combat" [class.minimized]="minimized">
+  <div class="min-btn" (click)="minimized = !minimized">{{minimized ? title : '-'}}</div>
+  <h2>{{title}}</h2>
+
+
+
+
+  <!-- View for attacker -->
+  <div class="arena" *ngIf="attacker === 'A'">
+    <div class="creature-list">
+      <div class="combat-col" *ngFor="let col of combatCards">
+
+        <div class="panel-card" *ngIf="col.defendingCard" (mouseover)="hoverCard.emit(col.defendingCard)" (mouseleave)="clearHover.emit()">
+          <img [src]="'/assets/images/cards/' + col.defendingCard.image">
+          <span class="damage-points" *ngIf="col.defendingCard.damage">
+            <span>{{col.defendingCard.damage}}</span>
+            <span class="icon-power"></span>
+          </span>
+        </div>
+
+        <div class="panel-card empty-slot" *ngIf="subPhase !== 'selectAttack' && !col.defendingCard">
+          <img>
+          <span class="damage-points" *ngIf="subPhase === 'afterCombat' && col.attackingCard.attack">
+            <span>{{col.attackingCard.attack}}</span>
+            <span class="icon-power"></span>
+          </span>
+        </div>
+
+        <div *ngIf="subPhase !== 'selectAttack'"><span class="icon-arrow-up16"></span></div>
+
+        <div class="panel-card" (mouseover)="hoverCard.emit(col.attackingCard)" (mouseleave)="clearHover.emit()">
+          <img [src]="'/assets/images/cards/' + col.attackingCard.image">
+          <span class="damage-points" *ngIf="col.attackingCard.damage">
+            <span>{{col.attackingCard.damage}}</span>
+            <span class="icon-power"></span>
+          </span>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+
+
+
+
+  <!-- View for defender -->
+  <div class="arena" *ngIf="attacker === 'B'">
+    <div class="creature-list">
+      <div class="combat-col" *ngFor="let col of combatCards" 
+           [class.is-selectable]="!!defenderLookingForTarget"
+           (click)="clickCol(col)"
+           (mouseover)="hoverCol(col)"
+           (mouseleave)="hoverCol()">
+
+        <div class="panel-card" (mouseover)="hoverCard.emit(col.attackingCard)" (mouseleave)="clearHover.emit()">
+          <img [src]="'/assets/images/cards/' + col.attackingCard.image">
+          <span class="damage-points" *ngIf="col.attackingCard.damage">
+            <span>{{col.attackingCard.damage}}</span>
+            <span class="icon-power"></span>
+          </span>
+        </div>
+
+        <div><span class="icon-arrow-down16"></span></div>
+
+        <div class="panel-card" *ngIf="col.defendingCard" (mouseover)="hoverCard.emit(col.defendingCard)" (mouseleave)="clearHover.emit()">
+          <img [src]="'/assets/images/cards/' + col.defendingCard.image">
+          <span class="damage-points" *ngIf="col.defendingCard.damage">
+            <span>{{col.defendingCard.damage}}</span>
+            <span class="icon-power"></span>
+          </span>
+        </div>
+
+        <div class="panel-card" *ngIf="!col.defendingCard" 
+             [class.empty-slot]="!col.hoverDefender"
+             (mouseover)="col.hoverDefender && hoverCard.emit(col.hoverDefender)" (mouseleave)="clearHover.emit()">
+          <img [hidden]="col.hoverDefender">
+          <img [hidden]="!col.hoverDefender" [src]="'/assets/images/cards/' + col.hoverDefender?.image">
+          <span class="damage-points" *ngIf="subPhase === 'afterCombat' && col.attackingCard.attack">
+            <span>{{col.attackingCard.attack}}</span>
+            <span class="icon-power"></span>
+          </span>
+        </div>
+        <!-- defenderLookingForTarget={{defenderLookingForTarget?.name | json}} -->
+
+      </div>
+    </div>
+  </div>
+
+
+  
+
+  <div>
+    <div>CONTROL = {{game.state.control}}</div>   
+    subPhase={{subPhase}}
+    <span *ngIf="itemInfo">{{itemInfo}}</span>
+    <span *ngIf="!itemInfo">{{mainInfo}}</span>
+  </div>
+  
+
+  <div class="btns-box">
+    <bf-btn *ngIf="attacker === 'A' && subPhase === 'selectAttack'"  bfText="Cancel"  [bfDisabled]="!youControl" (bfClick)="cancelAttack()"  bfIcon="icon-cross"></bf-btn>
+    <bf-btn *ngIf="attacker === 'A' && subPhase === 'selectAttack'"  bfText="Attack"  [bfDisabled]="!youControl" (bfClick)="submitAttack()"  bfIcon="icon-arrow-right3"></bf-btn>
+    <bf-btn *ngIf="attacker === 'B' && subPhase === 'selectDefense'" bfText="Cancel"  [bfDisabled]="!youControl" (bfClick)="cancelDefense()" bfIcon="icon-cross"></bf-btn>
+    <bf-btn *ngIf="attacker === 'B' && subPhase === 'selectDefense'" bfText="Defense" [bfDisabled]="!youControl" (bfClick)="submitDefense()" bfIcon="icon-arrow-right3"></bf-btn>
+
+    <bf-btn *ngIf="subPhase === 'afterCombat'" bfText="Ok, continue" [bfDisabled]="!youControl" (bfClick)="endCombat()" bfIcon="icon-arrow-right3"></bf-btn>
+  </div>
+
+</div>

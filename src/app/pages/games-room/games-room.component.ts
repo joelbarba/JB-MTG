@@ -70,27 +70,34 @@ export class GamesRoomComponent {
     }
 
     const deck1 = [
+      getCardById('c000053'), // Ornithopter
       getCardById('c000004'), // mountain
       getCardById('c000004'), // mountain
       getCardById('c000002'), // plains
       getCardById('c000001'), // island
       getCardById('c000005'), // forest
-      getCardById('c000036'), // gray ogre
-      getCardById('c000036'), // gray ogre
-      getCardById('c000032'), // lightning bolt
-      getCardById('c000032'), // lightning bolt
-      getCardById('c000032'), // lightning bolt
-      getCardById('c000036'), // gray ogre
-      getCardById('c000036'), // gray ogre
-      getCardById('c000036'), // gray ogre
-      getCardById('c000032'), // lightning bolt
-      getCardById('c000032'), // lightning bolt
-      getCardById('c000032'), // lightning bolt
+      getCardById('c000005'), // forest
+      getCardById('c000036'), // gray ogre (2/2)
+      getCardById('c000037'), // Brass Man (1/3)
+      getCardById('c000045'), // Goblin Balloon Brigade (1/1)
+      getCardById('c000052'), // Mons's Goblin Raiders (1/1)
+      getCardById('c000041'), // Elvish Archers (2/1)
+      getCardById('c000044'), // Giant Spider (2/4)
+      getCardById('c000046'), // Granite Gargoyle (2/2)
+      getCardById('c000047'), // Grizzly Bears (2/2)
+      getCardById('c000048'), // Hill Giant (3/3)
+      getCardById('c000049'), // Hurloon Minotaur (2/3)
+      getCardById('c000056'), // Wall of Ice (0/7)
       getCardById('c000004'), // mountain
       getCardById('c000004'), // mountain
       getCardById('c000004'), // mountain
       getCardById('c000004'), // mountain
       getCardById('c000004'), // mountain
+      // getCardById('c0000'), // 
+      // getCardById('c0000'), // 
+      getCardById('c000032'), // lightning bolt
+      getCardById('c000032'), // lightning bolt
+      getCardById('c000032'), // lightning bolt
       getCardById('c000002'), // plains
       getCardById('c000002'), // plains
       getCardById('c000002'), // plains
@@ -117,13 +124,31 @@ export class GamesRoomComponent {
      .sort((a, b) => a.order > b.order ? 1 : -1);     
 
     const deck2 = [
+      getCardById('c000053'), // Ornithopter
       getCardById('c000004'), // mountain
       getCardById('c000004'), // mountain
       getCardById('c000002'), // plains
       getCardById('c000001'), // island
       getCardById('c000005'), // forest
-      getCardById('c000036'), // gray ogre
-      getCardById('c000036'), // gray ogre
+      getCardById('c000005'), // forest
+      getCardById('c000036'), // gray ogre (2/2)
+      getCardById('c000037'), // Brass Man (1/3)
+      getCardById('c000045'), // Goblin Balloon Brigade (1/1)
+      getCardById('c000052'), // Mons's Goblin Raiders (1/1)
+      getCardById('c000041'), // Elvish Archers (2/1)
+      getCardById('c000044'), // Giant Spider (2/4)
+      getCardById('c000046'), // Granite Gargoyle (2/2)
+      getCardById('c000047'), // Grizzly Bears (2/2)
+      getCardById('c000048'), // Hill Giant (3/3)
+      getCardById('c000049'), // Hurloon Minotaur (2/3)
+      getCardById('c000056'), // Wall of Ice (0/7)
+      getCardById('c000004'), // mountain
+      getCardById('c000004'), // mountain
+      getCardById('c000004'), // mountain
+      getCardById('c000004'), // mountain
+      getCardById('c000004'), // mountain
+      // getCardById('c0000'), // 
+      // getCardById('c0000'), // 
       getCardById('c000032'), // lightning bolt
       getCardById('c000032'), // lightning bolt
       getCardById('c000032'), // lightning bolt
@@ -205,6 +230,7 @@ export class GamesRoomComponent {
       status: 'created',
       turn: '1',
       phase: EPhase.untap,
+      subPhase: null,
       player1,
       player2,
       cards,
