@@ -54,6 +54,9 @@ export class DialogCombatComponent {
 
   mainInfo = '';
   itemInfo = '';
+
+  submitDefenseBtnText = 'Defend with current selection';
+  anyDefenders = false; // Whether there is any defender assigned
   
 
   constructor(public game: GameStateService) {}
@@ -123,21 +126,10 @@ export class DialogCombatComponent {
     })
 
 
-    // if (this.attacker === 'A') {
-    //   this.yourCreatures = this.attackingCreatures;
-    //   this.oppCreatures  = this.defendingCreatures;
-    // } else {
-    //   this.yourCreatures = this.defendingCreatures;
-    //   this.oppCreatures  = this.attackingCreatures;
-    // }
-
-    // if (!playerB.controlTime) { this.isRemotePaused = true; }
-    // if (state.control === this.game.playerANum) {
-    //   if (this.stateSub) { this.stateSub.unsubscribe(); }
-    //   this.endSummoning();
-    // }
     this.canSubmitAttack = !!state.options.find(op => op.action === 'submit-attack');
     this.canSubmitDefense = !!state.options.find(op => op.action === 'submit-defense');
+    this.anyDefenders = !!this.defendingCreatures.length;
+    this.submitDefenseBtnText = this.anyDefenders ? 'Defend with current selection' : `Do not defend`;
 
     if (state.control === this.game.playerANum) {
       this.defenderLookingForTarget = this.game.state.cards.find(c => c.status === 'combat:selectingTarget');

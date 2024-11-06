@@ -319,8 +319,8 @@ $white-dark: gainsboro;
 .play-card.is-sick { // for summon sickness (creatures)
   opacity: 0.35;
 }
-.play-card.is-selected-attack, .play-card.is-selected-defending { // when combat
-  opacity: 1;
+.play-card.is-selected-attack, .play-card.is-selected-defense { // when combat
+  display: none;
 }
 
 .hand-card.is-summoning {

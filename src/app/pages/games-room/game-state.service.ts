@@ -550,7 +550,7 @@ export class GameStateService {
   }
 
   private endCombat(nextState: TGameState) {
-    // this.checkCreatureDamage(nextState);  // Check those creatures that received more damage than defense, and kill them    
+    this.checkCreatureDamage(nextState);  // Check those creatures that received more damage than defense, and kill them    
     this.endPhase(nextState);
   }
 
@@ -680,6 +680,7 @@ export class GameStateService {
     const table = nextState.cards.filter(c => c.type === 'creature' && c.location.slice(0, 4) === 'tble');
     table.forEach(card => {
       if ((card.defense || 0) <= (card.damage || 0)) {
+        console.log(`Creature ${card.gId} ${card.name} (${card.attack}/${card.defense}) has received "${card.damage}" points of damage ---> IT DIES (go to graveyard)`);
         this.moveCard(nextState, card.gId, 'grav');
       }
     });

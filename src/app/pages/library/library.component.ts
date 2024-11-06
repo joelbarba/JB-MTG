@@ -84,6 +84,8 @@ export class LibraryComponent {
 
   async saveCard(card: TCard) {
     card.cast = card.cast.map((v: number | string) => Number.parseInt(v as string, 10)) as TCast;
+    if (typeof card.attack === 'string') { card.attack = Number.parseInt(card.attack, 10); }
+    if (typeof card.defense === 'string') { card.defense = Number.parseInt(card.defense, 10); }
     const docObj = card.keyFilter('name, image, color, type, attack, defense, cast, text') as Partial<TCard>;
     console.log('Saving Card', docObj);
     await updateDoc(doc(this.firestore, 'cards', card.id), docObj);

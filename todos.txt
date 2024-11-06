@@ -1,10 +1,23 @@
+- spell-stack mechanism
 - Add graveyard panel to see graveyard cards
 - Show last card image on graveyard
-
-- Opponents Summon event panel (for interruptions / instants)
-
-- Combat operation
+- Fix summoning Brass Man (only uncolored mana)
+- Fix dragging cards on the table
+- Figure out how to do "artifact creature" type
+- Reorder (card.order) when dragging on the table
+- Toast messages + helping messages
+- Style panels properly
+- 1900x1024 size adjustment
 - Add chat
+- Remove top bar + floating config panel (top-right)
+- Visual element to show you have/don't have game control (very intuitively)
+
+- Your cards page
+- Adquire cards page
+- Deck builder page
 
 - Performance improvement: Do not save the static card properties (c0000) on the state.card[] objects
   Merge those properties in memory every state change
+
+- Performance: Move options calculation to a seperate service
+- Split reducer to another service
