@@ -1,6 +1,6 @@
 export type TColor = 'uncolored' | 'blue' | 'white' | 'black' | 'red' | 'green';
 export type TCast = [number, number, number, number, number, number];
-export type TCardType = 'land' | 'creature' | 'instant' | 'artifact' | 'sorcery' | 'enchantment';
+export type TCardType = 'land' | 'creature' | 'instant' | 'interruption' | 'artifact' | 'sorcery' | 'enchantment';
 
 export enum EPhase {
   untap       = 'untap',
@@ -32,9 +32,9 @@ export type TCard = {
   defense : number;
 };
 
-export type TCardLocation = 'off'
-  | 'deck1' | 'hand1' | 'tble1' | 'play1' | 'grav1'
-  | 'deck2' | 'hand2' | 'tble2' | 'play2' | 'grav2';
+export type TCardLocation = 'off' | 'stack'
+  | 'deck1' | 'hand1' | 'tble1' | 'grav1'
+  | 'deck2' | 'hand2' | 'tble2' | 'grav2';
 export type TCardSemiLocation = 'off' | 'deck' | 'hand' | 'tble' | 'grav';
 export type TCardAnyLocation = TCardSemiLocation & TCardSemiLocation;
 
@@ -79,12 +79,17 @@ export type TExtGameCard = TGameCard & {
 export type TPlayer = {
   userId: string;
   name: string;
+  num: '1' | '2';
   help: string;
   life: number;
   manaPool: TCast;
   drawnCards: number;  // Only 1 per turn
   summonedLands: number;  // Only 1 per turn
   controlTime: number;
+  stackCall: boolean;  // true if the spell-stack needs to stop on the player
+  selectableAction?: null | TGameOption;
+  selectableTarget?: null | { text: string, value: string };
+  aaa: any;
 }
 
 export type TGameOption = { action: TAction, params: TActionParams, text?: string };
@@ -97,7 +102,7 @@ export type TAction = 'start-game'
 | 'draw' 
 | 'summon-land' 
 | 'summon-creature'
-| 'summon-instant-spell'
+| 'summon-spell'
 | 'cancel-summon'
 | 'select-card-to-discard' 
 | 'tap-land'
@@ -110,6 +115,7 @@ export type TAction = 'start-game'
 | 'cancel-defense'
 | 'submit-defense'
 | 'end-combat'
+| 'release-stack'
 | 'end-interrupting'
 ;
 

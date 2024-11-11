@@ -1,0 +1,46 @@
+<div class="card-with-targets">
+
+  <div class="targets-of-list">
+    <div class="target-of" *ngFor="let tCard of item.targetOf">
+      <stack-card-with-targets [item]="tCard"
+                               (selectCard)="selectCard.emit($event)"
+                               (selectPlayer)="selectPlayer.emit($event)">
+      </stack-card-with-targets>
+      <div class="vbar"></div>
+    </div>
+  </div>
+  <div *ngIf="item.targetOf.length > 1" class="hbar" [style.width.%]="(item.targetOf.length - 1) * 100 / item.targetOf.length"></div>
+    
+  <div class="main-card">
+    <span *ngIf="item.targetOf.length" class="icon-arrow-down"></span>
+    
+    <!-- Target Card -->
+    <div class="panel-card" *ngIf="item.card"
+         (click)="selectCard.emit(item.card)"
+         [class.selectable-card]="!!item.card.selectableAction || !!item.card.selectableTarget">
+      <img [src]="'/assets/images/cards/' + item.card.image">
+      <span class="damage-points" *ngIf="item.shadowDamage">
+        <span>{{item.shadowDamage}}</span>
+        <span class="icon-power"></span>
+      </span>
+      <div style="position: absolute; bottom: 30px; margin-left: 5px; color: white; background: black;">
+        gId={{item.card.gId}}
+        <br/>status={{item.card.status}}
+      </div>
+    </div>
+
+    <!-- Target Player -->
+    <div class="panel-user" *ngIf="item.player" 
+         (click)="selectPlayer.emit(item.player)"
+         [class.selectable-card]="!!item.player.selectableAction || !!item.player.selectableTarget">
+      <span class="damage-points" *ngIf="item.shadowDamage">
+        <span>{{item.shadowDamage}}</span>
+        <span class="icon-power"></span>
+      </span>
+      <span class="icon-user3"></span>
+      <span>{{targetPlayerText}}</span>
+    </div>
+
+  </div>
+
+</div>

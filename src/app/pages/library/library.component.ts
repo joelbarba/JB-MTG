@@ -55,6 +55,7 @@ export class LibraryComponent {
     { value: 'land'}, 
     { value: 'creature'}, 
     { value: 'instant'}, 
+    { value: 'interruption'}, 
     { value: 'artifact'},
     { value: 'sorcery'},
     { value: 'enchantment'},

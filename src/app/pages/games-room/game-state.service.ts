@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
-import { Subject, map } from 'rxjs';
+import { Subject, Subscription, map } from 'rxjs';
 import { AuthService } from '../../core/common/auth.service';
 import { ShellService } from '../../shell/shell.service';
-import { DocumentReference, Firestore, QuerySnapshot, collection, doc, getDoc, getDocs, onSnapshot, query, setDoc, DocumentData } from '@angular/fire/firestore';
+import { DocumentReference, Firestore, QuerySnapshot, collection, doc, getDoc, getDocs, onSnapshot, query, setDoc, DocumentData, Unsubscribe } from '@angular/fire/firestore';
 import { EPhase, TAction, TCard, TCardLocation, TGameState, TGameDBState, TGameCard, TGameCards, TActionParams, TPlayer, TCardType, TCardSemiLocation, TCardAnyLocation, TCast, TGameOption, ESubPhase } from '../../core/types';
+import { GameOptionsService } from './game/game.options.service';
 
 
 
@@ -13,17 +14,18 @@ export class GameStateService {
   library: Array<TCard> = [];
   initPromise!: Promise<void>;
 
-  gameDocRef: any;
-  gameDocSub: any;
+  gameId!: string;
+  gameDocSub!: Unsubscribe;
+  gameStateSub!: Subscription;
   gameHistoryRef: any;
 
-  state$ = new Subject<TGameDBState>();
-  stateExt$ = this.state$.pipe(map(state => this.extendState(state)));
+  dbState$ = new Subject<TGameDBState>();
+  state$ = new Subject<TGameState>();
   state!: TGameState;
 
   prevState!: TGameState; // Snapshot of the previous state
+  dbFutureStates: Array<TGameState> = []; // Queue for future state updates that come disordered (before the right ones)
 
-  currentGameId = '';
   playerANum: '1' | '2' = '1'; // You are always playerA, but can be 1 or 2
   playerBNum: '1' | '2' = '2'; // Your opponent2
 
@@ -44,6 +46,7 @@ export class GameStateService {
     public auth: AuthService,
     public shell: ShellService,
     public firestore: Firestore,
+    private options: GameOptionsService,
   ) {
     this.loadLibrary();
   }
@@ -57,7 +60,7 @@ export class GameStateService {
           const filteredCard = card.keyFilter('cast, color, name, image, text, type, attack, defense');
           this.library.push({ id: doc.id, ...filteredCard } as TCard);
         });
-        console.log(this.library);
+        // console.log(this.library);
         resolve();
       });
     });   
@@ -68,13 +71,12 @@ export class GameStateService {
     await this.auth.profilePromise;
     await this.initPromise; // wait to have all the cards loaded
 
-    this.currentGameId = gameId;
-    this.gameDocRef = doc(this.firestore, 'games', gameId);    
+    this.gameId = gameId;
 
     if (this.gameDocSub) { this.gameDocSub(); } // unsubscribe if previous detected
 
     // Changes on the game document from Firebase
-    this.gameDocSub = onSnapshot(this.gameDocRef, (docQuery: any) => {
+    this.gameDocSub = onSnapshot(doc(this.firestore, 'games', gameId), (docQuery: any) => {
       const source = docQuery.metadata.hasPendingWrites ? 'local' : 'server';
       const dbState = docQuery.data();
       // console.log('DB onSnapshot() from -->', source, nextState);
@@ -82,12 +84,12 @@ export class GameStateService {
       if (!this.state) { this.initState(dbState); } // First load of the game
       
       // Propagate changes from DB
-      if (source === 'server') { 
-        console.log('DB onSnapshot() from -->', source);
+      if (source === 'server') {
+        console.log('DB onSnapshot(): New State from -->', source);
         
         if (!this.state || this.state.id === dbState.id - 1) {
-          console.log('DB onSnapshot() --> New state from remote ACTION: ', dbState.lastAction);
-          this.state$.next(dbState);
+          // console.log('DB onSnapshot() --> New state from remote ACTION: ', dbState.lastAction);
+          this.dbState$.next(dbState);
 
           // Find if there are future updates that came before this one
           let nextId = dbState.id + 1;
@@ -95,7 +97,7 @@ export class GameStateService {
             const futureState = this.dbFutureStates[t];
             if (futureState.id === nextId) {
               console.warn('DB onSnapshot() --> New state from (stacked) ACTION: ', dbState.lastAction);
-              this.state$.next(futureState); nextId++;
+              this.dbState$.next(futureState); nextId++;
               delete this.dbFutureStates[t];
             }            
           }
@@ -111,30 +113,42 @@ export class GameStateService {
         }
       }
     });
+
+    // Extend the raw DB state:  dbState$ ---> state$
+    if (this.gameStateSub) { this.gameStateSub.unsubscribe(); }
+    this.gameStateSub = this.dbState$.subscribe((dbState: TGameDBState) => {
+      console.log('New State. Last action =', `${dbState.lastAction?.action}`, 'STATE:', this.state);
+      this.state = this.options.calculate(dbState, this.playerANum);
+      this.state$.next(this.state);
+      // console.log('New State - Options =', state.options.map(o => `${o.action}:${o.params?.gId}`), state);
+    });
   }
-  dbFutureStates: Array<TGameState> = [];
 
 
-
-  private initState(nextState: TGameState) { // Initialize internal vars for the first time
-    if (this.auth.profileUserId === nextState.player1.userId) {
+  private initState(state: TGameState) { // Initialize internal vars for the first time
+    if (this.auth.profileUserId === state.player1.userId) {
       this.playerANum = '1';
       this.playerBNum = '2';
-    } else if (this.auth.profileUserId === nextState.player2.userId) {
+    } else if (this.auth.profileUserId === state.player2.userId) {
       this.playerANum = '2';
       this.playerBNum = '1';
     } else {
-      nextState.status = 'error';
+      state.status = 'error';
     }
   }
 
-  private extendState(dbState: TGameDBState): TGameState {
-    const state = this.calculateOptions(dbState);
-    // console.log('New State - Options =', state.options.map(o => `${o.action}:${o.params?.gId}`), state);
-    // history.map(h => `${h.time} - player${h.player}:${h.action}`)
-    console.log('New State. Last action =', `${dbState.lastAction?.action}`, state);
-    this.state = state;
-    return state;
+
+  // DEBUGGING part to temporarily save the state to a different doc
+  async saveStateDebug() {
+    const dbState = this.state.keyFilter((v,k) => k !== 'options') as TGameDBState;
+    dbState.cards = dbState.cards.map(card => card.keyFilter((v,k) => k !== 'selectableAction' && k !== 'selectableTarget')) as Array<TGameCard>;
+    await setDoc(doc(this.firestore, 'games', 'tmpGameState'), dbState);
+  }
+  async loadStateDebug() {
+    const docSnap = await getDoc(doc(this.firestore, 'games', 'tmpGameState'));
+    await setDoc(doc(this.firestore, 'games', this.gameId), docSnap.data()).then(_ => {});
+    console.log('State rolled back to saved. YOU MUST REFRESH THE BROWSER');
+    location.reload(); // Reload the browser
   }
 
 
@@ -249,32 +263,27 @@ export class GameStateService {
       case 'burn-mana':                 this.burnMana(nextState); break;
       case 'summon-land':               this.summonLand(nextState, gId); break;
       case 'summon-creature':           this.summonCreature(nextState, gId, manaForUncolor); break;
-      case 'summon-instant-spell':      this.summonInstantSpell(nextState, params); break;
+      case 'summon-spell':              this.summonSpell(nextState, params); break;
       case 'cancel-summon':             this.cancelSummonOperations(nextState); break;
+      case 'release-stack':             this.releaseStack(nextState); break;
       case 'end-interrupting':          this.endInterrupting(nextState); break;
 
     }
 
-    // TODO: DELETE THIS
-    if (nextState.phase !== 'combat') {
-      nextState.cards.filter(c => c.status?.slice(0,6) === 'combat').forEach(c => c.status = null);
-    }
-
-    // this.setNextOptions(nextState);
     nextState.id += 1;
     nextState.lastAction = { action, params, player: this.playerANum, time: this.getTime() };
 
     // Update the state
-    this.state$.next(nextState); // Local update of the state (before it's saved to DB)
+    this.dbState$.next(nextState); // Local update of the state (before it's saved to DB)
 
     // Stripe out properties that do not need to be on DB
     const dbState = nextState.keyFilter((v,k) => k !== 'options') as TGameDBState;
     dbState.cards = dbState.cards.map(card => card.keyFilter((v,k) => k !== 'selectableAction' && k !== 'selectableTarget')) as Array<TGameCard>;
-    setDoc(this.gameDocRef, dbState).then(_ => {});
+    setDoc(doc(this.firestore, 'games', this.gameId), dbState).then(_ => {});
 
     // Save history
     const hActionId = 'action-' + (nextState.id + '').padStart(4, '0');
-    setDoc(doc(this.firestore, 'gamesHistory', this.currentGameId, 'history', hActionId), nextState.lastAction).then(_ => {});
+    setDoc(doc(this.firestore, 'gamesHistory', this.gameId, 'history', hActionId), nextState.lastAction).then(_ => {});
   }
 
   // Verifies that the given action is possible, being into the options[] array
@@ -320,9 +329,9 @@ export class GameStateService {
       const { playerA } = this.getPlayers(nextState);
       if (card.id === 'c000001') { playerA.manaPool[1] += 2; } // Island   = Blue mana
       if (card.id === 'c000002') { playerA.manaPool[2] += 1; } // Plains   = White mana
-      if (card.id === 'c000003') { playerA.manaPool[3] += 3; } // Swamp    = Black mana
+      if (card.id === 'c000003') { playerA.manaPool[3] += 1; } // Swamp    = Black mana
       if (card.id === 'c000004') { playerA.manaPool[4] += 1; } // Mountain = Red mana
-      if (card.id === 'c000005') { playerA.manaPool[5] += 4; } // Forest   = Green mana
+      if (card.id === 'c000005') { playerA.manaPool[5] += 1; } // Forest   = Green mana
       card.isTapped = true;
     }
   }
@@ -367,28 +376,20 @@ export class GameStateService {
         if (rightMana) {
           this.spendMana(card.cast, playerA.manaPool, manaForUncolor);          
           card.status = 'summoning';
-          nextState.control = this.playerBNum; // Switch control
-          playerB.controlTime = (new Date()).getTime();
-          console.log('SERVICE - Summoning creature and setting CONTROL to opponent => control = ', nextState.control);
+          this.addToSpellStack(nextState, card);
         }
-
-      } else if (card.status === 'summoning') {
-        this.moveCard(nextState, gId, 'tble');
-        card.status = 'sickness';
       }
-
     }
   }
 
-
-  private summonInstantSpell(nextState: TGameState, params: TActionParams) {
+  private summonSpell(nextState: TGameState, params: TActionParams) {
     const { playerA, playerB } = this.getPlayers(nextState);
 
     const gId = params?.gId || '';
     let manaForUncolor = params.manaForUncolor || [0,0,0,0,0,0];
 
 
-    const card = this.checkCard(nextState, gId, { location: 'hand', type: 'instant' });
+    const card = this.checkCard(nextState, gId, { location: 'hand' });
     if (card) {      
       this.cancelSummonOperations(nextState, card.gId); // Cancel other possible castings operations
 
@@ -408,50 +409,105 @@ export class GameStateService {
           if (!rightMana) { card.status = 'summon:selectingMana'; } // If there is not enough uncolor selected
         }
 
-
         if (rightMana) {
-          const hasTarget = card.id === 'c000032'; // Lightling bolt
+          let neededTargets = 0;
+          if (card.id === 'c000032') { neededTargets = 1; }; // Lightling bolt  // TODO: Add neededTargets field on cards[]
+          if (card.id === 'c000043') { neededTargets = 1; }; // Giant Growth    // TODO: Add neededTargets field on cards[]
+          if (card.id === 'c000038') { neededTargets = 1; }; // Counter Spell   // TODO: Add neededTargets field on cards[]
 
-          if (hasTarget && card.status !== 'summon:selectingTargets') { card.status = 'summon:selectingTargets'; }
+          if (neededTargets !== (params.targets?.length || 0)) { card.status = 'summon:selectingTargets'; }
           else {
-
-            console.log(`SUMMONING - gId=${params.gId}, manaForUncolor=${params.manaForUncolor},  targets=${params.targets}`);
-
-            if (card.status === 'summon:selectingTargets' && params.targets?.length === 1) {
-              // card.status = null;
-              this.spendMana(card.cast, playerA.manaPool, manaForUncolor);
-              card.status = 'summoning';
-              card.targets = params.targets;
-              nextState.control = this.playerBNum; // Switch control
-              playerB.controlTime = (new Date()).getTime();
-              console.log('SERVICE - Summoning instant and setting CONTROL to opponent => control = ', nextState.control);
-             }
+            console.log(`SUMMONING ${card.name} (${params.gId}), manaForUncolor=${params.manaForUncolor}, targets=${params.targets}`);
+            this.spendMana(card.cast, playerA.manaPool, manaForUncolor);
+            card.status = 'summoning';
+            card.targets = params.targets;
+            this.addToSpellStack(nextState, card);
           }
-        }        
+        }
 
-
-      } else if (card.status === 'summoning') {
-
-        console.log(`EXECUTING INSTANT - gId=${params.gId}, targets=${params.targets}`);
-        card.status = null;
-        if (card.id === 'c000032') { // Lightling bolt
-          if (card.targets?.length === 1) {
-            const target = (params.targets || [])[0];
-            if      (target === 'player1') { nextState.player1.life -= 3; }
-            else if (target === 'player2') { nextState.player2.life -= 3; }
-            else { // Target creature
-              const targetCard = nextState.cards.find(c => c.gId === target);
-              if (targetCard) { 
-                targetCard.damage = (targetCard.damage || 0) + 3; // Deals 3 points of damage
-                this.checkCreatureDamage(nextState);
-              }
-            }
-            this.moveCard(nextState, gId, 'grav'); // Move instant to graveyard
-          } 
-        } 
       }
-
     }
+  }
+
+
+  private addToSpellStack(nextState: TGameState, card: TGameCard) {
+    const { playerA, playerB } = this.getPlayers(nextState);
+    this.moveCard(nextState, card.gId, 'stack'); // Move playing card to the stack
+    playerB.stackCall = true; // Activate opponent's stack call, so he gets control later to add more spells to the stack
+    if (!playerA.stackCall) { this.switchPlayerControl(nextState); }  // stack initiator (you are just playing a spell)
+  }
+
+
+  private releaseStack(nextState: TGameState) {
+    const { playerA, playerB } = this.getPlayers(nextState);
+    playerA.stackCall = false;
+
+    if (playerB.stackCall) { // If you added spells, opponent may add more spells too. Llet him do it
+      this.switchPlayerControl(nextState);
+
+    } else { // If both stackCall are false (you didn't add any new spell), run the spell stack
+      console.log('You are both done, RUN THE STACK of SPELLS');
+      this.runSpellStack(nextState);
+    }    
+  }
+
+
+  private runSpellStack(nextState: TGameState) {
+    const stack = nextState.cards.filter(c => c.location === 'stack').sort((a,b) => a.order > b.order ? -1 : 1); // inverse order ([max,...,min])
+    stack.forEach(card => card.location === 'stack' && this.runSummonEvent(nextState, card));
+    this.killDamagedCreatures(nextState);
+    nextState.control = nextState.turn; // Return control to the turn player
+  }
+
+
+
+
+
+  runSummonEvent(nextState: TGameState, card: TGameCard) {
+    console.log(`EXECUTING ${card.name} (${card.gId}), targets=${card.targets}`);
+    const target = (card.targets || [])[0]; // code of the first target (playerX, gId, ...)
+
+    // Summoning creature
+    if (card.type === 'creature' && card.status === 'summoning') {
+      this.moveCard(nextState, card.gId, 'tble');
+      card.status = 'sickness';
+    }
+
+    // Summoning instant spell
+    if (card.type === 'instant' && card.status === 'summoning') {
+      this.moveCard(nextState, card.gId, 'grav'); // Move instant to graveyard
+      card.status = null;
+    }
+
+
+    if (card.id === 'c000032') { // Lightling bolt
+      if      (target === 'player1') { nextState.player1.life -= 3; } // Deals 3 points of damage to player1
+      else if (target === 'player2') { nextState.player2.life -= 3; } // Deals 3 points of damage to player2
+      else { // Target creature
+        const targetCard = nextState.cards.find(c => c.gId === target);
+        if (targetCard && (targetCard.location === 'stack' || targetCard.location.slice(0,4) === 'tble')) { 
+          targetCard.damage = (targetCard.damage || 0) + 3;   // Deals 3 points of damage to target creature
+        }
+        
+      }
+    }
+
+    if (card.id === 'c000043') { // Gian Growth
+      const targetCard = nextState.cards.find(c => c.gId === target); // target must be a creature
+      if (targetCard && (targetCard.location === 'stack' || targetCard.location.slice(0,4) === 'tble')) { 
+        targetCard.attack += 3; 
+        targetCard.defense += 3; // TODO: Change this to tunrEffect
+      }
+    }
+
+    if (card.id === 'c000038') { // Counter Spell      
+      const targetCard = nextState.cards.find(c => c.gId === target && c.location === 'stack');
+      if (targetCard) { // Remove the target from the stack (won't be executed)
+        this.moveCard(nextState, targetCard.gId, 'grav'); 
+        card.status = null;
+      }
+    }
+
   }
 
 
@@ -488,11 +544,9 @@ export class GameStateService {
 
   private submitAttack(nextState: TGameState) {
     const { playerA, playerB } = this.getPlayers(nextState);
-    // nextState.subPhase = ESubPhase.attacking;
+    // nextState.subPhase = ESubPhase.attacking; <--- Should do this to start a spell-stack
     nextState.subPhase = ESubPhase.selectDefense;
-    nextState.control = this.playerBNum; // Switch control
-    playerB.controlTime = (new Date()).getTime();
-    console.log('SERVICE - Submitting Atack. Switching CONTROL to opponent => control = ', nextState.control);
+    this.switchPlayerControl(nextState);
   }
 
   private selectDefendingCreature(nextState: TGameState, params: TActionParams) {
@@ -527,30 +581,26 @@ export class GameStateService {
       const defendingCard = defendingCreatures.find(c => c.targets?.includes(attackingCard.gId));
       const attackerTxt = `Attacking ${attackingCard.gId} (${attackingCard.attack}/${attackingCard.defense})`;
 
-      if (defendingCard) { // Blocking
+      if (defendingCard) { // Creatre blocked by another
         defendingCard.damage = attackingCard.attack;
         attackingCard.damage = defendingCard.attack;
         
         const defenserTxt = `Defending ${defendingCard.gId} (${attackingCard.attack}/${attackingCard.defense})`;
-
         console.log(`${attackerTxt} -----> deals ${attackingCard.attack} points of damage to ${defenserTxt}`);
         console.log(`${defenserTxt} -----> deals ${defendingCard.attack} points of damage to ${attackerTxt}`);
-
-        // Wait for instants before this.....
-        if ((attackingCard.defense || 0) <= (attackingCard.damage || 0)) { console.log('attacking', attackingCard.gId, 'dies'); }
-        if ((defendingCard.defense || 0) <= (attackingCard.damage || 0)) { console.log('defending', defendingCard.gId, 'dies'); }
         
-      } else {
+      } else { // If the creature is not blocked
         console.log(`${attackerTxt} -----> deals ${attackingCard.attack} points of damage to player${this.playerANum}`); // You are the defender
         totalDamage += attackingCard.attack; 
-      } // No block
+      }
     });
 
     playerA.life -= totalDamage; // None blocked creatures damage defending player
   }
 
   private endCombat(nextState: TGameState) {
-    this.checkCreatureDamage(nextState);  // Check those creatures that received more damage than defense, and kill them    
+    this.killDamagedCreatures(nextState);  // Check those creatures that received more damage than defense, and kill them    
+    nextState.cards.filter(c => c.status?.slice(0,6) === 'combat').forEach(c => c.status = null);
     this.endPhase(nextState);
   }
 
@@ -606,6 +656,13 @@ export class GameStateService {
 
   // --------------------------- INTERNALS ----------------------------------
 
+  private switchPlayerControl(nextState: TGameState) {
+    const { playerB } = this.getPlayers(nextState);
+    nextState.control = this.playerBNum; // Switch control to opponent
+    playerB.controlTime = (new Date()).getTime();
+    console.log('SERVICE - Switching CONTROL to opponent => control = ', nextState.control);
+  }
+
   // Validates if a given card exists (gId) and has the "options"
   private checkCard(state: TGameState, gId: string, options: { type?: TCardType, location?: TCardAnyLocation }): false | TGameCard {
     const { type, location } = options;
@@ -615,25 +672,6 @@ export class GameStateService {
     if (location && card.location.indexOf(location) < 0) { return false; } // Should match the location
     return card;
   }
-
-
-  // Moves a card from its current location to another.
-  // toLocation must be 'hand', 'tble', 'grav' (will add the player number from the current location)
-  private moveCard(state: TGameState, gId: string, toLocation: string) {
-    const card = state.cards.find(c => c.gId === gId);
-    if (card) {
-      const fromLocation = card.location;
-      toLocation += fromLocation.at(-1);
-      const lastCard = state.cards.filter(c => c.location === toLocation).sort((a,b) => a.order > b.order ? 1 : -1).at(-1);
-      if (lastCard) { card.order = lastCard.order + 1; } else { card.order = 0; }
-      card.location = toLocation as TCardLocation;
-
-      // Recalculate orders to make them sequential
-      state.cards.filter(c => c.location === fromLocation).sort((a,b) => a.order > b.order ? 1 : -1).forEach((card, ind) => card.order = ind);
-      state.cards.filter(c => c.location === toLocation).sort((a,b) => a.order > b.order ? 1 : -1).forEach((card, ind) => card.order = ind);
-    }
-  }
-
 
   // Validates the mana in the mana pool to cast a card
   // - 'not enough' = There not enough mana
@@ -675,8 +713,31 @@ export class GameStateService {
     for (let t = 0; t <= 5; t++) { manaPool[t] -= manaForUncolor[t]; }  // Subtract uncolored mana
   }
 
+
+  // Moves a card from its current location to another.
+  // If toLocation is deck, hand, tble or grav, the player number is added from the current location
+  private moveCard(state: TGameState, gId: string, toLocation: string) {
+    const card = state.cards.find(c => c.gId === gId);
+    if (card) {
+      const fromLocation = card.location;
+      let playerNum = fromLocation.at(-1);
+      if (playerNum !== '1' && playerNum !== '2') { playerNum = card.controller; }
+      if (['deck', 'hand', 'tble', 'grav'].includes(toLocation)) { toLocation += playerNum; }
+
+      // Move the card to the last position in the destination
+      const lastCard = state.cards.filter(c => c.location === toLocation).sort((a,b) => a.order > b.order ? 1 : -1).at(-1);
+      if (lastCard) { card.order = lastCard.order + 1; } else { card.order = 0; }
+
+      card.location = toLocation as TCardLocation;
+
+      // Recalculate orders to make them sequential
+      state.cards.filter(c => c.location === fromLocation).sort((a,b) => a.order > b.order ? 1 : -1).forEach((card, ind) => card.order = ind);
+      state.cards.filter(c => c.location === toLocation).sort((a,b) => a.order > b.order ? 1 : -1).forEach((card, ind) => card.order = ind);
+    }
+  }
+
   // Check the amount of damage for every creature, and destroys them if needed
-  private checkCreatureDamage(nextState: TGameState) {
+  private killDamagedCreatures(nextState: TGameState) {
     const table = nextState.cards.filter(c => c.type === 'creature' && c.location.slice(0, 4) === 'tble');
     table.forEach(card => {
       if ((card.defense || 0) <= (card.damage || 0)) {
@@ -685,229 +746,5 @@ export class GameStateService {
       }
     });
   }
-
-
-
-
-
-
-
-
-
-
-  // --------------------------- NEXT OPTIONS CALCULATIONS ----------------------------------
-
-  // Calculates your possible options for a current state
-  // It modifies/extends:
-  //  - state.options[]
-  //  - state.cards[].selectableAction    - state.player1/2.help
-  //  - state.cards[].selectableTarget
-  private calculateOptions(dbState: TGameDBState): TGameState {
-    const state: TGameState = { ...dbState, options: [] };
-    state.cards.forEach(card => { card.selectableAction = null; card.selectableTarget = null });  // Remove all actions (from prev state)
-
-    const { playerA, playerB, turnPlayer } = this.getPlayers(state);
-    const { hand, table } = this.getCards(state, 'playerA'); // Your cards
-
-    // Shortcut to check if the current phase is any of the given
-    const isPhase = (...phases: string[]) => phases.includes(state.phase);    
-
-    let canSkipPhase = true;
-    playerA.help = '';
-
-    if (state.control !== this.playerANum) { return state; } // If you don't have control, you have no options
-
-    // If the game is not running
-    if (state.status === 'created') { state.options.push({ action: 'start-game', params: {} }); return state; }
-    if (state.status !== 'playing') { return state; } // in case someone's won
-
-
-
-    // If it's not your turn, yet you have control (casting interruptions, defend from atack, ...)
-    if (state.turn !== this.playerANum) {
-      const tableA = state.cards.filter(c => c.location === 'tble' + this.playerANum).sort((a, b) => a.order > b.order ? 1 : -1);
-      const tableB = state.cards.filter(c => c.location === 'tble' + this.playerBNum).sort((a, b) => a.order > b.order ? 1 : -1);
-
-      // Combat - Defending from an atack
-      if (isPhase('combat')) {
-        if (state.subPhase === 'selectDefense') {
-          state.options.push({ action: 'cancel-defense', params: {}, text: 'Reset you defending selection' });
-          state.options.push({ action: 'submit-defense', params: {}, text: 'Defend with selected creatures' });
-  
-          // You may select a creature to defend your opponents attack
-          tableA.filter(c => c.type === 'creature' && !c.isTapped && c.status !== 'combat:defending').forEach(card => {
-            const option: TGameOption = { action: 'select-defending-creature', params: { gId: card.gId }, text: `Defend with ${card.name}` };
-            state.options.push(option);
-            card.selectableAction = option;
-          });
-  
-          // You may select the opponent's attacking creature as a target of your defending creature
-          const defenderToAssign = state.cards.find(c => c.status === 'combat:selectingTarget');
-          if (defenderToAssign) {
-            tableB.filter(c => c.status === 'combat:attacking').forEach(card => {
-              const params = { gId: defenderToAssign.gId, targets: [card.gId] };
-              const option: TGameOption = { action: 'select-defending-creature', params, text: `Defend ${card.name} with ${defenderToAssign.name}` };
-              state.options.push(option);
-              card.selectableAction = option;
-            });
-          }
-        } else if (state.subPhase === 'afterCombat') {
-          state.options.push({ action: 'end-interrupting', params: {}, text: `Skip` });
-        }
-
-      } else { // Opponent is not on the combat phase
-        state.options.push({ action: 'end-interrupting', params: {}, text: `Skip` });
-
-        // You may tap lands to produce mana
-        tableA.filter(c => c.type === 'land' && !c.isTapped).forEach(card => {
-          const option: TGameOption = { action: 'tap-land', params: { gId: card.gId }, text: `Tap ${card.name}` };
-          state.options.push(option);
-          card.selectableAction = option;
-        });
-      }
-
-      return state; // <---- Skip generic options (it's not your turn)
-    }
-
-
-
-    
-    // If you have a summoning operation, let it cancel
-    const summonCard = hand.find(c => c.status?.slice(0, 7) === 'summon:');
-    if (summonCard) { state.options.push({ action: 'cancel-summon', params: {}, text: 'Cancel ' + summonCard.name }); }
-
-
-    // Selecting target
-    const playingCard = state.cards.find(c => c.status === 'summon:selectingTargets');
-    if (playingCard?.id === 'c000032') { // Lightning Bolt
-      state.options.push({ action: 'summon-instant-spell', params: { gId: playingCard.gId, targets: ['player1'] }});
-      state.options.push({ action: 'summon-instant-spell', params: { gId: playingCard.gId, targets: ['player2'] }});
-      state.cards.filter(c => c.location.slice(0,4) === 'tble' && c.type === 'creature').forEach(card => {
-        card.selectableTarget = { text: `Select target ${card.name}`, value: card.gId };
-        state.options.push({ action: 'summon-instant-spell', params: { gId: playingCard.gId, targets: [card.gId] } });
-      });
-      return state; // <---- Avoid any other action when selecting a target
-    }
-
-
-
-
-
-
-    // Casting / Summoning:
-
-    // You may summon lands on hand
-    if (isPhase('pre', 'post') && playerA.summonedLands === 0) {
-      hand.filter(c => c.type === 'land').forEach(card => {
-        const option: TGameOption = { action: 'summon-land', params: { gId: card.gId }, text: `Summon ${card.name}` };
-        state.options.push(option);
-        card.selectableAction = option;
-      });
-    }
-
-    // You may summon creatures
-    if (isPhase('pre', 'post')) {
-      hand.filter(c => c.type === 'creature').forEach(card => {
-        const option: TGameOption = { action: 'summon-creature', params: { gId: card.gId }, text: `Summon ${card.name}` };
-        state.options.push(option);
-        if (!card.status) { card.selectableAction = option; }
-      });
-    }
-
-    // You may summon/cast an instant spell
-    if (isPhase('maintenance', 'draw', 'pre', 'combat', 'post')) {
-      hand.filter(c => c.type === 'instant').forEach(card => {
-        const option: TGameOption = { action: 'summon-instant-spell', params: { gId: card.gId }, text: `Cast ${card.name}` };
-        state.options.push(option);
-        if (!card.status) { card.selectableAction = option; }
-      });
-    }
-
-    
-
-    // Tapping habilities:
-
-    // You may tap lands to produce mana
-    const spellsAvailable = hand.filter(c => c.type === 'instant').length > 0;
-    if (isPhase('pre', 'post') || spellsAvailable) {
-      table.filter(c => c.type === 'land' && !c.isTapped).forEach(card => {
-        const option: TGameOption = { action: 'tap-land', params: { gId: card.gId }, text: `Tap ${card.name}` };
-        state.options.push(option);
-        card.selectableAction = option;
-      });
-    }
-
-
-    // Combat
-    if (isPhase('combat')) {
-      const isAttackOn = !!table.filter(c => c.status === 'combat:attacking').length; // Are you leading an attack?
-
-      if (state.subPhase === 'selectAttack') {
-        table.filter(c => c.type === 'creature' && !c.isTapped && c.status !== 'sickness').forEach(card => {
-          if (card.status !== 'combat:attacking') {
-            const option: TGameOption = { action: 'select-attacking-creature', params: { gId: card.gId }, text: `Attack with ${card.name}` };
-            state.options.push(option);
-            card.selectableAction = option;
-          }
-        });
-
-        // If you have selected attacking creatures, you may submit the attack
-        if (isAttackOn) { 
-          state.options.push({ action: 'cancel-attack', params: {}, text: 'Cancel the current attacking selection' });
-          state.options.push({ action: 'submit-attack', params: {}, text: 'Attack with selected creatures' });
-        }
-      }
-
-      // You may finish the combat and end the spell-stack after the combat
-      if (state.subPhase === 'afterCombat') { state.options.push({ action: 'end-combat', params: {}, text: 'Continue with the game' }); }
-
-      // If ongoing combat, you can't skip to the next phase, you need to finish with the combat
-      if (isAttackOn) { canSkipPhase = false; }
-    }
-
-    // Common turn actions:
-    
-    // You may untap cards
-    if (isPhase('untap')) {
-      state.options.push({ action: 'untap-all', params: {}, text: `Untap all your cards` });
-      table.filter(c => c.isTapped).forEach(card => {
-        const option: TGameOption = { action: 'untap-card', params: { gId: card.gId }, text: `Untap ${card.name}` };
-        state.options.push(option);
-        card.selectableAction = option;
-      });    
-    }
-
-    // You may draw a card
-    if (isPhase('draw') && playerA.drawnCards < 1) {
-      state.options.push({ action: 'draw', params: {}, text: `Draw a card from your library` });
-      canSkipPhase = false; // Player must draw
-    }
-
-    // You may discard a card
-    if (isPhase('discard') && hand.length > 7) {
-      canSkipPhase = false; // Player must discard if more than 7 cards on the hand
-      playerA.help = `You cannot have more than 7 cards on your hand. Please discard`;
-      hand.forEach(card => {
-        const option: TGameOption = { action: 'select-card-to-discard', params: { gId: card.gId }, text: `Discard ${card.name}` };
-        state.options.push(option);
-        card.selectableAction = option;
-      });
-    }
-
-    // You may burn unspent mana
-    if (isPhase('end') && playerA.manaPool.some(m => m > 0)) {
-      canSkipPhase = false;  // Player must burn unspent mana
-      playerA.help = `You have to burn unspent mana`;
-      state.options.push({ action: 'burn-mana', params: {} });
-    }
-
-    // You may do nothing (skip phase)
-    if (canSkipPhase) {
-      state.options.push({ action: 'skip-phase', params: {} });
-    }
-
-    return state;
-  }
-
 
 }

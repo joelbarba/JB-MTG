@@ -102,7 +102,7 @@ export class DialogSummonEventComponent {
       }, 25);
 
       // React on state changes, to know when you get control back (from playerB -> playerA)
-      this.stateSub = this.game.stateExt$.subscribe(state => {
+      this.stateSub = this.game.state$.subscribe(state => {
         const playerB = this.game.playerANum === '1' ? state.player2 : state.player1;
         if (!playerB.controlTime) { this.isRemotePaused = true; }
         if (state.control === this.game.playerANum) {
@@ -146,7 +146,7 @@ export class DialogSummonEventComponent {
         const params: TActionParams = { gId: this.card.gId };
         if (this.card.targets?.length) { params.targets = this.card.targets; }
         if (this.card.type === 'creature') { this.game.action('summon-creature', params); }
-        if (this.card.type === 'instant')  { this.game.action('summon-instant-spell', params); }
+        if (this.card.type === 'instant')  { this.game.action('summon-spell', params); }
         this.close();
       }
     }

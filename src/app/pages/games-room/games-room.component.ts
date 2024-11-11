@@ -70,18 +70,32 @@ export class GamesRoomComponent {
     }
 
     const deck1 = [
+      getCardById('c000004'), // mountain
+      getCardById('c000004'), // mountain
+      getCardById('c000052'), // Mons's Goblin Raiders (1/1)
+      getCardById('c000005'), // forest
+      getCardById('c000005'), // forest
+      getCardById('c000032'), // Lightning Bolt
+      getCardById('c000043'), // Gian Growth
+      getCardById('c000001'), // Island
+      getCardById('c000001'), // Island
+      getCardById('c000001'), // Island
+      getCardById('c000038'), // Counter Spell
+      getCardById('c000038'), // Counter Spell
+      getCardById('c000038'), // Counter Spell
+      getCardById('c000032'), // Lightning Bolt
+      getCardById('c000032'), // Lightning Bolt
+      getCardById('c000043'), // Gian Growth
+      getCardById('c000043'), // Gian Growth
+      // getCardById('c0000'), // 
+      // getCardById('c0000'), // 
       getCardById('c000053'), // Ornithopter
-      getCardById('c000004'), // mountain
-      getCardById('c000004'), // mountain
+      getCardById('c000041'), // Elvish Archers (2/1)
       getCardById('c000002'), // plains
       getCardById('c000001'), // island
-      getCardById('c000005'), // forest
-      getCardById('c000005'), // forest
-      getCardById('c000036'), // gray ogre (2/2)
       getCardById('c000037'), // Brass Man (1/3)
       getCardById('c000045'), // Goblin Balloon Brigade (1/1)
       getCardById('c000052'), // Mons's Goblin Raiders (1/1)
-      getCardById('c000041'), // Elvish Archers (2/1)
       getCardById('c000044'), // Giant Spider (2/4)
       getCardById('c000046'), // Granite Gargoyle (2/2)
       getCardById('c000047'), // Grizzly Bears (2/2)
@@ -93,8 +107,6 @@ export class GamesRoomComponent {
       getCardById('c000004'), // mountain
       getCardById('c000004'), // mountain
       getCardById('c000004'), // mountain
-      // getCardById('c0000'), // 
-      // getCardById('c0000'), // 
       getCardById('c000032'), // lightning bolt
       getCardById('c000032'), // lightning bolt
       getCardById('c000032'), // lightning bolt
@@ -124,7 +136,27 @@ export class GamesRoomComponent {
      .sort((a, b) => a.order > b.order ? 1 : -1);     
 
     const deck2 = [
+      getCardById('c000004'), // mountain
+      getCardById('c000004'), // mountain
+      getCardById('c000052'), // Mons's Goblin Raiders (1/1)
+      getCardById('c000005'), // forest
+      getCardById('c000005'), // forest
+      getCardById('c000032'), // Lightning Bolt
+      getCardById('c000043'), // Gian Growth
+      getCardById('c000001'), // Island
+      getCardById('c000001'), // Island
+      getCardById('c000001'), // Island
+      getCardById('c000038'), // Counter Spell
+      getCardById('c000038'), // Counter Spell
+      getCardById('c000038'), // Counter Spell
+      getCardById('c000032'), // Lightning Bolt
+      getCardById('c000032'), // Lightning Bolt
+      getCardById('c000043'), // Gian Growth
+      getCardById('c000043'), // Gian Growth
+      // getCardById('c0000'), // 
+      // getCardById('c0000'), //      
       getCardById('c000053'), // Ornithopter
+      getCardById('c000041'), // Elvish Archers (2/1)
       getCardById('c000004'), // mountain
       getCardById('c000004'), // mountain
       getCardById('c000002'), // plains
@@ -147,8 +179,6 @@ export class GamesRoomComponent {
       getCardById('c000004'), // mountain
       getCardById('c000004'), // mountain
       getCardById('c000004'), // mountain
-      // getCardById('c0000'), // 
-      // getCardById('c0000'), // 
       getCardById('c000032'), // lightning bolt
       getCardById('c000032'), // lightning bolt
       getCardById('c000032'), // lightning bolt
@@ -208,22 +238,23 @@ export class GamesRoomComponent {
       manaPool: [0,0,0,0,0,0],
       drawnCards: 0,
       summonedLands: 0,
+      stackCall: false,
     };
     
-    const playerYou = { userId: this.auth.profileUserId, name: this.auth.profileUserName, ...defaultPlayerValues } as TPlayer;
-    const playerOther = { userId: 'BhyW7MAVP4Xi5fojf3hF7T58tem2', name: 'Bob', ...defaultPlayerValues } as TPlayer;
+    const playerYou = { userId: this.auth.profileUserId, name: this.auth.profileUserName, ...defaultPlayerValues };
+    const playerOther = { userId: 'BhyW7MAVP4Xi5fojf3hF7T58tem2', name: 'Bob', ...defaultPlayerValues };
     if (playerYou.userId === 'BhyW7MAVP4Xi5fojf3hF7T58tem2') { // If you are Bob, set Alice as the other
       playerOther.userId = '4cix25Z3DPNgcTFy4FcsYmXjdSi1';
       playerOther.name = 'Alice'
     }
     
     // Randomly set who is player 1 or player 2
-    let player1 = playerYou;
-    let player2 = playerOther;
+    let player1 = { ...playerYou,   num: '1' } as TPlayer;
+    let player2 = { ...playerOther, num: '2' } as TPlayer;
     // if (Math.random() * 2 >= 0.5) {
-    //   player1 = playerOther;
-    //   player2 = playerYou;
-    // }
+    //   player1 = { ...playerOther, num: '1' } as TPlayer;
+    //   player2 = { ...playerYou,   num: '2' } as TPlayer;
+    // }    
 
     const newGame: TGameDBState = {
       created: new Date() + '',

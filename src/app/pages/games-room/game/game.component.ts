@@ -12,6 +12,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { DialogSelectingManaComponent } from './dialog-selecting-mana/dialog-selecting-mana.component';
 import { DialogSummonEventComponent } from './dialog-summon-event/dialog-summon-event.component';
 import { DialogCombatComponent } from './dialog-combat/dialog-combat.component';
+import { DialogSpellStackComponent } from './dialog-spell-stack/dialog-spell-stack.component';
 
 export interface ICard {
   img: string;
@@ -44,7 +45,8 @@ export type TPanel =
 | 'summon-event-A'
 | 'summon-event-B'
 | 'combat-A'
-| 'combat-B';
+| 'combat-B'
+| 'spell-stack';
 
 
 @Component({
@@ -59,6 +61,7 @@ export type TPanel =
     DialogSelectingManaComponent,
     DialogSummonEventComponent,
     DialogCombatComponent,
+    DialogSpellStackComponent,
   ],
   templateUrl: './game.component.html',
   styleUrls: ['./game.component.scss'],
@@ -86,8 +89,6 @@ export class GameComponent {
   deckBCount = 60;
 
   canIDraw = false;
-  canSelectPlayerA = false;
-  canSelectPlayerB = false;
 
   skipPhase = {
     skip: () => this.game.action('skip-phase'),
@@ -123,7 +124,7 @@ export class GameComponent {
     console.log('Entering Game ID', gameId);
     await this.game.activateGame(gameId);
 
-    this.subs.push(this.game.stateExt$.subscribe(state => { // React on state changes
+    this.subs.push(this.game.state$.subscribe(state => { // React on state changes
       this.stateTime = new Date();
       this.mainInfo = '';
       this.itemInfo = '';
@@ -183,11 +184,7 @@ export class GameComponent {
       this.mainInfo = `Draw Phase`;
       this.skipPhase.whyNot = `You must draw a card from your deck`;
     }
-    // if (state.turn === '1' && state.options.find(o => o.action === 'draw'))
     
-    this.canSelectPlayerA = !!yourOptions.find(op => op.params.targets?.some(t => t === 'player' + you));
-    this.canSelectPlayerB = !!yourOptions.find(op => op.params.targets?.some(t => t === 'player' + other));
-
 
     // If untap phase, show the global button to untapp all tapped
     const untapOp = yourOptions.find(op => op.action === 'untap-all');
@@ -223,7 +220,7 @@ export class GameComponent {
       }, 100);
     }
 
-    if (this.state.phase === 'combat') { return; } // For now, avoid autoadvance during combat
+    // if (this.state.phase === 'combat') { return; } // For now, avoid autoadvance during combat
 
     // If you can only skip phase, do it
     if (yourOptions.length === 1 && yourOptions[0].action === 'skip-phase') { return advancePhase(); }
@@ -238,8 +235,7 @@ export class GameComponent {
     if (this.state.phase === 'draw' && !yourOptions.find(o => o.action === 'draw')) { return advancePhase(); }
 
     // Don't stop at the combat phase if you don't have creatures to attack
-    // const combatCreatures = this.tableA.filter(c => c.type === 'creature' && c.status !== 'sickness' && !c.isTapped);
-    // if (this.state.phase === 'combat' && combatCreatures.length === 0) { return advancePhase(); }
+    if (this.state.phase === 'combat' && this.state.subPhase === 'selectAttack' && !yourOptions.find(o => o.action === 'select-attacking-creature')) { return advancePhase(); }
 
     // Don't stop at the discard phase, if you don't have to discard
     if (this.state.phase === 'discard' && !yourOptions.find(o => o.action === 'select-card-to-discard')) { return advancePhase(); }
@@ -353,7 +349,6 @@ export class GameComponent {
 
 
 
-
   // -------------------------- Dialogs --------------------------
 
 
@@ -381,6 +376,7 @@ export class GameComponent {
 
     this.updateSummonOperation();
     this.updateCombatOperation();
+    this.updateSpellStack();
   }
 
 
@@ -450,7 +446,7 @@ export class GameComponent {
       const manaStatus = this.game.checkMana(this.summonOp.card.cast, this.playerA.manaPool);
       if (manaStatus === 'exact' || manaStatus === 'auto') {
         this.summonOp.turnOff();
-        this.game.action(this.summonOp.action, this.summonOp.params);
+        setTimeout(() => this.game.action(this.summonOp.action, this.summonOp.params));
       }
       else if (manaStatus === 'not enough') { console.log('Still not enough mana'); }
       else if (manaStatus === 'manual') { // Too many mana of different colors. You need to select
@@ -459,7 +455,7 @@ export class GameComponent {
         const reserveStatus = this.game.checkMana(this.summonOp.card.cast, this.summonOp.manaReserved);
         if (reserveStatus === 'exact' || reserveStatus === 'auto') {
           this.summonOp.turnOff();
-          this.game.action(this.summonOp.action, this.summonOp.params);
+          setTimeout(() => this.game.action(this.summonOp.action, this.summonOp.params));
         } 
         else if (this.summonOp.status !== 'selectingMana') {
           this.startSummonOp(this.summonOp.card, 'selectingMana');
@@ -494,8 +490,9 @@ export class GameComponent {
       this.summonOp.cast          = [...card.cast];
       this.summonOp.manaLeft      = [...card.cast];   // Remaining mana left to summon
       this.summonOp.manaReserved  = [0,0,0,0,0,0];    // Mana temporarily reserved to summon
-      if (card.type === 'creature') { this.summonOp.action = 'summon-creature'; }
-      if (card.type === 'instant')  { this.summonOp.action = 'summon-instant-spell'; }
+      if (card.type === 'creature')     { this.summonOp.action = 'summon-creature'; }
+      if (card.type === 'instant')      { this.summonOp.action = 'summon-spell'; }
+      if (card.type === 'interruption') { this.summonOp.action = 'summon-spell'; }
     }
 
     this.summonOp.status = status;
@@ -517,18 +514,6 @@ export class GameComponent {
       this.summonOp.text = `Select target`;
     }
   }
-
-  
-
-  // stateChanges: Array<{ field: string, value: any, prev: any }> = [];
-  // calcStateChanges(prevState: TGameState, state: TGameState) {
-  //   this.stateChanges = [];
-  //   if (!prevState) { return; }
-  //   state.player1.manaPool.forEach((value, i) => {
-  //     const prev = prevState.player1.manaPool[i];
-  //     if (prev !== value) { this.stateChanges.push({ field: 'player1.manaPool.' + i, value, prev }); }
-  //   });
-  // }
 
 
 
@@ -565,6 +550,22 @@ export class GameComponent {
   }
 
 
+  spellStackPanel = false;
+  spellStackPanelSize: 'min' | 'max' = 'max';
+  updateSpellStack() {
+    this.spellStackPanel = this.state.player1.stackCall || this.state.player2.stackCall;
+
+    if (this.spellStackPanel) {
+      // If summoning a card and waiting for mana, minimize it (so the lands on the table get visible)
+      if (this.state.cards.find(c => c.status === 'summon:waitingMana')) { this.spellStackPanelSize = 'min'; }
+      if (this.state.cards.find(c => c.status === 'summon:selectingMana')) { this.spellStackPanelSize = 'min'; }
+  
+      // If summoning a card and selecting a target, maximize it because its' most likely one on the stack
+      if (this.state.cards.find(c => c.status === 'summon:selectingTargets')) { this.spellStackPanelSize = 'max'; }
+    }
+  }
+
+
 
 
   // -------------------------- Actions --------------------------
@@ -575,21 +576,22 @@ export class GameComponent {
     if (this.canIDraw) { this.game.action('draw'); }
   }
 
+  selectManaPool(fromPlayer: 'A' | 'B', poolNum: number) {
+    if (this.summonOp.status === 'selectingMana' && this.playerA.manaPool[poolNum] > 0) { this.summonOp.reserveMana(poolNum); }
+  }
+
   selectCardFromYourHand(card: TGameCard) {
     if (card.selectableAction) {
       this.game.action(card.selectableAction.action, { gId: card.gId });
     }
   }
 
-  selectManaPool(fromPlayer: 'A' | 'B', poolNum: number) {
-    if (this.summonOp.status === 'selectingMana' && this.playerA.manaPool[poolNum] > 0) { this.summonOp.reserveMana(poolNum); }
+  selectCardFromTable(card: TExtGameCard) {
+    this.focusPlayCard(card);
+    this.selectCard(card);
   }
 
-
-
-  selectCardFromTable(player: 'A' | 'B', card: TExtGameCard) {
-    this.focusPlayCard(card);
-
+  selectCard(card: TGameCard) {
     if (card.selectableTarget) {
       if (this.summonOp.status === 'selectingTargets') {
         this.summonOp.addTarget(card.selectableTarget.value);        
@@ -600,10 +602,11 @@ export class GameComponent {
     }
   }
 
-  selectPlayer(player: 'A' | 'B') {
-    if (this.summonOp.status === 'selectingTargets') {
-      if (player === 'A' && this.canSelectPlayerA) { this.summonOp.addTarget('player' + this.game.playerANum); }
-      if (player === 'B' && this.canSelectPlayerB) { this.summonOp.addTarget('player' + this.game.playerBNum); }
+  selectPlayer(player: TPlayer) {
+    if (player.selectableTarget) {
+      if (this.summonOp.status === 'selectingTargets') {
+        this.summonOp.addTarget(player.selectableTarget.value);
+      }
     }
   }
 

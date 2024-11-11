@@ -97,7 +97,7 @@ export class DialogCombatComponent {
 
 
     // React on state changes
-    this.stateSub = this.game.stateExt$.subscribe(state => this.onStateChanges(state));
+    this.stateSub = this.game.state$.subscribe(state => this.onStateChanges(state));
     this.onStateChanges(this.game.state);
   }
 

@@ -13,7 +13,9 @@
           </div>
         </div>
   
-        <div class="life" [class.is-selectable]="canSelectPlayerB" (click)="selectPlayer('B')">
+        <div class="life" 
+             [class.is-selectable]="playerB.selectableAction || playerB.selectableTarget"
+             (click)="selectPlayer(playerB)">
           Life: {{playerB.life}}
         </div>
       </div>
@@ -39,7 +41,9 @@
 
     <div class="player-A">
       <div class="left">
-        <div class="life" [class.is-selectable]="canSelectPlayerA" (click)="selectPlayer('A')">
+        <div class="life"
+             [class.is-selectable]="playerA.selectableAction || playerA.selectableTarget"
+             (click)="selectPlayer(playerA)">
           Life: {{playerA.life}}
         </div>
 
@@ -112,7 +116,7 @@
               [style.z-index]="card.zInd"
               [bfDraggable]="card"
               (dragstart)="dragStart($event, card)"
-              (click)="selectCardFromTable('B', card)"
+              (click)="selectCardFromTable(card)"
               (mouseover)="hoverTableCard(card)"
               (mouseleave)="clearHover()">
           <img [src]="'/assets/images/cards/' + card.image">
@@ -120,8 +124,8 @@
             <span>{{card.damage}}</span>
             <span class="icon-power"></span>
           </span>
-          <div style="position: absolute; bottom: 60px; margin-left: 5px; color: white;">
-            <br/>gId={{card.gId}}
+          <div style="position: absolute; bottom: 30px; margin-left: 5px; color: white; background: black;">
+            gId={{card.gId}}
             <!-- <br/>status={{card.status}} -->
             <br/>damage={{card.damage}}
           </div>
@@ -208,7 +212,7 @@
              [style.z-index]="card.zInd"
              [bfDraggable]="card"
              (dragstart)="dragStart($event, card)"
-             (click)="selectCardFromTable('A', card)"
+             (click)="selectCardFromTable(card)"
              (mouseover)="hoverTableCard(card)"
              (mouseleave)="clearHover()">
           <img [src]="'/assets/images/cards/' + card.image">
@@ -216,7 +220,7 @@
             <span>{{card.damage}}</span>
             <span class="icon-power"></span>
           </span>
-          <div style="position: absolute; bottom: 60px; margin-left: 5px; color: white; background: black;">
+          <div style="position: absolute; bottom: 30px; margin-left: 5px; color: white; background: black;">
             gId={{card.gId}}
             <br/>status={{card.status}}
             <!-- <br/>damage={{card.damage}} -->
@@ -251,19 +255,30 @@
   <dialog-summon-event *ngIf="panel === 'summon-event-B'" summoner="B" (end)="panel = null"></dialog-summon-event>B
   <dialog-combat *ngIf="panel === 'combat-A'" attacker="A" (end)="panel = null" (hoverCard)="hoverCard($event)" (clearHover)="clearHover()"></dialog-combat>
   <dialog-combat *ngIf="panel === 'combat-B'" attacker="B" (end)="panel = null" (hoverCard)="hoverCard($event)" (clearHover)="clearHover()"></dialog-combat>
-  panel={{panel}}
+
+  <dialog-spell-stack 
+    *ngIf="spellStackPanel"
+    [panelSize]="spellStackPanelSize"
+    (selectCard)="selectCard($event)"
+    (selectPlayer)="selectPlayer($event)"
+    (end)="panel = null" >
+  </dialog-spell-stack>
+  spellStackPanelSize={{spellStackPanelSize}}
+  <!-- panel={{panel}} -->
 
 
 </div>
 
 
 
-<div style="position: fixed; top: 10%; left: 70%; background: lightgray; padding: 10px; z-index: 10000; width: 50%; height: 300px;">
-  <bf-btn (bfClick)="game.action('refresh')" bfText="REFRESH" bfIcon="icon-arrow-right3"></bf-btn>
-  <bf-btn (bfClick)="skipPhase.skip()" bfText="SKIP PHASE" bfIcon="icon-arrow-right3" style="margin-left: 30px;"></bf-btn>
+<div style="position: fixed; top: 130px; right: 2000px; background: lightgray; padding: 10px; z-index: 2000; width: 400px; height: 140px;">
+  <bf-btn (bfClick)="game.action('refresh')" bfText="REFRESH"></bf-btn>
+  <!-- <bf-btn (bfClick)="skipPhase.skip()" bfText="SKIP PHASE" bfIcon="icon-arrow-right3" style="margin-left: 30px;"></bf-btn> -->
+  <bf-btn (bfClick)="game.saveStateDebug()" bfText="SAVE STATE" style="margin-left: 30px;"></bf-btn>
+  <bf-btn (bfClick)="game.loadStateDebug()" bfText="LOAD STATE" style="margin-left: 30px;"></bf-btn>
   <!-- <br/>HELP = {{ playerA.help }} -->
   <!-- <br/>cardActionHelp = {{ cardActionHelp }} -->
-  <br/>phase$={{phase}}
+  <!-- <br/>phase$={{phase}} -->
   <br/>You are player={{game.playerANum}}
   <br/><span *ngIf="game.state">
     control={{game.state.control}} ====>
