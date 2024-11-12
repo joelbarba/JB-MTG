@@ -130,12 +130,12 @@ export class DialogSummonEventComponent {
   }
 
   endInterrupting() { // When you are done interrupting (summoner === 'B')
-    console.log('Ok, you are done interrupting. summoner=', this.summoner, 'control=', this.game.state.control, 'playerA=', this.game.playerANum);
-    if (this.interval) { clearInterval(this.interval); }
-    if (this.summoner === 'B' && this.game.state.control === this.game.playerANum) {
-      this.game.action('end-interrupting'); 
-    }
-    this.close();
+    // console.log('Ok, you are done interrupting. summoner=', this.summoner, 'control=', this.game.state.control, 'playerA=', this.game.playerANum);
+    // if (this.interval) { clearInterval(this.interval); }
+    // if (this.summoner === 'B' && this.game.state.control === this.game.playerANum) {
+    //   this.game.action('end-interrupting'); 
+    // }
+    // this.close();
   }
 
   endSummoning() { // When the waiting for the opponent is over, end your summoning (summoner === 'A')

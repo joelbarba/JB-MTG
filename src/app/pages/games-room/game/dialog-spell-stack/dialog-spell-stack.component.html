@@ -1,4 +1,4 @@
-<div class="spell-stack" [class.minimized]="minimized">
+<div class="spell-stack h-cards-len-{{hCardsLen}} v-cards-len-{{vCardsLen}}" [class.minimized]="minimized">
   <div class="min-btn" (click)="minimized = !minimized">{{minimized ? title : '-'}}</div>
   <h2>{{title}}</h2>
 
@@ -25,7 +25,7 @@
   </div>
 
   <div style="position: absolute; top: 80px; left: 35px; text-align: left;">
-    STACK EXECUTION ORDER:
+    <b>PLAYING SPELLS:</b>
     <div *ngFor="let txt of stackInfo">- {{txt}}</div>
   </div>
 
@@ -33,7 +33,7 @@
   <!-- <div *ngIf="summoner === 'A'">Waiting for the opponent to play any interruptions</div>
   <div *ngIf="summoner === 'B'">You can play some interruptions now</div> -->
 
-  <div>CONTROL = {{youControl ? 'Me' : 'Opponent'}}</div>
+  <div *ngIf="game.debugMode">CONTROL = {{youControl ? 'Me' : 'Opponent'}}</div>
   
   <!-- <div class="wating-progress-bar">
     <div class="time" [style.width.px]="progressBar"></div>

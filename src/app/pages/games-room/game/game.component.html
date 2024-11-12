@@ -124,7 +124,7 @@
             <span>{{card.damage}}</span>
             <span class="icon-power"></span>
           </span>
-          <div style="position: absolute; bottom: 30px; margin-left: 5px; color: white; background: black;">
+          <div *ngIf="game.debugMode" style="position: absolute; bottom: 30px; margin-left: 5px; color: white; background: black;">
             gId={{card.gId}}
             <!-- <br/>status={{card.status}} -->
             <br/>damage={{card.damage}}
@@ -185,7 +185,7 @@
              (mouseover)="hoverHandCard(card)"
              (mouseleave)="clearHover()">
           <img [src]="'/assets/images/cards/' + card.image">
-          <div style="position: absolute; bottom: 60px; margin-left: 5px; color: white; background: black;">
+          <div *ngIf="game.debugMode" style="position: absolute; bottom: 60px; margin-left: 5px; color: white; background: black;">
             gId={{card.gId}}
             <!-- <br/>action={{card.selectableAction?.action}} -->
             <br/>status={{card.status}}
@@ -220,15 +220,11 @@
             <span>{{card.damage}}</span>
             <span class="icon-power"></span>
           </span>
-          <div style="position: absolute; bottom: 30px; margin-left: 5px; color: white; background: black;">
+          <div *ngIf="game.debugMode" style="position: absolute; bottom: 30px; margin-left: 5px; color: white; background: black;">
             gId={{card.gId}}
             <br/>status={{card.status}}
             <!-- <br/>damage={{card.damage}} -->
           </div>
-          <!-- <div style="position: absolute;">
-            order={{card.order}}, gId={{card.gId}}
-            <br>x={{card.posX}}, y={{card.posY}}, z={{card.zInd}}
-          </div> -->
         </div>
       </div>
 
@@ -253,8 +249,17 @@
 
   <dialog-summon-event *ngIf="panel === 'summon-event-A'" summoner="A" (end)="panel = null"></dialog-summon-event>
   <dialog-summon-event *ngIf="panel === 'summon-event-B'" summoner="B" (end)="panel = null"></dialog-summon-event>B
-  <dialog-combat *ngIf="panel === 'combat-A'" attacker="A" (end)="panel = null" (hoverCard)="hoverCard($event)" (clearHover)="clearHover()"></dialog-combat>
-  <dialog-combat *ngIf="panel === 'combat-B'" attacker="B" (end)="panel = null" (hoverCard)="hoverCard($event)" (clearHover)="clearHover()"></dialog-combat>
+  <!-- <dialog-combat *ngIf="panel === 'combat-A'" attacker="A" (end)="panel = null" (hoverCard)="hoverCard($event)" (clearHover)="clearHover()"></dialog-combat>
+  <dialog-combat *ngIf="panel === 'combat-B'" attacker="B" (end)="panel = null" (hoverCard)="hoverCard($event)" (clearHover)="clearHover()"></dialog-combat> -->
+
+  <dialog-combat 
+    *ngIf="combatPanel"
+    [attacker]="combatPanelAttacker"
+    (end)="combatPanel = false"
+    (selectCard)="selectCard($event)"
+    (hoverCard)="hoverCard($event)"
+    (clearHover)="clearHover()">
+  </dialog-combat>
 
   <dialog-spell-stack 
     *ngIf="spellStackPanel"
@@ -263,7 +268,7 @@
     (selectPlayer)="selectPlayer($event)"
     (end)="panel = null" >
   </dialog-spell-stack>
-  spellStackPanelSize={{spellStackPanelSize}}
+  <!-- spellStackPanelSize={{spellStackPanelSize}} -->
   <!-- panel={{panel}} -->
 
 
@@ -271,31 +276,91 @@
 
 
 
-<div style="position: fixed; top: 130px; right: 2000px; background: lightgray; padding: 10px; z-index: 2000; width: 400px; height: 140px;">
-  <bf-btn (bfClick)="game.action('refresh')" bfText="REFRESH"></bf-btn>
-  <!-- <bf-btn (bfClick)="skipPhase.skip()" bfText="SKIP PHASE" bfIcon="icon-arrow-right3" style="margin-left: 30px;"></bf-btn> -->
-  <bf-btn (bfClick)="game.saveStateDebug()" bfText="SAVE STATE" style="margin-left: 30px;"></bf-btn>
-  <bf-btn (bfClick)="game.loadStateDebug()" bfText="LOAD STATE" style="margin-left: 30px;"></bf-btn>
-  <!-- <br/>HELP = {{ playerA.help }} -->
-  <!-- <br/>cardActionHelp = {{ cardActionHelp }} -->
-  <!-- <br/>phase$={{phase}} -->
-  <br/>You are player={{game.playerANum}}
-  <br/><span *ngIf="game.state">
-    control={{game.state.control}} ====>
-    {{(game.state.control === game.playerANum ? 'YOU' : 'Opponent') + ' (player ' + game.state.control + ') got control'}}
-  </span>
-  <!-- <br/>options = {{state.options | json}} -->
-  <br/>
-  <div *ngIf="summonOp.status !== 'off'">
-    summonOp - status = {{summonOp.status}}
-    <br/>action={{summonOp.action | json}}
-    <br/>params={{summonOp.params | json}}
-    <br/>text = {{summonOp.text}}
-    <br/>manaReserved={{summonOp.manaReserved | json}}
-    <br/>manaLeft={{summonOp.manaLeft | json}}
-    <br/><bf-btn (bfClick)="summonOp.cancel()" bfText="Cancel"></bf-btn>
-    <bf-btn style="margin-left: 15px;" (bfClick)="summonOp.tryToSummon()" bfText="tryToSummon"
-            [bfDisabled]="!summonOp.showSummonBtn"></bf-btn>
+<div style="position: fixed;
+top: 76px;
+left: 10px;
+background: lightgray;
+padding: 2px;
+z-index: 2000;
+width: 140px;
+height: 200px;">
+  <bf-btn (bfClick)="game.action('refresh')" bfText="REFRESH" class="full-width"></bf-btn>
+  <bf-btn (bfClick)="game.saveStateDebug()" bfText="SAVE STATE" class="full-width" style="margin-top: 5px;"></bf-btn>
+  <bf-btn (bfClick)="game.loadStateDebug()" bfText="LOAD STATE" class="full-width" style="margin-top: 5px;"></bf-btn>
+  <bf-btn *ngIf="!game.debugMode" (bfClick)="game.debugMode = true" bfText="Debug OFF" class="full-width" style="margin-top: 5px;"></bf-btn>
+  <bf-btn *ngIf="game.debugMode" (bfClick)="game.debugMode = false" bfText="Debug ON"  class="full-width" style="margin-top: 5px;"></bf-btn>
+  <bf-btn (bfClick)="debugPanel = !debugPanel"  bfText="Debug Panel" class="full-width" style="margin-top: 5px;"></bf-btn>
+</div>
+
+<div *ngIf="game.state && debugPanel"
+     style="position: fixed; top: 90px; left: 500px; background: lightgray; padding: 10px; z-index: 2000; right: 10px; bottom: 10px;">
+  <div>
+    <br/>You are player={{game.playerANum}}
+    <br/>
+    <span>control={{game.state.control}} ====> {{(game.state.control === game.playerANum ? 'YOU' : 'Opponent') + ' (player ' + game.state.control + ') got control'}}</span>
+    <br/>phase$={{game.state.phase}}
+    <br/>subPhase={{game.state.subPhase}}
+    <!-- <br/>options = {{state.options | json}} -->
+    <br/>
+    <div *ngIf="summonOp.status !== 'off'">
+      summonOp - status = {{summonOp.status}}
+      <br/>action={{summonOp.action | json}}
+      <br/>params={{summonOp.params | json}}
+      <br/>text = {{summonOp.text}}
+      <br/>manaReserved={{summonOp.manaReserved | json}}
+      <br/>manaLeft={{summonOp.manaLeft | json}}
+      <br/><bf-btn (bfClick)="summonOp.cancel()" bfText="Cancel"></bf-btn>
+      <bf-btn style="margin-left: 15px;" (bfClick)="summonOp.tryToSummon()" bfText="tryToSummon"
+              [bfDisabled]="!summonOp.showSummonBtn"></bf-btn>
+    </div>
   </div>
-  
+
+  <div style="display: flex; margin-top: 30px;">
+    <!-- stack -->
+    <div style="padding: 5px; border: 1px solid gray;">
+      <div><b>Cards in "stack"</b></div>
+      <div *ngFor="let card of cardFilter('stack')" style="cursor: pointer;" (click)="debugCard(card)">{{card.gId}} - {{card.name}}</div>
+    </div>
+    <!-- deck1 -->
+    <div style="padding: 5px; border: 1px solid gray; margin-left: 15px;">
+      <div><b>Cards in "deck1"</b></div>
+      <div *ngFor="let card of cardFilter('deck1')" style="cursor: pointer;" (click)="debugCard(card)">{{card.gId}} - {{card.name}}</div>
+    </div>
+    <!-- hand1 -->
+    <div style="padding: 5px; border: 1px solid gray;">
+      <div><b>Cards in "hand1"</b></div>
+      <div *ngFor="let card of cardFilter('hand1')" style="cursor: pointer;" (click)="debugCard(card)">{{card.gId}} - {{card.name}}</div>
+    </div>
+    <!-- tble1 -->
+    <div style="padding: 5px; border: 1px solid gray;">
+      <div><b>Cards in "tble1"</b></div>
+      <div *ngFor="let card of cardFilter('tble1')" style="cursor: pointer;" (click)="debugCard(card)">{{card.gId}} - {{card.name}}</div>
+    </div>
+    <!-- grav1 -->
+    <div style="padding: 5px; border: 1px solid gray;">
+      <div><b>Cards in "grav1"</b></div>
+      <div *ngFor="let card of cardFilter('grav1')" style="cursor: pointer;" (click)="debugCard(card)">{{card.gId}} - {{card.name}}</div>
+    </div>
+    <!-- deck2 -->
+    <div style="padding: 5px; border: 1px solid gray; margin-left: 15px;">
+      <div><b>Cards in "deck2"</b></div>
+      <div *ngFor="let card of cardFilter('deck2')" style="cursor: pointer;" (click)="debugCard(card)">{{card.gId}} - {{card.name}}</div>
+    </div>
+    <!-- hand2 -->
+    <div style="padding: 5px; border: 1px solid gray;">
+      <div><b>Cards in "hand2"</b></div>
+      <div *ngFor="let card of cardFilter('hand2')" style="cursor: pointer;" (click)="debugCard(card)">{{card.gId}} - {{card.name}}</div>
+    </div>
+    <!-- tble2 -->
+    <div style="padding: 5px; border: 1px solid gray;">
+      <div><b>Cards in "tble2"</b></div>
+      <div *ngFor="let card of cardFilter('tble2')" style="cursor: pointer;" (click)="debugCard(card)">{{card.gId}} - {{card.name}}</div>
+    </div>
+    <!-- grav2 -->
+    <div style="padding: 5px; border: 1px solid gray;">
+      <div><b>Cards in "grav2"</b></div>
+      <div *ngFor="let card of cardFilter('grav2')" style="cursor: pointer;" (click)="debugCard(card)">{{card.gId}} - {{card.name}}</div>
+    </div>
+  </div>
+
 </div>

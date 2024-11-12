@@ -23,7 +23,7 @@
         <span>{{item.shadowDamage}}</span>
         <span class="icon-power"></span>
       </span>
-      <div style="position: absolute; bottom: 30px; margin-left: 5px; color: white; background: black;">
+      <div *ngIf="game.debugMode" style="position: absolute; bottom: 30px; margin-left: 5px; color: white; background: black;">
         gId={{item.card.gId}}
         <br/>status={{item.card.status}}
       </div>

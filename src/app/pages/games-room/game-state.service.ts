@@ -29,6 +29,8 @@ export class GameStateService {
   playerANum: '1' | '2' = '1'; // You are always playerA, but can be 1 or 2
   playerBNum: '1' | '2' = '2'; // Your opponent2
 
+  debugMode = false;
+
   playerA = () => this.playerANum === '1' ? this.state.player1 : this.state.player2;
   playerB = () => this.playerBNum === '1' ? this.state.player1 : this.state.player2;
 
@@ -178,9 +180,11 @@ export class GameStateService {
     const player2    = state.player2;
     const playerA    = this.playerANum === '1' ? state.player1 : state.player2;
     const playerB    = this.playerBNum === '1' ? state.player1 : state.player2;
-    const turnPlayer    = state.turn    === '1' ? state.player1 : state.player2;
-    const controlPlayer = state.control === '1' ? state.player1 : state.player2;
-    return { player1, player2, playerA, playerB, turnPlayer, controlPlayer };
+    const turnPlayer       = state.turn    === '1' ? state.player1 : state.player2;
+    const controlPlayer    = state.control === '1' ? state.player1 : state.player2;
+    const attackingPlayer  = state.turn    === '1' ? state.player1 : state.player2;
+    const defendingPlayer  = state.turn    === '1' ? state.player2 : state.player1;
+    return { player1, player2, playerA, playerB, turnPlayer, controlPlayer, attackingPlayer, defendingPlayer };
   }
 
   // Shortcut for state objects (cards split on locations)
@@ -258,7 +262,6 @@ export class GameStateService {
       case 'select-defending-creature': this.selectDefendingCreature(nextState, params); break;
       case 'cancel-defense':            this.cancelDefense(nextState); break;
       case 'submit-defense':            this.submitDefense(nextState); break;
-      case 'end-combat':                this.endCombat(nextState); break;
       case 'select-card-to-discard':    this.discardCard(nextState, gId); break;
       case 'burn-mana':                 this.burnMana(nextState); break;
       case 'summon-land':               this.summonLand(nextState, gId); break;
@@ -266,7 +269,7 @@ export class GameStateService {
       case 'summon-spell':              this.summonSpell(nextState, params); break;
       case 'cancel-summon':             this.cancelSummonOperations(nextState); break;
       case 'release-stack':             this.releaseStack(nextState); break;
-      case 'end-interrupting':          this.endInterrupting(nextState); break;
+      // case 'end-interrupting':          this.endInterrupting(nextState); break;
 
     }
 
@@ -448,6 +451,7 @@ export class GameStateService {
     } else { // If both stackCall are false (you didn't add any new spell), run the spell stack
       console.log('You are both done, RUN THE STACK of SPELLS');
       this.runSpellStack(nextState);
+      if (nextState.phase === 'combat') { this.continueCombat(nextState); }      
     }    
   }
 
@@ -458,8 +462,6 @@ export class GameStateService {
     this.killDamagedCreatures(nextState);
     nextState.control = nextState.turn; // Return control to the turn player
   }
-
-
 
 
 
@@ -475,6 +477,12 @@ export class GameStateService {
 
     // Summoning instant spell
     if (card.type === 'instant' && card.status === 'summoning') {
+      this.moveCard(nextState, card.gId, 'grav'); // Move instant to graveyard
+      card.status = null;
+    }
+
+    // Summoning interruption
+    if (card.type === 'interruption' && card.status === 'summoning') {
       this.moveCard(nextState, card.gId, 'grav'); // Move instant to graveyard
       card.status = null;
     }
@@ -519,12 +527,6 @@ export class GameStateService {
   }
 
 
-  // Mark the end of the interruption break
-  private endInterrupting(nextState: TGameState) {
-    nextState.control = this.playerBNum; // Switch back control
-    console.log('SERVICE - End Interrupting - Switching back control to opponent => control = ', nextState.control);
-  }
-
 
 
 
@@ -543,10 +545,35 @@ export class GameStateService {
   }
 
   private submitAttack(nextState: TGameState) {
-    const { playerA, playerB } = this.getPlayers(nextState);
-    // nextState.subPhase = ESubPhase.attacking; <--- Should do this to start a spell-stack
-    nextState.subPhase = ESubPhase.selectDefense;
-    this.switchPlayerControl(nextState);
+    const { playerA, playerB, attackingPlayer, defendingPlayer } = this.getPlayers(nextState);
+    nextState.subPhase = ESubPhase.attacking;
+    defendingPlayer.stackCall = true; // Activate opponent's stack call, so he gets control to cast spells
+    // attackingPlayer.stackCall = true; // You may also play spells
+    this.switchPlayerControl(nextState, defendingPlayer);
+  }
+
+  // Advance combat subphases after the spell stack is released:
+  // selectAttack --> attacking (spell stack) --> selectDefense
+  // selectDefense --> defending (spell stack) --> afterCombat
+  // afterCombat (spell stack) --> end
+  private continueCombat(nextState: TGameState) {
+    const { playerA, playerB, attackingPlayer, defendingPlayer } = this.getPlayers(nextState);
+
+    // If for whatever reason, the attacking creatures were killed by spells, end the combat
+    const attackingCreatures = nextState.cards.filter(c => c.status === 'combat:attacking');
+    if (!attackingCreatures.length) { this.endCombat(nextState); }
+
+    if (nextState.subPhase === 'attacking') {
+      nextState.subPhase = ESubPhase.selectDefense;
+      this.switchPlayerControl(nextState, defendingPlayer);
+
+    } else if (nextState.subPhase === 'defending') {
+      this.runCombat(nextState);
+      this.switchPlayerControl(nextState, attackingPlayer);
+
+    } else if (nextState.subPhase === 'afterCombat') {
+      this.endCombat(nextState);      
+    }
   }
 
   private selectDefendingCreature(nextState: TGameState, params: TActionParams) {
@@ -570,11 +597,17 @@ export class GameStateService {
   }
 
   private submitDefense(nextState: TGameState) {
-    const { playerA, playerB, turnPlayer } = this.getPlayers(nextState);
+    const { playerA, playerB, attackingPlayer, defendingPlayer } = this.getPlayers(nextState);
+    nextState.subPhase = ESubPhase.defending;
+    attackingPlayer.stackCall = true; // Activate opponent's stack call, so he gets control to cast spells
+    // defendingPlayer.stackCall = true; // You may also play spells
+    this.switchPlayerControl(nextState, attackingPlayer);
+  }
 
+  private runCombat(nextState: TGameState) {
+    const { playerA, playerB, attackingPlayer, defendingPlayer } = this.getPlayers(nextState);
     const attackingCreatures = nextState.cards.filter(c => c.status === 'combat:attacking');
     const defendingCreatures = nextState.cards.filter(c => c.status === 'combat:defending');
-    nextState.subPhase = ESubPhase.afterCombat;
 
     let totalDamage = 0;
     attackingCreatures.forEach(attackingCard => {
@@ -595,12 +628,21 @@ export class GameStateService {
       }
     });
 
-    playerA.life -= totalDamage; // None blocked creatures damage defending player
+    defendingPlayer.life -= totalDamage; // None blocked creatures damage defending player
+
+    nextState.subPhase = ESubPhase.afterCombat;
+    attackingPlayer.stackCall = true;
+    defendingPlayer.stackCall = true;
   }
 
   private endCombat(nextState: TGameState) {
+    const { playerA, playerB, attackingPlayer, defendingPlayer } = this.getPlayers(nextState);
     this.killDamagedCreatures(nextState);  // Check those creatures that received more damage than defense, and kill them    
-    nextState.cards.filter(c => c.status?.slice(0,6) === 'combat').forEach(c => c.status = null);
+    nextState.cards.filter(c => c.status?.slice(0,6) === 'combat').forEach(card => {
+      card.status = null;
+      card.targets = [];
+    });
+    this.switchPlayerControl(nextState, attackingPlayer);
     this.endPhase(nextState);
   }
 
@@ -656,10 +698,9 @@ export class GameStateService {
 
   // --------------------------- INTERNALS ----------------------------------
 
-  private switchPlayerControl(nextState: TGameState) {
-    const { playerB } = this.getPlayers(nextState);
-    nextState.control = this.playerBNum; // Switch control to opponent
-    playerB.controlTime = (new Date()).getTime();
+  private switchPlayerControl(nextState: TGameState, player = this.playerB()) {
+    nextState.control = player.num;
+    player.controlTime = (new Date()).getTime();
     console.log('SERVICE - Switching CONTROL to opponent => control = ', nextState.control);
   }
 
@@ -743,6 +784,8 @@ export class GameStateService {
       if ((card.defense || 0) <= (card.damage || 0)) {
         console.log(`Creature ${card.gId} ${card.name} (${card.attack}/${card.defense}) has received "${card.damage}" points of damage ---> IT DIES (go to graveyard)`);
         this.moveCard(nextState, card.gId, 'grav');
+        card.status = null;
+        card.targets = [];
       }
     });
   }

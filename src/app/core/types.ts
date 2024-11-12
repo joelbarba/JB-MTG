@@ -107,16 +107,14 @@ export type TAction = 'start-game'
 | 'select-card-to-discard' 
 | 'tap-land'
 | 'burn-mana'
-| 'cancel-instant-spell'
 | 'select-attacking-creature'
 | 'cancel-attack'
 | 'submit-attack'
 | 'select-defending-creature'
 | 'cancel-defense'
 | 'submit-defense'
-| 'end-combat'
 | 'release-stack'
-| 'end-interrupting'
+// | 'end-interrupting'
 ;
 
 export type TActionParams = { 

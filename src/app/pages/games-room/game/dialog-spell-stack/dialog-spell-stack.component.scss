@@ -13,11 +13,37 @@
   justify-content: space-between;
   h2 { font-size: 35px; } // title
 
-  // &.md {}
-  top: 90px;
-  left: 550px;
-  right: 70px;
-  bottom: 200px;
+  // Panel Size
+
+  $table-left: 490px; // Width of the left panel
+  $table-width: calc(100% - $table-left);
+  $table-center-right: calc($table-width / 2);
+  $table-center-left: calc($table-left + $table-center-right);
+
+  $table-top: 72px; // Height of the navbar
+  $table-height: calc(100% - $table-top);  
+  $table-center-bottom: calc($table-height / 2);
+  $table-center-top: calc($table-top + $table-center-bottom);
+
+  left: calc($table-center-left - 1000px);
+  right: calc($table-center-right - 1000px);
+  top: calc($table-center-top - 590px); 
+  bottom: calc($table-center-bottom - 380px);
+
+  &.h-cards-len-1 { left: calc($table-center-left - 370px); right: calc($table-center-right - 370px); }
+  &.h-cards-len-2 { left: calc($table-center-left - 420px); right: calc($table-center-right - 420px); }
+  &.h-cards-len-3 { left: calc($table-center-left - 470px); right: calc($table-center-right - 470px); }
+  &.h-cards-len-4 { left: calc($table-center-left - 520px); right: calc($table-center-right - 520px); }
+  &.h-cards-len-5 { left: calc($table-center-left - 570px); right: calc($table-center-right - 570px); }
+  &.h-cards-len-6 { left: calc($table-center-left - 620px); right: calc($table-center-right - 620px); }
+  &.h-cards-len-7 { left: calc($table-center-left - 670px); right: calc($table-center-right - 670px); }
+  &.h-cards-len-8 { left: calc($table-center-left - 720px); right: calc($table-center-right - 720px); }
+  &.h-cards-len-9 { left: calc($table-center-left - 770px); right: calc($table-center-right - 770px); }
+
+  &.v-cards-len-1 { top: calc($table-center-top - 340px); bottom: calc($table-center-bottom - 70px); }
+  &.v-cards-len-2 { top: calc($table-center-top - 560px); bottom: calc($table-center-bottom - 90px); }
+  &.v-cards-len-3 { top: calc($table-center-top - 590px); bottom: calc($table-center-bottom - 290px); }
+
 
   .stack-box {
     flex: 1;
@@ -29,6 +55,7 @@
     border: 1px solid #c3c3c3;
     background: #66cdaa33;
     border-radius: 2px;
+    margin-bottom: 15px;
     .stack {
       display: flex;
       align-items: end;

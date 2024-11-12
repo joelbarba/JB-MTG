@@ -31,6 +31,7 @@ type TCol = {
 export class DialogCombatComponent {
   @Input({ required: true }) attacker!: 'A' | 'B';
   @Output() end = new EventEmitter<any>();
+  @Output() selectCard = new EventEmitter<TGameCard>();
   @Output() hoverCard = new EventEmitter<any>();
   @Output() clearHover = new EventEmitter<any>();
 
@@ -57,7 +58,8 @@ export class DialogCombatComponent {
 
   submitDefenseBtnText = 'Defend with current selection';
   anyDefenders = false; // Whether there is any defender assigned
-  
+
+  hCardsLen = 1;  // Max number of cards on a horizontal line  
 
   constructor(public game: GameStateService) {}
 
@@ -74,24 +76,20 @@ export class DialogCombatComponent {
     const youControl = (this.game.state.control === this.game.playerANum);
     
     if (this.attacker === 'A') {
-      // this.title = `Summoning ${this.card.name}`;
+      this.title = `Combat: Attacking`;
+
       let msg = `COMBAT PANEL - You are playerA = player${this.game.playerANum} (attacker). `;
       if (youControl) { msg += 'Select your attacking creatures'; } 
       else { msg += `Waiting for playerB = player${this.game.playerBNum} to select their defense.`; }
       console.log(msg);
 
-      if (youControl) { this.title = `Combat: Select Attacking Creatures`; }
-      else { this.title = `Combat: Opponent Defending`; }
-
     } else { // summoner === B
-      // this.title = `Opponent is summoning ${this.card.name}`;
+      this.title = `Combat: Defending`;
+
       let msg = `COMBAT PANEL - You are playerA = player${this.game.playerANum} (defender). `;
       if (this.game.state.control === this.game.playerANum) { msg += 'Select your defending creatures'; } 
       else { msg += `Waiting for playerB = player${this.game.playerBNum} to select their attacking creatures.`; }
       console.log(msg);
-
-      if (youControl) { this.title = `Combat: Select Defending Creatures`; }
-      else { this.title = `Combat: Opponent Selecting Attacking Creatures`; }
     }
 
 
@@ -106,8 +104,6 @@ export class DialogCombatComponent {
 
   attackingCreatures!: Array<TGameCard>;
   defendingCreatures!: Array<TGameCard>;
-  // yourCreatures!: Array<TGameCard>;
-  // oppCreatures!: Array<TGameCard>;
 
   defenderLookingForTarget?: TGameCard;   // When setting a defending creature, but waiting to select an attacker target to defend
 
@@ -123,13 +119,43 @@ export class DialogCombatComponent {
     this.combatCards = this.attackingCreatures.map(attackingCard => {
       const defendingCard = this.defendingCreatures.find(c => c.targets?.includes(attackingCard.gId));
       return { attackingCard, defendingCard, hoverDefender: undefined };
-    })
-
+    });
 
     this.canSubmitAttack = !!state.options.find(op => op.action === 'submit-attack');
     this.canSubmitDefense = !!state.options.find(op => op.action === 'submit-defense');
     this.anyDefenders = !!this.defendingCreatures.length;
     this.submitDefenseBtnText = this.anyDefenders ? 'Defend with current selection' : `Do not defend`;
+
+    this.hCardsLen = this.attackingCreatures.length;
+
+    // Set this.mainInfo to give a human-readable definition of the status
+    if (this.attacker === 'A') { // You are the attacker
+      if (state.subPhase === 'selectAttack') { this.mainInfo = `Select what creatures you want to attack with`; }
+      if (state.subPhase === 'attacking') {
+        if (!this.youControl) { this.mainInfo = `Waiting for the opponent to defend or cast any spells`; }
+        else { this.mainInfo = `You may also cast spells before the defense is set`; }
+      }
+      if (state.subPhase === 'selectDefense') { this.mainInfo = `Waiting for the opponent to select the defense`; }
+
+    } else { // You are the defender
+      if (state.subPhase === 'selectAttack') { this.mainInfo = `Your opponent is selecting creatures to attack you (wait for it)`; }
+      if (state.subPhase === 'attacking') {
+        if (this.youControl) { this.mainInfo = `You may cast spells before you select your defense`; }
+        else { this.mainInfo = `Wait for the opponent to cast any other spells`; }
+      }
+      if (state.subPhase === 'selectDefense') { this.mainInfo = `Select what creatures you want to defend with, or do not defend`; }
+    }
+
+    if (state.subPhase === 'defending') {
+      if (!this.youControl) { this.mainInfo = `Waiting for the opponent cast spells before the combat is executed`; }
+      else { this.mainInfo = `You may cast spells before the combat is executed`; }
+    }
+    if (state.subPhase === 'afterCombat') {
+      if (!this.youControl) { this.mainInfo = `Waiting for the opponent cast spells before dying creatures are destroyed`; }
+      else { this.mainInfo = `You may cast spells before dying creatures are destroyed`; }
+    }
+
+
 
     if (state.control === this.game.playerANum) {
       this.defenderLookingForTarget = this.game.state.cards.find(c => c.status === 'combat:selectingTarget');
@@ -155,7 +181,7 @@ export class DialogCombatComponent {
     this.hoveringCol = col;
     this.combatCards.forEach(col => col.hoverDefender = undefined);
     this.itemInfo = ``;
-    if (col && this.defenderLookingForTarget) { 
+    if (col && !col.defendingCard && this.defenderLookingForTarget) { 
       col.hoverDefender = this.defenderLookingForTarget;
       this.itemInfo = `Defend ${col.attackingCard.name} with ${this.defenderLookingForTarget.name}`;
     }
@@ -163,7 +189,7 @@ export class DialogCombatComponent {
 
   clickCol(col: TCol) {
     console.log(col);
-    if (this.defenderLookingForTarget && col.attackingCard.selectableAction) {
+    if (!col.defendingCard && this.defenderLookingForTarget && col.attackingCard.selectableAction) {
       const option = col.attackingCard.selectableAction;
       this.game.action(option.action, option.params);
     }
@@ -174,13 +200,10 @@ export class DialogCombatComponent {
   cancelAttack()  { this.game.action('cancel-attack'); }
   cancelDefense() { this.game.action('cancel-defense'); }
 
-  endCombat() {
-    if (this.attacker === 'B') {
-      this.game.action('end-interrupting'); // switch back control to the attacker
-    } else {
-      this.game.action('end-combat'); // end combat phase
-    }
+  releaseStack() {
+    this.game.action('release-stack');
   }
+  
 
 
   close() {

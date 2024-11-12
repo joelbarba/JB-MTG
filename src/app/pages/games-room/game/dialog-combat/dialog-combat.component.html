@@ -1,8 +1,10 @@
-<div class="combat" [class.minimized]="minimized">
+<div class="combat h-cards-len-{{hCardsLen}}" [class.minimized]="minimized">
   <div class="min-btn" (click)="minimized = !minimized">{{minimized ? title : '-'}}</div>
   <h2>{{title}}</h2>
 
+  <div>CONTROL = {{youControl ? 'Me' : 'Opponent'}} - subPhase = "{{subPhase}}"</div>
 
+  
 
 
   <!-- View for attacker -->
@@ -11,8 +13,11 @@
       <div class="combat-col" *ngFor="let col of combatCards">
 
         <!-- Defending Creature -->
-        <div class="panel-card" *ngIf="col.defendingCard" (mouseover)="hoverCard.emit(col.defendingCard)" (mouseleave)="clearHover.emit()"
-             [class.is-dying]="col.defendingCard.defense <= (col.defendingCard.damage || 0)">
+        <div class="panel-card" *ngIf="col.defendingCard" 
+             [class.is-dying]="col.defendingCard.defense <= (col.defendingCard.damage || 0)"
+             [class.selectable-card]="col.defendingCard.selectableAction || col.defendingCard.selectableTarget"
+             (click)="selectCard.emit(col.defendingCard)"
+             (mouseover)="hoverCard.emit(col.defendingCard)" (mouseleave)="clearHover.emit()">
           <img [src]="'/assets/images/cards/' + col.defendingCard.image">
           <span class="damage-points" *ngIf="col.defendingCard.damage">
             <span>{{col.defendingCard.damage}}</span>
@@ -45,8 +50,11 @@
         </div>
 
         <!-- Attacking Creature -->
-        <div class="panel-card" (mouseover)="hoverCard.emit(col.attackingCard)" (mouseleave)="clearHover.emit()"
-             [class.is-dying]="col.attackingCard.defense <= (col.attackingCard.damage || 0)">
+        <div class="panel-card" 
+             [class.is-dying]="col.attackingCard.defense <= (col.attackingCard.damage || 0)"
+             [class.selectable-card]="col.attackingCard.selectableAction || col.attackingCard.selectableTarget"
+             (click)="selectCard.emit(col.attackingCard)"
+             (mouseover)="hoverCard.emit(col.attackingCard)" (mouseleave)="clearHover.emit()">
           <img [src]="'/assets/images/cards/' + col.attackingCard.image">
           <span class="damage-points" *ngIf="col.attackingCard.damage">
             <span>{{col.attackingCard.damage}}</span>
@@ -72,8 +80,11 @@
            (mouseleave)="hoverCol()">
 
         <!-- Attacking Creature -->
-        <div class="panel-card" (mouseover)="hoverCard.emit(col.attackingCard)" (mouseleave)="clearHover.emit()"
-             [class.is-dying]="col.attackingCard.defense <= (col.attackingCard.damage || 0)">
+        <div class="panel-card" 
+             [class.is-dying]="col.attackingCard.defense <= (col.attackingCard.damage || 0)"
+             [class.selectable-card]="col.attackingCard.selectableAction || col.attackingCard.selectableTarget"
+             (click)="selectCard.emit(col.attackingCard)"
+             (mouseover)="hoverCard.emit(col.attackingCard)" (mouseleave)="clearHover.emit()">
           <img [src]="'/assets/images/cards/' + col.attackingCard.image">
           <span class="damage-points" *ngIf="col.attackingCard.damage">
             <span>{{col.attackingCard.damage}}</span>
@@ -96,8 +107,11 @@
         </div>
 
         <!-- Defending Creature -->
-        <div class="panel-card" *ngIf="col.defendingCard" (mouseover)="hoverCard.emit(col.defendingCard)" (mouseleave)="clearHover.emit()"
-             [class.is-dying]="col.defendingCard.defense <= (col.defendingCard.damage || 0)">
+        <div class="panel-card" *ngIf="col.defendingCard"
+             [class.is-dying]="col.defendingCard.defense <= (col.defendingCard.damage || 0)"
+             [class.selectable-card]="col.defendingCard.selectableAction || col.defendingCard.selectableTarget"
+             (click)="selectCard.emit(col.defendingCard)"
+             (mouseover)="hoverCard.emit(col.defendingCard)" (mouseleave)="clearHover.emit()">
           <img [src]="'/assets/images/cards/' + col.defendingCard.image">
           <span class="damage-points" *ngIf="col.defendingCard.damage">
             <span>{{col.defendingCard.damage}}</span>
@@ -125,22 +139,21 @@
 
   
 
-  <div>
-    <div>CONTROL = {{game.state.control}}</div>   
-    subPhase={{subPhase}}
-    <span *ngIf="itemInfo">{{itemInfo}}</span>
-    <span *ngIf="!itemInfo">{{mainInfo}}</span>
-  </div>
-  
 
   <div class="btns-box">
+    <span class="main-info" *ngIf="itemInfo">{{itemInfo}}</span>
+    <span class="main-info" *ngIf="mainInfo && !itemInfo">{{mainInfo}}</span>
+
     <bf-btn *ngIf="attacker === 'A' && subPhase === 'selectAttack'"  bfText="Cancel"  [bfDisabled]="!youControl" (bfClick)="cancelAttack()"  bfIcon="icon-cross"></bf-btn>
     <bf-btn *ngIf="attacker === 'A' && subPhase === 'selectAttack'"  bfText="Submit Attack"  [bfDisabled]="!youControl" (bfClick)="submitAttack()"  bfIcon="icon-arrow-right3"></bf-btn>
-
+    
     <bf-btn *ngIf="attacker === 'B' && subPhase === 'selectDefense' && anyDefenders" bfText="Cancel"  [bfDisabled]="!youControl" (bfClick)="cancelDefense()" bfIcon="icon-cross"></bf-btn>
     <bf-btn *ngIf="attacker === 'B' && subPhase === 'selectDefense'" [bfText]="submitDefenseBtnText" [bfDisabled]="!youControl" (bfClick)="submitDefense()" bfIcon="icon-arrow-right3"></bf-btn>
 
-    <bf-btn *ngIf="subPhase === 'afterCombat'" bfText="Ok, continue" [bfDisabled]="!youControl" (bfClick)="endCombat()" bfIcon="icon-arrow-right3"></bf-btn>
+    <bf-btn *ngIf="subPhase === 'attacking'"   bfText="Continue" [bfDisabled]="!youControl" (bfClick)="releaseStack()" bfIcon="icon-arrow-right3"></bf-btn>
+    <bf-btn *ngIf="subPhase === 'defending'"   bfText="Continue" [bfDisabled]="!youControl" (bfClick)="releaseStack()" bfIcon="icon-arrow-right3"></bf-btn>
+    <bf-btn *ngIf="subPhase === 'afterCombat'" bfText="Continue" [bfDisabled]="!youControl" (bfClick)="releaseStack()" bfIcon="icon-arrow-right3"></bf-btn>
+
   </div>
 
 </div>

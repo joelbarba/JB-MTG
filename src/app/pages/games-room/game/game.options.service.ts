@@ -136,7 +136,7 @@ export class GameOptionsService {
             });
           }
         } else if (state.subPhase === 'afterCombat') {
-          state.options.push({ action: 'end-interrupting', params: {}, text: `Skip` });
+          // state.options.push({ action: 'end-interrupting', params: {}, text: `Skip` });
         }
 
       } else { // Opponent is not on the combat phase
@@ -153,11 +153,20 @@ export class GameOptionsService {
         });
 
         // You may summon instant spells (add them to the stack)
-        handA.filter(c => c.type === 'instant' || c.type === 'interruption').forEach(card => {
+        handA.filter(c => c.type === 'instant').forEach(card => {
           const option: TGameOption = { action: 'summon-spell', params: { gId: card.gId }, text: `Cast ${card.name}` };
           state.options.push(option);
           if (!card.status) { card.selectableAction = option; }
         });
+
+        // You may summon interruptions (add them to the stack)
+        if (state.cards.find(c => c.location === 'stack')) {
+          handA.filter(c => c.type === 'interruption').forEach(card => {
+            const option: TGameOption = { action: 'summon-spell', params: { gId: card.gId }, text: `Interrupt spell with ${card.name}` };
+            state.options.push(option);
+            if (!card.status) { card.selectableAction = option; }
+          });
+        }
       }
 
       return state; // <---- Skip generic options (it's not your turn)
@@ -235,9 +244,6 @@ export class GameOptionsService {
         }
       }
 
-      // You may finish the combat and end the spell-stack after the combat
-      if (state.subPhase === 'afterCombat') { state.options.push({ action: 'end-combat', params: {}, text: 'Continue with the game' }); }
-
       // If ongoing combat, you can't skip to the next phase, you need to finish with the combat
       if (isAttackOn) { canSkipPhase = false; }
     }
@@ -246,7 +252,7 @@ export class GameOptionsService {
     
     // You may untap cards
     if (isPhase('untap')) {
-      state.options.push({ action: 'untap-all', params: {}, text: `Untap all your cards` });
+      if (tableA.filter(c => c.isTapped).length) { state.options.push({ action: 'untap-all', params: {}, text: `Untap all your cards` }); }
       tableA.filter(c => c.isTapped).forEach(card => {
         const option: TGameOption = { action: 'untap-card', params: { gId: card.gId }, text: `Untap ${card.name}` };
         state.options.push(option);

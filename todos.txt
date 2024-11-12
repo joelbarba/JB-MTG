@@ -1,11 +1,12 @@
-- spell-stack mechanism
+- Effects
+- Toast messages + helping messages
 - Add graveyard panel to see graveyard cards
 - Show last card image on graveyard
 - Fix summoning Brass Man (only uncolored mana)
 - Fix dragging cards on the table
 - Figure out how to do "artifact creature" type
 - Reorder (card.order) when dragging on the table
-- Toast messages + helping messages
+- Reorder mana on the table on a same column
 - Style panels properly
 - 1900x1024 size adjustment
 - Add chat
@@ -19,5 +20,4 @@
 - Performance improvement: Do not save the static card properties (c0000) on the state.card[] objects
   Merge those properties in memory every state change
 
-- Performance: Move options calculation to a seperate service
 - Split reducer to another service

@@ -32,23 +32,16 @@ export class DialogSpellStackComponent {
   @Input() panelSize: 'min' | 'max' = 'max';
   minimized = false;
 
+  title = 'Spell Stack';
+
   card?: TGameCard;  // Summoning card
-
-  progress = 0; // Counter to the up time (never stops until it reaches it)
-  progressBar = 0;  // Displayed progress (it stops when it's paused or reaches)
-  interval!: ReturnType<typeof setInterval>;
+  target?: TGameCard | 'playerA' | 'playerB';
+  
   stateSub!: Subscription;
-  isPaused = false;
-  isRemotePaused = false;
-
-  canSelectPlayer1 = false;
-  canSelectPlayer2 = false;
-
-
   youControl = false;
 
-  target?: TGameCard | 'playerA' | 'playerB';
-  title = 'Spell Stack';
+  hCardsLen = 1;  // Max number of cards on a horizontal line
+  vCardsLen = 1;  // Max number of cards on a vertical line
 
   constructor(public game: GameStateService) {}
 
@@ -63,7 +56,6 @@ export class DialogSpellStackComponent {
 
   ngOnDestroy() {
     if (this.stateSub) { this.stateSub.unsubscribe(); }
-    if (this.interval) { clearInterval(this.interval); }
   }
 
   stack: Array<TGameCard> = [];
@@ -138,50 +130,59 @@ export class DialogSpellStackComponent {
 
     // Generate a human-readable list of the stack actions
     this.stackInfo = this.stack.map(card => {
-      let txt = `Cast ${card.name}`;
+      let txt = `Casting ${card.name}`;
       if (card.targets && card.targets.length) { 
         const targetGId = card.targets[0];
         const target = state.cards.find(c => c.gId === targetGId);
-        if (target) { txt += ` to ${target.name}`; }
+        if (target) { txt = `${card.name} --> ${target.name}`; }
       }
       return txt;
     });
 
-    this.canSelectPlayer1 = !!state.options.find(op => op.params.targets?.some(t => t === 'player1'));
-    this.canSelectPlayer2 = !!state.options.find(op => op.params.targets?.some(t => t === 'player2'));
+
+    // Find a suitable title for the panel
+    this.title = 'Casting Spells';
+    if (this.rootTargets.length === 1) {
+      const mainCard = this.stack.at(-1);
+      if (mainCard) {
+        if (mainCard.type === 'creature')     { this.title = `Summoning ${mainCard.name}`; }
+        if (mainCard.type === 'instant')      { this.title = `Casting ${mainCard.name}`; }
+        if (mainCard.type === 'interruption') { this.title = `Casting ${mainCard.name}`; }        
+      }      
+      if (mainCard?.targets && mainCard.targets.length === 1) {
+        const target = mainCard.targets[0];
+        if      (target === 'player1') { this.title += ` on ${state.player1.name}`; }
+        else if (target === 'player2') { this.title += ` on ${state.player2.name}`; }
+        else {
+          const targetCard = state.cards.find(c => c.gId === target);
+          if (targetCard) { this.title += ` on ${targetCard.name}`; }
+        }
+      }
+    }
+
+    // Find how many cards in horizontal line and vertical line are displayed in the spell tree, to resize the panel
+    this.hCardsLen = this.rootTargets.length;
+    this.vCardsLen = 1;
+    const checkSize = (target: TStackTree, level = 1) => {
+      if (this.vCardsLen < level) { this.vCardsLen = level; }
+      if (this.hCardsLen < target.targetOf.length) { this.hCardsLen = target.targetOf.length; }
+      target.targetOf.forEach(t => checkSize(t, level + 1));
+    }
+    this.rootTargets.forEach(target => checkSize(target));
   }
 
 
-  pause() {
-    this.isPaused = true;
-  }
 
-  continue() {
-    this.isPaused = false;
-  }
+
 
   releaseStack() { // When you are done adding spells to the stack
     console.log('Ok, you are done adding spells to the stack.', 'control=', this.game.state.control, 'playerA=', this.game.playerANum);
     this.game.action('release-stack'); 
   }
 
-  endSummoning() { // When the waiting for the opponent is over, end your summoning (summoner === 'A')
-    // if (this.interval) { clearInterval(this.interval); }
-    // if (this.summoner === 'A') {
-    //   console.log('Ok, the opponent has finished with interruptions');
-    //   if (this.card) {
-    //     const params: TActionParams = { gId: this.card.gId };
-    //     if (this.card.targets?.length) { params.targets = this.card.targets; }
-    //     if (this.card.type === 'creature') { this.game.action('summon-creature', params); }
-    //     if (this.card.type === 'instant')  { this.game.action('summon-spell', params); }
-    //     this.close();
-    //   }
-    // }
-  }
 
   close() {
     if (this.stateSub) { this.stateSub.unsubscribe(); }
-    if (this.interval) { clearInterval(this.interval); }
     this.end.emit();
   }
 

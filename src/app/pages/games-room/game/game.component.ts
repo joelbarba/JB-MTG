@@ -5,7 +5,7 @@ import { CommonModule } from '@angular/common';
 import { BfConfirmService, BfDnDModule, BfDnDService, BfUiLibModule } from '@blueface_npm/bf-ui-lib';
 import { GameStateService } from '../game-state.service';
 import { filter, map, Subscription, timeout } from 'rxjs';
-import { EPhase, TGameState, TGameCard, TExtGameCard, TPlayer, TAction, TCast, TActionParams, ESubPhase } from '../../../core/types';
+import { EPhase, TGameState, TGameCard, TExtGameCard, TPlayer, TAction, TCast, TActionParams, ESubPhase, TCardLocation } from '../../../core/types';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -100,7 +100,7 @@ export class GameComponent {
   globalButtons: Array<{ id: string, text: string, icon: string, clickFn: () => void }> = [];
 
   panel: null | TPanel = null;
-  dialog: null | IDialog = null;
+  dialog: null | IDialog = null;  
 
   mainInfo = '';  // General info for the state
   itemInfo = '';  // Info about a specific item (card, button, ...)
@@ -168,7 +168,10 @@ export class GameComponent {
     this.subs.forEach(sub => sub.unsubscribe());
   }
 
-
+  // Debugging tools
+  debugPanel = false;
+  cardFilter(location: TCardLocation) { return this.state.cards.filter(c => c.location === location); }
+  debugCard(card: TGameCard) { console.log(card); }
 
   setVarsFromStateChange() {
     const you = this.game.playerANum;
@@ -210,12 +213,12 @@ export class GameComponent {
     if (!this.game.isYourTurn()) { return; }
     const yourOptions = this.game.doYouHaveControl() ? this.state.options : [];
 
-    const advancePhase = () => {
+    const advancePhase = (action = this.skipPhase.skip) => {
       const lastStateTime = this.stateTime;
       this.autoAdvanceTimeout = setTimeout(() => {
         if (lastStateTime === this.stateTime) {
           // console.log('Auto advancing phase', this.state.phase);
-          this.skipPhase.skip();
+          action();
         }
       }, 100);
     }
@@ -225,17 +228,25 @@ export class GameComponent {
     // If you can only skip phase, do it
     if (yourOptions.length === 1 && yourOptions[0].action === 'skip-phase') { return advancePhase(); }
 
+    // Automatically untap
+    if (this.state.phase === 'untap' && yourOptions.filter(o => o.action === 'untap-all').length === 1) { return advancePhase(() => this.game.action('untap-all')); }
+
     // Don't stop at the untap pahse if there are no cards to untap
     if (this.state.phase === 'untap' && !yourOptions.find(o => o.action === 'untap-card')) { return advancePhase(); }
 
     // Always skip maintenance (for now)
     if (this.state.phase === 'maintenance') { return advancePhase(); }
 
+    // Automatically draw if you can't only draw 1 card
+    if (this.state.phase === 'draw' && yourOptions.filter(o => o.action === 'draw').length === 1) { return advancePhase(() => this.game.action('draw')); }
+
     // Don't stop at the draw pahse if you can't draw more cards
     if (this.state.phase === 'draw' && !yourOptions.find(o => o.action === 'draw')) { return advancePhase(); }
 
     // Don't stop at the combat phase if you don't have creatures to attack
-    if (this.state.phase === 'combat' && this.state.subPhase === 'selectAttack' && !yourOptions.find(o => o.action === 'select-attacking-creature')) { return advancePhase(); }
+    const selectableCreatures = !!yourOptions.find(o => o.action === 'select-attacking-creature');
+    const attackingCreatures = !!this.tableA.find(c => c.status === 'combat:attacking');
+    if (this.state.phase === 'combat' && this.state.subPhase === 'selectAttack' && !selectableCreatures && !attackingCreatures) { return advancePhase(); }
 
     // Don't stop at the discard phase, if you don't have to discard
     if (this.state.phase === 'discard' && !yourOptions.find(o => o.action === 'select-card-to-discard')) { return advancePhase(); }
@@ -295,10 +306,12 @@ export class GameComponent {
   }
 
   defaultCardPos(card: TGameCard | TExtGameCard) {
+    const x = card.order % 15;
+    const y = Math.floor(card.order / 15);
     if (card.location === 'tble' + this.game.playerANum) {
-      return { posX: 20 + (card.order * 135), posY: 20, zInd: 100 + card.order };  // Your card (table A)
+      return { posX: 20 + (x * 135), posY: 20 + (y * 180), zInd: 100 + card.order };  // Your card (table A)
     } else {
-      return { posX: 20 + (card.order * 135), posY: 300, zInd: 100 + card.order }; // Opponent's card (B)
+      return { posX: 20 + (x * 135), posY: 230 + (y * 180), zInd: 100 + card.order }; // Opponent's card (B)
     }
   }
 
@@ -516,36 +529,35 @@ export class GameComponent {
   }
 
 
+  combatPanel = false;
+  combatPanelAttacker: 'A' | 'B' = 'A';
+  combatPanelSize: 'min' | 'max' = 'max';
 
   // On state change, detect and update the status of a combat operation
   updateCombatOperation() {
+    this.combatPanel = false;
 
     if (this.state.phase === 'combat') {
-      this.panel = null;
       
       // If you have attacking creatures (you are leading an attack)
       const attackingCreatures = this.tableA.find(c => c.status === 'combat:attacking');
       if (attackingCreatures) {
-        this.panel = 'combat-A';
+        this.combatPanel = true;
+        this.combatPanelAttacker = 'A';
         if (this.game.state.subPhase === 'selectAttack')  { this.mainInfo = 'Selecting creatures to attack'; }
         if (this.game.state.subPhase === 'selectDefense') { this.mainInfo = 'Waiting for the opponent to select a defense'; }
-
       }
   
       // If the opponent is attacking you
       const opponentAttack = this.tableB.find(c => c.status === 'combat:attacking');
       const defendingCreatures = this.tableA.find(c => c.status === 'combat:defending');
       if (opponentAttack || defendingCreatures) {
-        this.panel = 'combat-B';
+        this.combatPanel = true;
+        this.combatPanelAttacker = 'B';
         if (this.game.state.subPhase === 'selectAttack')  { this.mainInfo = 'Waiting for the opponent to attack'; }
         if (this.game.state.subPhase === 'selectDefense') { this.mainInfo = 'Selecting creatures to defend'; }
       }
-
-    } else {
-      if (this.panel === 'combat-A') { this.panel = null; }
-      if (this.panel === 'combat-B') { this.panel = null; }
     }
-
 
   }
 
@@ -553,7 +565,8 @@ export class GameComponent {
   spellStackPanel = false;
   spellStackPanelSize: 'min' | 'max' = 'max';
   updateSpellStack() {
-    this.spellStackPanel = this.state.player1.stackCall || this.state.player2.stackCall;
+    const anySpellsInTheStack = !!this.state.cards.find(c => c.location === 'stack');
+    this.spellStackPanel = anySpellsInTheStack && (this.state.player1.stackCall || this.state.player2.stackCall);
 
     if (this.spellStackPanel) {
       // If summoning a card and waiting for mana, minimize it (so the lands on the table get visible)
