@@ -8,15 +8,17 @@
             <img [src]="'/assets/images/cards/card_back.jpg'">
             <div class="deck-count">{{deckBCount}}</div>
           </div>
-          <div class="grav-card empty">
-            <img [src]="'/assets/images/cards/empty.png'">
+          <div class="grav-card" [class.empty]="!topGravB" (click)="graveyardPanel = graveyardPanel === 'B' ? null : 'B'">
+            <img *ngIf="topGravB" [src]="'/assets/images/cards/' + topGravB.image">
+            <img *ngIf="!topGravB" [src]="'/assets/images/cards/empty.png'">
           </div>
         </div>
   
         <div class="life" 
              [class.is-selectable]="playerB.selectableAction || playerB.selectableTarget"
              (click)="selectPlayer(playerB)">
-          Life: {{playerB.life}}
+          <!-- Life: {{playerB.life}} -->
+          {{playerB.name}}: {{playerB.life}}
         </div>
       </div>
 
@@ -44,7 +46,8 @@
         <div class="life"
              [class.is-selectable]="playerA.selectableAction || playerA.selectableTarget"
              (click)="selectPlayer(playerA)">
-          Life: {{playerA.life}}
+          <!-- Life: {{playerA.life}} -->
+          {{playerA.name}}: {{playerA.life}}
         </div>
 
         <div class="deck">
@@ -52,8 +55,9 @@
             <img [src]="'/assets/images/cards/card_back.jpg'">
             <div class="deck-count">{{deckACount}}</div>
           </div>
-          <div class="grav-card">
-            <img [src]="'/assets/images/cards/fork.jpg'">
+          <div class="grav-card" [class.empty]="!topGravA" (click)="graveyardPanel = graveyardPanel === 'A' ? null : 'A'">
+            <img *ngIf="topGravA" [src]="'/assets/images/cards/' + topGravA.image">
+            <img *ngIf="!topGravA" [src]="'/assets/images/cards/empty.png'">
           </div>
         </div>
 
@@ -231,6 +235,15 @@
     </div>
   </div>
 
+  <!-- Graveyard Panel -->
+  <panel-graveyard *ngIf="graveyardPanel"
+    [playerLetter]="graveyardPanel"
+    (selectCard)="selectCard($event)"
+    (hoverCard)="hoverCard($event)"
+    (clearHover)="clearHover()"
+    (end)="graveyardPanel = null">
+  </panel-graveyard>
+
   <!-- Generic Dialog -->
   <div *ngIf="dialog" class="dialog-box" [class]="dialog.type" 
       [style.background]="dialog.background" [style.color]="dialog.color">
@@ -245,20 +258,15 @@
   </div>
 
   <!-- Dialog: Selecting Mana (cherry pick on summoning) -->
-  <dialog-selecting-mana *ngIf="panel === 'selecting-mana'" [summonOp]="summonOp"></dialog-selecting-mana>
-
-  <dialog-summon-event *ngIf="panel === 'summon-event-A'" summoner="A" (end)="panel = null"></dialog-summon-event>
-  <dialog-summon-event *ngIf="panel === 'summon-event-B'" summoner="B" (end)="panel = null"></dialog-summon-event>B
-  <!-- <dialog-combat *ngIf="panel === 'combat-A'" attacker="A" (end)="panel = null" (hoverCard)="hoverCard($event)" (clearHover)="clearHover()"></dialog-combat>
-  <dialog-combat *ngIf="panel === 'combat-B'" attacker="B" (end)="panel = null" (hoverCard)="hoverCard($event)" (clearHover)="clearHover()"></dialog-combat> -->
+  <dialog-selecting-mana *ngIf="summonOp.status === 'selectingMana'" [summonOp]="summonOp"></dialog-selecting-mana>
 
   <dialog-combat 
     *ngIf="combatPanel"
-    [attacker]="combatPanelAttacker"
-    (end)="combatPanel = false"
+    [attacker]="combatPanelAttacker"    
     (selectCard)="selectCard($event)"
     (hoverCard)="hoverCard($event)"
-    (clearHover)="clearHover()">
+    (clearHover)="clearHover()"
+    (end)="combatPanel = false">
   </dialog-combat>
 
   <dialog-spell-stack 
@@ -266,7 +274,9 @@
     [panelSize]="spellStackPanelSize"
     (selectCard)="selectCard($event)"
     (selectPlayer)="selectPlayer($event)"
-    (end)="panel = null" >
+    (hoverCard)="hoverCard($event)"
+    (clearHover)="clearHover()"
+    (end)="spellStackPanel = false" >
   </dialog-spell-stack>
   <!-- spellStackPanelSize={{spellStackPanelSize}} -->
   <!-- panel={{panel}} -->
@@ -275,15 +285,8 @@
 </div>
 
 
-
-<div style="position: fixed;
-top: 76px;
-left: 10px;
-background: lightgray;
-padding: 2px;
-z-index: 2000;
-width: 140px;
-height: 200px;">
+<!-- Debug Buttons -->
+<div style="position: fixed;top: 76px; left: 10px; background: lightgray; padding: 2px; z-index: 2000; width: 140px; height: 200px;">
   <bf-btn (bfClick)="game.action('refresh')" bfText="REFRESH" class="full-width"></bf-btn>
   <bf-btn (bfClick)="game.saveStateDebug()" bfText="SAVE STATE" class="full-width" style="margin-top: 5px;"></bf-btn>
   <bf-btn (bfClick)="game.loadStateDebug()" bfText="LOAD STATE" class="full-width" style="margin-top: 5px;"></bf-btn>
@@ -292,8 +295,8 @@ height: 200px;">
   <bf-btn (bfClick)="debugPanel = !debugPanel"  bfText="Debug Panel" class="full-width" style="margin-top: 5px;"></bf-btn>
 </div>
 
-<div *ngIf="game.state && debugPanel"
-     style="position: fixed; top: 90px; left: 500px; background: lightgray; padding: 10px; z-index: 2000; right: 10px; bottom: 10px;">
+<!-- Debug Panel -->
+<div *ngIf="game.state && debugPanel" style="position: fixed; top: 90px; left: 500px; background: lightgray; padding: 10px; z-index: 2000; right: 10px; bottom: 10px;">
   <div>
     <br/>You are player={{game.playerANum}}
     <br/>
@@ -314,52 +317,13 @@ height: 200px;">
               [bfDisabled]="!summonOp.showSummonBtn"></bf-btn>
     </div>
   </div>
-
+  
   <div style="display: flex; margin-top: 30px;">
-    <!-- stack -->
-    <div style="padding: 5px; border: 1px solid gray;">
-      <div><b>Cards in "stack"</b></div>
-      <div *ngFor="let card of cardFilter('stack')" style="cursor: pointer;" (click)="debugCard(card)">{{card.gId}} - {{card.name}}</div>
-    </div>
-    <!-- deck1 -->
-    <div style="padding: 5px; border: 1px solid gray; margin-left: 15px;">
-      <div><b>Cards in "deck1"</b></div>
-      <div *ngFor="let card of cardFilter('deck1')" style="cursor: pointer;" (click)="debugCard(card)">{{card.gId}} - {{card.name}}</div>
-    </div>
-    <!-- hand1 -->
-    <div style="padding: 5px; border: 1px solid gray;">
-      <div><b>Cards in "hand1"</b></div>
-      <div *ngFor="let card of cardFilter('hand1')" style="cursor: pointer;" (click)="debugCard(card)">{{card.gId}} - {{card.name}}</div>
-    </div>
-    <!-- tble1 -->
-    <div style="padding: 5px; border: 1px solid gray;">
-      <div><b>Cards in "tble1"</b></div>
-      <div *ngFor="let card of cardFilter('tble1')" style="cursor: pointer;" (click)="debugCard(card)">{{card.gId}} - {{card.name}}</div>
-    </div>
-    <!-- grav1 -->
-    <div style="padding: 5px; border: 1px solid gray;">
-      <div><b>Cards in "grav1"</b></div>
-      <div *ngFor="let card of cardFilter('grav1')" style="cursor: pointer;" (click)="debugCard(card)">{{card.gId}} - {{card.name}}</div>
-    </div>
-    <!-- deck2 -->
-    <div style="padding: 5px; border: 1px solid gray; margin-left: 15px;">
-      <div><b>Cards in "deck2"</b></div>
-      <div *ngFor="let card of cardFilter('deck2')" style="cursor: pointer;" (click)="debugCard(card)">{{card.gId}} - {{card.name}}</div>
-    </div>
-    <!-- hand2 -->
-    <div style="padding: 5px; border: 1px solid gray;">
-      <div><b>Cards in "hand2"</b></div>
-      <div *ngFor="let card of cardFilter('hand2')" style="cursor: pointer;" (click)="debugCard(card)">{{card.gId}} - {{card.name}}</div>
-    </div>
-    <!-- tble2 -->
-    <div style="padding: 5px; border: 1px solid gray;">
-      <div><b>Cards in "tble2"</b></div>
-      <div *ngFor="let card of cardFilter('tble2')" style="cursor: pointer;" (click)="debugCard(card)">{{card.gId}} - {{card.name}}</div>
-    </div>
-    <!-- grav2 -->
-    <div style="padding: 5px; border: 1px solid gray;">
-      <div><b>Cards in "grav2"</b></div>
-      <div *ngFor="let card of cardFilter('grav2')" style="cursor: pointer;" (click)="debugCard(card)">{{card.gId}} - {{card.name}}</div>
+    <div *ngFor="let location of debugLocations">
+      <div style="padding: 5px; border: 1px solid gray;" *ngIf="cardFilter(location) as list">
+        <div><b>Cards in "{{location}}" ({{list.length}})</b></div>
+        <div *ngFor="let card of list" style="cursor: pointer;" (click)="debugCard(card)">{{card.gId}} - {{card.name}}</div>
+      </div>  
     </div>
   </div>
 

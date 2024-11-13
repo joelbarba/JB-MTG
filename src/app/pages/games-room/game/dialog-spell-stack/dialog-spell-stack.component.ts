@@ -26,20 +26,28 @@ export type TStackTree = { card: TGameCard | null, player: TPlayer | null, targe
   styleUrl: './dialog-spell-stack.component.scss'
 })
 export class DialogSpellStackComponent {
-  @Output() end = new EventEmitter<any>();
-  @Output() selectCard = new EventEmitter<TGameCard>();
-  @Output() selectPlayer = new EventEmitter<TPlayer>();
   @Input() panelSize: 'min' | 'max' = 'max';
+  @Output() selectCard    = new EventEmitter<TGameCard>();
+  @Output() selectPlayer  = new EventEmitter<TPlayer>();
+  @Output() hoverCard     = new EventEmitter<any>();
+  @Output() clearHover    = new EventEmitter<any>();
+  @Output() end           = new EventEmitter<any>();
   minimized = false;
 
   title = 'Spell Stack';
+  youControl: boolean = false;
 
   card?: TGameCard;  // Summoning card
   target?: TGameCard | 'playerA' | 'playerB';
   
   stateSub!: Subscription;
-  youControl = false;
+  interval!: ReturnType<typeof setInterval>;
+  progressBar = 0;
+  showTimer = false;
 
+  mainInfo = '';
+  itemInfo = '';
+  
   hCardsLen = 1;  // Max number of cards on a horizontal line
   vCardsLen = 1;  // Max number of cards on a vertical line
 
@@ -56,6 +64,7 @@ export class DialogSpellStackComponent {
 
   ngOnDestroy() {
     if (this.stateSub) { this.stateSub.unsubscribe(); }
+    if (this.interval) { clearInterval(this.interval); }
   }
 
   stack: Array<TGameCard> = [];
@@ -64,7 +73,7 @@ export class DialogSpellStackComponent {
 
   onStateChanges(state: TGameState) {
     const playerB = this.game.playerANum === '1' ? state.player2 : state.player1;
-    this.youControl = (this.game.state.control === this.game.playerANum);
+    this.youControl = this.game.state.control === this.game.playerANum;
 
     this.stack = this.game.state.cards.filter(c => c.location === 'stack').sort((a, b) => a.order > b.order ? -1 : 1); // reverse order
     console.log('STACK', this.stack);
@@ -132,9 +141,13 @@ export class DialogSpellStackComponent {
     this.stackInfo = this.stack.map(card => {
       let txt = `Casting ${card.name}`;
       if (card.targets && card.targets.length) { 
-        const targetGId = card.targets[0];
-        const target = state.cards.find(c => c.gId === targetGId);
-        if (target) { txt = `${card.name} --> ${target.name}`; }
+        const targetId = card.targets[0];
+        if      (targetId === 'player1') { txt = `${card.name} --> ${state.player1.name}`; }
+        else if (targetId === 'player2') { txt = `${card.name} --> ${state.player2.name}`; }
+        else {
+          const target = state.cards.find(c => c.gId === targetId);
+          if (target) { txt = `${card.name} --> ${target.name}`; }
+        }        
       }
       return txt;
     });
@@ -169,9 +182,47 @@ export class DialogSpellStackComponent {
       target.targetOf.forEach(t => checkSize(t, level + 1));
     }
     this.rootTargets.forEach(target => checkSize(target));
+
+
+    // Set a human-readable text to help the player understand what is going on
+    if (this.youControl) {
+      this.mainInfo = `You may cast more spells on this action.<br/>Or you may not, and go on.`;
+    } else {
+      this.mainInfo = `Wait for the opponent to cast any spells.`;
+    }
+
+
+    this.showTimer = this.youControl && state.lastAction?.player !== this.game.playerANum;
+    if (this.showTimer) {
+      console.log('Init auto Stack release timer. Last Action =', state.lastAction);
+      this.initTimer();
+    }
   }
 
 
+
+
+
+  // Init the timer to automatically release the stack after a few seconds
+  initTimer() {
+    const waitingMs = 5000;
+    const ctrlTime = (new Date()).getTime(); //this.game.playerB().controlTime;
+    if (this.interval) { clearInterval(this.interval); }
+    this.interval = setInterval(() => {
+      this.progressBar = Math.min(100, ((new Date()).getTime() - ctrlTime) * 200 / waitingMs);
+      if (this.progressBar >= 100) { // Max reach
+        clearInterval(this.interval); 
+        this.showTimer = false;
+        console.log('AUTO release stack');
+        this.releaseStack();
+      }
+    }, 25);
+  }
+
+  pause() { // Stop the auto stack release
+    clearInterval(this.interval);
+    this.showTimer = false;
+  }
 
 
 
@@ -183,6 +234,7 @@ export class DialogSpellStackComponent {
 
   close() {
     if (this.stateSub) { this.stateSub.unsubscribe(); }
+    if (this.interval) { clearInterval(this.interval); }
     this.end.emit();
   }
 

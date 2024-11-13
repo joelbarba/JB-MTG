@@ -35,11 +35,6 @@ export class DialogCombatComponent {
   @Output() hoverCard = new EventEmitter<any>();
   @Output() clearHover = new EventEmitter<any>();
 
-  // progress = 0; // Counter to the up time (never stops until it reaches it)
-  // progressBar = 0;  // Displayed progress (it stops when it's paused or reaches)
-  // interval!: ReturnType<typeof setInterval>;
-  // isPaused = false;
-  // isRemotePaused = false;
   stateSub!: Subscription;
   minimized = false;
 
@@ -136,6 +131,18 @@ export class DialogCombatComponent {
         else { this.mainInfo = `You may also cast spells before the defense is set`; }
       }
       if (state.subPhase === 'selectDefense') { this.mainInfo = `Waiting for the opponent to select the defense`; }
+      if (state.subPhase === 'defending') {
+        if (!this.youControl) { this.mainInfo = `Waiting for the opponent cast spells before the combat is executed`; }
+        else {
+          if (!this.anyDefenders) { this.mainInfo = `The opponent is not defending your attack.<br/>`;  }
+          else { this.mainInfo = `The opponent has assigned their defense.<br/>`;  }
+          this.mainInfo += `You may cast spells before the combat is executed`; 
+        }
+      }
+      if (state.subPhase === 'afterCombat') {
+        if (!this.youControl) { this.mainInfo = `Waiting for the opponent cast spells before dying creatures are destroyed`; }
+        else { this.mainInfo = `You may cast spells before dying creatures are destroyed`; }
+      }
 
     } else { // You are the defender
       if (state.subPhase === 'selectAttack') { this.mainInfo = `Your opponent is selecting creatures to attack you (wait for it)`; }
@@ -144,18 +151,15 @@ export class DialogCombatComponent {
         else { this.mainInfo = `Wait for the opponent to cast any other spells`; }
       }
       if (state.subPhase === 'selectDefense') { this.mainInfo = `Select what creatures you want to defend with, or do not defend`; }
+      if (state.subPhase === 'defending') {
+        if (!this.youControl) { this.mainInfo = `Waiting for the opponent cast spells before the combat is executed`; }
+        else { this.mainInfo = `You may cast spells before the combat is executed`; }
+      }
+      if (state.subPhase === 'afterCombat') {
+        if (!this.youControl) { this.mainInfo = `Waiting for the opponent cast spells before dying creatures are destroyed`; }
+        else { this.mainInfo = `You may cast spells before dying creatures are destroyed`; }
+      }
     }
-
-    if (state.subPhase === 'defending') {
-      if (!this.youControl) { this.mainInfo = `Waiting for the opponent cast spells before the combat is executed`; }
-      else { this.mainInfo = `You may cast spells before the combat is executed`; }
-    }
-    if (state.subPhase === 'afterCombat') {
-      if (!this.youControl) { this.mainInfo = `Waiting for the opponent cast spells before dying creatures are destroyed`; }
-      else { this.mainInfo = `You may cast spells before dying creatures are destroyed`; }
-    }
-
-
 
     if (state.control === this.game.playerANum) {
       this.defenderLookingForTarget = this.game.state.cards.find(c => c.status === 'combat:selectingTarget');

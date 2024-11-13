@@ -141,8 +141,8 @@
 
 
   <div class="btns-box">
-    <span class="main-info" *ngIf="itemInfo">{{itemInfo}}</span>
-    <span class="main-info" *ngIf="mainInfo && !itemInfo">{{mainInfo}}</span>
+    <span class="main-info" *ngIf="itemInfo" [innerHtml]="itemInfo"></span>
+    <span class="main-info" *ngIf="mainInfo && !itemInfo" [innerHtml]="mainInfo"></span>
 
     <bf-btn *ngIf="attacker === 'A' && subPhase === 'selectAttack'"  bfText="Cancel"  [bfDisabled]="!youControl" (bfClick)="cancelAttack()"  bfIcon="icon-cross"></bf-btn>
     <bf-btn *ngIf="attacker === 'A' && subPhase === 'selectAttack'"  bfText="Submit Attack"  [bfDisabled]="!youControl" (bfClick)="submitAttack()"  bfIcon="icon-arrow-right3"></bf-btn>

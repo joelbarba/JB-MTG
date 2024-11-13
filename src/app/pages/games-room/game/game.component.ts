@@ -10,7 +10,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { DialogSelectingManaComponent } from './dialog-selecting-mana/dialog-selecting-mana.component';
-import { DialogSummonEventComponent } from './dialog-summon-event/dialog-summon-event.component';
+import { PanelGraveyardComponent } from './panel-graveyard/panel-graveyard.component';
 import { DialogCombatComponent } from './dialog-combat/dialog-combat.component';
 import { DialogSpellStackComponent } from './dialog-spell-stack/dialog-spell-stack.component';
 
@@ -39,14 +39,14 @@ export interface ISummonOp {
 }
 
 
-export type TPanel =
-  'selecting-mana'
-| 'selecting-discard'
-| 'summon-event-A'
-| 'summon-event-B'
-| 'combat-A'
-| 'combat-B'
-| 'spell-stack';
+// export type TPanel =
+//   'selecting-mana'
+// | 'selecting-discard'
+// | 'summon-event-A'
+// | 'summon-event-B'
+// | 'combat-A'
+// | 'combat-B'
+// | 'spell-stack';
 
 
 @Component({
@@ -59,7 +59,7 @@ export type TPanel =
     FormsModule,
     BfUiLibModule,
     DialogSelectingManaComponent,
-    DialogSummonEventComponent,
+    PanelGraveyardComponent,
     DialogCombatComponent,
     DialogSpellStackComponent,
   ],
@@ -83,6 +83,8 @@ export class GameComponent {
   handB: Array<TGameCard> = [];
   tableA: Array<TExtGameCard> = [];
   tableB: Array<TExtGameCard> = [];
+  topGravA!: TGameCard | null;
+  topGravB!: TGameCard | null;
   playerA !: TPlayer;
   playerB !: TPlayer;
   deckACount = 60;
@@ -99,7 +101,6 @@ export class GameComponent {
 
   globalButtons: Array<{ id: string, text: string, icon: string, clickFn: () => void }> = [];
 
-  panel: null | TPanel = null;
   dialog: null | IDialog = null;  
 
   mainInfo = '';  // General info for the state
@@ -147,16 +148,20 @@ export class GameComponent {
 
       this.handA = state.cards.filter(c => c.location === this.game.yourHand()).sort((a, b) => a.order > b.order ? 1 : -1);
       this.handB = state.cards.filter(c => c.location === this.game.otherHand()).sort((a, b) => a.order > b.order ? 1 : -1);
-
+      
       this.tableA = state.cards.filter(c => c.location === this.game.yourTable()).sort((a, b) => a.order > b.order ? 1 : -1).map(c => this.extendTableCard(c));
       this.tableB = state.cards.filter(c => c.location === this.game.otherTable()).sort((a, b) => a.order > b.order ? 1 : -1).map(c => this.extendTableCard(c));
-
+      
       this.deckACount = state.cards.filter(c => c.location === this.game.yourDeck()).length;
       this.deckBCount = state.cards.filter(c => c.location === this.game.otherDeck()).length;
-
+      
       this.playerA = this.game.getPlayers(state).playerA;
       this.playerB = this.game.getPlayers(state).playerB;
-
+      
+      const gravA = state.cards.filter(c => c.location === this.game.yourGrav()).sort((a, b) => a.order > b.order ? 1 : -1);
+      const gravB = state.cards.filter(c => c.location === this.game.otherGrav()).sort((a, b) => a.order > b.order ? 1 : -1);
+      this.topGravA = gravA.length ? gravA[0] : null;
+      this.topGravB = gravA.length ? gravB[0] : null;
 
       this.setVarsFromStateChange();
       this.triggerDialogs();
@@ -170,6 +175,7 @@ export class GameComponent {
 
   // Debugging tools
   debugPanel = false;
+  debugLocations: Array<TCardLocation> = ['stack', 'deck1', 'deck2', 'hand1', 'hand2', 'tble1', 'tble2', 'grav1', 'grav2', 'off'];
   cardFilter(location: TCardLocation) { return this.state.cards.filter(c => c.location === location); }
   debugCard(card: TGameCard) { console.log(card); }
 
@@ -210,8 +216,8 @@ export class GameComponent {
   autoAdvanceTimeout: any;
   autoAdvance() {
     if (this.autoAdvanceTimeout) { clearTimeout(this.autoAdvanceTimeout); }
-    if (!this.game.isYourTurn()) { return; }
-    const yourOptions = this.game.doYouHaveControl() ? this.state.options : [];
+    if (!this.game.doYouHaveControl()) { return; }
+    const options = this.state.options;
 
     const advancePhase = (action = this.skipPhase.skip) => {
       const lastStateTime = this.stateTime;
@@ -226,33 +232,42 @@ export class GameComponent {
     // if (this.state.phase === 'combat') { return; } // For now, avoid autoadvance during combat
 
     // If you can only skip phase, do it
-    if (yourOptions.length === 1 && yourOptions[0].action === 'skip-phase') { return advancePhase(); }
+    if (options.length === 1 && options[0].action === 'skip-phase') { return advancePhase(); }
 
     // Automatically untap
-    if (this.state.phase === 'untap' && yourOptions.filter(o => o.action === 'untap-all').length === 1) { return advancePhase(() => this.game.action('untap-all')); }
+    if (this.state.phase === 'untap' && options.filter(o => o.action === 'untap-all').length === 1) { return advancePhase(() => this.game.action('untap-all')); }
 
     // Don't stop at the untap pahse if there are no cards to untap
-    if (this.state.phase === 'untap' && !yourOptions.find(o => o.action === 'untap-card')) { return advancePhase(); }
+    if (this.state.phase === 'untap' && !options.find(o => o.action === 'untap-card')) { return advancePhase(); }
 
     // Always skip maintenance (for now)
     if (this.state.phase === 'maintenance') { return advancePhase(); }
 
     // Automatically draw if you can't only draw 1 card
-    if (this.state.phase === 'draw' && yourOptions.filter(o => o.action === 'draw').length === 1) { return advancePhase(() => this.game.action('draw')); }
+    if (this.state.phase === 'draw' && options.filter(o => o.action === 'draw').length === 1) { return advancePhase(() => this.game.action('draw')); }
 
     // Don't stop at the draw pahse if you can't draw more cards
-    if (this.state.phase === 'draw' && !yourOptions.find(o => o.action === 'draw')) { return advancePhase(); }
+    if (this.state.phase === 'draw' && !options.find(o => o.action === 'draw')) { return advancePhase(); }
 
-    // Don't stop at the combat phase if you don't have creatures to attack
-    const selectableCreatures = !!yourOptions.find(o => o.action === 'select-attacking-creature');
-    const attackingCreatures = !!this.tableA.find(c => c.status === 'combat:attacking');
-    if (this.state.phase === 'combat' && this.state.subPhase === 'selectAttack' && !selectableCreatures && !attackingCreatures) { return advancePhase(); }
+    if (this.state.phase === 'combat') {
+      const selectableAttackingCreatures = !!options.find(o => o.action === 'select-attacking-creature');
+      const attackingCreatures = !!this.tableA.find(c => c.status === 'combat:attacking');
+      const selectableDefendingCreatures = !!options.find(o => o.action === 'select-defending-creature');
+      const defendingCreatures = !!this.tableA.find(c => c.status === 'combat:defending');
+
+      // Don't stop at the combat phase if you don't have creatures to attack
+      if (this.state.subPhase === 'selectAttack' && !selectableAttackingCreatures && !attackingCreatures) { return advancePhase(); }
+      
+      // Don't stop at the select defense if there are no creatures to select for the defense
+      if (this.state.subPhase === 'selectDefense' && !selectableDefendingCreatures && !defendingCreatures) { return advancePhase(() => this.game.action('submit-defense')); }
+
+    } 
 
     // Don't stop at the discard phase, if you don't have to discard
-    if (this.state.phase === 'discard' && !yourOptions.find(o => o.action === 'select-card-to-discard')) { return advancePhase(); }
+    if (this.state.phase === 'discard' && !options.find(o => o.action === 'select-card-to-discard')) { return advancePhase(); }
 
     // Don't stop at the end phase if you don't have mana to burn
-    if (this.state.phase === 'end' && !yourOptions.find(o => o.action === 'burn-mana')) { return advancePhase(); }
+    if (this.state.phase === 'end' && !options.find(o => o.action === 'burn-mana')) { return advancePhase(); }
     return;    
   }
 
@@ -392,6 +407,8 @@ export class GameComponent {
     this.updateSpellStack();
   }
 
+  
+
 
   // -------------------------- Summon Operation --------------------------
 
@@ -415,12 +432,6 @@ export class GameComponent {
     if (selectingTargetCard && (this.summonOp.status === 'off' || this.summonOp.gId !== selectingTargetCard.gId)) {
       this.startSummonOp(selectingTargetCard, 'selectingTargets'); // start new summon op
     }
-
-    // If you or your opponent successfuly summoned, trigger the summon event panel for interruptions
-    if (this.handA.find(c => c.status === 'summoning')) { this.panel = 'summon-event-A'; }
-    if (this.handB.find(c => c.status === 'summoning')) { this.panel = 'summon-event-B'; }
-    if (this.panel?.slice(-2) === 'summon-event') { this.mainInfo = `Waiting for interruptions on the summoning event`; }
-
 
     // If an ongoing waiting mana operation, try to use the current mana pool
     if (this.summonOp.status === 'waitingMana') { this.summonOp.tryToSummon(); }
@@ -488,7 +499,6 @@ export class GameComponent {
     turnOff: () => { // Hides, but keeps the values
       this.globalButtons.removeById('cancel-summon');
       this.summonOp.status = 'off';
-      this.panel = null;
     }
   };
 
@@ -515,7 +525,6 @@ export class GameComponent {
 
     } else if (status === 'selectingMana') {
       this.summonOp.text = `Please select the mana from your mana pool you want to use to summon ${card.name}`;
-      this.panel = 'selecting-mana';
       // Automatically reserve colored mana
       for (let t = 0; t < Math.min(this.playerA.manaPool[1], card.cast[1]); t++) { this.summonOp.reserveMana(1); }
       for (let t = 0; t < Math.min(this.playerA.manaPool[2], card.cast[2]); t++) { this.summonOp.reserveMana(2); }
@@ -578,6 +587,7 @@ export class GameComponent {
     }
   }
 
+  graveyardPanel: 'A' | 'B' | null = null;
 
 
 

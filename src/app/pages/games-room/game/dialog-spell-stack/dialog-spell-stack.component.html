@@ -1,53 +1,39 @@
-<div class="spell-stack h-cards-len-{{hCardsLen}} v-cards-len-{{vCardsLen}}" [class.minimized]="minimized">
+<div class="spell-stack h-cards-len-{{hCardsLen}} v-cards-len-{{vCardsLen}}" 
+     [class.minimized]="minimized">
   <div class="min-btn" (click)="minimized = !minimized">{{minimized ? title : '-'}}</div>
   <h2>{{title}}</h2>
 
-  <div class="stack-box">
+  <div class="stack-box" [class.no-scroll]="vCardsLen <= 3">
 
     <div class="stack">
       <stack-card-with-targets
         *ngFor="let rootTarget of rootTargets"
         [item]="rootTarget"
         (selectCard)="selectCard.emit($event)"
-        (selectPlayer)="selectPlayer.emit($event)">
+        (selectPlayer)="selectPlayer.emit($event)"
+        (hoverCard)="hoverCard.emit($event)" (clearHover)="clearHover.emit()">
       </stack-card-with-targets>
     </div>
 
-    <!-- <div class="panel-user" *ngIf="target === 'playerA'">
-      <span class="icon-user3"></span>
-      <span>Target: Yourself</span>
-    </div>
-
-    <div class="panel-user" *ngIf="target === 'playerB'">
-      <span class="icon-user3"></span>
-      <span>Target: Opponent</span>
-    </div> -->
   </div>
 
-  <div style="position: absolute; top: 80px; left: 35px; text-align: left;">
+  <div *ngIf="stackInfo.length > 1" style="position: absolute; top: 80px; left: 35px; text-align: left;">
     <b>PLAYING SPELLS:</b>
     <div *ngFor="let txt of stackInfo">- {{txt}}</div>
   </div>
 
-  <!-- target={{target | json}} -->
-  <!-- <div *ngIf="summoner === 'A'">Waiting for the opponent to play any interruptions</div>
-  <div *ngIf="summoner === 'B'">You can play some interruptions now</div> -->
 
   <div *ngIf="game.debugMode">CONTROL = {{youControl ? 'Me' : 'Opponent'}}</div>
   
-  <!-- <div class="wating-progress-bar">
-    <div class="time" [style.width.px]="progressBar"></div>
-  </div> -->
 
-  <!-- <div class="pause-btn">
-    <bf-btn *ngIf="summoner === 'B' && !isPaused" (bfClick)="pause()" bfText="Wait" bfIcon="icon-pause2"></bf-btn>
-    <bf-btn *ngIf="summoner === 'A'" (bfClick)="pause()" bfText="Wait" bfIcon="icon-pause2"></bf-btn>
-  </div> -->
+  <div class="btns-box">
+    <span class="main-info" *ngIf="itemInfo" [innerHtml]="itemInfo"></span>
+    <span class="main-info" *ngIf="mainInfo && !itemInfo" [innerHtml]="mainInfo"></span>
 
-  <div class="skip-btn">
-    <!-- <bf-btn *ngIf="summoner === 'A'" (bfClick)="endSummoning()" bfText="Continue" bfIcon="icon-arrow-right3"
-    [bfDisabled]="progressBar < 200">
-    </bf-btn> -->
+    <div *ngIf="showTimer" class="wating-progress-bar">
+      <div class="time" [style.width.px]="progressBar"></div>
+    </div>
+    <bf-btn *ngIf="showTimer" (bfClick)="pause()" bfText="Wait" bfIcon="icon-pause2"></bf-btn>
     <bf-btn [bfDisabled]="!youControl" (bfClick)="releaseStack()" bfText="Ok, go on" bfIcon="icon-arrow-right3"></bf-btn>
   </div>
   

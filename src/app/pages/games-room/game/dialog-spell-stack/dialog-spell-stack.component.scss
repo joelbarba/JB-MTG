@@ -54,6 +54,10 @@
     overflow: auto;
     border: 1px solid #c3c3c3;
     background: #66cdaa33;
+    &.no-scroll {
+      border: none;
+      background: unset;
+    }
     border-radius: 2px;
     margin-bottom: 15px;
     .stack {
@@ -65,9 +69,11 @@
 
 
   .wating-progress-bar {
-    width: 200px;
-    height: 30px;
+    margin-left: 15px;
+    width: 100px;
+    height: 35px;
     border: 1px solid black;
+    box-shadow: inset 2px 2px 5px 0px #757575;
     .time {
       height: 100%;
       background-color: #525254;;
@@ -79,25 +85,19 @@
     bf-btn { transform: scale(2); }
   }
 
-  .skip-btn {
-    text-align: right;
+  .btns-box {
+    display: flex;
     width: 100%;
+    justify-content: end;
+    align-items: center;
+    bf-btn { margin-left: 15px; }
+    .main-info {
+      margin: 0 15px;
+      flex: 1;
+      text-align: left;
+    }
   }
 
-  // .mana-count { 
-  //   padding: 0 30px;
-  //   display: flex;
-  //   justify-content: space-between;
-  //   .selected-mana-count { text-align: left; }
-  //   .total-mana-needed { text-align: right; }
-  //  }
-  // .mana { margin-left: 5px; img { border-radius: 100%; padding: 1px; background: black; }}
-  // .btns-box {
-  //   // display: flex;
-  //   // justify-content: space-between;
-  //   text-align: right;
-  //   bf-btn { margin-left: 15px; }
-  // }
   .min-btn {
     position: absolute;
     top: 0;

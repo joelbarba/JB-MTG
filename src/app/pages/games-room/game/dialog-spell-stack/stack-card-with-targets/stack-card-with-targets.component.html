@@ -4,7 +4,8 @@
     <div class="target-of" *ngFor="let tCard of item.targetOf">
       <stack-card-with-targets [item]="tCard"
                                (selectCard)="selectCard.emit($event)"
-                               (selectPlayer)="selectPlayer.emit($event)">
+                               (selectPlayer)="selectPlayer.emit($event)"
+                               (hoverCard)="hoverCard.emit($event)" (clearHover)="clearHover.emit()">
       </stack-card-with-targets>
       <div class="vbar"></div>
     </div>
@@ -16,13 +17,17 @@
     
     <!-- Target Card -->
     <div class="panel-card" *ngIf="item.card"
+         [class.selectable-card]="!!item.card.selectableAction || !!item.card.selectableTarget"
          (click)="selectCard.emit(item.card)"
-         [class.selectable-card]="!!item.card.selectableAction || !!item.card.selectableTarget">
+         (mouseover)="hoverCard.emit(item.card)" (mouseleave)="clearHover.emit()">
       <img [src]="'/assets/images/cards/' + item.card.image">
       <span class="damage-points" *ngIf="item.shadowDamage">
         <span>{{item.shadowDamage}}</span>
         <span class="icon-power"></span>
       </span>
+      <div *ngIf="item.targetOf.length || item.card.targets" style="position: absolute; font-size: 11px; top: -17px; left: 0px;">
+        {{item.card.owner === game.playerANum ? 'Yours' : "Opponent's"}}
+      </div>
       <div *ngIf="game.debugMode" style="position: absolute; bottom: 30px; margin-left: 5px; color: white; background: black;">
         gId={{item.card.gId}}
         <br/>status={{item.card.status}}

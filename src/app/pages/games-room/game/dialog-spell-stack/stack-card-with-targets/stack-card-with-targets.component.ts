@@ -24,8 +24,10 @@ import { TStackTree } from '../dialog-spell-stack.component';
 })
 export class StackCardWithTargetsComponent {
   @Input({ required: true }) item!: TStackTree; // Can be a card or a player
-  @Output() selectCard = new EventEmitter<TGameCard>();
-  @Output() selectPlayer = new EventEmitter<TPlayer>();
+  @Output() selectCard    = new EventEmitter<TGameCard>();
+  @Output() selectPlayer  = new EventEmitter<TPlayer>();
+  @Output() hoverCard     = new EventEmitter<any>();
+  @Output() clearHover    = new EventEmitter<any>();
 
   targetPlayerText = '';
 

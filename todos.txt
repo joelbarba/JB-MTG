@@ -1,10 +1,9 @@
-- Effects
+ok - Add timer on spell stack to automatically trigger Ok after 4 seconds
 - Toast messages + helping messages
-- Add graveyard panel to see graveyard cards
-- Show last card image on graveyard
+- Effects
 - Fix summoning Brass Man (only uncolored mana)
+- Support MultiType cards: Add extraType on cards, for "creature artifacts" or others
 - Fix dragging cards on the table
-- Figure out how to do "artifact creature" type
 - Reorder (card.order) when dragging on the table
 - Reorder mana on the table on a same column
 - Style panels properly

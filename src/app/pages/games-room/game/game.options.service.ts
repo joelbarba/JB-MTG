@@ -66,7 +66,7 @@ export class GameOptionsService {
 
     // Actions that you can do during both your turn or opponents turn
     
-    // If you have a summoning operation, let it cancel
+    // TARGET SELECTION: If you have a summoning operation, let it cancel
     const summonCard = handA.find(c => c.status?.slice(0, 7) === 'summon:');
     if (summonCard) { state.options.push({ action: 'cancel-summon', params: {}, text: 'Cancel ' + summonCard.name }); }
     
@@ -104,67 +104,63 @@ export class GameOptionsService {
     }
 
 
+    // Actions that you can do during both your turn or opponents turn:
 
-    // You may finish the spell stack
-    if (playerA.stackCall) { state.options.push({ action: 'release-stack', params: {}, text: `Continue` }); }
+    // SPELL STACK: You may summon instant/interrupt as a counter mesure from your opponent's action
+    if (playerA.stackCall) { 
+
+      // You may finish the spell stack
+      state.options.push({ action: 'release-stack', params: {}, text: `Continue` }); 
+
+      // You may tap lands to produce mana
+      tableA.filter(c => c.type === 'land' && !c.isTapped).forEach(card => {
+        const option: TGameOption = { action: 'tap-land', params: { gId: card.gId }, text: `Tap ${card.name}` };
+        state.options.push(option);
+        card.selectableAction = option;
+      });
+
+      // You may summon instant spells (add them to the stack)
+      handA.filter(c => c.type === 'instant').forEach(card => {
+        const option: TGameOption = { action: 'summon-spell', params: { gId: card.gId }, text: `Cast ${card.name}` };
+        state.options.push(option);
+        if (!card.status) { card.selectableAction = option; }
+      });
+
+      // You may summon interruptions (add them to the stack)
+      if (state.cards.find(c => c.location === 'stack')) {
+        handA.filter(c => c.type === 'interruption').forEach(card => {
+          const option: TGameOption = { action: 'summon-spell', params: { gId: card.gId }, text: `Interrupt spell with ${card.name}` };
+          state.options.push(option);
+          if (!card.status) { card.selectableAction = option; }
+        });
+      }
+      return state; // <---- Skip generic options (it's not your turn)
+    }
 
 
     // If it's not your turn, yet you have control (casting interruptions, defend from atack, ...)
     if (state.turn !== playerANum) {
 
-      // Combat - Defending from an atack
-      if (isPhase('combat')) {
-        if (state.subPhase === 'selectDefense') {
-          state.options.push({ action: 'cancel-defense', params: {}, text: 'Reset you defending selection' });
-          state.options.push({ action: 'submit-defense', params: {}, text: 'Defend with selected creatures' });
-  
-          // You may select a creature to defend your opponents attack
-          tableA.filter(c => c.type === 'creature' && !c.isTapped && c.status !== 'combat:defending').forEach(card => {
-            const option: TGameOption = { action: 'select-defending-creature', params: { gId: card.gId }, text: `Defend with ${card.name}` };
-            state.options.push(option);
-            card.selectableAction = option;
-          });
-  
-          // You may select the opponent's attacking creature as a target of your defending creature
-          const defenderToAssign = state.cards.find(c => c.status === 'combat:selectingTarget');
-          if (defenderToAssign) {
-            tableB.filter(c => c.status === 'combat:attacking').forEach(card => {
-              const params = { gId: defenderToAssign.gId, targets: [card.gId] };
-              const option: TGameOption = { action: 'select-defending-creature', params, text: `Defend ${card.name} with ${defenderToAssign.name}` };
-              state.options.push(option);
-              card.selectableAction = option;
-            });
-          }
-        } else if (state.subPhase === 'afterCombat') {
-          // state.options.push({ action: 'end-interrupting', params: {}, text: `Skip` });
-        }
+      // COMBAT: Defending from an atack
+      if (isPhase('combat') && state.subPhase === 'selectDefense') {
+        state.options.push({ action: 'cancel-defense', params: {}, text: 'Reset you defending selection' });
+        state.options.push({ action: 'submit-defense', params: {}, text: 'Defend with selected creatures' });
 
-      } else { // Opponent is not on the combat phase
-        // state.options.push({ action: 'end-interrupting', params: {}, text: `Skip` });
-      }
-
-      if (playerA.stackCall) { // You may summon instant/interrupt as a counter mesure from your opponent's action
-
-        // You may tap lands to produce mana
-        tableA.filter(c => c.type === 'land' && !c.isTapped).forEach(card => {
-          const option: TGameOption = { action: 'tap-land', params: { gId: card.gId }, text: `Tap ${card.name}` };
+        // You may select a creature to defend your opponents attack
+        tableA.filter(c => c.type === 'creature' && !c.isTapped && c.status !== 'combat:defending').forEach(card => {
+          const option: TGameOption = { action: 'select-defending-creature', params: { gId: card.gId }, text: `Defend with ${card.name}` };
           state.options.push(option);
           card.selectableAction = option;
         });
 
-        // You may summon instant spells (add them to the stack)
-        handA.filter(c => c.type === 'instant').forEach(card => {
-          const option: TGameOption = { action: 'summon-spell', params: { gId: card.gId }, text: `Cast ${card.name}` };
-          state.options.push(option);
-          if (!card.status) { card.selectableAction = option; }
-        });
-
-        // You may summon interruptions (add them to the stack)
-        if (state.cards.find(c => c.location === 'stack')) {
-          handA.filter(c => c.type === 'interruption').forEach(card => {
-            const option: TGameOption = { action: 'summon-spell', params: { gId: card.gId }, text: `Interrupt spell with ${card.name}` };
+        // You may select the opponent's attacking creature as a target of your defending creature
+        const defenderToAssign = state.cards.find(c => c.status === 'combat:selectingTarget');
+        if (defenderToAssign) {
+          tableB.filter(c => c.status === 'combat:attacking').forEach(card => {
+            const params = { gId: defenderToAssign.gId, targets: [card.gId] };
+            const option: TGameOption = { action: 'select-defending-creature', params, text: `Defend ${card.name} with ${defenderToAssign.name}` };
             state.options.push(option);
-            if (!card.status) { card.selectableAction = option; }
+            card.selectableAction = option;
           });
         }
       }

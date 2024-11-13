@@ -1,0 +1,16 @@
+<div class="graveyard-panel">
+  <div class="close-btn" (click)="end.emit()">x</div>
+  <h2>{{title}}</h2>
+
+  <div class="card-list">
+    <div class="panel-card" *ngFor="let card of grav"
+         (mouseover)="hoverCard.emit(card)" (mouseleave)="clearHover.emit()">
+      <img [src]="'/assets/images/cards/' + card?.image">
+    </div>
+  </div>
+
+  <div class="btns-box">
+    <bf-btn (bfClick)="end.emit()" bfText="Close" bfIcon="icon-cross"></bf-btn>
+  </div>
+  
+</div>

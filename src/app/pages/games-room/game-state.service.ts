@@ -672,7 +672,7 @@ export class GameStateService {
 
   // End the turn and reset all turn counters and values
   private endTurn(nextState: TGameState) {
-    const { turnPlayer } = this.getPlayers(nextState);
+    const { playerA, playerB, turnPlayer } = this.getPlayers(nextState);
     const { table, tableA } = this.getGroups(nextState);
     turnPlayer.drawnCards = 0;
     turnPlayer.summonedLands = 0;
@@ -682,8 +682,10 @@ export class GameStateService {
     tableA.filter(c => c.status === 'sickness').forEach(c => c.status = null); // Summon sickness ends
     table.filter(c => c.type === 'creature').forEach(c => c.damage = 0); // Damage on creatures is reset
 
-    // if (nextState.turn)
+    // Check if a player is dead
     if (turnPlayer.life <= 0) { this.endGame(nextState, nextState.turn); return; }
+    // if (playerA.life <= 0) { this.endGame(nextState, 'A'); return; }
+    // if (playerB.life <= 0) { this.endGame(nextState, 'B'); return; }
 
     const newTurnPlayer = this.getPlayers(nextState).turnPlayer;
   }
