@@ -3,6 +3,7 @@ import { RouterOutlet } from '@angular/router';
 import { NavbarComponent } from './shell/navbar/navbar.component';
 import { MenuComponent } from './shell/menu/menu.component';
 import { ShellService } from './shell/shell.service';
+import { BfGrowlModule } from '@blueface_npm/bf-ui-lib';
 
 
 @Component({
@@ -12,6 +13,7 @@ import { ShellService } from './shell/shell.service';
     RouterOutlet,
     NavbarComponent,
     MenuComponent,
+    BfGrowlModule,
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'

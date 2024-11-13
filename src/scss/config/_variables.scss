@@ -11,3 +11,10 @@ $extra_color      : #6F1E00;
 @import "./default-vars.scss";
 @import "./globals.scss";
 
+$growl-border: rgba($white, 0.4);
+
+$growl-success: $white;
+$growl-success-bg: $secondary_color;
+
+$growl-error: $white;
+$growl-error-bg: $warning_color;

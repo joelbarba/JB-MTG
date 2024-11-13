@@ -2,7 +2,7 @@ import { Component, ViewEncapsulation } from '@angular/core';
 import { AuthService } from '../../../core/common/auth.service';
 import { ShellService } from '../../../shell/shell.service';
 import { CommonModule } from '@angular/common';
-import { BfConfirmService, BfDnDModule, BfDnDService, BfUiLibModule } from '@blueface_npm/bf-ui-lib';
+import { BfConfirmService, BfDnDModule, BfDnDService, BfGrowlService, BfUiLibModule } from '@blueface_npm/bf-ui-lib';
 import { GameStateService } from '../game-state.service';
 import { filter, map, Subscription, timeout } from 'rxjs';
 import { EPhase, TGameState, TGameCard, TExtGameCard, TPlayer, TAction, TCast, TActionParams, ESubPhase, TCardLocation } from '../../../core/types';
@@ -23,7 +23,7 @@ export interface ICard {
 
 
 interface IDialog { type: 'xs' | 'sm' | 'md' | 'lg', title: string, text: string, icon?: string, background?: string, color?: string,
-  buttons: Array<{ text: string, action: any }> }
+  buttons: Array<{ text: string, class: string; action: any }> }
 
 
 export interface ITargetOp { status: string, targets: Array<string> };
@@ -116,6 +116,7 @@ export class GameComponent {
     public game: GameStateService,
     public router: Router,
     public bfConfirm: BfConfirmService,
+    public growl: BfGrowlService,
   ) {
     this.shell.showMenu = false;
   }
@@ -164,6 +165,7 @@ export class GameComponent {
       this.topGravB = gravA.length ? gravB[0] : null;
 
       this.setVarsFromStateChange();
+      this.showToastMesssages();
       this.triggerDialogs();
       this.autoAdvance();
     }));
@@ -211,6 +213,47 @@ export class GameComponent {
       });
     }
 
+  }
+
+  showToastMesssages() {
+  // | 'refresh'
+  // | 'skip-phase'
+  // | 'untap-card'
+  // | 'untap-all'
+  // | 'draw' 
+  // | 'summon-land' 
+  // | 'summon-creature'
+  // | 'summon-spell'
+  // | 'cancel-summon'
+  // | 'select-card-to-discard' 
+  // | 'tap-land'
+  // | 'burn-mana'
+  // | 'select-attacking-creature'
+  // | 'cancel-attack'
+  // | 'submit-attack'
+  // | 'select-defending-creature'
+  // | 'cancel-defense'
+  // | 'submit-defense'
+  // | 'release-stack'
+    const toast = (text: string, msgIcon?: string) => {
+      this.growl.pushMsg({ text, timeOut: 2000, msgType: 'success', msgIcon });
+    }
+
+    const lastAction = this.state.lastAction;
+    if (lastAction) {
+      console.log('LAST ACTION', lastAction);
+      const playerA = this.game.playerA();
+      const playerB = this.game.playerB();
+      const card = this.state.cards.find(c => c.gId === lastAction.params?.gId);
+      const cardName = `<b>${card?.name || ''}</b>`;
+      
+      if (lastAction.player !== this.game.playerANum) { // Actions from opponent
+
+        if (lastAction.action === 'summon-land')     { toast(`<b>${playerB.name}</b> summoned a ${cardName}`,           'icon-arrow-down16'); }
+        if (lastAction.action === 'summon-creature') { toast(`<b>${playerB.name}</b> summoned a creature: ${cardName}`, 'icon-arrow-down16'); }
+        if (lastAction.action === 'summon-spell')    { toast(`<b>${playerB.name}</b> cast a ${cardName}`,               'icon-arrow-down16'); }
+      }
+    }
   }
 
   autoAdvanceTimeout: any;
@@ -385,22 +428,19 @@ export class GameComponent {
 
     // Mana Burn dialog
     if (this.state.options.find(op => op.action === 'burn-mana')) {
+      const totalMana = this.game.playerA().manaPool.reduce((v,a) => v + a, 0);
       this.dialog = {
         type: 'sm',
         title: 'Mana burn',
         icon: 'icon-fire',
         background: 'crimson',
         color: 'white',
-        text: 'There is unspent mana in your mana pool. It deals 1 damage point for each',
+        text: `There is ${totalMana} unspent mana into your mana pool.<br/> It deals ${totalMana} damage to you`,
         buttons: [
-          { text: 'Ok, burn it', action: () => this.game.action('burn-mana') }
+          { text: 'Ok, burn it', class: 'quaternary', action: () => this.game.action('burn-mana') }
         ]
       };
     }
-
-    // if (state.options.find(op => op.action === 'skip-phase')) {
-    //   return { type: 'small', title: '', text: '', buttons: [{ text: 'Next Phase', action: 'skip-phase' }] };
-    // }
 
     this.updateSummonOperation();
     this.updateCombatOperation();

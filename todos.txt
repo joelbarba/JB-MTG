@@ -1,8 +1,11 @@
-ok - Add timer on spell stack to automatically trigger Ok after 4 seconds
-- Toast messages + helping messages
+ok - Add timer on spell stack to automatically trigger Ok after 5 seconds
+ok - Improve the mana burn dialog (and add a toast for the opponent)
 - Effects
+- Fix spell stack scroll box (calc height dynamically to set no scroll size)
 - Fix summoning Brass Man (only uncolored mana)
 - Support MultiType cards: Add extraType on cards, for "creature artifacts" or others
+- Add toast for combat results
+- Add toasts for spell stack execution
 - Fix dragging cards on the table
 - Reorder (card.order) when dragging on the table
 - Reorder mana on the table on a same column

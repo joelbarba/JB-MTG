@@ -3,6 +3,15 @@ $gray-light: #616161;
 // $gray-light2: #757575;
 $white-dark: gainsboro;
 
+// $playerInControl: floralwhite;
+// $playerInControl: aliceblue;
+// $playerInControl: ghostwhite;
+// $playerInControl: ivory;
+// $playerInControl: azure;
+$playerInControl: honeydew;
+$playerInWaiting: mix($playerInControl, black, 40%);
+
+
 .game {
 
   .left-panel {
@@ -260,8 +269,8 @@ $white-dark: gainsboro;
     }
 
     .player-B {
-      // background-color: ivory;
-      background-color: azure;
+      &.in-control { background-color: $playerInControl; }
+      &.in-waiting { background-color: $playerInWaiting; }
       .hand-box {
         top: -221px;
         &.expanded { transform: translateY(220px); }
@@ -279,12 +288,8 @@ $white-dark: gainsboro;
     }
 
     .player-A {
-      // background-color: floralwhite;
-      // background-color: aliceblue;
-      // background-color: ghostwhite;
-      // background-color: honeydew;
-      // background-color: ivory;
-      background-color: honeydew;      
+      &.in-control { background-color: $playerInControl; }
+      &.in-waiting { background-color: $playerInWaiting; }
       .hand-box {
         bottom: -221px;
         &.expanded { transform: translateY(-220px); }

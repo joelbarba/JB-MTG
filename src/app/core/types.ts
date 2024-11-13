@@ -89,7 +89,6 @@ export type TPlayer = {
   stackCall: boolean;  // true if the spell-stack needs to stop on the player
   selectableAction?: null | TGameOption;
   selectableTarget?: null | { text: string, value: string };
-  aaa: any;
 }
 
 export type TGameOption = { action: TAction, params: TActionParams, text?: string };
@@ -114,7 +113,6 @@ export type TAction = 'start-game'
 | 'cancel-defense'
 | 'submit-defense'
 | 'release-stack'
-// | 'end-interrupting'
 ;
 
 export type TActionParams = { 
