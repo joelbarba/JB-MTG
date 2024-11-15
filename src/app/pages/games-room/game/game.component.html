@@ -124,14 +124,16 @@
               (mouseover)="hoverTableCard(card)"
               (mouseleave)="clearHover()">
           <img [src]="'/assets/images/cards/' + card.image">
-          <span class="damage-points" *ngIf="card.damage">
-            <span>{{card.damage}}</span>
+          <span class="damage-points" *ngIf="card.turnDamage">
+            <span>{{card.turnDamage}}</span>
             <span class="icon-power"></span>
           </span>
+          <span class="attack-defense" *ngIf="card.type === 'creature'">{{card.turnAttack + '/' + card.turnDefense}}</span>
+          <span class="effects-badge" *ngIf="card.effectsFrom?.length"><span>{{card.effectsFrom?.length}}</span></span>
           <div *ngIf="game.debugMode" style="position: absolute; bottom: 30px; margin-left: 5px; color: white; background: black;">
             gId={{card.gId}}
             <!-- <br/>status={{card.status}} -->
-            <br/>damage={{card.damage}}
+            <br/>damage={{card.turnDamage}}
           </div>
         </div>
 
@@ -220,14 +222,17 @@
              (mouseover)="hoverTableCard(card)"
              (mouseleave)="clearHover()">
           <img [src]="'/assets/images/cards/' + card.image">
-          <span class="damage-points" *ngIf="card.damage">
-            <span>{{card.damage}}</span>
+          <span class="damage-points" *ngIf="card.turnDamage">
+            <span>{{card.turnDamage}}</span>
             <span class="icon-power"></span>
           </span>
+          <span class="attack-defense" *ngIf="card.type === 'creature'">{{card.turnAttack + '/' + card.turnDefense}}</span>
+          <span class="effects-badge" *ngIf="card.effectsFrom?.length"><span>{{card.effectsFrom?.length}}</span></span>
+
           <div *ngIf="game.debugMode" style="position: absolute; bottom: 30px; margin-left: 5px; color: white; background: black;">
             gId={{card.gId}}
             <br/>status={{card.status}}
-            <!-- <br/>damage={{card.damage}} -->
+            <!-- <br/>damage={{card.turnDamage}} -->
           </div>
         </div>
       </div>

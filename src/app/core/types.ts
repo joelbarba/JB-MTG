@@ -30,13 +30,27 @@ export type TCard = {
   type    : TCardType;
   attack  : number;
   defense : number;
+  readyToPlay: boolean;
 };
 
 export type TCardLocation = 'off' | 'stack'
   | 'deck1' | 'hand1' | 'tble1' | 'grav1'
   | 'deck2' | 'hand2' | 'tble2' | 'grav2';
 export type TCardSemiLocation = 'off' | 'deck' | 'hand' | 'tble' | 'grav';
-export type TCardAnyLocation = TCardSemiLocation & TCardSemiLocation;
+export type TCardAnyLocation = TCardLocation | TCardSemiLocation;
+
+export type TTargetType = {
+  player?: 'A' | 'B';       // If provided, the selected target must be player A or B
+  cardType?: TCardType;     // If provided, the selected target must be of this type
+  location?: TCardAnyLocation; // If provided, the selected target must be of this location
+}
+
+export type TEffect = {
+  id: string; // Id of the effect
+  gId: string; // gId of the card that generated the effect
+  scope: 'permanent' | 'turn';
+  targets: Array<string>; // Array of gIds or player1 or player2
+}
 
 export type TGameDBState = {
   created: string;
@@ -48,6 +62,7 @@ export type TGameDBState = {
   player1: TPlayer;
   player2: TPlayer;
   cards: Array<TGameCard>;
+  effects: Array<TEffect>;
   lastAction?: TGameOption & { time: string, player: '1' | '2' };
   id: number; // sequential order
 }
@@ -63,10 +78,21 @@ export type TGameCard = TCard & {
   isTapped: boolean;
   status: null | 'summon:waitingMana' | 'summon:selectingMana' | 'summon:selectingTargets' | 'summoning' | 'sickness'
                | 'combat:attacking' | 'combat:defending' | 'combat:selectingTarget';
+
+  targets: Array<string>;         // Aarray of gIds, playerA, playerB
+  possibleTargets: Array<string>; // Aarray of gIds, playerA, playerB (of the possible targets to be selected at that moment)
+  neededTargets: number;          // Minimum number of targets to complete the summoinng
+
+  turnDamage: number;
+  turnAttack: number;  // <-- attack + effects
+  turnDefense: number; // <-- defense + effects
+
+  // Not in DB (calculated when options)
   selectableAction?: null | TGameOption;
   selectableTarget?: null | { text: string, value: string };
-  targets?: Array<string>;
-  damage?: number;
+  effectsFrom?: Array<TEffect>;
+
+  // possibleTargets: (state: TGameState) => Array<string>; // Returns an array of gIds, playerA, playerB
 }
 export type TGameCards = Array<TGameCard>;
 export type TExtGameCard = TGameCard & {
@@ -80,12 +106,10 @@ export type TPlayer = {
   userId: string;
   name: string;
   num: '1' | '2';
-  help: string;
   life: number;
   manaPool: TCast;
   drawnCards: number;  // Only 1 per turn
   summonedLands: number;  // Only 1 per turn
-  controlTime: number;
   stackCall: boolean;  // true if the spell-stack needs to stop on the player
   selectableAction?: null | TGameOption;
   selectableTarget?: null | { text: string, value: string };

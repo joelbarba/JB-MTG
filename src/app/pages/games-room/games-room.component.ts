@@ -1,10 +1,10 @@
 import { Component } from '@angular/core';
-import { Firestore, addDoc, collection, collectionData, doc, setDoc } from '@angular/fire/firestore';
+import { Firestore, addDoc, collection, collectionData, deleteDoc, doc, setDoc } from '@angular/fire/firestore';
 import { AuthService } from '../../core/common/auth.service';
 import { ShellService } from '../../shell/shell.service';
 import { CommonModule } from '@angular/common';
 import { Observable } from 'rxjs';
-import { EPhase, TGameCard, TGameDBState, TGameState, TPlayer } from '../../core/types';
+import { EPhase, TCast, TGameCard, TGameDBState, TGameState, TPlayer } from '../../core/types';
 import { Router } from '@angular/router';
 import { GameStateService } from './game-state.service';
 
@@ -50,6 +50,10 @@ export class GamesRoomComponent {
     await setDoc(doc(this.firestore, 'games', gameId), newGame);
     // this.goToGame(gameId);
   }
+  async deleteGame(gameId: string) {
+    await deleteDoc(doc(this.firestore, 'games', gameId));
+    // this.goToGame(gameId);
+  }
 
   generateGame() {
     const getCardById = (id: string): TGameCard => this.gameState.library.find(c => c.id === id) as TGameCard;
@@ -62,21 +66,42 @@ export class GamesRoomComponent {
         location: 'deck' + playerNum, 
         owner: playerNum, 
         controller: playerNum, 
-        // posX: 100, posY: 30, zInd: 100,
-        // selectableAction: null,
         isTapped: false,
         status: null,
+        targets: [],
+        possibleTargets: [],
+        neededTargets: 0,
+        turnDamage: 0,
+        turnAttack: 0,
+        turnDefense: 0,
       };
     }
 
     const deck1 = [
-      getCardById('c000004'), // mountain
-      getCardById('c000004'), // mountain
+      getCardById('c000004'), // Mountain
+      getCardById('c000005'), // Forest
+      getCardById('c000003'), // Swamp
+      getCardById('c000003'), // Swamp
+      getCardById('c000002'), // Plains
       getCardById('c000052'), // Mons's Goblin Raiders (1/1)
-      getCardById('c000005'), // forest
-      getCardById('c000005'), // forest
-      getCardById('c000032'), // Lightning Bolt
       getCardById('c000043'), // Gian Growth
+      getCardById('c000028'), // Drudge Skeletons
+      getCardById('c000025'), // Bad Moon
+      getCardById('c000055'), // Unholy Strength
+      getCardById('c000057'), // Disenchantment
+      getCardById('c000055'), // Unholy Strength
+      getCardById('c000055'), // Unholy Strength
+      getCardById('c000041'), // Elvish Archers (2/1)
+      getCardById('c000025'), // Bad Moon
+      getCardById('c000004'), // Mountain
+      getCardById('c000005'), // Forest
+      getCardById('c000044'), // Giant Spider (2/4)
+      getCardById('c000046'), // Granite Gargoyle (2/2)
+      getCardById('c000047'), // Grizzly Bears (2/2)
+      getCardById('c000048'), // Hill Giant (3/3)
+      getCardById('c000049'), // Hurloon Minotaur (2/3)
+      getCardById('c000056'), // Wall of Ice (0/7)
+
       getCardById('c000001'), // Island
       getCardById('c000001'), // Island
       getCardById('c000001'), // Island
@@ -90,18 +115,12 @@ export class GamesRoomComponent {
       // getCardById('c0000'), // 
       // getCardById('c0000'), // 
       getCardById('c000053'), // Ornithopter
-      getCardById('c000041'), // Elvish Archers (2/1)
-      getCardById('c000002'), // plains
-      getCardById('c000001'), // island
+
+      getCardById('c000002'), // Plains
+      getCardById('c000001'), // Island
       getCardById('c000037'), // Brass Man (1/3)
       getCardById('c000045'), // Goblin Balloon Brigade (1/1)
       getCardById('c000052'), // Mons's Goblin Raiders (1/1)
-      getCardById('c000044'), // Giant Spider (2/4)
-      getCardById('c000046'), // Granite Gargoyle (2/2)
-      getCardById('c000047'), // Grizzly Bears (2/2)
-      getCardById('c000048'), // Hill Giant (3/3)
-      getCardById('c000049'), // Hurloon Minotaur (2/3)
-      getCardById('c000056'), // Wall of Ice (0/7)
       getCardById('c000004'), // mountain
       getCardById('c000004'), // mountain
       getCardById('c000004'), // mountain
@@ -115,7 +134,6 @@ export class GamesRoomComponent {
       getCardById('c000002'), // plains
       getCardById('c000001'), // island
       getCardById('c000001'), // island
-      getCardById('c000003'), // swamp
       getCardById('c000003'), // swamp
       getCardById('c000003'), // swamp
       getCardById('c000005'), // forest
@@ -136,8 +154,32 @@ export class GamesRoomComponent {
      .sort((a, b) => a.order > b.order ? 1 : -1);     
 
     const deck2 = [
-      getCardById('c000004'), // mountain
-      getCardById('c000004'), // mountain
+      getCardById('c000004'), // Mountain
+      getCardById('c000005'), // Forest
+      getCardById('c000003'), // Swamp
+      getCardById('c000003'), // Swamp
+      getCardById('c000002'), // Plains
+      getCardById('c000052'), // Mons's Goblin Raiders (1/1)
+      getCardById('c000043'), // Gian Growth
+      getCardById('c000028'), // Drudge Skeletons
+      getCardById('c000025'), // Bad Moon
+      getCardById('c000055'), // Unholy Strength
+      getCardById('c000057'), // Disenchantment
+      getCardById('c000055'), // Unholy Strength
+      getCardById('c000055'), // Unholy Strength
+      getCardById('c000057'), // Disenchantment
+      getCardById('c000057'), // Disenchantment
+      getCardById('c000041'), // Elvish Archers (2/1)
+      getCardById('c000025'), // Bad Moon
+      getCardById('c000004'), // Mountain
+      getCardById('c000005'), // Forest
+      getCardById('c000044'), // Giant Spider (2/4)
+      getCardById('c000046'), // Granite Gargoyle (2/2)
+      getCardById('c000047'), // Grizzly Bears (2/2)
+      getCardById('c000048'), // Hill Giant (3/3)
+      getCardById('c000049'), // Hurloon Minotaur (2/3)
+      getCardById('c000056'), // Wall of Ice (0/7)
+
       getCardById('c000052'), // Mons's Goblin Raiders (1/1)
       getCardById('c000005'), // forest
       getCardById('c000005'), // forest
@@ -235,10 +277,10 @@ export class GamesRoomComponent {
     const defaultPlayerValues = {
       help: '',
       life: 20,
-      manaPool: [0,0,0,0,0,0],
+      manaPool: [0,0,0,0,0,0] as TCast,
       drawnCards: 0,
       summonedLands: 0,
-      stackCall: false,
+      stackCall: false,      
     };
     
     const playerYou = { userId: this.auth.profileUserId, name: this.auth.profileUserName, ...defaultPlayerValues };
@@ -265,6 +307,7 @@ export class GamesRoomComponent {
       player1,
       player2,
       cards,
+      effects: [],
       control: '1', // Player1 starts
       id: 0,
     };

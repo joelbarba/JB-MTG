@@ -1,8 +1,9 @@
+@import '../game.vars.scss';
+
 .graveyard-panel {
   position: fixed;
   z-index: 1000;
-  // background: honeydew;
-  background: azure;
+  background: $panel-graveyard-bg;
   border: 1px solid #737373;
   padding: 15px;
   border-radius: 10px;
@@ -14,17 +15,7 @@
   justify-content: space-between;
   h2 { font-size: 35px; } // title
 
-  // Panel Size
 
-  $table-left: 490px; // Width of the left panel
-  $table-width: calc(100% - $table-left);
-  $table-center-right: calc($table-width / 2);
-  $table-center-left: calc($table-left + $table-center-right);
-
-  $table-top: 72px; // Height of the navbar
-  $table-height: calc(100% - $table-top);  
-  $table-center-bottom: calc($table-height / 2);
-  $table-center-top: calc($table-top + $table-center-bottom);
 
   left: calc($table-center-left - 1000px);
   right: calc($table-center-right - 1000px);

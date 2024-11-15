@@ -53,6 +53,16 @@ $arrows-color: $text-color;
         color: red;
         .icon-power { font-size: 30px; }
       }
+      .attack-defense {
+        position: absolute;
+        right: 9px;
+        bottom: -5px;
+        text-align: center;
+        font-size: 40px;
+        font-weight: 600;
+        -webkit-text-stroke: 2px #000000;
+        color: #ffffff;
+      }
     }
     .selectable-card {
       cursor: pointer;

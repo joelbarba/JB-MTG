@@ -25,7 +25,11 @@
         <span>{{item.shadowDamage}}</span>
         <span class="icon-power"></span>
       </span>
-      <div *ngIf="item.targetOf.length || item.card.targets" style="position: absolute; font-size: 11px; top: -17px; left: 0px;">
+      <span class="attack-defense" *ngIf="item.card.type === 'creature'">
+        <span>{{item.card.turnAttack + '/' + item.card.turnDefense}}</span>
+      </span>
+      
+      <div *ngIf="item.targetOf.length || item.card.targets.length" style="position: absolute; font-size: 11px; top: -17px; left: 0px;">
         {{item.card.owner === game.playerANum ? 'Yours' : "Opponent's"}}
       </div>
       <div *ngIf="game.debugMode" style="position: absolute; bottom: 30px; margin-left: 5px; color: white; background: black;">

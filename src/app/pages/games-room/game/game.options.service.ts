@@ -1,5 +1,7 @@
 import { Injectable } from '@angular/core';
-import { EPhase, TAction, TCard, TCardLocation, TGameState, TGameDBState, TGameCard, TGameCards, TActionParams, TPlayer, TCardType, TCardSemiLocation, TCardAnyLocation, TCast, TGameOption, ESubPhase } from '../../../core/types';
+import { EPhase, TAction, TCard, TCardLocation, TGameState, TGameDBState, TGameCard, TGameCards, TActionParams, TPlayer, TCardType, TCardSemiLocation, TCardAnyLocation, TCast, TGameOption, ESubPhase, TEffect } from '../../../core/types';
+import { compareLocations } from './gameLogic/game.utils';
+import { runEvent } from './gameLogic/game.card-logic';
 
 
 @Injectable({ providedIn: 'root' })
@@ -34,8 +36,9 @@ export class GameOptionsService {
   // Calculates your possible options for a current state
   // It modifies/extends:
   //  - state.options[]
-  //  - state.cards[].selectableAction    - state.player1/2.help
+  //  - state.cards[].selectableAction
   //  - state.cards[].selectableTarget
+  //  - state.cards[].effectsFrom[] ---> Pointers to the state.effects[]
   calculate(dbState: TGameDBState, playerANum: '1' | '2'): TGameState {
     const state: TGameState = { ...dbState, options: [] };
     state.cards.forEach(card => { card.selectableAction = null; card.selectableTarget = null });  // Remove all actions (from prev state)
@@ -53,7 +56,6 @@ export class GameOptionsService {
     const isPhase = (...phases: string[]) => phases.includes(state.phase);    
 
     let canSkipPhase = true;
-    playerA.help = '';
 
     if (state.control !== playerANum) { return state; } // If you don't have control, you have no options
 
@@ -72,34 +74,24 @@ export class GameOptionsService {
     
     const playingCard = state.cards.find(c => c.status === 'summon:selectingTargets');
     if (playingCard) {  // Selecting target
+      runEvent(state, playingCard.gId, 'onTargetLookup');
+      playingCard.possibleTargets.forEach(target => {
+        if (target === 'playerA') {
+          state.options.push({ action: 'summon-spell', params: { gId: playingCard.gId, targets: ['player' + playerANum] }});
+          state.player1.selectableTarget = { text: `Select target player ${state.player1.name}`, value: 'player' + playerANum };
 
-      const addTargetPlayer = () => {
-        state.options.push({ action: 'summon-spell', params: { gId: playingCard.gId, targets: ['player1'] }});
-        state.options.push({ action: 'summon-spell', params: { gId: playingCard.gId, targets: ['player2'] }});
-        state.player1.selectableTarget = { text: `Select target player ${state.player1.name}`, value: 'player1' };
-        state.player2.selectableTarget = { text: `Select target player ${state.player2.name}`, value: 'player2' };
-      }
-      const addTargetCreature = () => { // Select creatures on the table or on the stack
-        const tableAndStack = state.cards.filter(c => c.location === 'stack' || c.location.slice(0,4) === 'tble');
-        tableAndStack.filter(c => c.type === 'creature').forEach(card => {
-          card.selectableTarget = { text: `Select target ${card.name}`, value: card.gId };
-          state.options.push({ action: 'summon-spell', params: { gId: playingCard.gId, targets: [card.gId] } });
-        });
-      }
+        } else if (target === 'playerB') {
+          state.options.push({ action: 'summon-spell', params: { gId: playingCard.gId, targets: ['player' + playerBNum] }});
+          state.player1.selectableTarget = { text: `Select target player ${state.player1.name}`, value: 'player' + playerBNum };            
 
-      if (playingCard.id === 'c000032') { // Lightning Bolt
-        addTargetPlayer();
-        addTargetCreature();
-      }
-      if (playingCard.id === 'c000043') { // Giant Growth
-        addTargetCreature();
-      }
-      if (playingCard.id === 'c000038') { // Counter Spell
-        state.cards.filter(c => c.location === 'stack').forEach(card => {
-          card.selectableTarget = { text: `Select target ${card.name}`, value: card.gId };
-          state.options.push({ action: 'summon-spell', params: { gId: playingCard.gId, targets: [card.gId] } });
-        });
-      }
+        } else { // Card target
+          const targetCard = state.cards.find(c => c.gId === target);
+          if (targetCard) {
+            targetCard.selectableTarget = { text: `Select target ${targetCard.name}`, value: targetCard.gId };
+            state.options.push({ action: 'summon-spell', params: { gId: playingCard.gId, targets: [targetCard.gId] } });
+          }
+        }
+      });
       return state; // <---- Avoid any other action when selecting a target
     }
 
@@ -196,7 +188,25 @@ export class GameOptionsService {
       });
     }
 
-    // You may summon/cast an instant spell
+    // You may summon enchantments
+    if (isPhase('pre', 'post')) {
+      handA.filter(c => c.type === 'enchantment').forEach(card => {
+        const option: TGameOption = { action: 'summon-spell', params: { gId: card.gId }, text: `Cast ${card.name}` };
+        state.options.push(option);
+        if (!card.status) { card.selectableAction = option; }
+      });
+    }
+
+    // You may summon sorceries
+    if (isPhase('pre', 'post')) {
+      handA.filter(c => c.type === 'sorcery').forEach(card => {
+        const option: TGameOption = { action: 'summon-spell', params: { gId: card.gId }, text: `Cast ${card.name}` };
+        state.options.push(option);
+        if (!card.status) { card.selectableAction = option; }
+      });
+    }
+
+    // You may summon instant spells
     if (isPhase('maintenance', 'draw', 'pre', 'combat', 'post')) {
       handA.filter(c => c.type === 'instant').forEach(card => {
         const option: TGameOption = { action: 'summon-spell', params: { gId: card.gId }, text: `Cast ${card.name}` };
@@ -265,7 +275,6 @@ export class GameOptionsService {
     // You may discard a card
     if (isPhase('discard') && handA.length > 7) {
       canSkipPhase = false; // Player must discard if more than 7 cards on the hand
-      playerA.help = `You cannot have more than 7 cards on your hand. Please discard`;
       handA.forEach(card => {
         const option: TGameOption = { action: 'select-card-to-discard', params: { gId: card.gId }, text: `Discard ${card.name}` };
         state.options.push(option);
@@ -276,7 +285,6 @@ export class GameOptionsService {
     // You may burn unspent mana
     if (isPhase('end') && playerA.manaPool.some(m => m > 0)) {
       canSkipPhase = false;  // Player must burn unspent mana
-      playerA.help = `You have to burn unspent mana`;
       state.options.push({ action: 'burn-mana', params: {} });
     }
 
@@ -285,8 +293,20 @@ export class GameOptionsService {
       state.options.push({ action: 'skip-phase', params: {} });
     }
 
+
     return state;
   }
 
+
+  calculateEffectsFrom(state: TGameState) {
+    // state.cards.forEach(card => {
+    //   card.effectsFrom = state.effects
+    //     .filter(effect => effect.targets.indexOf(card.gId) >= 0)
+    //     .map(effect => ({ ...effect, card: state.cards.find(c => c.gId === effect.gId) } as TEffect));
+    // });
+    state.cards.forEach(card => {
+      card.effectsFrom = state.effects.filter(effect => effect.targets.indexOf(card.gId) >= 0);
+    });
+  }
 
 }

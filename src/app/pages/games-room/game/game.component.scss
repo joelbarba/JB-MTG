@@ -1,15 +1,4 @@
-$gray-dark: #3c3c3c;
-$gray-light: #616161;
-// $gray-light2: #757575;
-$white-dark: gainsboro;
-
-// $playerInControl: floralwhite;
-// $playerInControl: aliceblue;
-// $playerInControl: ghostwhite;
-// $playerInControl: ivory;
-// $playerInControl: azure;
-$playerInControl: honeydew;
-$playerInWaiting: mix($playerInControl, black, 40%);
+@import 'game.vars.scss';
 
 
 .game {
@@ -243,6 +232,32 @@ $playerInWaiting: mix($playerInControl, black, 40%);
             color: red;
             .icon-power { font-size: 30px; }
           }
+          .attack-defense {
+            position: absolute;
+            right: 9px;
+            bottom: -5px;
+            text-align: center;
+            font-size: 40px;
+            font-weight: 600;
+            -webkit-text-stroke: 2px #000000;
+            color: #ffffff;
+          }
+          .effects-badge {
+            position: absolute;
+            right: 0;
+            left: 0;
+            top: -12px;
+            text-align: center;
+            span {
+              font-size: 16px;
+              font-weight: 500;
+              color: #ffffff;
+              background: orange;
+              border-radius: 4px;
+              padding: 2px 12px;
+              cursor: pointer;
+            }
+          }
         }
       }
 
@@ -269,8 +284,8 @@ $playerInWaiting: mix($playerInControl, black, 40%);
     }
 
     .player-B {
-      &.in-control { background-color: $playerInControl; }
-      &.in-waiting { background-color: $playerInWaiting; }
+      &.in-control { background-color: $player-in-control-bg; }
+      &.in-waiting { background-color: $player-in-waiting-bg; }
       .hand-box {
         top: -221px;
         &.expanded { transform: translateY(220px); }
@@ -288,8 +303,8 @@ $playerInWaiting: mix($playerInControl, black, 40%);
     }
 
     .player-A {
-      &.in-control { background-color: $playerInControl; }
-      &.in-waiting { background-color: $playerInWaiting; }
+      &.in-control { background-color: $player-in-control-bg; }
+      &.in-waiting { background-color: $player-in-waiting-bg; }
       .hand-box {
         bottom: -221px;
         &.expanded { transform: translateY(-220px); }

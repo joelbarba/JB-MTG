@@ -78,10 +78,14 @@
           <bf-input bfLabel="Green"  [(ngModel)]="selectedCard.cast[5]"></bf-input>
         </div>
         
-        <bf-input bfLabel="Text"  [(ngModel)]="selectedCard.text"></bf-input>
+        <bf-input bfLabel="Text" [(ngModel)]="selectedCard.text"></bf-input>
 
-        <bf-btn bfText="Cancel" (bfClick)="isEdit = false" class="secondary" style="margin-right: 15px;"></bf-btn>
-        <bf-btn bfText="Save Details" (bfClick)="saveCard(selectedCard)"></bf-btn>
+        <bf-checkbox bfLabel="Ready to play" [(ngModel)]="selectedCard.readyToPlay"></bf-checkbox>
+
+        <div style="text-align: right;">
+          <bf-btn bfText="Cancel" (bfClick)="isEdit = false" class="secondary" style="margin-right: 15px;"></bf-btn>
+          <bf-btn bfText="Save Details" (bfClick)="saveCard(selectedCard)"></bf-btn>
+        </div>
       </div>
     </div>
   </div>

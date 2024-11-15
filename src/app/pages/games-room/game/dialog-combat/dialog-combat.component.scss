@@ -1,8 +1,9 @@
+@import '../game.vars.scss';
+
 .combat {
   position: fixed;
   z-index: 1000;
-  // background: honeydew;
-  background: azure;
+  background: $dialog-combat-bg;
   border: 1px solid #737373;
   padding: 15px;
   border-radius: 10px;
@@ -19,17 +20,6 @@
   left: calc(40% - 400px);
   right: calc(40% - 400px);
   bottom: calc(50%);
-
-  // Panel Size
-  $table-left: 490px; // Width of the left panel
-  $table-width: calc(100% - $table-left);
-  $table-center-right: calc($table-width / 2);
-  $table-center-left: calc($table-left + $table-center-right);
-
-  $table-top: 72px; // Height of the navbar
-  $table-height: calc(100% - $table-top);  
-  $table-center-bottom: calc($table-height / 2);
-  $table-center-top: calc($table-top + $table-center-bottom);
 
   top: $table-top + 3px; 
   bottom: calc($table-center-bottom - 60px);
@@ -84,6 +74,16 @@
             -webkit-text-stroke: 2px #fff;
             color: red;
             .icon-power { font-size: 30px; }
+          }
+          .attack-defense {
+            position: absolute;
+            right: 9px;
+            bottom: -5px;
+            text-align: center;
+            font-size: 40px;
+            font-weight: 600;
+            -webkit-text-stroke: 2px #000000;
+            color: #ffffff;
           }
           &.is-hidden { opacity: 0; }
           &.is-dying { box-shadow: 0px 0px 9px 9px #F44336; }

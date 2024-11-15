@@ -1,0 +1,31 @@
+$gray-dark: #3c3c3c;
+$gray-light: #616161;
+// $gray-light2: #757575;
+$white-dark: gainsboro;
+
+
+// Panel Size
+
+$table-left: 490px; // Width of the left panel
+$table-width: calc(100% - $table-left);
+$table-center-right: calc($table-width / 2);
+$table-center-left: calc($table-left + $table-center-right);
+
+$table-top: 72px; // Height of the navbar
+$table-height: calc(100% - $table-top);  
+$table-center-bottom: calc($table-height / 2);
+$table-center-top: calc($table-top + $table-center-bottom);
+
+
+// $player-in-control-bg: floralwhite;
+// $player-in-control-bg: aliceblue;
+// $player-in-control-bg: ghostwhite;
+// $player-in-control-bg: ivory;
+// $player-in-control-bg: azure;
+$player-in-control-bg: honeydew;
+$player-in-waiting-bg: mix(azure, black, 40%);
+
+$dialog-selecting-mana-bg: azure;
+$dialog-spell-stack-bg: honeydew;
+$dialog-combat-bg: ivory;
+$panel-graveyard-bg: azure;

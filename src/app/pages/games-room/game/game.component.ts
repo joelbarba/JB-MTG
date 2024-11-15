@@ -13,6 +13,7 @@ import { DialogSelectingManaComponent } from './dialog-selecting-mana/dialog-sel
 import { PanelGraveyardComponent } from './panel-graveyard/panel-graveyard.component';
 import { DialogCombatComponent } from './dialog-combat/dialog-combat.component';
 import { DialogSpellStackComponent } from './dialog-spell-stack/dialog-spell-stack.component';
+import { checkMana } from './gameLogic/game.utils';
 
 export interface ICard {
   img: string;
@@ -147,22 +148,23 @@ export class GameComponent {
 
       this.phase = `${this.game.getTurnPlayerLetter()}.${state.phase}`;
 
-      this.handA = state.cards.filter(c => c.location === this.game.yourHand()).sort((a, b) => a.order > b.order ? 1 : -1);
-      this.handB = state.cards.filter(c => c.location === this.game.otherHand()).sort((a, b) => a.order > b.order ? 1 : -1);
+      const gCards = this.game.getCards(state);
+      const gPlayers = this.game.getPlayers(state);
+
+      this.handA = gCards.handA;
+      this.handB = gCards.handB;
+
+      this.tableA = gCards.tableA.map(c => this.extendTableCard(c));
+      this.tableB = gCards.tableB.map(c => this.extendTableCard(c));
       
-      this.tableA = state.cards.filter(c => c.location === this.game.yourTable()).sort((a, b) => a.order > b.order ? 1 : -1).map(c => this.extendTableCard(c));
-      this.tableB = state.cards.filter(c => c.location === this.game.otherTable()).sort((a, b) => a.order > b.order ? 1 : -1).map(c => this.extendTableCard(c));
+      this.deckACount = gCards.deckA.length;
+      this.deckBCount = gCards.deckB.length;
       
-      this.deckACount = state.cards.filter(c => c.location === this.game.yourDeck()).length;
-      this.deckBCount = state.cards.filter(c => c.location === this.game.otherDeck()).length;
-      
-      this.playerA = this.game.getPlayers(state).playerA;
-      this.playerB = this.game.getPlayers(state).playerB;
-      
-      const gravA = state.cards.filter(c => c.location === this.game.yourGrav()).sort((a, b) => a.order > b.order ? 1 : -1);
-      const gravB = state.cards.filter(c => c.location === this.game.otherGrav()).sort((a, b) => a.order > b.order ? 1 : -1);
-      this.topGravA = gravA.length ? gravA[0] : null;
-      this.topGravB = gravA.length ? gravB[0] : null;
+      this.playerA = gPlayers.playerA;
+      this.playerB = gPlayers.playerB;
+
+      this.topGravA = gCards.graveyardA.at(-1) || null;
+      this.topGravB = gCards.graveyardB.at(-1) || null;
 
       this.setVarsFromStateChange();
       this.showToastMesssages();
@@ -179,23 +181,26 @@ export class GameComponent {
   debugPanel = false;
   debugLocations: Array<TCardLocation> = ['stack', 'deck1', 'deck2', 'hand1', 'hand2', 'tble1', 'tble2', 'grav1', 'grav2', 'off'];
   cardFilter(location: TCardLocation) { return this.state.cards.filter(c => c.location === location); }
-  debugCard(card: TGameCard) { console.log(card); }
+  debugCard(card: TGameCard) { console.log(card.name, card); }
 
   setVarsFromStateChange() {
     const you = this.game.playerANum;
     const other = this.game.playerBNum;
     const yourOptions = this.game.doYouHaveControl() ? this.state.options : [];
 
+    this.skipPhase.enabled = !!yourOptions.find(op => op.action === 'skip-phase');
     this.canIDraw = !!yourOptions.find(op => op.action === 'draw');
 
-    this.skipPhase.enabled = !!yourOptions.find(op => op.action === 'skip-phase');
-    if (!this.skipPhase.enabled) { this.skipPhase.whyNot = `You can't move to the next pahse yet. You need to complete it first`; }
+    if (!this.skipPhase.enabled) { this.skipPhase.whyNot = `You can't move to the next phase yet. You need to complete it first`; }
 
     if (this.canIDraw && !this.skipPhase.enabled) {
       this.mainInfo = `Draw Phase`;
       this.skipPhase.whyNot = `You must draw a card from your deck`;
     }
-    
+
+    if (this.game.doYouHaveControl() && this.state.phase === 'discard' && this.handA.length > 7) {
+      this.mainInfo = `You cannot have more than 7 cards on your hand. Please discard`;
+    }
 
     // If untap phase, show the global button to untapp all tapped
     const untapOp = yourOptions.find(op => op.action === 'untap-all');
@@ -245,13 +250,13 @@ export class GameComponent {
       const playerA = this.game.playerA();
       const playerB = this.game.playerB();
       const card = this.state.cards.find(c => c.gId === lastAction.params?.gId);
-      const cardName = `<b>${card?.name || ''}</b>`;
+      const cardName = `<br/><b>${card?.name || ''}</b>`;
       
       if (lastAction.player !== this.game.playerANum) { // Actions from opponent
 
-        if (lastAction.action === 'summon-land')     { toast(`<b>${playerB.name}</b> summoned a ${cardName}`,           'icon-arrow-down16'); }
-        if (lastAction.action === 'summon-creature') { toast(`<b>${playerB.name}</b> summoned a creature: ${cardName}`, 'icon-arrow-down16'); }
-        if (lastAction.action === 'summon-spell')    { toast(`<b>${playerB.name}</b> cast a ${cardName}`,               'icon-arrow-down16'); }
+        if (lastAction.action === 'summon-land')     { toast(`<b>${playerB.name}</b> summoned a ${cardName}`,               'icon-arrow-down16'); }
+        if (lastAction.action === 'summon-creature') { toast(`<b>${playerB.name}</b> is summoning a creature: ${cardName}`, 'icon-arrow-down16'); }
+        if (lastAction.action === 'summon-spell')    { toast(`<b>${playerB.name}</b> is casting a ${cardName}`,             'icon-arrow-down16'); }
       }
     }
   }
@@ -507,7 +512,7 @@ export class GameComponent {
     },
     tryToSummon: () => {
       if (!this.summonOp.card) { return; }
-      const manaStatus = this.game.checkMana(this.summonOp.card.cast, this.playerA.manaPool);
+      const manaStatus = checkMana(this.summonOp.card.cast, this.playerA.manaPool);
       if (manaStatus === 'exact' || manaStatus === 'auto') {
         this.summonOp.turnOff();
         setTimeout(() => this.game.action(this.summonOp.action, this.summonOp.params));
@@ -516,7 +521,7 @@ export class GameComponent {
       else if (manaStatus === 'manual') { // Too many mana of different colors. You need to select
         console.log('Ops, too much mana of different colors. You need to select');        
 
-        const reserveStatus = this.game.checkMana(this.summonOp.card.cast, this.summonOp.manaReserved);
+        const reserveStatus = checkMana(this.summonOp.card.cast, this.summonOp.manaReserved);
         if (reserveStatus === 'exact' || reserveStatus === 'auto') {
           this.summonOp.turnOff();
           setTimeout(() => this.game.action(this.summonOp.action, this.summonOp.params));
@@ -553,6 +558,7 @@ export class GameComponent {
       this.summonOp.cast          = [...card.cast];
       this.summonOp.manaLeft      = [...card.cast];   // Remaining mana left to summon
       this.summonOp.manaReserved  = [0,0,0,0,0,0];    // Mana temporarily reserved to summon
+      this.summonOp.action = 'summon-spell';
       if (card.type === 'creature')     { this.summonOp.action = 'summon-creature'; }
       if (card.type === 'instant')      { this.summonOp.action = 'summon-spell'; }
       if (card.type === 'interruption') { this.summonOp.action = 'summon-spell'; }

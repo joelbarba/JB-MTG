@@ -59,14 +59,10 @@ export class DialogCombatComponent {
   constructor(public game: GameStateService) {}
 
   ngOnInit() {
-    // Find the summoning card
-    const { hand } = this.game.getCards(this.game.state, 'player' + this.attacker as 'playerA' | 'playerB');
-
     
     // const controlPlayer = this.game.state.control === '1' ? this.game.state.player1 : this.game.state.player2;
     // const summonerPlayer      = this.summoner === 'A' ? this.game.playerA() : this.game.playerB();
     // const interruptingPlayer  = this.summoner === 'A' ? this.game.playerB() : this.game.playerA();
-    // controlPlayer.controlTime = (new Date()).getTime(); // TODO: REMOVE THISSSSSSSSSSS!!!!!!!!!!!!!!!!!!!!!!!
     // console.log('Summoning Event', this.card);
     const youControl = (this.game.state.control === this.game.playerANum);
     

@@ -87,7 +87,24 @@ export class LibraryComponent {
     card.cast = card.cast.map((v: number | string) => Number.parseInt(v as string, 10)) as TCast;
     if (typeof card.attack === 'string') { card.attack = Number.parseInt(card.attack, 10); }
     if (typeof card.defense === 'string') { card.defense = Number.parseInt(card.defense, 10); }
-    const docObj = card.keyFilter('name, image, color, type, attack, defense, cast, text') as Partial<TCard>;
+
+    // if (card.id === 'c000032') { // Lightning Bolt
+    //   card.castTargetTypes = [
+    //     [{ player: 'A', }, { player: 'B'}, 
+    //      { cardType: 'creature', location: 'tble' },
+    //      { cardType: 'creature', location: 'stack' },
+    //     ]
+    //   ];
+    // }
+    // if (card.id === 'c000043') { // Giant Growth
+    //   card.castTargetTypes = [
+    //     [{ cardType: 'creature', location: 'tble' },
+    //      { cardType: 'creature', location: 'stack' },
+    //     ]
+    //   ];
+    // }
+
+    const docObj = card.keyFilter('name, image, color, type, attack, defense, cast, text, readyToPlay') as Partial<TCard>;
     console.log('Saving Card', docObj);
     await updateDoc(doc(this.firestore, 'cards', card.id), docObj);
     this.isEdit = false;
@@ -108,6 +125,7 @@ export class LibraryComponent {
       type    : 'land',
       attack  : 0,
       defense : 0,
+      readyToPlay: false,
     };
     console.log('New Card:', card);
     await setDoc(doc(this.firestore, 'cards', id), card);

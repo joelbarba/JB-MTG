@@ -1,8 +1,9 @@
+@import '../game.vars.scss';
+
 .selecting-mana {
   position: fixed;
   z-index: 1000;
-  // background: honeydew;
-  background: azure;
+  background: $dialog-selecting-mana-bg;
   border: 1px solid #737373;
   padding: 15px;
   border-radius: 10px;

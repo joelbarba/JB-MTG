@@ -14,14 +14,17 @@
 
         <!-- Defending Creature -->
         <div class="panel-card" *ngIf="col.defendingCard" 
-             [class.is-dying]="col.defendingCard.defense <= (col.defendingCard.damage || 0)"
+             [class.is-dying]="col.defendingCard.turnDefense <= col.defendingCard.turnDamage"
              [class.selectable-card]="col.defendingCard.selectableAction || col.defendingCard.selectableTarget"
              (click)="selectCard.emit(col.defendingCard)"
              (mouseover)="hoverCard.emit(col.defendingCard)" (mouseleave)="clearHover.emit()">
           <img [src]="'/assets/images/cards/' + col.defendingCard.image">
-          <span class="damage-points" *ngIf="col.defendingCard.damage">
-            <span>{{col.defendingCard.damage}}</span>
+          <span class="damage-points" *ngIf="col.defendingCard.turnDamage">
+            <span>{{col.defendingCard.turnDamage}}</span>
             <span class="icon-power"></span>
+          </span>
+          <span class="attack-defense" *ngIf="col.defendingCard.type === 'creature'">
+            <span>{{col.defendingCard.turnAttack + '/' + col.defendingCard.turnDefense}}</span>
           </span>
         </div>
 
@@ -29,8 +32,8 @@
         <div class="panel-card empty-slot" *ngIf="!col.defendingCard"
              [class.is-hidden]="subPhase === 'selectAttack'">
           <img>
-          <span class="damage-points" *ngIf="subPhase === 'afterCombat' && col.attackingCard.attack">
-            <span>{{col.attackingCard.attack}}</span>
+          <span class="damage-points" *ngIf="subPhase === 'afterCombat' && col.attackingCard.turnAttack">
+            <span>{{col.attackingCard.turnAttack}}</span>
             <span class="icon-power"></span>
           </span>
         </div>
@@ -38,27 +41,30 @@
         <!-- Damage Arrows -->
         <div class="combat-arrows">          
           <div class="combat-arrow">
-            <span class="damage left bottom">{{col.attackingCard.attack}}<span class="icon-power"></span></span>
-            <!-- <span class="damage left top" *ngIf="col.defendingCard">{{col.defendingCard.defense}}<span class="icon-shield2"></span></span> -->
+            <span class="damage left bottom">{{col.attackingCard.turnAttack}}<span class="icon-power"></span></span>
+            <!-- <span class="damage left top" *ngIf="col.defendingCard">{{col.defendingCard.turnDefense}}<span class="icon-shield2"></span></span> -->
             <span class="icon-arrow-up16"></span>
           </div>
           <div class="combat-arrow" *ngIf="col.defendingCard">
             <span class="icon-arrow-down16"></span>
-            <span class="damage right top">{{col.defendingCard.attack}}<span class="icon-power"></span></span>
-            <!-- <span class="damage right bottom">{{col.attackingCard.defense}}<span class="icon-shield2"></span></span> -->
+            <span class="damage right top">{{col.defendingCard.turnAttack}}<span class="icon-power"></span></span>
+            <!-- <span class="damage right bottom">{{col.attackingCard.turnDefense}}<span class="icon-shield2"></span></span> -->
           </div>
         </div>
 
         <!-- Attacking Creature -->
         <div class="panel-card" 
-             [class.is-dying]="col.attackingCard.defense <= (col.attackingCard.damage || 0)"
+             [class.is-dying]="col.attackingCard.turnDefense <= col.attackingCard.turnDamage"
              [class.selectable-card]="col.attackingCard.selectableAction || col.attackingCard.selectableTarget"
              (click)="selectCard.emit(col.attackingCard)"
              (mouseover)="hoverCard.emit(col.attackingCard)" (mouseleave)="clearHover.emit()">
           <img [src]="'/assets/images/cards/' + col.attackingCard.image">
-          <span class="damage-points" *ngIf="col.attackingCard.damage">
-            <span>{{col.attackingCard.damage}}</span>
+          <span class="damage-points" *ngIf="col.attackingCard.turnDamage">
+            <span>{{col.attackingCard.turnDamage}}</span>
             <span class="icon-power"></span>
+          </span>
+          <span class="attack-defense" *ngIf="col.attackingCard.type === 'creature'">
+            <span>{{col.attackingCard.turnAttack + '/' + col.attackingCard.turnDefense}}</span>
           </span>
         </div>
 
@@ -81,41 +87,47 @@
 
         <!-- Attacking Creature -->
         <div class="panel-card" 
-             [class.is-dying]="col.attackingCard.defense <= (col.attackingCard.damage || 0)"
+             [class.is-dying]="col.attackingCard.turnDefense <= col.attackingCard.turnDamage"
              [class.selectable-card]="col.attackingCard.selectableAction || col.attackingCard.selectableTarget"
              (click)="selectCard.emit(col.attackingCard)"
              (mouseover)="hoverCard.emit(col.attackingCard)" (mouseleave)="clearHover.emit()">
           <img [src]="'/assets/images/cards/' + col.attackingCard.image">
-          <span class="damage-points" *ngIf="col.attackingCard.damage">
-            <span>{{col.attackingCard.damage}}</span>
+          <span class="damage-points" *ngIf="col.attackingCard.turnDamage">
+            <span>{{col.attackingCard.turnDamage}}</span>
             <span class="icon-power"></span>
+          </span>
+          <span class="attack-defense" *ngIf="col.attackingCard.type === 'creature'">
+            <span>{{col.attackingCard.turnAttack + '/' + col.attackingCard.turnDefense}}</span>
           </span>
         </div>
 
         <!-- Damage Arrows -->
         <div class="combat-arrows">
           <div class="combat-arrow">
-            <span class="damage left top">{{col.attackingCard.attack}}<span class="icon-power"></span></span>
-            <!-- <span class="damage left bottom" *ngIf="col.defendingCard">{{col.defendingCard.defense}}<span class="icon-shield2"></span></span> -->
+            <span class="damage left top">{{col.attackingCard.turnAttack}}<span class="icon-power"></span></span>
+            <!-- <span class="damage left bottom" *ngIf="col.defendingCard">{{col.defendingCard.turnDefense}}<span class="icon-shield2"></span></span> -->
             <span class="icon-arrow-down16"></span>
           </div>
           <div class="combat-arrow" *ngIf="col.defendingCard">
             <span class="icon-arrow-up16"></span>
-            <!-- <span class="damage right top">{{col.attackingCard.defense}}<span class="icon-shield2"></span></span> -->
-            <span class="damage right bottom">{{col.defendingCard.attack}}<span class="icon-power"></span></span>
+            <!-- <span class="damage right top">{{col.attackingCard.turnDefense}}<span class="icon-shield2"></span></span> -->
+            <span class="damage right bottom">{{col.defendingCard.turnAttack}}<span class="icon-power"></span></span>
           </div>
         </div>
 
         <!-- Defending Creature -->
         <div class="panel-card" *ngIf="col.defendingCard"
-             [class.is-dying]="col.defendingCard.defense <= (col.defendingCard.damage || 0)"
+             [class.is-dying]="col.defendingCard.turnDefense <= col.defendingCard.turnDamage"
              [class.selectable-card]="col.defendingCard.selectableAction || col.defendingCard.selectableTarget"
              (click)="selectCard.emit(col.defendingCard)"
              (mouseover)="hoverCard.emit(col.defendingCard)" (mouseleave)="clearHover.emit()">
           <img [src]="'/assets/images/cards/' + col.defendingCard.image">
-          <span class="damage-points" *ngIf="col.defendingCard.damage">
-            <span>{{col.defendingCard.damage}}</span>
+          <span class="damage-points" *ngIf="col.defendingCard.turnDamage">
+            <span>{{col.defendingCard.turnDamage}}</span>
             <span class="icon-power"></span>
+          </span>
+          <span class="attack-defense" *ngIf="col.defendingCard.type === 'creature'">
+            <span>{{col.defendingCard.turnAttack + '/' + col.defendingCard.turnDefense}}</span>
           </span>
         </div>
 
@@ -125,8 +137,8 @@
              (mouseover)="col.hoverDefender && hoverCard.emit(col.hoverDefender)" (mouseleave)="clearHover.emit()">
           <img [hidden]="col.hoverDefender">
           <img [hidden]="!col.hoverDefender" [src]="'/assets/images/cards/' + col.hoverDefender?.image">
-          <span class="damage-points" *ngIf="subPhase === 'afterCombat' && col.attackingCard.attack">
-            <span>{{col.attackingCard.attack}}</span>
+          <span class="damage-points" *ngIf="subPhase === 'afterCombat' && col.attackingCard.turnAttack">
+            <span>{{col.attackingCard.turnAttack}}</span>
             <span class="icon-power"></span>
           </span>
         </div>

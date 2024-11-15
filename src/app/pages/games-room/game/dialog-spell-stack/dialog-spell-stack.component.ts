@@ -8,8 +8,16 @@ import { GameStateService } from '../../game-state.service';
 import { TActionParams, TGameCard, TGameState, TPlayer } from '../../../../core/types';
 import { Subscription } from 'rxjs';
 import { StackCardWithTargetsComponent } from './stack-card-with-targets/stack-card-with-targets.component';
+import { runEvent } from '../gameLogic/game.card-logic';
 
-export type TStackTree = { card: TGameCard | null, player: TPlayer | null, targetOf: Array<TStackTree>, shadowDamage: number };
+export type TStackTree = {
+  card: TGameCard | null,
+  player: TPlayer | null,
+  targetOf: Array<TStackTree>,
+  shadowDamage: number,
+  shadowAttack: number,
+  shadowDefense: number,
+};
 
 @Component({
   selector: 'dialog-spell-stack',
@@ -90,7 +98,7 @@ export class DialogSpellStackComponent {
         else { // target = gId
           const card = state.cards.find(c => c.gId === target);
           if (card) {
-            if (!card.targets?.length) { rootTargets.add(target); }
+            if (!card.targets.length) { rootTargets.add(target); }
             else { findEmptyTargets(card.targets); }
           }
         }
@@ -101,17 +109,17 @@ export class DialogSpellStackComponent {
 
     // Construct the inverted tree with card.targetOf[] <---> card.target[]
     const expandTreeCard = (target: string): TStackTree => {
-      const targetOf = this.stack.filter(c => c.targets && c.targets?.indexOf(target) >= 0).map((card: TGameCard) => {
+      const targetOf = this.stack.filter(c => c.targets.indexOf(target) >= 0).map((card: TGameCard) => {
         return expandTreeCard(card.gId);
       });
 
       if (target === 'player1' || target === 'player2') {
         const player = target === 'player1' ? state.player1 : state.player2;
-        return { card: null, player, targetOf, shadowDamage: 0 } as TStackTree;
+        return { card: null, player, targetOf, shadowDamage: 0, shadowAttack: 0, shadowDefense: 0 } as TStackTree;
 
       } else {
         const card = state.cards.find(c => c.gId === target) || null;
-        return { card, player: null, targetOf, shadowDamage: 0 };
+        return { card, player: null, targetOf, shadowDamage: 0, shadowAttack: 0, shadowDefense: 0 };
       }
     }
     this.rootTargets = Array.from(rootTargets).sort((a,b) => a > b ? 1:-1).map((target: string) => expandTreeCard(target));
@@ -120,10 +128,14 @@ export class DialogSpellStackComponent {
     // Fakely run the stack to figure out the shadow damage (the damage creatures and players will receive when the stack is executed)
     const fakeState = JSON.parse(JSON.stringify(state)) as TGameState;
     const fakeStack = fakeState.cards.filter(c => c.location === 'stack').sort((a, b) => a.order > b.order ? -1 : 1); // reverse order
-    fakeStack.forEach(card => card.location === 'stack' && this.game.runSummonEvent(fakeState, card));
+    fakeStack.forEach(card => card.location === 'stack' && runEvent(fakeState, card.id, 'onSummon', { isFake: true }));
     this.rootTargets.filter(i => !!i.card).forEach(item => {
       const fakeMatch = fakeState.cards.find(c => c.gId === item.card?.gId);
-      if (fakeMatch && item.card) { item.shadowDamage = (item.card.damage || 0) + (fakeMatch.damage || 0); }
+      if (fakeMatch && item.card) {
+        item.shadowDamage  = (item.card.turnDamage  || 0) + (fakeMatch.turnDamage  || 0);
+        item.shadowAttack  = (item.card.turnAttack  || 0) + (fakeMatch.turnAttack  || 0);
+        item.shadowDefense = (item.card.turnDefense || 0) + (fakeMatch.turnDefense || 0);
+      }
     });
     this.rootTargets.filter(i => !!i.player).forEach(item => {
       if (item.player?.num === '1') { item.shadowDamage = state.player1.life - fakeState.player1.life; }
@@ -195,7 +207,7 @@ export class DialogSpellStackComponent {
     this.showTimer = this.youControl && state.lastAction?.player !== this.game.playerANum;
     if (this.showTimer) {
       console.log('Init auto Stack release timer. Last Action =', state.lastAction);
-      this.initTimer();
+      // this.initTimer(); // TODO: Uncomment this
     }
   }
 
@@ -206,7 +218,7 @@ export class DialogSpellStackComponent {
   // Init the timer to automatically release the stack after a few seconds
   initTimer() {
     const waitingMs = 5000;
-    const ctrlTime = (new Date()).getTime(); //this.game.playerB().controlTime;
+    const ctrlTime = (new Date()).getTime();
     if (this.interval) { clearInterval(this.interval); }
     this.interval = setInterval(() => {
       this.progressBar = Math.min(100, ((new Date()).getTime() - ctrlTime) * 200 / waitingMs);
