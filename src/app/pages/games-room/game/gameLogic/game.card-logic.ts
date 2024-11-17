@@ -1,5 +1,5 @@
 import { TEffect, TGameCard, TGameState } from "../../../../core/types";
-import { getCards, killDamagedCreatures, moveCard, moveCardToGraveyard, summonCreature } from "./game.utils";
+import { getCards, killDamagedCreatures, moveCard, moveCardToGraveyard, randomId, summonCreature } from "./game.utils";
 
 export type TRunEvent = 'onSummon' | 'onTap' | 'onDestroy' | 'onDiscard' | 'onEffect' | 'onTargetLookup';
 export type TRunEventParams = Partial<{ effectId?: string, isFake?: boolean }>;
@@ -19,8 +19,7 @@ export const runEvent: TRunEventFn = (nextState, gId, event, params = {}) => {
   if (!params.isFake) { console.log(`EXECUTING event ${event} for ${card.name} (${card.gId})`); }
 
   // Wrap common values and functions
-  const { randomId, targetId, effect, effectTargetId, cardPlayer, table, stack, tableStack, commonLand, commonCreature } = (function() {
-    const randomId = () => { return (Math.round((Math.random() * 1000)) + ((new Date()).getTime() * 1000)) + ''; };
+  const { targetId, effect, effectTargetId, cardPlayer, table, stack, tableStack, commonLand, commonCreature } = (function() {
     const targetId = card.targets[0]; // code of the first target (playerX, gId, ...)
     const effect = nextState.effects.find(e => e.id === params.effectId);
     const effectTargetId = effect?.targets[0]; // The card that the card's effect is targetting
@@ -39,7 +38,7 @@ export const runEvent: TRunEventFn = (nextState, gId, event, params = {}) => {
       if (event === 'onSummon') { summonCreature(nextState, gId); }
     }
 
-    return { randomId, targetId, effect, effectTargetId, cardPlayer, table, stack, tableStack, commonLand, commonCreature };
+    return { targetId, effect, effectTargetId, cardPlayer, table, stack, tableStack, commonLand, commonCreature };
   })();
 
   
@@ -139,7 +138,7 @@ export const runEvent: TRunEventFn = (nextState, gId, event, params = {}) => {
       card.possibleTargets = tableStack.filter(c => c.type === 'creature').map(c => c.gId);
     }
     if (event === 'onSummon') {
-      nextState.effects.push({ scope: 'turn', gId, targets: [targetId], id: randomId() });
+      nextState.effects.push({ scope: 'turn', gId, targets: [targetId], id: randomId('e') });
       moveCardToGraveyard(nextState, gId);
     }
     if (event === 'onEffect') {
@@ -165,7 +164,7 @@ export const runEvent: TRunEventFn = (nextState, gId, event, params = {}) => {
 
   function c000025_BadMoon() {
     if (event === 'onSummon') {
-      nextState.effects.push({ scope: 'permanent', gId, targets: [], id: randomId() });
+      nextState.effects.push({ scope: 'permanent', gId, targets: [], id: randomId('e') });
       moveCard(nextState, gId, 'tble');
     }
     if (event === 'onEffect') { // Add +1/+1 to all black creatures in the game
@@ -184,7 +183,7 @@ export const runEvent: TRunEventFn = (nextState, gId, event, params = {}) => {
       card.possibleTargets = tableStack.filter(c => c.type === 'creature').map(c => c.gId);
     }
     if (event === 'onSummon') {
-      nextState.effects.push({ scope: 'permanent', gId, targets: [targetId], id: randomId() });
+      nextState.effects.push({ scope: 'permanent', gId, targets: [targetId], id: randomId('e') });
       moveCard(nextState, gId, 'tble');
     }
     if (event === 'onEffect') { // Add +2/+1 to target creature

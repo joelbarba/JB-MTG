@@ -14,6 +14,7 @@ import { PanelGraveyardComponent } from './panel-graveyard/panel-graveyard.compo
 import { DialogCombatComponent } from './dialog-combat/dialog-combat.component';
 import { DialogSpellStackComponent } from './dialog-spell-stack/dialog-spell-stack.component';
 import { checkMana } from './gameLogic/game.utils';
+import { HoverTipDirective } from '../../../core/common/internal-lib/bf-tooltip/bf-tooltip.directive';
 
 export interface ICard {
   img: string;
@@ -63,6 +64,7 @@ export interface ISummonOp {
     PanelGraveyardComponent,
     DialogCombatComponent,
     DialogSpellStackComponent,
+    HoverTipDirective,
   ],
   templateUrl: './game.component.html',
   styleUrls: ['./game.component.scss'],
@@ -653,6 +655,11 @@ export class GameComponent {
     if (card.selectableAction) {
       this.game.action(card.selectableAction.action, { gId: card.gId });
     }
+  }
+
+  selectEffectsBadge(ev: MouseEvent) {
+    console.log('eeee', ev);
+    ev.stopPropagation();
   }
 
   selectCardFromTable(card: TExtGameCard) {

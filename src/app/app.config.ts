@@ -21,6 +21,7 @@ import { getFirestore, provideFirestore } from '@angular/fire/firestore';
 
 // Initialize prototypes
 import { BfPrototypes } from '@blueface_npm/bf-ui-lib';
+import { HoverTipDirective } from './core/common/internal-lib/bf-tooltip/bf-tooltip.directive';
 BfPrototypes.run();  // Extend all common prototypes
 
 export const appConfig: ApplicationConfig = {
@@ -45,5 +46,6 @@ export const appConfig: ApplicationConfig = {
       // providePerformance(() => getPerformance()),
       // provideStorage(() => getStorage()),
     ]),
+    // HoverTipDirective,
   ]
 };

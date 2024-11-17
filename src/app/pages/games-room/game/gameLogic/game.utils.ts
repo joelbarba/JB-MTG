@@ -62,6 +62,7 @@ export const getTime = (): string => {
   return timeStr
 }
 
+export const randomId = (prefix = ''): string => { return prefix + (Math.round((Math.random() * 1000)) + ((new Date()).getTime() * 1000)); };
 
 
 // Moves a card from its current location to another.

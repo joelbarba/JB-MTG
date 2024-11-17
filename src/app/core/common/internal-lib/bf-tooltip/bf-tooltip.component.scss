@@ -1,0 +1,33 @@
+@import 'variables';
+
+:host {
+  .bf-tooltip {
+    z-index: 9001;
+    position: fixed;
+    padding: 5px 10px;
+    background: #333333;
+    color: white;
+    border-radius: 4px;
+    // border: 1px solid #898989;
+    box-shadow: 3px 3px 5px 1px rgb(103 103 103 / 45%);
+    span { position: relative; z-index: 9001; }
+
+    .arrow-rect {
+      z-index: 9000;
+      position: absolute;
+      left: calc(50% - 6px);
+      bottom: -6px;
+      width: 12px;
+      height: 12px;
+      transform: rotate(45deg);
+      background: #333333;
+    }
+
+    transition-duration: 300ms;
+    transition-timing-function: ease-out;
+    transition-property: opacity;
+    opacity: 0;
+    &.is-on { opacity: 1; }
+  }
+
+}

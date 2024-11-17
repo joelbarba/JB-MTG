@@ -121,6 +121,7 @@
               [bfDraggable]="card"
               (dragstart)="dragStart($event, card)"
               (click)="selectCardFromTable(card)"
+              [hoverTip]="card.selectableAction?.text || ''"
               (mouseover)="hoverTableCard(card)"
               (mouseleave)="clearHover()">
           <img [src]="'/assets/images/cards/' + card.image">
@@ -129,7 +130,10 @@
             <span class="icon-power"></span>
           </span>
           <span class="attack-defense" *ngIf="card.type === 'creature'">{{card.turnAttack + '/' + card.turnDefense}}</span>
-          <span class="effects-badge" *ngIf="card.effectsFrom?.length"><span>{{card.effectsFrom?.length}}</span></span>
+          <span class="effects-badge" *ngIf="card.effectsFrom?.length"
+                [hoverTip]="'There are ' + card.effectsFrom?.length + ' effects applied on this card'">
+            <span>{{card.effectsFrom?.length}}</span>
+          </span>
           <div *ngIf="game.debugMode" style="position: absolute; bottom: 30px; margin-left: 5px; color: white; background: black;">
             gId={{card.gId}}
             <!-- <br/>status={{card.status}} -->
@@ -188,6 +192,7 @@
              class="hand-card" [class.selectable-card]="isHandCardSelectable(card)"
              [class.is-summoning]="!!card.status"
              (click)="selectCardFromYourHand(card)"
+             [hoverTip]="card.selectableAction?.text || ''"
              (mouseover)="hoverHandCard(card)"
              (mouseleave)="clearHover()">
           <img [src]="'/assets/images/cards/' + card.image">
@@ -216,9 +221,11 @@
              [style.left.px]="card.posX"
              [style.top.px]="card.posY"
              [style.z-index]="card.zInd"
-             [bfDraggable]="card"
+             [bfDraggable]="card"             
              (dragstart)="dragStart($event, card)"
              (click)="selectCardFromTable(card)"
+             [hoverTip]="card.selectableAction?.text || ''"
+             tipId="card"
              (mouseover)="hoverTableCard(card)"
              (mouseleave)="clearHover()">
           <img [src]="'/assets/images/cards/' + card.image">
@@ -227,7 +234,12 @@
             <span class="icon-power"></span>
           </span>
           <span class="attack-defense" *ngIf="card.type === 'creature'">{{card.turnAttack + '/' + card.turnDefense}}</span>
-          <span class="effects-badge" *ngIf="card.effectsFrom?.length"><span>{{card.effectsFrom?.length}}</span></span>
+          <span class="effects-badge" *ngIf="card.effectsFrom?.length"
+                (click)="selectEffectsBadge($event)"
+                tipId="badge"
+                [hoverTip]="'There are ' + card.effectsFrom?.length + ' effects applied on this card'">
+            <span>{{card.effectsFrom?.length}}</span>
+          </span>
 
           <div *ngIf="game.debugMode" style="position: absolute; bottom: 30px; margin-left: 5px; color: white; background: black;">
             gId={{card.gId}}
@@ -291,7 +303,8 @@
 
 
 <!-- Debug Buttons -->
-<div *ngIf="false" style="position: fixed;top: 76px; left: 10px; background: lightgray; padding: 2px; z-index: 2000; width: 140px; height: 200px;">
+<div *ngIf="true" hoverTip="eeee"
+     style="position: fixed;top: 76px; left: 10px; background: lightgray; padding: 2px; z-index: 2000; width: 140px; height: 200px;">
   <!-- <bf-btn (bfClick)="growl.success('test test');" bfText="GROWL" class="full-width"></bf-btn> -->
   <bf-btn (bfClick)="game.action('refresh')" bfText="REFRESH" class="full-width"></bf-btn>
   <bf-btn (bfClick)="game.saveStateDebug()" bfText="SAVE STATE" class="full-width" style="margin-top: 5px;"></bf-btn>
