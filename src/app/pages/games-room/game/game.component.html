@@ -291,7 +291,7 @@
 
 
 <!-- Debug Buttons -->
-<div style="position: fixed;top: 76px; left: 10px; background: lightgray; padding: 2px; z-index: 2000; width: 140px; height: 200px;">
+<div *ngIf="false" style="position: fixed;top: 76px; left: 10px; background: lightgray; padding: 2px; z-index: 2000; width: 140px; height: 200px;">
   <!-- <bf-btn (bfClick)="growl.success('test test');" bfText="GROWL" class="full-width"></bf-btn> -->
   <bf-btn (bfClick)="game.action('refresh')" bfText="REFRESH" class="full-width"></bf-btn>
   <bf-btn (bfClick)="game.saveStateDebug()" bfText="SAVE STATE" class="full-width" style="margin-top: 5px;"></bf-btn>

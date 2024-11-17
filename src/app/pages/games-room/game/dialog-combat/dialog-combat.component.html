@@ -2,7 +2,7 @@
   <div class="min-btn" (click)="minimized = !minimized">{{minimized ? title : '-'}}</div>
   <h2>{{title}}</h2>
 
-  <div>CONTROL = {{youControl ? 'Me' : 'Opponent'}} - subPhase = "{{subPhase}}"</div>
+  <div *ngIf="game.debugMode">CONTROL = {{youControl ? 'Me' : 'Opponent'}} - subPhase = "{{subPhase}}"</div>
 
   
 
@@ -19,6 +19,7 @@
              (click)="selectCard.emit(col.defendingCard)"
              (mouseover)="hoverCard.emit(col.defendingCard)" (mouseleave)="clearHover.emit()">
           <img [src]="'/assets/images/cards/' + col.defendingCard.image">
+          <span class="effects-badge" *ngIf="col.defendingCard.effectsFrom?.length"><span>{{col.defendingCard.effectsFrom?.length}}</span></span>
           <span class="damage-points" *ngIf="col.defendingCard.turnDamage">
             <span>{{col.defendingCard.turnDamage}}</span>
             <span class="icon-power"></span>
@@ -59,6 +60,7 @@
              (click)="selectCard.emit(col.attackingCard)"
              (mouseover)="hoverCard.emit(col.attackingCard)" (mouseleave)="clearHover.emit()">
           <img [src]="'/assets/images/cards/' + col.attackingCard.image">
+          <span class="effects-badge" *ngIf="col.attackingCard.effectsFrom?.length"><span>{{col.attackingCard.effectsFrom?.length}}</span></span>
           <span class="damage-points" *ngIf="col.attackingCard.turnDamage">
             <span>{{col.attackingCard.turnDamage}}</span>
             <span class="icon-power"></span>
@@ -92,6 +94,7 @@
              (click)="selectCard.emit(col.attackingCard)"
              (mouseover)="hoverCard.emit(col.attackingCard)" (mouseleave)="clearHover.emit()">
           <img [src]="'/assets/images/cards/' + col.attackingCard.image">
+          <span class="effects-badge" *ngIf="col.attackingCard.effectsFrom?.length"><span>{{col.attackingCard.effectsFrom?.length}}</span></span>
           <span class="damage-points" *ngIf="col.attackingCard.turnDamage">
             <span>{{col.attackingCard.turnDamage}}</span>
             <span class="icon-power"></span>
@@ -122,6 +125,7 @@
              (click)="selectCard.emit(col.defendingCard)"
              (mouseover)="hoverCard.emit(col.defendingCard)" (mouseleave)="clearHover.emit()">
           <img [src]="'/assets/images/cards/' + col.defendingCard.image">
+          <span class="effects-badge" *ngIf="col.defendingCard.effectsFrom?.length"><span>{{col.defendingCard.effectsFrom?.length}}</span></span>
           <span class="damage-points" *ngIf="col.defendingCard.turnDamage">
             <span>{{col.defendingCard.turnDamage}}</span>
             <span class="icon-power"></span>

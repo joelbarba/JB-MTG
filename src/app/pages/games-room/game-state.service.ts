@@ -215,7 +215,6 @@ export class GameStateService {
       case 'summon-spell':              this.summonSpell(nextState, params); break;
       case 'cancel-summon':             this.cancelSummonOperations(nextState); break;
       case 'release-stack':             this.releaseStack(nextState); break;
-      // case 'end-interrupting':          this.endInterrupting(nextState); break;
     }
 
     this.applyEffects(nextState); // Recalculate state based on current effects
@@ -387,7 +386,11 @@ export class GameStateService {
     } else { // If both stackCall are false (you didn't add any new spell), run the spell stack
       console.log('You are both done, RUN THE STACK of SPELLS');
       this.runSpellStack(nextState);
-      if (nextState.phase === 'combat') { this.continueCombat(nextState); }      
+      if (nextState.phase === 'combat') { this.continueCombat(nextState); }
+      // else {
+      //   this.applyEffects(nextState);
+      //   killDamagedCreatures(nextState);
+      // }
     }
   }
 
@@ -403,7 +406,8 @@ export class GameStateService {
     stack.forEach(card => {
       if (card.location === 'stack') { runEvent(nextState, card.gId, 'onSummon') }
     });
-    killDamagedCreatures(nextState);
+    this.applyEffects(nextState); // Recalculate the effects
+    killDamagedCreatures(nextState); // Kill creatures if needed
     nextState.control = nextState.turn; // Return control to the turn player
   }
 
@@ -501,13 +505,13 @@ export class GameStateService {
     let totalDamage = 0;
     attackingCreatures.forEach(attackingCard => {
       const defendingCard = defendingCreatures.find(c => c.targets.includes(attackingCard.gId));
-      const attackerTxt = `Attacking ${attackingCard.gId} (${attackingCard.turnAttack}/${attackingCard.turnDefense})`;
+      const attackerTxt = `Attacking ${attackingCard.gId} ${attackingCard.name} (${attackingCard.turnAttack}/${attackingCard.turnDefense})`;
 
       if (defendingCard) { // Creatre blocked by another
         defendingCard.turnDamage = attackingCard.turnAttack;
         attackingCard.turnDamage = defendingCard.turnAttack;
         
-        const defenserTxt = `Defending ${defendingCard.gId} (${attackingCard.turnAttack}/${attackingCard.turnDefense})`;
+        const defenserTxt = `Defending ${defendingCard.gId} ${defendingCard.name} (${attackingCard.turnAttack}/${attackingCard.turnDefense})`;
         console.log(`${attackerTxt} -----> deals ${attackingCard.turnAttack} points of damage to ${defenserTxt}`);
         console.log(`${defenserTxt} -----> deals ${defendingCard.turnAttack} points of damage to ${attackerTxt}`);
         
@@ -558,6 +562,7 @@ export class GameStateService {
     // If starting combat phase, init sub-phase
     nextState.subPhase = null;
     if (nextState.phase === EPhase.combat) { nextState.subPhase = ESubPhase.selectAttack; }
+    killDamagedCreatures(nextState); // In case something dealt damage or changed creatures defense
   }
 
   // End the turn and reset all turn counters and values
@@ -612,7 +617,7 @@ export class GameStateService {
   // ---------- EFFECTS ----------
 
   // This happens every time the state is modified (at the end of the reducer)
-  private applyEffects(nextState: TGameState) {
+  applyEffects(nextState: TGameState) {
     console.log('Applying EFFECTS');
 
     // Reset all turnAttack / turnDefense
@@ -633,6 +638,8 @@ export class GameStateService {
       runEvent(nextState, effect.gId, 'onEffect', { effectId: effect.id });
     });
 
+    // We can't do this here, because of afterCombat subphase (creatures should stay until the end of combat)
+    // killDamagedCreatures(nextState); // In case an effect deals damage or changes creatures defense
   }
 
 

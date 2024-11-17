@@ -18,6 +18,9 @@
     <!-- Target Card -->
     <div class="panel-card" *ngIf="item.card"
          [class.selectable-card]="!!item.card.selectableAction || !!item.card.selectableTarget"
+         [class.is-dying]="item.card.type === 'creature' && item.card.turnDefense <= item.shadowDamage"
+         [class.has-targets]="!!item.card.targets.length"
+         [class]="item.card.type + '-' + item.card.location"
          (click)="selectCard.emit(item.card)"
          (mouseover)="hoverCard.emit(item.card)" (mouseleave)="clearHover.emit()">
       <img [src]="'/assets/images/cards/' + item.card.image">
@@ -25,9 +28,9 @@
         <span>{{item.shadowDamage}}</span>
         <span class="icon-power"></span>
       </span>
-      <span class="attack-defense" *ngIf="item.card.type === 'creature'">
-        <span>{{item.card.turnAttack + '/' + item.card.turnDefense}}</span>
-      </span>
+      <span class="attack-defense delta" *ngIf="item.card.type === 'creature' && item.shadowDelta">{{item.shadowDelta}}</span>
+      <span class="attack-defense shado" *ngIf="item.card.type === 'creature' && item.shadowForce">{{item.shadowForce}}</span>
+      <span class="attack-defense" [class.turn]="item.shadowDelta" *ngIf="item.card.type === 'creature'">{{item.card.turnAttack + '/' + item.card.turnDefense}}</span>
       
       <div *ngIf="item.targetOf.length || item.card.targets.length" style="position: absolute; font-size: 11px; top: -17px; left: 0px;">
         {{item.card.owner === game.playerANum ? 'Yours' : "Opponent's"}}

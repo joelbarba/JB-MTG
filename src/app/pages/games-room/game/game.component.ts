@@ -246,7 +246,7 @@ export class GameComponent {
 
     const lastAction = this.state.lastAction;
     if (lastAction) {
-      console.log('LAST ACTION', lastAction);
+      // console.log('LAST ACTION', lastAction);
       const playerA = this.game.playerA();
       const playerB = this.game.playerB();
       const card = this.state.cards.find(c => c.gId === lastAction.params?.gId);

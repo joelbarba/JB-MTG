@@ -84,13 +84,14 @@ export class GamesRoomComponent {
       getCardById('c000003'), // Swamp
       getCardById('c000002'), // Plains
       getCardById('c000052'), // Mons's Goblin Raiders (1/1)
+      getCardById('c000032'), // Lightning Bolt
       getCardById('c000043'), // Gian Growth
       getCardById('c000028'), // Drudge Skeletons
       getCardById('c000025'), // Bad Moon
       getCardById('c000055'), // Unholy Strength
       getCardById('c000057'), // Disenchantment
       getCardById('c000055'), // Unholy Strength
-      getCardById('c000055'), // Unholy Strength
+      // getCardById('c000055'), // Unholy Strength
       getCardById('c000041'), // Elvish Archers (2/1)
       getCardById('c000025'), // Bad Moon
       getCardById('c000004'), // Mountain
@@ -159,14 +160,14 @@ export class GamesRoomComponent {
       getCardById('c000003'), // Swamp
       getCardById('c000003'), // Swamp
       getCardById('c000002'), // Plains
-      getCardById('c000052'), // Mons's Goblin Raiders (1/1)
+      getCardById('c000041'), // Elvish Archers (2/1)
       getCardById('c000043'), // Gian Growth
       getCardById('c000028'), // Drudge Skeletons
       getCardById('c000025'), // Bad Moon
       getCardById('c000055'), // Unholy Strength
       getCardById('c000057'), // Disenchantment
       getCardById('c000055'), // Unholy Strength
-      getCardById('c000055'), // Unholy Strength
+      // getCardById('c000055'), // Unholy Strength
       getCardById('c000057'), // Disenchantment
       getCardById('c000057'), // Disenchantment
       getCardById('c000041'), // Elvish Archers (2/1)

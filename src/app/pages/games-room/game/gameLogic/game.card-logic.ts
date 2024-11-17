@@ -1,5 +1,5 @@
 import { TEffect, TGameCard, TGameState } from "../../../../core/types";
-import { getCards, moveCard, moveCardToGraveyard, summonCreature } from "./game.utils";
+import { getCards, killDamagedCreatures, moveCard, moveCardToGraveyard, summonCreature } from "./game.utils";
 
 export type TRunEvent = 'onSummon' | 'onTap' | 'onDestroy' | 'onDiscard' | 'onEffect' | 'onTargetLookup';
 export type TRunEventParams = Partial<{ effectId?: string, isFake?: boolean }>;
@@ -14,29 +14,36 @@ export type TRunEventFn = (
 // ------------------------ SPECIFIC EVENTS for every CARD ------------------------
 
 export const runEvent: TRunEventFn = (nextState, gId, event, params = {}) => {
-
   const card = nextState.cards.find(c => c.gId === gId);
   if (!card) { return; }
-  if (!params.isFake) { console.log(`EXECUTING event ${event} for ${card.name} (${card.gId}); targets=${card.targets}`); }
-  const randomId = () => { return (Math.round((Math.random() * 1000)) + ((new Date()).getTime() * 1000)) + ''; }
-  const targetId = card.targets[0]; // code of the first target (playerX, gId, ...)
-  const effect = nextState.effects.find(e => e.id === params.effectId);
-  const effectTargetId = effect?.targets[0]; // The card that the card's effect is targetting
-  const cardPlayer = card.controller === '1' ? nextState.player1 : nextState.player2
-  const { table, stack, tableStack } = getCards(nextState);
+  if (!params.isFake) { console.log(`EXECUTING event ${event} for ${card.name} (${card.gId})`); }
 
-  const commonLand = (manaNum: 0|1|2|3|4|5) => {
-    if (event === 'onTap') {
-      if (card && !card.isTapped && card.location.slice(0,4) === 'tble') { 
-        cardPlayer.manaPool[manaNum] += 1;
-        card.isTapped = true;
-      } 
+  // Wrap common values and functions
+  const { randomId, targetId, effect, effectTargetId, cardPlayer, table, stack, tableStack, commonLand, commonCreature } = (function() {
+    const randomId = () => { return (Math.round((Math.random() * 1000)) + ((new Date()).getTime() * 1000)) + ''; };
+    const targetId = card.targets[0]; // code of the first target (playerX, gId, ...)
+    const effect = nextState.effects.find(e => e.id === params.effectId);
+    const effectTargetId = effect?.targets[0]; // The card that the card's effect is targetting
+    const cardPlayer = card.controller === '1' ? nextState.player1 : nextState.player2
+    const { table, stack, tableStack } = getCards(nextState);
+
+    const commonLand = (manaNum: 0|1|2|3|4|5) => {
+      if (event === 'onTap') {
+        if (card && !card.isTapped && card.location.slice(0,4) === 'tble') { 
+          cardPlayer.manaPool[manaNum] += 1;
+          card.isTapped = true;
+        } 
+      }
+    }  
+    const commonCreature = () => {
+      if (event === 'onSummon') { summonCreature(nextState, gId); }
     }
-  }  
-  const commonCreature = () => {
-    if (event === 'onSummon') { summonCreature(nextState, gId); }
-  }
+
+    return { randomId, targetId, effect, effectTargetId, cardPlayer, table, stack, tableStack, commonLand, commonCreature };
+  })();
+
   
+
 
 
 
@@ -187,12 +194,17 @@ export const runEvent: TRunEventFn = (nextState, gId, event, params = {}) => {
         targetCreature.turnDefense += 1;
       }
     }
+    // if (event === 'onDestroy') {
+    //   const targetCreature = tableStack.find(c => c.effectsFrom?.find(e => e.gId === gId));
+    //   if (targetCreature) { targetCreature.turnDefense -= 1; targetCreature.turnAttack -= 2; }
+    //   killDamagedCreatures(nextState, targetId); // It may happen that the damage is now > defense
+    // }
   }  
 
   function c000057_Disenchantment() {
     if (event === 'onTargetLookup' && card) {
       card.neededTargets = 1; // Target must be any playing enchantment or artifact
-      card.possibleTargets = tableStack.filter(c => c.type === 'creature' || c.type === 'artifact').map(c => c.gId);
+      card.possibleTargets = tableStack.filter(c => c.type === 'enchantment' || c.type === 'artifact').map(c => c.gId);
     }
     if (event === 'onSummon') {
       const targetEnchantment = tableStack.find(c => c.gId === targetId && c.type === 'enchantment');

@@ -15,8 +15,8 @@ export type TStackTree = {
   player: TPlayer | null,
   targetOf: Array<TStackTree>,
   shadowDamage: number,
-  shadowAttack: number,
-  shadowDefense: number,
+  shadowForce: string;  // (4/4) Future Attack/Defense (after the stack runs)
+  shadowDelta: string;  // (+3/-2) Difference between real turnAttack/defense and shadowAttack/defense
 };
 
 @Component({
@@ -75,7 +75,6 @@ export class DialogSpellStackComponent {
     if (this.interval) { clearInterval(this.interval); }
   }
 
-  stack: Array<TGameCard> = [];
   stackInfo: Array<string> = [];
   rootTargets: Array<TStackTree> = [];
 
@@ -83,10 +82,10 @@ export class DialogSpellStackComponent {
     const playerB = this.game.playerANum === '1' ? state.player2 : state.player1;
     this.youControl = this.game.state.control === this.game.playerANum;
 
-    this.stack = this.game.state.cards.filter(c => c.location === 'stack').sort((a, b) => a.order > b.order ? -1 : 1); // reverse order
-    console.log('STACK', this.stack);
+    const stack = state.cards.filter(c => c.location === 'stack').sort((a, b) => a.order > b.order ? -1 : 1); // reverse order
+    console.log('STACK', stack);
 
-    if (!this.stack.length) { return this.close(); }
+    if (!stack.length) { return this.close(); }
 
     // Find all those cards in the stack without any target (initial tree points), or target players
     const rootTargets: Set<string> = new Set(); // Array<gId | player1 | player2>
@@ -98,43 +97,70 @@ export class DialogSpellStackComponent {
         else { // target = gId
           const card = state.cards.find(c => c.gId === target);
           if (card) {
-            if (!card.targets.length) { rootTargets.add(target); }
-            else { findEmptyTargets(card.targets); }
+            // if (card.location === 'stack' && card.targets.length) { findEmptyTargets(card.targets); }
+            if (card.targets.length) { findEmptyTargets(card.targets); }
+            else { rootTargets.add(target); }
           }
         }
       });
     }    
-    findEmptyTargets(this.stack.map(c => c.gId));
+    findEmptyTargets(stack.map(c => c.gId));
     
+
+    // Function to check if a card is target of a card in the stack (at any level)
+    const checkStackBranch = (target: TStackTree): boolean => {
+      if (target.card?.location === 'stack') { return true };
+      return !!target.targetOf.find(t => checkStackBranch(t));
+    }
 
     // Construct the inverted tree with card.targetOf[] <---> card.target[]
     const expandTreeCard = (target: string): TStackTree => {
-      const targetOf = this.stack.filter(c => c.targets.indexOf(target) >= 0).map((card: TGameCard) => {
-        return expandTreeCard(card.gId);
+     
+      // Select cards that are targetting the target
+      const cardsTargetting = state.cards.filter(card => {
+        if (card.type === 'creature' && card.status?.slice(0,6) === 'combat') { return false; } // Omit defending creatures in combat (target = attacker)
+        return card.targets.indexOf(target) >= 0; 
+      }).sort((a, b) => { // Cards that are not in the stack go first (left)
+        if (a.location === 'stack' && b.location !== 'stack') { return 1; }
+        if (a.location !== 'stack' && b.location === 'stack') { return -1; }
+        return a.order > b.order ? 1 : -1;
       });
+      
+      const targetOf = cardsTargetting.map((card: TGameCard) => {
+        return expandTreeCard(card.gId);
+      }).filter(card => checkStackBranch(card)); // Only include targets that have a targeting card (at any level down) that is in the stack.
 
       if (target === 'player1' || target === 'player2') {
         const player = target === 'player1' ? state.player1 : state.player2;
-        return { card: null, player, targetOf, shadowDamage: 0, shadowAttack: 0, shadowDefense: 0 } as TStackTree;
+        return { card: null, player, targetOf, shadowDamage: 0, shadowForce: '', shadowDelta: '' } as TStackTree;
 
       } else {
         const card = state.cards.find(c => c.gId === target) || null;
-        return { card, player: null, targetOf, shadowDamage: 0, shadowAttack: 0, shadowDefense: 0 };
+        return { card, player: null, targetOf, shadowDamage: 0, shadowForce: '', shadowDelta: '' };
       }
     }
     this.rootTargets = Array.from(rootTargets).sort((a,b) => a > b ? 1:-1).map((target: string) => expandTreeCard(target));
 
 
-    // Fakely run the stack to figure out the shadow damage (the damage creatures and players will receive when the stack is executed)
+    // Fakely run the stack to figure out the shadow damage (the damage creatures and players will receive after the stack is executed)
     const fakeState = JSON.parse(JSON.stringify(state)) as TGameState;
     const fakeStack = fakeState.cards.filter(c => c.location === 'stack').sort((a, b) => a.order > b.order ? -1 : 1); // reverse order
-    fakeStack.forEach(card => card.location === 'stack' && runEvent(fakeState, card.id, 'onSummon', { isFake: true }));
+    fakeStack.forEach(card => card.location === 'stack' && runEvent(fakeState, card.gId, 'onSummon', { isFake: true }));
+    this.game.applyEffects(fakeState);
     this.rootTargets.filter(i => !!i.card).forEach(item => {
       const fakeMatch = fakeState.cards.find(c => c.gId === item.card?.gId);
       if (fakeMatch && item.card) {
-        item.shadowDamage  = (item.card.turnDamage  || 0) + (fakeMatch.turnDamage  || 0);
-        item.shadowAttack  = (item.card.turnAttack  || 0) + (fakeMatch.turnAttack  || 0);
-        item.shadowDefense = (item.card.turnDefense || 0) + (fakeMatch.turnDefense || 0);
+        item.shadowDamage = fakeMatch.turnDamage || 0;
+
+        if (item.card.turnAttack !== fakeMatch.turnAttack || item.card.turnDefense !== fakeMatch.turnDefense) {
+          item.shadowForce = `${fakeMatch.turnAttack}/${fakeMatch.turnDefense}`;
+          const deltaA = fakeMatch.turnAttack - item.card.turnAttack;
+          const deltaD = fakeMatch.turnDefense - item.card.turnDefense;
+          if (deltaA !== 0 || deltaD !== 0) {
+            item.shadowDelta = (deltaA > 0 ? '+' : '') + deltaA + '/' + (deltaD > 0 ? '+' : '') + deltaD;
+          }
+        }
+
       }
     });
     this.rootTargets.filter(i => !!i.player).forEach(item => {
@@ -150,7 +176,7 @@ export class DialogSpellStackComponent {
 
 
     // Generate a human-readable list of the stack actions
-    this.stackInfo = this.stack.map(card => {
+    this.stackInfo = stack.map(card => {
       let txt = `Casting ${card.name}`;
       if (card.targets && card.targets.length) { 
         const targetId = card.targets[0];
@@ -168,7 +194,7 @@ export class DialogSpellStackComponent {
     // Find a suitable title for the panel
     this.title = 'Casting Spells';
     if (this.rootTargets.length === 1) {
-      const mainCard = this.stack.at(-1);
+      const mainCard = stack.at(-1);
       if (mainCard) {
         if (mainCard.type === 'creature')     { this.title = `Summoning ${mainCard.name}`; }
         if (mainCard.type === 'instant')      { this.title = `Casting ${mainCard.name}`; }

@@ -110,36 +110,44 @@ export const summonCreature = (nextState: TGameState, gId: string) => {
 export const moveCardToGraveyard = (nextState: TGameState, gId: string) => {
   const card = nextState.cards.find(c => c.gId === gId);
   if (!card) { return; }
-  card.status = null;
-  card.targets = [];
   moveCard(nextState, gId, 'grav');
   runEvent(nextState, gId, 'onDestroy');
+  card.status = null;
+  card.targets = [];
 
   // Find all enchantments targetting the card, and move them all to the graveyard too
   const tableStackCards = nextState.cards.filter(c => c.location === 'stack' || c.location.slice(0,4) === 'tble');
-  tableStackCards.filter(c => c.type === 'enchantment' && c.targets.includes(gId)).forEach(enchantment => {
-    moveCardToGraveyard(nextState, enchantment.gId);
-  });
+  const enchantments = tableStackCards.filter(c => c.type === 'enchantment' && c.targets.includes(gId));
+  if (enchantments.length) { console.log(`${card.name} has ${enchantments.length} enchantments. These are destroyed too`); }
+  enchantments.forEach(enchantment => moveCardToGraveyard(nextState, enchantment.gId));
 }
 
 
 // Check the amount of damage for every creature, and destroy them if needed
-export const killDamagedCreatures = (nextState: TGameState) => {
-  const table = nextState.cards.filter(c => c.type === 'creature' && c.location.slice(0, 4) === 'tble');
-  table.forEach(card => {
+// If a creature gId is provided, it only checks this one
+export const killDamagedCreatures = (nextState: TGameState, gId?: string) => {
+  const killDamagedCreture = (card: TGameCard) => {
     if ((card.turnDefense || 0) <= (card.turnDamage || 0)) {
       console.log(`Creature ${card.gId} ${card.name} (${card.turnAttack}/${card.turnDefense}) has received "${card.turnDamage}" points of damage ---> IT DIES (go to graveyard)`);
       moveCardToGraveyard(nextState, card.gId);
     }
-  });
+  }
+  if (gId) { // Check the given creature
+    const card = nextState.cards.find(c => c.gId === gId);
+    if (card) { killDamagedCreture(card); }
+
+  } else { // Check all creatures in the game (table + stack)
+    const table = nextState.cards.filter(c => c.type === 'creature' && c.location.slice(0, 4) === 'tble');
+    table.forEach(card => killDamagedCreture(card));
+  }
 }
 
-  // Validates the mana in the mana pool to cast a card
-  // - 'not enough' = There not enough mana
-  // - 'exact' --> There is the exact mana
-  // - If there is more mana:
-  //    - 'auto' -> If all uncolored can be taken from the same source
-  //    - 'manual' -> If there are different colors to be used as uncolored (cherry picking)
+// Validates the mana in the mana pool to cast a card
+// - 'not enough' = There not enough mana
+// - 'exact' --> There is the exact mana
+// - If there is more mana:
+//    - 'auto' -> If all uncolored can be taken from the same source
+//    - 'manual' -> If there are different colors to be used as uncolored (cherry picking)
 export const checkMana = (cast: TCast, playerManaPool: TCast): 'not enough' | 'exact' | 'auto' | 'manual' => {
   const manaPool = [...playerManaPool] as TCast;
   for (let t = 1; t <= 5; t++) { manaPool[t] -= cast[t]; } // Subtract colored mana
