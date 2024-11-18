@@ -46,7 +46,6 @@ export class DialogCombatComponent {
 
   youControl = false;  // Whether you have control of the game
   
-  target?: TGameCard | 'playerA' | 'playerB';
   title = 'Combat';
   
   subPhase!: ESubPhase | null;
@@ -111,7 +110,7 @@ export class DialogCombatComponent {
     this.defendingCreatures = this.game.state.cards.filter(c => c.status === 'combat:defending').sort((a, b) => a.order > b.order ? 1 : -1);
 
     this.combatCards = this.attackingCreatures.map(attackingCard => {
-      const defendingCard = this.defendingCreatures.find(c => c.targets?.includes(attackingCard.gId));
+      const defendingCard = this.defendingCreatures.find(c => c.blockingTarget === attackingCard.gId);
       return { attackingCard, defendingCard, hoverDefender: undefined };
     });
 

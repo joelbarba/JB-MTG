@@ -287,6 +287,16 @@
     (end)="combatPanel = false">
   </dialog-combat>
 
+  <!-- Effects Floating Panel -->
+  <panel-effects *ngIf="effectsPanelCard"
+    [card]="effectsPanelCard"
+    (selectCard)="selectCard($event)"
+    (hoverCard)="hoverCard($event)"
+    (clearHover)="clearHover()"
+    (end)="effectsPanelCard = null">
+  </panel-effects>
+
+
   <dialog-spell-stack 
     *ngIf="spellStackPanel"
     [panelSize]="spellStackPanelSize"
@@ -299,14 +309,7 @@
   <!-- spellStackPanelSize={{spellStackPanelSize}} -->
   <!-- panel={{panel}} -->
 
-  <!-- Effects Floating Panel -->
-  <panel-effects *ngIf="effectsPanelCard"
-    [card]="effectsPanelCard"
-    (selectCard)="selectCard($event)"
-    (hoverCard)="hoverCard($event)"
-    (clearHover)="clearHover()"
-    (end)="effectsPanelCard = null">
-  </panel-effects>
+
 
 
 </div>

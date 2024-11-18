@@ -449,10 +449,21 @@ export class GameStateService {
     if (creature) {
       if (params.targets && params.targets.length) {
         creature.status = 'combat:defending';
-        creature.targets = params.targets;
+        creature.blockingTarget = params.targets[0]; // For now only 1 blocker allowed
+
       } else {
         nextState.cards.filter(c => c.status === 'combat:selectingTarget').forEach(c => c.status = null); // unselect previous (if any)
-        creature.status = 'combat:selectingTarget';
+        creature.status = 'combat:selectingTarget'; // Manually select the defending target
+
+        // This needs to take in cosideration blocking patters (flying, color protection, ...)
+        // const unblockedAttackers = nextState.cards.filter(c => {
+        //   return c.status === 'combat:attacking' 
+        //       && !nextState.cards.find(d => d.status === 'combat:defending' && d.blockingTarget === c.gId);
+        // });
+        // if (unblockedAttackers.length === 1) { // Automatically select the only none blocked attacker
+        //   creature.status = 'combat:defending';
+        //   creature.blockingTarget = unblockedAttackers[0].gId;
+        // }
       }
     }
   }
@@ -465,7 +476,7 @@ export class GameStateService {
 
   // action: submit-defense
   private submitDefense(nextState: TGameState) {
-    const { playerA, playerB, attackingPlayer, defendingPlayer } = this.getPlayers(nextState);
+    const { attackingPlayer } = this.getPlayers(nextState);
     nextState.subPhase = ESubPhase.defending;
     attackingPlayer.stackCall = true; // Activate opponent's stack call, so he gets control to cast spells
     // defendingPlayer.stackCall = true; // You may also play spells
@@ -505,7 +516,7 @@ export class GameStateService {
 
     let totalDamage = 0;
     attackingCreatures.forEach(attackingCard => {
-      const defendingCard = defendingCreatures.find(c => c.targets.includes(attackingCard.gId));
+      const defendingCard = defendingCreatures.find(c => c.blockingTarget === attackingCard.gId);
       const attackerTxt = `Attacking ${attackingCard.gId} ${attackingCard.name} (${attackingCard.turnAttack}/${attackingCard.turnDefense})`;
 
       if (defendingCard) { // Creatre blocked by another
@@ -534,7 +545,7 @@ export class GameStateService {
     killDamagedCreatures(nextState);  // Check those creatures that received more damage than defense, and kill them    
     nextState.cards.filter(c => c.status?.slice(0,6) === 'combat').forEach(card => {
       card.status = null;
-      card.targets = [];
+      card.blockingTarget = null;
     });
     this.switchPlayerControl(nextState, attackingPlayer);
     this.endPhase(nextState);

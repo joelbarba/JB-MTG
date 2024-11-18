@@ -9,6 +9,8 @@
       <!-- Effect {{effect.id}} ({{effect.scope}}) -->
       <span class="owner-text">{{effect.card?.owner === game.playerANum ? 'Yours' : "Opponent's"}}</span>
       <div class="panel-card" *ngIf="effect.card"
+           [class.selectable-card]="effect.card.selectableAction || effect.card.selectableTarget"
+           (click)="selectCard.emit(effect.card)"
            (mouseover)="hoverCard.emit(effect.card)" (mouseleave)="clearHover.emit()">
         <img [src]="'/assets/images/cards/' + effect.card.image">
       </div>
@@ -19,7 +21,11 @@
 
   <div class="main-card">
     <span class="owner-text">{{card.owner === game.playerANum ? 'Yours' : "Opponent's"}}</span>
-    <div class="panel-card" (mouseover)="hoverCard.emit(card)" (mouseleave)="clearHover.emit()">
+    <div class="panel-card" 
+        [class.is-dying]="card.turnDefense <= card.turnDamage"
+        [class.selectable-card]="card.selectableAction || card.selectableTarget"
+        (click)="selectCard.emit(card)"
+        (mouseover)="hoverCard.emit(card)" (mouseleave)="clearHover.emit()">
       <img [src]="'/assets/images/cards/' + card.image">
     </div>
   </div>
