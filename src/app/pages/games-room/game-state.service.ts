@@ -4,9 +4,9 @@ import { AuthService } from '../../core/common/auth.service';
 import { ShellService } from '../../shell/shell.service';
 import { DocumentReference, Firestore, QuerySnapshot, collection, doc, getDoc, getDocs, onSnapshot, query, setDoc, DocumentData, Unsubscribe } from '@angular/fire/firestore';
 import { EPhase, TAction, TCard, TCardLocation, TGameState, TGameDBState, TGameCard, TGameCards, TActionParams, TPlayer, TCardType, TCardSemiLocation, TCardAnyLocation, TCast, TGameOption, ESubPhase, TEffect } from '../../core/types';
-import { GameOptionsService } from './game/game.options.service';
 import { runEvent } from './game/gameLogic/game.card-logic';
 import { calcManaForUncolored, checkMana, getCards, getPlayers, getTime, killDamagedCreatures, moveCard, moveCardToGraveyard, spendMana } from './game/gameLogic/game.utils';
+import { GameOptionsService } from './game/game.options.service';
 
 
 
@@ -124,6 +124,7 @@ export class GameStateService {
       console.log('New State. Last action =', `${dbState.lastAction?.action}`, 'STATE:', this.state);
       this.state = this.options.calculate(dbState, this.playerANum);
       this.options.calculateEffectsFrom(this.state);
+      this.options.calculateTargetsFrom(this.state);      
       this.state$.next(this.state);
       // console.log('New State - Options =', state.options.map(o => `${o.action}:${o.params?.gId}`), state);
     });

@@ -7,6 +7,7 @@ import { ISummonOp, ITargetOp } from '../game.component';
 import { GameStateService } from '../../game-state.service';
 import { ESubPhase, TActionParams, TGameCard, TGameState } from '../../../../core/types';
 import { Subscription } from 'rxjs';
+import { HoverTipDirective } from '../../../../core/common/internal-lib/bf-tooltip/bf-tooltip.directive';
 
 type TCol = {
   attackingCard: TGameCard;
@@ -23,7 +24,8 @@ type TCol = {
     BfDnDModule,
     TranslateModule,
     FormsModule,
-    BfUiLibModule,    
+    BfUiLibModule,
+    HoverTipDirective,
   ],
   templateUrl: './dialog-combat.component.html',
   styleUrl: './dialog-combat.component.scss'
@@ -34,6 +36,7 @@ export class DialogCombatComponent {
   @Output() selectCard = new EventEmitter<TGameCard>();
   @Output() hoverCard = new EventEmitter<any>();
   @Output() clearHover = new EventEmitter<any>();
+  @Output() selectEffects = new EventEmitter<any>();
 
   stateSub!: Subscription;
   minimized = false;
@@ -203,7 +206,11 @@ export class DialogCombatComponent {
   releaseStack() {
     this.game.action('release-stack');
   }
-  
+
+  selectEffectsBadge(card: TGameCard, ev?: MouseEvent) {
+    this.selectEffects.emit(card);
+    if (ev) { ev.stopPropagation(); }
+  }
 
 
   close() {

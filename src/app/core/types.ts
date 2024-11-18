@@ -83,6 +83,8 @@ export type TGameCard = TCard & {
   possibleTargets: Array<string>; // Aarray of gIds, playerA, playerB (of the possible targets to be selected at that moment)
   neededTargets: number;          // Minimum number of targets to complete the summoinng
 
+  blockingTarget: string | null;  // For combat: When defending, the gId of the attacking creature this one is blocking
+
   turnDamage: number;
   turnAttack: number;  // <-- attack + effects
   turnDefense: number; // <-- defense + effects
@@ -91,14 +93,15 @@ export type TGameCard = TCard & {
   selectableAction?: null | TGameOption;
   selectableTarget?: null | { text: string, value: string };
   effectsFrom?: Array<TEffect>;
-
-  // possibleTargets: (state: TGameState) => Array<string>; // Returns an array of gIds, playerA, playerB
+  targetOf?: Array<TGameCard>;
+  uniqueTargetOf?: Array<TGameCard>;
 }
 export type TGameCards = Array<TGameCard>;
 export type TExtGameCard = TGameCard & {
   posX: number;
   posY: number;
   zInd: number;
+  grid: 'A' | 'B';
 }
 
 

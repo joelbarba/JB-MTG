@@ -15,6 +15,7 @@ import { DialogCombatComponent } from './dialog-combat/dialog-combat.component';
 import { DialogSpellStackComponent } from './dialog-spell-stack/dialog-spell-stack.component';
 import { checkMana } from './gameLogic/game.utils';
 import { HoverTipDirective } from '../../../core/common/internal-lib/bf-tooltip/bf-tooltip.directive';
+import { PanelEffectsComponent } from './panel-effects/panel-effects.component';
 
 export interface ICard {
   img: string;
@@ -61,9 +62,10 @@ export interface ISummonOp {
     FormsModule,
     BfUiLibModule,
     DialogSelectingManaComponent,
-    PanelGraveyardComponent,
     DialogCombatComponent,
     DialogSpellStackComponent,
+    PanelGraveyardComponent,
+    PanelEffectsComponent,
     HoverTipDirective,
   ],
   templateUrl: './game.component.html',
@@ -156,9 +158,9 @@ export class GameComponent {
       this.handA = gCards.handA;
       this.handB = gCards.handB;
 
-      this.tableA = gCards.tableA.map(c => this.extendTableCard(c));
-      this.tableB = gCards.tableB.map(c => this.extendTableCard(c));
-      
+      this.tableA = gCards.tableA.map(c => this.extendTableCard(c, 'A'));
+      this.tableB = gCards.tableB.map(c => this.extendTableCard(c, 'B'));
+
       this.deckACount = gCards.deckA.length;
       this.deckBCount = gCards.deckB.length;
       
@@ -172,6 +174,8 @@ export class GameComponent {
       this.showToastMesssages();
       this.triggerDialogs();
       this.autoAdvance();
+
+      this.autoPositionGameCards();
     }));
   }
 
@@ -363,11 +367,11 @@ export class GameComponent {
     return mana;
   }
 
-  extendTableCard(card: TGameCard): TExtGameCard {
+  extendTableCard(card: TGameCard, grid: 'A'| 'B'): TExtGameCard {
     const extInfo = this.positions[card.gId];
-    if (extInfo) { return { ...card, ...extInfo }; }
+    if (extInfo) { return { ...card, ...extInfo, grid }; }
     this.positions[card.gId] = this.defaultCardPos(card); // Find the position on the table for the first time
-    return { ...card, ...this.positions[card.gId] };
+    return { ...card, ...this.positions[card.gId], grid };
   }
 
   defaultCardPos(card: TGameCard | TExtGameCard) {
@@ -380,14 +384,94 @@ export class GameComponent {
     }
   }
 
-  autoPositionGameCards(table: 'A' | 'B' = 'A') {
-    if (table === 'A') {
-      this.tableA = this.tableA.map(card => ({ ...card, ...this.defaultCardPos(card) }));
-      this.tableA.forEach(({ gId, posX, posY, zInd }) => { this.positions[gId] = { posX, posY, zInd }; })
-    } else {
-      this.tableB = this.tableB.map(card => ({ ...card, ...this.defaultCardPos(card) }));
-      this.tableB.forEach(({ gId, posX, posY, zInd }) => { this.positions[gId] = { posX, posY, zInd }; })
-    }
+
+  displayTableA: Array<TExtGameCard> = [];  // tableA + playing cards from B that target cards from tableA
+  displayTableB: Array<TExtGameCard> = [];  // tableB + playing cards from A that target cards from tableB
+  autoPositionGameCards() {
+    // if (table === 'A') {
+    //   this.tableA = this.tableA.map(card => ({ ...card, ...this.defaultCardPos(card) }));
+    //   this.tableA.forEach(({ gId, posX, posY, zInd }) => { this.positions[gId] = { posX, posY, zInd }; })
+    // } else {
+    //   this.tableB = this.tableB.map(card => ({ ...card, ...this.defaultCardPos(card) }));
+    //   this.tableB.forEach(({ gId, posX, posY, zInd }) => { this.positions[gId] = { posX, posY, zInd }; })
+    // }
+
+    // Order cards in a grid of columns: Lands + Creatures + Others
+    const positionTable = (tableCards: Array<TExtGameCard>) => {
+      const tableGrid: Array<Array<TExtGameCard>> = [];
+  
+      const lands     = tableCards.filter(c => c.type === 'land').sort((a,b) => a.order > b.order ? 1: -1);
+      const creatures = tableCards.filter(c => c.type === 'creature').sort((a,b) => a.order > b.order ? 1: -1);
+      const others    = tableCards.filter(c => c.type !== 'land' && c.type !== 'creature').sort((a,b) => a.order > b.order ? 1: -1);
+  
+      const groupLand = tableCards.length > 8;
+      const groupCretures = tableCards.length > 16;
+      const groupOthers = tableCards.length > 20;
+  
+      lands.forEach(card => {
+        const col = tableGrid.find(col => col.find(c => c.id === card.id));
+        if (groupLand && col) { col.push(card); } else { tableGrid.push([card]); }
+      });
+      creatures.forEach(card => {
+        const col = tableGrid.find(col => col.find(c => c.id === card.id));
+        if (groupCretures && col) { col.push(card); } else { tableGrid.push([card]); }
+      });
+      others.forEach(card => {
+        const col = tableGrid.find(col => col.find(c => c.id === card.id));
+        if (groupOthers && col) { col.push(card); } else { tableGrid.push([card]); }
+      });
+      return tableGrid;
+    };
+
+    // Those cards that have only 1 target should be placed right before that target
+    // If the target belongs to the opponent, move it to the opponent's grid
+    const repositionCardsWithOneTarget = (tableCards: Array<TExtGameCard>, tableGrid: Array<Array<TExtGameCard>>) => {
+      const oneTarget = tableCards.filter(c => c.targets.length === 1).sort((a,b) => a.order > b.order ? 1: -1);
+  
+      oneTarget.forEach(card => { // Find cards with 1 target, and reposition them right before their target
+        const targetId = card.targets[0];
+        const targetA = this.tableA.find(t => t.gId === targetId);
+        const targetB = this.tableB.find(t => t.gId === targetId);
+        if (targetA && card.grid === 'B') { card.grid = 'A'; } // Changing grid (opponent's targeting one of your cards)
+        if (targetB && card.grid === 'A') { card.grid = 'B'; } // Changing grid (you targeting one of opponent's cards)
+        const targetGrid = targetA ? tableGridA : targetB ? tableGridB : null;
+        if (targetGrid) {
+          let cCol = -1, cInd = -1; // Card position in its grid
+          let tCol = -1, tInd = -1; // Target position in its grid
+          tableGrid.forEach((arr, col) => arr.forEach((c, ind) => { if (c.gId === card.gId) { cCol = col; cInd = ind; } }));
+          targetGrid.forEach((arr, col) => arr.forEach((c, ind) => { if (c.gId === targetId) { tCol = col; tInd = ind; } }));
+          if (cCol >= 0 && cInd >= 0) { tableGrid[cCol].splice(cInd, 1); } // Remove it from the original position
+          if (tCol >= 0 && tInd >= 0) { targetGrid[tCol].splice(tInd, 0, card); } // Add it to the target column, right before the target 
+        }
+      });
+    };
+
+    this.tableA.forEach(c => c.grid === 'A');
+    this.tableB.forEach(c => c.grid === 'B');
+    const tableGridA = positionTable(this.tableA);
+    const tableGridB = positionTable(this.tableB);
+    repositionCardsWithOneTarget(this.tableA, tableGridA);
+    repositionCardsWithOneTarget(this.tableB, tableGridB);
+
+    const allTableCards = this.tableA.concat(this.tableB);
+    this.displayTableA = allTableCards.filter(c => c.grid === 'A');
+    this.displayTableB = allTableCards.filter(c => c.grid === 'B');
+
+    // Once the grid is constructed, give coordinates to every card
+    tableGridA.forEach((arr, col) => {
+      arr.forEach((card, ind) => {
+        card.posX = 20 + (col * 135);
+        card.posY = 20 + (ind * 30);
+        card.zInd = 100 + ind;
+      })
+    });
+    tableGridB.forEach((arr, col) => {
+      arr.forEach((card, ind) => {
+        card.posX = 20 + (col * 135);
+        card.posY = 280 + (ind * 30);
+        card.zInd = 100 + (col * 15) + ind;
+      })
+    });
   }
 
 
@@ -636,6 +720,7 @@ export class GameComponent {
   }
 
   graveyardPanel: 'A' | 'B' | null = null;
+  effectsPanelCard: TGameCard | null = null;
 
 
 
@@ -657,9 +742,9 @@ export class GameComponent {
     }
   }
 
-  selectEffectsBadge(ev: MouseEvent) {
-    console.log('eeee', ev);
-    ev.stopPropagation();
+  selectEffectsBadge(card: TGameCard, ev?: MouseEvent) {
+    this.effectsPanelCard = card;
+    if (ev) { ev.stopPropagation(); }
   }
 
   selectCardFromTable(card: TExtGameCard) {

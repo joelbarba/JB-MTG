@@ -17,7 +17,7 @@ export class HoverTipDirective {
   @HostListener('mouseenter', ['$event']) onMouseEnter(event: MouseEvent) {
     if (this.text) {
       this.tooltip.activate(this.text, this.tipId, this.el.nativeElement.getBoundingClientRect());
-      console.log(new Date(), 'MOUSE ENTER', 'currHost=', this.tooltip.currHost, 'tipId=', this.tipId);
+      // console.log(new Date(), 'MOUSE ENTER', 'currHost=', this.tooltip.currHost, 'tipId=', this.tipId);
       // event.preventDefault();
       // event.stopPropagation();
     }
@@ -27,7 +27,7 @@ export class HoverTipDirective {
     if (this.tooltip.currHost !== this.currHost) { // When hovering back form a nested element (mouse enter was not triggered again)
       this.tooltip.activate(this.text, this.tipId, this.el.nativeElement.getBoundingClientRect());
     }
-    console.log(new Date(), 'MOUSE OVER', 'currHost=', this.tooltip.currHost, 'tipId=', this.tipId);
+    // console.log(new Date(), 'MOUSE OVER', 'currHost=', this.tooltip.currHost, 'tipId=', this.tipId);
     event.stopPropagation();
   }
 

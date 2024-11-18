@@ -110,7 +110,7 @@
            bfDropContainer
           (bfDrop)="moveCardPosition($event)" 
           (dblclick)="autoPositionGameCards()">
-        <div *ngFor="let card of tableB"
+        <div *ngFor="let card of displayTableB"
               class="play-card"
               [class.selectable-card]="!!card.selectableAction || !!card.selectableTarget"
               [class.is-tapped]="card.isTapped"
@@ -131,6 +131,7 @@
           </span>
           <span class="attack-defense" *ngIf="card.type === 'creature'">{{card.turnAttack + '/' + card.turnDefense}}</span>
           <span class="effects-badge" *ngIf="card.effectsFrom?.length"
+                (click)="selectEffectsBadge(card, $event)"          
                 [hoverTip]="'There are ' + card.effectsFrom?.length + ' effects applied on this card'">
             <span>{{card.effectsFrom?.length}}</span>
           </span>
@@ -211,7 +212,7 @@
 
         <!-- isDragging={{bfDnD.isDragging}} -->
         <!-- activeContainer={{bfDnD.activeContainer | json}} -->
-        <div *ngFor="let card of tableA" 
+        <div *ngFor="let card of displayTableA" 
              class="play-card"
              [class.selectable-card]="!!card.selectableAction || !!card.selectableTarget"
              [class.is-tapped]="card.isTapped"
@@ -224,8 +225,7 @@
              [bfDraggable]="card"             
              (dragstart)="dragStart($event, card)"
              (click)="selectCardFromTable(card)"
-             [hoverTip]="card.selectableAction?.text || ''"
-             tipId="card"
+             [hoverTip]="card.selectableAction?.text || ''" tipId="card"
              (mouseover)="hoverTableCard(card)"
              (mouseleave)="clearHover()">
           <img [src]="'/assets/images/cards/' + card.image">
@@ -235,9 +235,8 @@
           </span>
           <span class="attack-defense" *ngIf="card.type === 'creature'">{{card.turnAttack + '/' + card.turnDefense}}</span>
           <span class="effects-badge" *ngIf="card.effectsFrom?.length"
-                (click)="selectEffectsBadge($event)"
-                tipId="badge"
-                [hoverTip]="'There are ' + card.effectsFrom?.length + ' effects applied on this card'">
+                (click)="selectEffectsBadge(card, $event)"
+                [hoverTip]="'There are ' + card.effectsFrom?.length + ' effects applied on this card'" tipId="badge">
             <span>{{card.effectsFrom?.length}}</span>
           </span>
 
@@ -261,6 +260,7 @@
     (end)="graveyardPanel = null">
   </panel-graveyard>
 
+
   <!-- Generic Dialog -->
   <div *ngIf="dialog" class="dialog-box" [class]="dialog.type" 
       [style.background]="dialog.background" [style.color]="dialog.color">
@@ -280,9 +280,10 @@
   <dialog-combat 
     *ngIf="combatPanel"
     [attacker]="combatPanelAttacker"    
-    (selectCard)="selectCard($event)"
+    (selectCard)="selectCard($event)"    
     (hoverCard)="hoverCard($event)"
     (clearHover)="clearHover()"
+    (selectEffects)="selectEffectsBadge($event)"
     (end)="combatPanel = false">
   </dialog-combat>
 
@@ -297,6 +298,15 @@
   </dialog-spell-stack>
   <!-- spellStackPanelSize={{spellStackPanelSize}} -->
   <!-- panel={{panel}} -->
+
+  <!-- Effects Floating Panel -->
+  <panel-effects *ngIf="effectsPanelCard"
+    [card]="effectsPanelCard"
+    (selectCard)="selectCard($event)"
+    (hoverCard)="hoverCard($event)"
+    (clearHover)="clearHover()"
+    (end)="effectsPanelCard = null">
+  </panel-effects>
 
 
 </div>

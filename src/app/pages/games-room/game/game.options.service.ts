@@ -1,35 +1,12 @@
 import { Injectable } from '@angular/core';
 import { EPhase, TAction, TCard, TCardLocation, TGameState, TGameDBState, TGameCard, TGameCards, TActionParams, TPlayer, TCardType, TCardSemiLocation, TCardAnyLocation, TCast, TGameOption, ESubPhase, TEffect } from '../../../core/types';
-import { compareLocations } from './gameLogic/game.utils';
+import { compareLocations, getCards } from './gameLogic/game.utils';
 import { runEvent } from './gameLogic/game.card-logic';
 
 
 @Injectable({ providedIn: 'root' })
 export class GameOptionsService {
   constructor() {}
-
-  // Shortcut for state objects (cards split on locations)
-  getCards(state: TGameState, playerANum: '1' | '2') {
-    const playerBNum = playerANum === '1' ? '2' : '1';
-    const deck        = state.cards.filter(c => c.location.slice(0,4) === 'deck').sort((a, b) => a.order > b.order ? 1 : -1);
-    const hand        = state.cards.filter(c => c.location.slice(0,4) === 'hand').sort((a, b) => a.order > b.order ? 1 : -1);
-    const table       = state.cards.filter(c => c.location.slice(0,4) === 'tble').sort((a, b) => a.order > b.order ? 1 : -1);
-    const play        = state.cards.filter(c => c.location.slice(0,4) === 'play').sort((a, b) => a.order > b.order ? 1 : -1);
-    const graveyard   = state.cards.filter(c => c.location.slice(0,4) === 'grav').sort((a, b) => a.order > b.order ? 1 : -1);
-    const deckA       = state.cards.filter(c => c.location === 'deck' + playerANum).sort((a, b) => a.order > b.order ? 1 : -1);
-    const deckB       = state.cards.filter(c => c.location === 'deck' + playerBNum).sort((a, b) => a.order > b.order ? 1 : -1);
-    const handA       = state.cards.filter(c => c.location === 'hand' + playerANum).sort((a, b) => a.order > b.order ? 1 : -1);
-    const handB       = state.cards.filter(c => c.location === 'hand' + playerBNum).sort((a, b) => a.order > b.order ? 1 : -1);
-    const tableA      = state.cards.filter(c => c.location === 'tble' + playerANum).sort((a, b) => a.order > b.order ? 1 : -1);
-    const tableB      = state.cards.filter(c => c.location === 'tble' + playerBNum).sort((a, b) => a.order > b.order ? 1 : -1);
-    const playA       = state.cards.filter(c => c.location === 'play' + playerANum).sort((a, b) => a.order > b.order ? 1 : -1);
-    const playB       = state.cards.filter(c => c.location === 'play' + playerBNum).sort((a, b) => a.order > b.order ? 1 : -1);
-    const graveyardA  = state.cards.filter(c => c.location === 'grav' + playerANum).sort((a, b) => a.order > b.order ? 1 : -1);
-    const graveyardB  = state.cards.filter(c => c.location === 'grav' + playerBNum).sort((a, b) => a.order > b.order ? 1 : -1);
-    return { deck,  hand,  table,  play,  graveyard,
-             deckA, handA, tableA, playA, graveyardA, 
-             deckB, handB, tableB, playB, graveyardB };
-  }
 
   // --------------------------- NEXT OPTIONS CALCULATIONS ----------------------------------
 
@@ -50,7 +27,7 @@ export class GameOptionsService {
     const playerB = playerBNum === '1' ? state.player1 : state.player2;
 
     // const { hand, table } = this.getCards(state, 'playerA'); // Your cards
-    const { handA, handB, tableA, tableB } = this.getCards(state, playerANum);
+    const { handA, handB, tableA, tableB } = getCards(state, playerANum);
 
     // Shortcut to check if the current phase is any of the given
     const isPhase = (...phases: string[]) => phases.includes(state.phase);    
@@ -299,13 +276,16 @@ export class GameOptionsService {
 
 
   calculateEffectsFrom(state: TGameState) {
-    // state.cards.forEach(card => {
-    //   card.effectsFrom = state.effects
-    //     .filter(effect => effect.targets.indexOf(card.gId) >= 0)
-    //     .map(effect => ({ ...effect, card: state.cards.find(c => c.gId === effect.gId) } as TEffect));
-    // });
     state.cards.forEach(card => {
       card.effectsFrom = state.effects.filter(effect => effect.targets.indexOf(card.gId) >= 0);
+    });
+  }
+
+
+  calculateTargetsFrom(state: TGameState) {
+    state.cards.forEach(card => {
+      card.targetOf = state.cards.filter(t => t.targets.includes(card.gId));
+      card.uniqueTargetOf = state.cards.filter(t => t.targets.length === 1 && t.targets[0] === card.gId);
     });
   }
 
