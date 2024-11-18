@@ -23,38 +23,55 @@ export type TRunEventFn = (
 
 // ------------------------ SPECIFIC EVENTS for every CARD ------------------------
 
-export const runEvent: TRunEventFn = (nextState, gId, event, params = {}) => {
-  const card = nextState.cards.find(c => c.gId === gId);
-  if (!card) { return; }
-  if (!params.isFake) { console.log(`EXECUTING event ${event} for ${card.name} (${card.gId})`); }
+export const extendCardLogic = (card: TGameCard): TGameCard => {
+  const gId = card.gId;
+  // The card object when extended is a reference of the nextState at the begining of the reducer
+  // so it always points to the cards of the same state is passed on the functions.
+  // But to be 100% pure, we should filter the object from the given nextState in every function --> const card = getCard(nextState);
 
-  // Wrap common values and functions
-  const { targetId, effect, effectTargetId, cardPlayer, table, stack, tableStack, commonLand, commonCreature } = (function() {
-    const targetId = card.targets[0]; // code of the first target (playerX, gId, ...)
-    const effect = nextState.effects.find(e => e.id === params.effectId);
-    const effectTargetId = effect?.targets[0]; // The card that the card's effect is targetting
+  // Functions to exted: common values
+  card.onSummon       = (nextState: TGameState) => {};
+  card.onTap          = (nextState: TGameState) => {};
+  card.onDestroy      = (nextState: TGameState) => {};
+  card.onDiscard      = (nextState: TGameState) => { moveCard(nextState, gId, 'grav') };
+  card.onEffect       = (nextState: TGameState, effectId: string) => {};
+  card.onTargetLookup = (nextState: TGameState) => ({ neededTargets: 0, possibleTargets: [] });
+  card.canAttack      = (nextState: TGameState) => true;
+  card.canDefend      = (nextState: TGameState) => true;
+  card.canBlock       = (nextState: TGameState) => [];
+
+
+  const getCard = (nextState: TGameState) => nextState.cards.find(c => c.gId === gId) || card;
+  const getShorts = (nextState: TGameState) => {
+    const card = getCard(nextState);
     const cardPlayer = card.controller === '1' ? nextState.player1 : nextState.player2;
-    const { table, stack, tableStack } = getCards(nextState);
+    const targetId = card.targets[0]; // code of the first target (playerX, gId, ...)
+    return { card, targetId, cardPlayer, ...getCards(nextState) };
+  }
 
-    const commonLand = (manaNum: 0|1|2|3|4|5) => {
-      if (event === 'onTap') {
-        if (card && !card.isTapped && card.location.slice(0,4) === 'tble') {
-          cardPlayer.manaPool[manaNum] += 1;
-          // if (manaNum === 1) { cardPlayer.manaPool[manaNum] += 1; } // Blue x2
-          card.isTapped = true;
-        } 
+
+  const commonLandTap = (manaNum: 0|1|2|3|4|5) => {
+    card.onSummon = (nextState: TGameState) => {
+      const { card, cardPlayer } = getShorts(nextState);
+      if (card.location.slice(0,4) === 'hand' && cardPlayer.summonedLands < 1) {
+        moveCard(nextState, gId, 'tble');
+        cardPlayer.summonedLands += 1;
       }
-    }  
-    const commonCreature = () => {
-      if (event === 'onSummon')  { summonCreature(nextState, gId); }
-      if (event === 'canAttack') { summonCreature(nextState, gId); }
+    };
+    card.onTap = (nextState: TGameState) => {
+      const { card, cardPlayer } = getShorts(nextState);
+      if (!card.isTapped && card.location.slice(0,4) === 'tble') {
+        cardPlayer.manaPool[manaNum] += 1;
+        card.isTapped = true;
+      } 
+    };
+  }
+
+  const commonCreature = () => {
+    card.onSummon = (nextState: TGameState) => {
+      summonCreature(nextState, gId);
     }
-
-    return { targetId, effect, effectTargetId, cardPlayer, table, stack, tableStack, commonLand, commonCreature };
-  })();
-
-  
-
+  }
 
 
 
@@ -121,53 +138,61 @@ export const runEvent: TRunEventFn = (nextState, gId, event, params = {}) => {
 
 
   // Common Lands
-  function c000001_Island()   { commonLand(1); } // 1 Blue Mana
-  function c000002_Plains()   { commonLand(2); } // 1 White Mana
-  function c000003_Swamp()    { commonLand(3); } // 1 Black Mana
-  function c000004_Mountain() { commonLand(4); } // 1 Red Mana
-  function c000005_Forest()   { commonLand(5); } // 1 Breen Mana
+  function c000001_Island()   { commonLandTap(1); } // 1 Blue Mana
+  function c000002_Plains()   { commonLandTap(2); } // 1 White Mana
+  function c000003_Swamp()    { commonLandTap(3); } // 1 Black Mana
+  function c000004_Mountain() { commonLandTap(4); } // 1 Red Mana
+  function c000005_Forest()   { commonLandTap(5); } // 1 Breen Mana
 
 
   function c000032_LightningBolt() {
-    if (event === 'onTargetLookup' && card) {
-      // card.neededTargets = 1; // Target must be any playing creature + any player
-      // card.possibleTargets = tableStack.filter(c => c.type === 'creature').map(c => c.gId);
-      // card.possibleTargets.push('playerA');
-      // card.possibleTargets.push('playerB');
-    }
-    if (event === 'onSummon') {
+    card.onTargetLookup = (nextState: TGameState) => {
+      const { tableStack } = getShorts(nextState);
+      const possibleTargets = tableStack.filter(c => c.type === 'creature').map(c => c.gId);
+      possibleTargets.push('playerA');
+      possibleTargets.push('playerB');
+      return { neededTargets: 1, possibleTargets }; // Target must be any playing creature + any player
+    };
+    card.onSummon = (nextState: TGameState) => {
+      const { tableStack, targetId } = getShorts(nextState);
       const targetCreature = tableStack.find(c => c.gId === targetId && c.type === 'creature');
       if      (targetId === 'player1') { nextState.player1.life -= 3; } // Deals 3 points of damage to player1
       else if (targetId === 'player2') { nextState.player2.life -= 3; } // Deals 3 points of damage to player2
       else if (targetCreature) { targetCreature.turnDamage += 3; } // Deals 3 points of damage to target creature
       moveCardToGraveyard(nextState, gId);
-    }
+    };
   }
 
   function c000043_GiantGrowth() {
-    if (event === 'onTargetLookup' && card) {
-      // card.neededTargets = 1; // Target must be any playing creature
-      // card.possibleTargets = tableStack.filter(c => c.type === 'creature').map(c => c.gId);
-    }
-    if (event === 'onSummon') {
+    card.onTargetLookup = (nextState: TGameState) => {
+      const { tableStack } = getShorts(nextState);
+      const possibleTargets = tableStack.filter(c => c.type === 'creature').map(c => c.gId);
+      return { neededTargets: 1, possibleTargets }; // Target must be any playing creature
+    };
+    card.onSummon = (nextState: TGameState) => {
+      const { tableStack, targetId } = getShorts(nextState);
       nextState.effects.push({ scope: 'turn', gId, targets: [targetId], id: randomId('e') });
       moveCardToGraveyard(nextState, gId);
     }
-    if (event === 'onEffect') {
+    card.onEffect = (nextState: TGameState, effectId: string) => { // Add +3/+3 to target creature
+      const { tableStack } = getShorts(nextState);
+      const effect = nextState.effects.find(e => e.id === effectId);
+      const effectTargetId = effect?.targets[0]; // The card that the card's effect is targetting
       const targetCreature = tableStack.find(c => c.gId === effectTargetId && c.type === 'creature');
       if (targetCreature) { // target must be a creature on the table or stack
-        if (targetCreature.turnAttack)  { targetCreature.turnAttack  += 3; }
-        if (targetCreature.turnDefense) { targetCreature.turnDefense += 3; }
+        targetCreature.turnAttack  += 3;
+        targetCreature.turnDefense += 3;
       }
     }
   }
 
   function c000038_Counterspell() {
-    if (event === 'onTargetLookup' && card) {
-      // card.neededTargets = 1; // Target must be a summoning card on the stack
-      // card.possibleTargets = stack.map(c => c.gId);
-    }
-    if (event === 'onSummon') {
+    card.onTargetLookup = (nextState: TGameState) => {
+      const { stack } = getShorts(nextState);
+      return { neededTargets: 1, possibleTargets: stack.map(c => c.gId) }; // Target must be a spell in the stack
+    };
+    card.onSummon = (nextState: TGameState) => {
+      const { targetId } = getShorts(nextState);
       const targetCard = nextState.cards.find(c => c.gId === targetId && c.location === 'stack');
       if (targetCard) { moveCardToGraveyard(nextState, targetCard.gId); } // Remove the target from the stack (won't be executed)
       moveCardToGraveyard(nextState, gId); // Move counterspell to the graveyard too
@@ -175,55 +200,61 @@ export const runEvent: TRunEventFn = (nextState, gId, event, params = {}) => {
   }
 
   function c000025_BadMoon() {
-    if (event === 'onSummon') {
+    card.onSummon = (nextState: TGameState) => {
       nextState.effects.push({ scope: 'permanent', gId, targets: [], id: randomId('e') });
       moveCard(nextState, gId, 'tble');
     }
-    if (event === 'onEffect') { // Add +1/+1 to all black creatures in the game
+    card.onEffect = (nextState: TGameState, effectId: string) => { // Add +1/+1 to all black creatures
+      const { tableStack } = getShorts(nextState);
       const blackCreatures = tableStack.filter(c => c.type === 'creature' && c.color === 'black');
+      const effect = nextState.effects.find(e => e.id === effectId);
       if (effect) { effect.targets = blackCreatures.map(c => c.gId); } // Update the effect with all the current black creatures
       blackCreatures.forEach(creature => {
-        creature.turnAttack += 1;
+        creature.turnAttack  += 1;
         creature.turnDefense += 1;
       });
+
     }
   }
 
   function c000055_UnholyStrength() {
-    if (event === 'onTargetLookup' && card) {
-      // card.neededTargets = 1; // Target must be any playing creature
-      // card.possibleTargets = tableStack.filter(c => c.type === 'creature').map(c => c.gId);
-    }
-    if (event === 'onSummon') {
+    card.onTargetLookup = (nextState: TGameState) => {
+      const { tableStack } = getShorts(nextState);
+      const possibleTargets = tableStack.filter(c => c.type === 'creature').map(c => c.gId);
+      return { neededTargets: 1, possibleTargets }; // Target must be any playing creature
+    };
+    card.onSummon = (nextState: TGameState) => {
+      const { targetId } = getShorts(nextState);
       nextState.effects.push({ scope: 'permanent', gId, targets: [targetId], id: randomId('e') });
       moveCard(nextState, gId, 'tble');
     }
-    if (event === 'onEffect') { // Add +2/+1 to target creature
+    card.onEffect = (nextState: TGameState, effectId: string) => { // Add +2/+1 to target creature
+      const { tableStack } = getShorts(nextState);
+      const effect = nextState.effects.find(e => e.id === effectId);
+      const effectTargetId = effect?.targets[0]; // The card that the card's effect is targetting
       const targetCreature = tableStack.find(c => c.gId === effectTargetId && c.type === 'creature');
       if (targetCreature) {
         targetCreature.turnAttack += 2;
         targetCreature.turnDefense += 1;
       }
-    }
-    // if (event === 'onDestroy') {
-    //   const targetCreature = tableStack.find(c => c.effectsFrom?.find(e => e.gId === gId));
-    //   if (targetCreature) { targetCreature.turnDefense -= 1; targetCreature.turnAttack -= 2; }
-    //   killDamagedCreatures(nextState, targetId); // It may happen that the damage is now > defense
-    // }
+    };
   }  
 
   function c000057_Disenchantment() {
-    if (event === 'onTargetLookup' && card) {
-      // card.neededTargets = 1; // Target must be any playing enchantment or artifact
-      // card.possibleTargets = tableStack.filter(c => c.type === 'enchantment' || c.type === 'artifact').map(c => c.gId);
-    }
-    if (event === 'onSummon') {
-      const targetEnchantment = tableStack.find(c => c.gId === targetId && c.type === 'enchantment');
-      if (targetEnchantment) {
-        moveCardToGraveyard(nextState, targetEnchantment.gId); // Destroy the enchantment
+    card.onTargetLookup = (nextState: TGameState) => {
+      const { tableStack } = getShorts(nextState);
+      const possibleTargets = tableStack.filter(c => c.type === 'enchantment' || c.type === 'artifact').map(c => c.gId);
+      return { neededTargets: 1, possibleTargets }; // Target must be any playing enchantment or artifact
+    };
+    card.onSummon = (nextState: TGameState) => {
+      const { tableStack, targetId } = getShorts(nextState);
+      const targetCard = tableStack.find(c => c.gId === targetId && (c.type === 'enchantment' || c.type === 'artifact'));
+      if (targetCard) {
+        moveCardToGraveyard(nextState, targetCard.gId); // Destroy the enchantment or artifact
         moveCardToGraveyard(nextState, gId); // Destroy Disenchantment too
       }
-    }
+    };
+
   }
 
   // Common Creatures
@@ -248,18 +279,18 @@ export const runEvent: TRunEventFn = (nextState, gId, event, params = {}) => {
   function c000050_IronrootTreefolk()      { commonCreature(); }
   function c000051_LlanowarElves()         { commonCreature(); }
   function c000056_WallofIce()             { 
-    // commonCreature(); 
-    if (card && event === 'onInit') {
-      card.canAttack = (state: TGameState) => {
-        return false;
-      }
-    }
-    if (event === 'onSummon') { summonCreature(nextState, gId); }
+    // // commonCreature(); 
+    // if (card && event === 'onInit') {
+    //   card.canAttack = (state: TGameState) => {
+    //     return false;
+    //   }
+    // }
+    // if (event === 'onSummon') { summonCreature(nextState, gId); }
   }
 
 
 
-  // Pending to be coded......
+  // // Pending to be coded......
   function c000006_MoxEmerald() {}
   function c000007_MoxJet() {}
   function c000008_MoxPearl() {}
@@ -286,7 +317,7 @@ export const runEvent: TRunEventFn = (nextState, gId, event, params = {}) => {
   function c000034_TimeWalk() {}
   function c000035_HowlingMine() {}
 
-
+  return card;
 }
 
 

@@ -7,6 +7,7 @@ import { EPhase, TAction, TCard, TCardLocation, TGameState, TGameDBState, TGameC
 import { runEvent } from './game/gameLogic/game.card-logic';
 import { calcManaForUncolored, checkMana, getCards, getPlayers, getTime, killDamagedCreatures, moveCard, moveCardToGraveyard, spendMana } from './game/gameLogic/game.utils';
 import { GameOptionsService } from './game/game.options.service';
+import { extendCardLogic } from './game/gameLogic/game.card-specifics';
 
 
 
@@ -124,7 +125,7 @@ export class GameStateService {
       console.log('New State. Last action =', `${dbState.lastAction?.action}`, 'STATE:', this.state);
       this.state = this.options.calculate(dbState, this.playerANum);
       this.options.calculateEffectsFrom(this.state);
-      this.options.calculateTargetsFrom(this.state);      
+      this.options.calculateTargetsFrom(this.state);
       this.state$.next(this.state);
       // console.log('New State - Options =', state.options.map(o => `${o.action}:${o.params?.gId}`), state);
     });
@@ -143,11 +144,33 @@ export class GameStateService {
     }
   }
 
+  // Stripe out extended properties that do not need to be on DB
+  private convertToDBState(nextState: TGameState): TGameDBState {
+    const dbState = nextState.keyFilter((v,k) => k !== 'options') as TGameDBState;
+    const extFields = [
+      'selectableAction',
+      'selectableTarget',
+      'effectsFrom',
+      'targetOf',
+      'uniqueTargetOf',
+      'onSummon',
+      'onTap',
+      'onDestroy',
+      'onDiscard',
+      'onEffect',
+      'onTargetLookup',
+      'canAttack',
+      'canDefend',
+      'canBlock',
+    ]
+    dbState.cards = dbState.cards.map(card => card.keyFilter((v,k) => !extFields.includes(k))) as Array<TGameCard>;
+    return dbState;
+  }
+
 
   // DEBUGGING part to temporarily save the state to a different doc
   async saveStateDebug() {
-    const dbState = this.state.keyFilter((v,k) => k !== 'options') as TGameDBState;
-    dbState.cards = dbState.cards.map(card => card.keyFilter((v,k) => k !== 'selectableAction' && k !== 'selectableTarget')) as Array<TGameCard>;
+    const dbState = this.convertToDBState(this.state);
     await setDoc(doc(this.firestore, 'games', 'tmpGameState'), dbState);
   }
   async loadStateDebug() {
@@ -192,7 +215,8 @@ export class GameStateService {
 
     console.log('ACTION: ', action, params);
 
-    // Actions should be always triggered by you (this.playerANum)
+    // Extend specific logic functions on cards
+    nextState.cards.forEach(card => extendCardLogic(card));
 
     const gId = params?.gId || '';
     const manaForUncolor = params.manaForUncolor || [0,0,0,0,0,0];
@@ -226,9 +250,7 @@ export class GameStateService {
     // Update the state
     this.dbState$.next(nextState); // Local update of the state (before it's saved to DB)
 
-    // Stripe out properties that do not need to be on DB
-    const dbState = nextState.keyFilter((v,k) => k !== 'options') as TGameDBState;
-    dbState.cards = dbState.cards.map(card => card.keyFilter((v,k) => k !== 'selectableAction' && k !== 'selectableTarget')) as Array<TGameCard>;
+    const dbState = this.convertToDBState(nextState);
     setDoc(doc(this.firestore, 'games', this.gameId), dbState).then(_ => {});
 
     // Save history
@@ -267,21 +289,18 @@ export class GameStateService {
   }
 
   private summonLand(nextState: TGameState, gId: string) {
-    if (this.checkCard(nextState, gId, { type: 'land', location: 'hand' })) {
-      moveCard(nextState, gId, 'tble');
-      this.getPlayers(nextState).playerA.summonedLands += 1;
-    }
+    const card = nextState.cards.find(c => c.gId === gId);
+    if (card) { card.onSummon(nextState); }
   }
 
   private tapLand(nextState: TGameState, gId: string) {
-    runEvent(nextState, gId, 'onTap');
+    const card = nextState.cards.find(c => c.gId === gId);
+    if (card) { card.onTap(nextState); }
   }
 
   private discardCard(nextState: TGameState, gId: string) {
-    if (this.checkCard(nextState, gId, { location: 'hand' })) {
-      moveCard(nextState, gId, 'grav');
-      runEvent(nextState, gId, 'onDiscard');
-    }
+    const card = nextState.cards.find(c => c.gId === gId);
+    if (card && card.onDiscard) { card.onDiscard(nextState); }
   }
 
   private burnMana(nextState: TGameState) {
@@ -352,8 +371,16 @@ export class GameStateService {
         }
 
         if (rightMana) {
-          runEvent(nextState, gId, 'onTargetLookup');
-          if ((params.targets?.length || 0) < (card.neededTargets || 0)) { card.status = 'summon:selectingTargets'; }
+          // runEvent(nextState, gId, 'onTargetLookup');
+          const { neededTargets, possibleTargets } = card.onTargetLookup(nextState); 
+
+          if (neededTargets > possibleTargets.length) {
+            console.log(`You can't summon ${card.name} because there are no targets to select`);
+            this.cancelSummonOperations(nextState);
+          }
+          else if ((params.targets?.length || 0) < (neededTargets || 0)) { 
+            card.status = 'summon:selectingTargets'; 
+          }
           else {
             console.log(`SUMMONING ${card.name} (${params.gId}), manaForUncolor=${params.manaForUncolor}, targets=${params.targets}`);
             spendMana(card.cast, playerA.manaPool, manaForUncolor);
@@ -405,7 +432,10 @@ export class GameStateService {
   private runSpellStack(nextState: TGameState) {
     const stack = nextState.cards.filter(c => c.location === 'stack').sort((a,b) => a.order > b.order ? -1 : 1); // inverse order ([max,...,min])
     stack.forEach(card => {
-      if (card.location === 'stack') { runEvent(nextState, card.gId, 'onSummon') }
+      if (card.location === 'stack') { 
+        // runEvent(nextState, card.gId, 'onSummon');
+        card.onSummon(nextState);
+      }
     });
     this.applyEffects(nextState); // Recalculate the effects
     killDamagedCreatures(nextState); // Kill creatures if needed
@@ -634,8 +664,8 @@ export class GameStateService {
 
     // Reset all turnAttack / turnDefense
     nextState.cards.filter(c => c.type === 'creature').forEach(creature => {
-      creature.turnAttack = creature.attack;
-      creature.turnDefense = creature.defense;
+      creature.turnAttack  = creature.attack || 0;
+      creature.turnDefense = creature.defense || 0;
     });
 
     // Remove permanent effects from cards that no longer exist (on the table)
@@ -647,7 +677,10 @@ export class GameStateService {
 
     // Apply effects
     nextState.effects.forEach(effect => {
-      runEvent(nextState, effect.gId, 'onEffect', { effectId: effect.id });
+      // runEvent(nextState, effect.gId, 'onEffect', { effectId: effect.id });
+      // Find the logic on the card that generated the effect
+      const card = nextState.cards.find(c => c.gId === effect.gId); 
+      if (card) { extendCardLogic(card).onEffect(nextState, effect.id); }
     });
 
     // We can't do this here, because of afterCombat subphase (creatures should stay until the end of combat)

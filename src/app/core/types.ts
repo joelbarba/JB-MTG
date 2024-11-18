@@ -30,6 +30,10 @@ export type TCard = {
   type    : TCardType;
   attack  : number;
   defense : number;
+  isWall        : boolean;
+  isFlying      : boolean;
+  isTrample     : boolean;
+  isFirstStrike : boolean;
   readyToPlay: boolean;
 };
 
@@ -80,8 +84,8 @@ export type TGameCard = TCard & {
                | 'combat:attacking' | 'combat:defending' | 'combat:selectingTarget';
 
   targets: Array<string>;         // Aarray of gIds, playerA, playerB
-  possibleTargets: Array<string>; // Aarray of gIds, playerA, playerB (of the possible targets to be selected at that moment)
-  neededTargets: number;          // Minimum number of targets to complete the summoinng
+  // possibleTargets: Array<string>; // Aarray of gIds, playerA, playerB (of the possible targets to be selected at that moment)
+  // neededTargets: number;          // Minimum number of targets to complete the summoinng
 
   blockingTarget: string | null;  // For combat: When defending, the gId of the attacking creature this one is blocking
 
@@ -95,6 +99,16 @@ export type TGameCard = TCard & {
   effectsFrom?: Array<TEffect>;
   targetOf?: Array<TGameCard>;
   uniqueTargetOf?: Array<TGameCard>;
+
+  onSummon: (state: TGameState) => void;
+  onTap: (state: TGameState) => void;
+  onDestroy: (state: TGameState) => void;
+  onDiscard: (state: TGameState) => void;
+  onEffect: (state: TGameState, effectId: string) => void;
+  onTargetLookup: (state: TGameState) => { neededTargets: number, possibleTargets: Array<string> };
+  canAttack: (state: TGameState) => boolean;
+  canDefend: (state: TGameState) => boolean;
+  canBlock: (state: TGameState) => Array<string>;
 }
 export type TGameCards = Array<TGameCard>;
 export type TExtGameCard = TGameCard & {

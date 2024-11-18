@@ -9,6 +9,7 @@ import { TActionParams, TGameCard, TGameState, TPlayer } from '../../../../core/
 import { Subscription } from 'rxjs';
 import { StackCardWithTargetsComponent } from './stack-card-with-targets/stack-card-with-targets.component';
 import { runEvent } from '../gameLogic/game.card-logic';
+import { extendCardLogic } from '../gameLogic/game.card-specifics';
 
 export type TStackTree = {
   card: TGameCard | null,
@@ -59,8 +60,6 @@ export class DialogSpellStackComponent {
   
   hCardsLen = 1;  // Max number of cards on a horizontal line
   vCardsLen = 1;  // Max number of cards on a vertical line
-  windowHeight = 0;   // Height of the <div class="stack-box"> (fixed window)
-  stackHeight  = 0;   // Height of the <div class="stack"> (moving part when scrolling)
   hasScroll = false;  // If the height of the stack > height of the window
 
   stackInfo: Array<string> = [];
@@ -77,8 +76,8 @@ export class DialogSpellStackComponent {
   }
   
   ngAfterViewInit() {
-    this.windowHeight = this.stackWindow.nativeElement.getBoundingClientRect().height;
-    console.log('Window rect. Height=', this.windowHeight, this.stackWindow.nativeElement.getBoundingClientRect());
+    // this.windowHeight = this.stackWindow.nativeElement.getBoundingClientRect().height;
+    // console.log('Window rect. Height=', this.windowHeight, this.stackWindow.nativeElement.getBoundingClientRect());
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -100,7 +99,7 @@ export class DialogSpellStackComponent {
     setTimeout(() => {
       const windowHeight = Math.round(this.stackWindow.nativeElement.getBoundingClientRect().height);
       const stackHeight = Math.round(this.stackEl.nativeElement.getBoundingClientRect().height);
-      console.log('Window height=', windowHeight, 'stack height=', stackHeight);
+      // console.log('Window height=', windowHeight, 'stack height=', stackHeight);
       this.hasScroll = stackHeight >= windowHeight;
     }, 200);
 
@@ -164,7 +163,7 @@ export class DialogSpellStackComponent {
     // Fakely run the stack to figure out the shadow damage (the damage creatures and players will receive after the stack is executed)
     const fakeState = JSON.parse(JSON.stringify(state)) as TGameState;
     const fakeStack = fakeState.cards.filter(c => c.location === 'stack').sort((a, b) => a.order > b.order ? -1 : 1); // reverse order
-    fakeStack.forEach(card => card.location === 'stack' && runEvent(fakeState, card.gId, 'onSummon', { isFake: true }));
+    fakeStack.forEach(card => card.location === 'stack' && extendCardLogic(card).onSummon(fakeState));
     this.game.applyEffects(fakeState);
     this.rootTargets.filter(i => !!i.card).forEach(item => {
       const fakeMatch = fakeState.cards.find(c => c.gId === item.card?.gId);

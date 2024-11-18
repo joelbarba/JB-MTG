@@ -52,7 +52,7 @@ export class GamesRoomComponent {
   }
   async deleteGame(gameId: string) {
     await deleteDoc(doc(this.firestore, 'games', gameId));
-    // this.goToGame(gameId);
+    await deleteDoc(doc(this.firestore, 'history', gameId));
   }
 
   generateGame() {
@@ -69,8 +69,8 @@ export class GamesRoomComponent {
         isTapped: false,
         status: null,
         targets: [],
-        possibleTargets: [],
-        neededTargets: 0,
+        // possibleTargets: [],
+        // neededTargets: 0,
         turnDamage: 0,
         turnAttack: 0,
         turnDefense: 0,
@@ -79,49 +79,57 @@ export class GamesRoomComponent {
 
     const deck1 = [
       getCardById('c000004'), // Mountain
+      getCardById('c000003'), // Swamp
+      getCardById('c000003'), // Swamp
       getCardById('c000005'), // Forest
-      getCardById('c000003'), // Swamp
-      getCardById('c000003'), // Swamp
-      getCardById('c000002'), // Plains
-      getCardById('c000052'), // Mons's Goblin Raiders (1/1)
-      getCardById('c000032'), // Lightning Bolt
-      getCardById('c000043'), // Gian Growth
-      getCardById('c000001'), // Island
-      getCardById('c000001'), // Island
-      getCardById('c000038'), // Counter Spell
-      getCardById('c000038'), // Counter Spell
       getCardById('c000028'), // Drudge Skeletons
-      getCardById('c000025'), // Bad Moon
+      getCardById('c000002'), // Plains
       getCardById('c000055'), // Unholy Strength
       getCardById('c000057'), // Disenchantment
       getCardById('c000055'), // Unholy Strength
-      // getCardById('c000055'), // Unholy Strength
+      getCardById('c000057'), // Disenchantment
+      getCardById('c000032'), // Lightning Bolt
+      getCardById('c000056'), // Wall of Ice (0/7)
       getCardById('c000041'), // Elvish Archers (2/1)
-      getCardById('c000025'), // Bad Moon
-      getCardById('c000004'), // Mountain
+      getCardById('c000001'), // Island
+      getCardById('c000001'), // Island
+      getCardById('c000038'), // Counter Spell
+      getCardById('c000038'), // Counter Spell
+      getCardById('c000032'), // lightning bolt
       getCardById('c000005'), // Forest
+      getCardById('c000003'), // Swamp
+      getCardById('c000052'), // Mons's Goblin Raiders (1/1)
       getCardById('c000044'), // Giant Spider (2/4)
       getCardById('c000046'), // Granite Gargoyle (2/2)
       getCardById('c000047'), // Grizzly Bears (2/2)
       getCardById('c000048'), // Hill Giant (3/3)
       getCardById('c000049'), // Hurloon Minotaur (2/3)
-      getCardById('c000056'), // Wall of Ice (0/7)
-
-      getCardById('c000001'), // Island
-      getCardById('c000001'), // Island
-      getCardById('c000001'), // Island
-      getCardById('c000038'), // Counter Spell
-      getCardById('c000038'), // Counter Spell
-      getCardById('c000038'), // Counter Spell
-      getCardById('c000032'), // Lightning Bolt
-      getCardById('c000032'), // Lightning Bolt
-      getCardById('c000043'), // Gian Growth
-      getCardById('c000043'), // Gian Growth
-      // getCardById('c0000'), // 
-      // getCardById('c0000'), // 
       getCardById('c000053'), // Ornithopter
 
-      getCardById('c000002'), // Plains
+      getCardById('c000032'), // Lightning Bolt
+      getCardById('c000043'), // Gian Growth
+      getCardById('c000001'), // Island
+      getCardById('c000001'), // Island
+      getCardById('c000038'), // Counter Spell
+      getCardById('c000038'), // Counter Spell
+      getCardById('c000025'), // Bad Moon
+      getCardById('c000041'), // Elvish Archers (2/1)
+      getCardById('c000025'), // Bad Moon
+      getCardById('c000004'), // Mountain
+      getCardById('c000005'), // Forest
+      getCardById('c000001'), // Island
+      getCardById('c000001'), // Island
+      getCardById('c000001'), // Island
+      getCardById('c000038'), // Counter Spell
+      getCardById('c000038'), // Counter Spell
+      getCardById('c000038'), // Counter Spell
+      getCardById('c000032'), // Lightning Bolt
+      getCardById('c000032'), // Lightning Bolt
+      getCardById('c000043'), // Gian Growth
+      getCardById('c000043'), // Gian Growth
+      // getCardById('c0000'), // 
+      // getCardById('c0000'), // 
+      getCardById('c000053'), // Ornithopter      
       getCardById('c000001'), // Island
       getCardById('c000037'), // Brass Man (1/3)
       getCardById('c000045'), // Goblin Balloon Brigade (1/1)
@@ -163,16 +171,28 @@ export class GamesRoomComponent {
       getCardById('c000005'), // Forest
       getCardById('c000003'), // Swamp
       getCardById('c000003'), // Swamp
-      getCardById('c000002'), // Plains
-      getCardById('c000041'), // Elvish Archers (2/1)
-      getCardById('c000043'), // Gian Growth
-      getCardById('c000028'), // Drudge Skeletons
-      getCardById('c000001'), // Island
-      getCardById('c000001'), // Island
-      getCardById('c000038'), // Counter Spell
-      getCardById('c000038'), // Counter Spell
-      getCardById('c000038'), // Counter Spell
+      getCardById('c000002'), // plains
       getCardById('c000025'), // Bad Moon
+      getCardById('c000028'), // Drudge Skeletons
+      getCardById('c000055'), // Unholy Strength
+      getCardById('c000057'), // Disenchantment
+      getCardById('c000053'), // Ornithopter
+      getCardById('c000032'), // Lightning Bolt
+      getCardById('c000032'), // Lightning Bolt
+      getCardById('c000043'), // Gian Growth
+      getCardById('c000043'), // Gian Growth
+      getCardById('c000041'), // Elvish Archers (2/1)
+      getCardById('c000046'), // Granite Gargoyle (2/2)
+      getCardById('c000047'), // Grizzly Bears (2/2)
+      getCardById('c000048'), // Hill Giant (3/3)
+      getCardById('c000049'), // Hurloon Minotaur (2/3)
+      getCardById('c000056'), // Wall of Ice (0/7)
+
+      getCardById('c000001'), // Island
+      getCardById('c000001'), // Island
+      getCardById('c000038'), // Counter Spell
+      getCardById('c000038'), // Counter Spell
+      getCardById('c000038'), // Counter Spell      
       getCardById('c000055'), // Unholy Strength
       getCardById('c000057'), // Disenchantment
       getCardById('c000055'), // Unholy Strength
@@ -198,9 +218,7 @@ export class GamesRoomComponent {
       getCardById('c000001'), // Island
       getCardById('c000001'), // Island
 
-      getCardById('c000032'), // Lightning Bolt
-      getCardById('c000032'), // Lightning Bolt
-      getCardById('c000043'), // Gian Growth
+
       getCardById('c000043'), // Gian Growth
       // getCardById('c0000'), // 
       // getCardById('c0000'), //      

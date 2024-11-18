@@ -68,6 +68,13 @@
           <bf-input *ngIf="selectedCard.type === 'creature'" style="margin-left: 15px;" bfLabel="Defense" [(ngModel)]="selectedCard.defense"></bf-input>
         </div>
 
+        <div *ngIf="selectedCard.type === 'creature'" style="margin: 0 0 8px 0;">
+          <bf-checkbox style="margin-right: 10px;" bfLabel="Flying"       [(ngModel)]="selectedCard.isFlying"></bf-checkbox>
+          <bf-checkbox style="margin-right: 10px;" bfLabel="Trample"      [(ngModel)]="selectedCard.isTrample"></bf-checkbox>
+          <bf-checkbox style="margin-right: 10px;" bfLabel="First Strike" [(ngModel)]="selectedCard.isFirstStrike"></bf-checkbox>
+          <bf-checkbox style="margin-right: 10px;" bfLabel="Wall"         [(ngModel)]="selectedCard.isWall"></bf-checkbox>
+        </div>
+
         <bf-label bfText="Cast" class="block"></bf-label>
         <div style="display: flex;">
           <bf-input bfLabel="X"      [(ngModel)]="selectedCard.cast[0]"></bf-input>
@@ -77,7 +84,7 @@
           <bf-input bfLabel="Red"    [(ngModel)]="selectedCard.cast[4]"></bf-input>
           <bf-input bfLabel="Green"  [(ngModel)]="selectedCard.cast[5]"></bf-input>
         </div>
-        
+
         <bf-input bfLabel="Text" [(ngModel)]="selectedCard.text"></bf-input>
 
         <bf-checkbox bfLabel="Ready to play" [(ngModel)]="selectedCard.readyToPlay"></bf-checkbox>
