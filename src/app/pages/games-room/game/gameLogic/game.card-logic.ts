@@ -28,8 +28,9 @@ export const runEvent: TRunEventFn = (nextState, gId, event, params = {}) => {
 
     const commonLand = (manaNum: 0|1|2|3|4|5) => {
       if (event === 'onTap') {
-        if (card && !card.isTapped && card.location.slice(0,4) === 'tble') { 
+        if (card && !card.isTapped && card.location.slice(0,4) === 'tble') {
           cardPlayer.manaPool[manaNum] += 1;
+          if (manaNum === 1) { cardPlayer.manaPool[manaNum] += 1; } // Blue x2
           card.isTapped = true;
         } 
       }

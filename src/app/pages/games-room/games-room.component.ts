@@ -86,6 +86,10 @@ export class GamesRoomComponent {
       getCardById('c000052'), // Mons's Goblin Raiders (1/1)
       getCardById('c000032'), // Lightning Bolt
       getCardById('c000043'), // Gian Growth
+      getCardById('c000001'), // Island
+      getCardById('c000001'), // Island
+      getCardById('c000038'), // Counter Spell
+      getCardById('c000038'), // Counter Spell
       getCardById('c000028'), // Drudge Skeletons
       getCardById('c000025'), // Bad Moon
       getCardById('c000055'), // Unholy Strength
@@ -163,6 +167,11 @@ export class GamesRoomComponent {
       getCardById('c000041'), // Elvish Archers (2/1)
       getCardById('c000043'), // Gian Growth
       getCardById('c000028'), // Drudge Skeletons
+      getCardById('c000001'), // Island
+      getCardById('c000001'), // Island
+      getCardById('c000038'), // Counter Spell
+      getCardById('c000038'), // Counter Spell
+      getCardById('c000038'), // Counter Spell
       getCardById('c000025'), // Bad Moon
       getCardById('c000055'), // Unholy Strength
       getCardById('c000057'), // Disenchantment
@@ -188,10 +197,7 @@ export class GamesRoomComponent {
       getCardById('c000043'), // Gian Growth
       getCardById('c000001'), // Island
       getCardById('c000001'), // Island
-      getCardById('c000001'), // Island
-      getCardById('c000038'), // Counter Spell
-      getCardById('c000038'), // Counter Spell
-      getCardById('c000038'), // Counter Spell
+
       getCardById('c000032'), // Lightning Bolt
       getCardById('c000032'), // Lightning Bolt
       getCardById('c000043'), // Gian Growth

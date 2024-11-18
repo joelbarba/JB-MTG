@@ -92,7 +92,7 @@ $arrows-color: $text-color;
         }
       }
       &.is-dying { box-shadow: 0px 0px 9px 9px #F44336; }
-      &.has-targets {
+      &.has-targets:not(.selectable-card) {
         &.instant-stack, &.sorcery-stack, &.interruption-stack, &.enchantment-stack {
           box-shadow: 0px 0px 15px 5px #87c96c;
           animation-duration: 1.8s;
@@ -104,11 +104,11 @@ $arrows-color: $text-color;
           }
         }
       }
-    }
-    .selectable-card {
-      cursor: pointer;
-      box-shadow: 0px 0px 3px 3px #009688;
-      &:hover { box-shadow: 0px 0px 3px 3px #FFEB3B; }
+      &.selectable-card {
+        cursor: pointer;
+        box-shadow: 0px 0px 3px 3px #009688;
+        &:hover { box-shadow: 0px 0px 3px 3px #FFEB3B; }
+      }
     }
     
     .panel-user { 

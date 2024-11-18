@@ -13,7 +13,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  h2 { font-size: 35px; } // title
+  h2 { font-size: 30px; max-width: calc(100% - 70px); } // title
 
 
 
@@ -33,29 +33,33 @@
   &.h-cards-len-9 { left: calc($table-center-left - 780px); right: calc($table-center-right - 780px); }
 
   &.v-cards-len-1 { top: calc($table-center-top - 340px); bottom: calc($table-center-bottom - 70px); }
-  &.v-cards-len-2 { top: calc($table-center-top - 560px); bottom: calc($table-center-bottom - 90px); }
+  &.v-cards-len-2 { top: calc($table-center-top - 560px); bottom: calc($table-center-bottom - 120px); }
   &.v-cards-len-3 { top: calc($table-center-top - 590px); bottom: calc($table-center-bottom - 290px); }
 
 
   .stack-box {
     flex: 1;
     display: flex;
-    align-items: start;
+    align-items: center;    
     justify-content: center;
     width: 100%;
     overflow: auto;
-    border: 1px solid #c3c3c3;
-    background: #66cdaa33;
-    &.no-scroll {
-      border: none;
-      background: unset;
-    }
     border-radius: 2px;
     margin-bottom: 15px;
     .stack {
       display: flex;
-      align-items: end;
+      // height: calc(100% - 10px);
+      // align-items: center;      
       stack-card-with-targets { padding: 20px; }
+    }
+    &.has-scroll {
+      border: 1px solid #c3c3c3;
+      background: #66cdaa33;
+      align-items: start;
+      .stack {
+        align-items: end;
+        // height: unset;
+      }
     }
   }
 

@@ -3,9 +3,9 @@
   <div class="min-btn" (click)="minimized = !minimized">{{minimized ? title : '-'}}</div>
   <h2>{{title}}</h2>
 
-  <div class="stack-box" [class.no-scroll]="vCardsLen <= 3">
+  <div class="stack-box" #stackWindow [class.has-scroll]="hasScroll">
 
-    <div class="stack">
+    <div class="stack" #stackEl>
       <stack-card-with-targets
         *ngFor="let rootTarget of rootTargets"
         [item]="rootTarget"

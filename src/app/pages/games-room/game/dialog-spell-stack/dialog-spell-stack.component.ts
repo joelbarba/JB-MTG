@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, SimpleChanges } from '@angular/core';
+import { Component, ElementRef, EventEmitter, Input, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -15,6 +15,7 @@ export type TStackTree = {
   player: TPlayer | null,
   targetOf: Array<TStackTree>,
   shadowDamage: number,
+  shadowDefense: number;  // turnDefense (after the stack runs)
   shadowForce: string;  // (4/4) Future Attack/Defense (after the stack runs)
   shadowDelta: string;  // (+3/-2) Difference between real turnAttack/defense and shadowAttack/defense
 };
@@ -58,12 +59,26 @@ export class DialogSpellStackComponent {
   
   hCardsLen = 1;  // Max number of cards on a horizontal line
   vCardsLen = 1;  // Max number of cards on a vertical line
+  windowHeight = 0;   // Height of the <div class="stack-box"> (fixed window)
+  stackHeight  = 0;   // Height of the <div class="stack"> (moving part when scrolling)
+  hasScroll = false;  // If the height of the stack > height of the window
+
+  stackInfo: Array<string> = [];
+  rootTargets: Array<TStackTree> = [];
+
+  @ViewChild('stackWindow', { read: ElementRef, static: false }) stackWindow!: ElementRef;
+  @ViewChild('stackEl', { read: ElementRef, static: false }) stackEl!: ElementRef;
 
   constructor(public game: GameStateService) {}
 
   ngOnInit() {
     this.stateSub = this.game.state$.subscribe(state => this.onStateChanges(state));
     this.onStateChanges(this.game.state);
+  }
+  
+  ngAfterViewInit() {
+    this.windowHeight = this.stackWindow.nativeElement.getBoundingClientRect().height;
+    console.log('Window rect. Height=', this.windowHeight, this.stackWindow.nativeElement.getBoundingClientRect());
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -75,15 +90,19 @@ export class DialogSpellStackComponent {
     if (this.interval) { clearInterval(this.interval); }
   }
 
-  stackInfo: Array<string> = [];
-  rootTargets: Array<TStackTree> = [];
-
   onStateChanges(state: TGameState) {
     const playerB = this.game.playerANum === '1' ? state.player2 : state.player1;
     this.youControl = this.game.state.control === this.game.playerANum;
 
     const stack = state.cards.filter(c => c.location === 'stack').sort((a, b) => a.order > b.order ? -1 : 1); // reverse order
-    console.log('STACK', stack);
+    // console.log('STACK', stack);
+
+    setTimeout(() => {
+      const windowHeight = Math.round(this.stackWindow.nativeElement.getBoundingClientRect().height);
+      const stackHeight = Math.round(this.stackEl.nativeElement.getBoundingClientRect().height);
+      console.log('Window height=', windowHeight, 'stack height=', stackHeight);
+      this.hasScroll = stackHeight >= windowHeight;
+    }, 200);
 
     if (!stack.length) { return this.close(); }
 
@@ -132,11 +151,11 @@ export class DialogSpellStackComponent {
 
       if (target === 'player1' || target === 'player2') {
         const player = target === 'player1' ? state.player1 : state.player2;
-        return { card: null, player, targetOf, shadowDamage: 0, shadowForce: '', shadowDelta: '' } as TStackTree;
+        return { card: null, player, targetOf, shadowDamage: 0, shadowDefense: 0, shadowForce: '', shadowDelta: '' };
 
       } else {
         const card = state.cards.find(c => c.gId === target) || null;
-        return { card, player: null, targetOf, shadowDamage: 0, shadowForce: '', shadowDelta: '' };
+        return { card, player: null, targetOf, shadowDamage: 0, shadowDefense: 0, shadowForce: '', shadowDelta: '' };
       }
     }
     this.rootTargets = Array.from(rootTargets).sort((a,b) => a > b ? 1:-1).map((target: string) => expandTreeCard(target));
@@ -151,6 +170,7 @@ export class DialogSpellStackComponent {
       const fakeMatch = fakeState.cards.find(c => c.gId === item.card?.gId);
       if (fakeMatch && item.card) {
         item.shadowDamage = fakeMatch.turnDamage || 0;
+        item.shadowDefense = fakeMatch.turnDefense;
 
         if (item.card.turnAttack !== fakeMatch.turnAttack || item.card.turnDefense !== fakeMatch.turnDefense) {
           item.shadowForce = `${fakeMatch.turnAttack}/${fakeMatch.turnDefense}`;
@@ -233,7 +253,7 @@ export class DialogSpellStackComponent {
     this.showTimer = this.youControl && state.lastAction?.player !== this.game.playerANum;
     if (this.showTimer) {
       console.log('Init auto Stack release timer. Last Action =', state.lastAction);
-      // this.initTimer(); // TODO: Uncomment this
+      // this.initTimer(); // TODO: Uncomment this (with config flag)
     }
   }
 
