@@ -8,11 +8,13 @@ import { GameStateService } from '../../game-state.service';
 import { ESubPhase, TActionParams, TGameCard, TGameState } from '../../../../core/types';
 import { Subscription } from 'rxjs';
 import { HoverTipDirective } from '../../../../core/common/internal-lib/bf-tooltip/bf-tooltip.directive';
+import { extendCardLogic } from '../gameLogic/game.card-specifics';
 
 type TCol = {
   attackingCard: TGameCard;
   defendingCard: TGameCard | undefined;
   hoverDefender: TGameCard | undefined;
+  isPossibleTarget: boolean;
 };
 
 
@@ -111,7 +113,7 @@ export class DialogCombatComponent {
 
     this.combatCards = this.attackingCreatures.map(attackingCard => {
       const defendingCard = this.defendingCreatures.find(c => c.blockingTarget === attackingCard.gId);
-      return { attackingCard, defendingCard, hoverDefender: undefined };
+      return { attackingCard, defendingCard, hoverDefender: undefined, isPossibleTarget: true };
     });
 
     this.canSubmitAttack = !!state.options.find(op => op.action === 'submit-attack');
@@ -163,6 +165,10 @@ export class DialogCombatComponent {
       this.defenderLookingForTarget = this.game.state.cards.find(c => c.status === 'combat:selectingTarget');
       if (this.defenderLookingForTarget) {
         this.mainInfo = `Select what creature you want ${this.defenderLookingForTarget.name} to defend against`;
+        const possibleTargets = extendCardLogic(this.defenderLookingForTarget).canBlock(state);
+        this.combatCards.forEach(col => {
+          col.isPossibleTarget = possibleTargets.includes(col.attackingCard.gId);
+        });
       }
     }
   }
@@ -183,9 +189,13 @@ export class DialogCombatComponent {
     this.hoveringCol = col;
     this.combatCards.forEach(col => col.hoverDefender = undefined);
     this.itemInfo = ``;
-    if (col && !col.defendingCard && this.defenderLookingForTarget) { 
-      col.hoverDefender = this.defenderLookingForTarget;
-      this.itemInfo = `Defend ${col.attackingCard.name} with ${this.defenderLookingForTarget.name}`;
+    if (col && !col.defendingCard && this.defenderLookingForTarget) {
+      if (col.isPossibleTarget) {
+        col.hoverDefender = this.defenderLookingForTarget;
+        this.itemInfo = `Defend ${col.attackingCard.name} with ${this.defenderLookingForTarget.name}`;
+      } else {
+        this.itemInfo = `You cannot defend ${col.attackingCard.name} with ${this.defenderLookingForTarget.name}`;
+      }
     }
   }
 

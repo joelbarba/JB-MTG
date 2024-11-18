@@ -1,5 +1,4 @@
 import { TCardAnyLocation, TCardLocation, TCast, TGameCard, TGameState, TPlayer } from "../../../../core/types";
-import { runEvent } from "./game.card-logic";
 import { extendCardLogic } from "./game.card-specifics";
 
 

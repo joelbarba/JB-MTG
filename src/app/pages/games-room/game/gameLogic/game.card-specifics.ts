@@ -1,25 +1,6 @@
 import { TEffect, TGameCard, TGameState } from "../../../../core/types";
 import { getCards, killDamagedCreatures, moveCard, moveCardToGraveyard, randomId, summonCreature } from "./game.utils";
 
-export type TRunEvent = 'onSummon' | 'onTap' | 'onDestroy' | 'onDiscard' | 'onEffect' 
-                      | 'onTargetLookup' 
-                      | 'onInit'    // Whether it can be selected to attack at the combat phase
-                      | 'canAttack' // Whether it can be selected to attack at the combat phase
-                      | 'canDefed'  // Whether it can be selected to defend
-                      | 'canBlock'  // Whether it can be selected to defend against an attacker (params = { attackingCreature })
-
-// onTargetLookup = when summoning a card that requires 1 or more targets to be selected,
-//                  this logic will fill the card.neededTargets and card.possibleTargets fields
-
-
-export type TRunEventParams = Partial<{ effectId?: string, isFake?: boolean }>;
-export type TRunEventFn = (
-  nextState: TGameState,
-  gId: string,
-  event: TRunEvent, 
-  params?: TRunEventParams
-) => void;
-
 
 // ------------------------ SPECIFIC EVENTS for every CARD ------------------------
 
@@ -38,7 +19,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   card.onTargetLookup = (nextState: TGameState) => ({ neededTargets: 0, possibleTargets: [] });
   card.canAttack      = (nextState: TGameState) => true;
   card.canDefend      = (nextState: TGameState) => true;
-  card.canBlock       = (nextState: TGameState) => [];
+  card.canBlock       = (nextState: TGameState) => [];  // Returns a list of gId of the attacking creatues that can block
 
 
   const getCard = (nextState: TGameState) => nextState.cards.find(c => c.gId === gId) || card;
@@ -70,7 +51,23 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   const commonCreature = () => {
     card.onSummon = (nextState: TGameState) => {
       summonCreature(nextState, gId);
-    }
+    };
+    card.canAttack = (nextState: TGameState) => {
+      const { card } = getShorts(nextState);
+      return card && !card.isTapped && card.status !== 'sickness' && !card.isWall;
+    };
+    card.canDefend = (nextState: TGameState) => {
+      const { card } = getShorts(nextState);
+      return card && !card.isTapped;
+    };
+    card.canBlock = (nextState: TGameState) => {
+      const { card, table } = getShorts(nextState);
+      if (!card || card.isTapped) { return []; };
+      const defendingCard = card;
+      return table.filter(c => c.status === 'combat:attacking').filter(attackingCard => {
+        return !attackingCard.isFlying || defendingCard.isFlying; // Can only block flying if it flies too
+      }).map(c => c.gId);
+    };
   }
 
 
@@ -254,7 +251,6 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
         moveCardToGraveyard(nextState, gId); // Destroy Disenchantment too
       }
     };
-
   }
 
   // Common Creatures
@@ -279,13 +275,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   function c000050_IronrootTreefolk()      { commonCreature(); }
   function c000051_LlanowarElves()         { commonCreature(); }
   function c000056_WallofIce()             { 
-    // // commonCreature(); 
-    // if (card && event === 'onInit') {
-    //   card.canAttack = (state: TGameState) => {
-    //     return false;
-    //   }
-    // }
-    // if (event === 'onSummon') { summonCreature(nextState, gId); }
+    commonCreature();
   }
 
 

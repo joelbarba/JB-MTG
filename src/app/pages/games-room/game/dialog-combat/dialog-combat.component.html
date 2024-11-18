@@ -90,7 +90,7 @@
   <div class="arena" *ngIf="attacker === 'B'">
     <div class="creature-list">
       <div class="combat-col" *ngFor="let col of combatCards" 
-           [class.is-selectable]="!!defenderLookingForTarget"
+           [class.is-selectable]="!!defenderLookingForTarget && col.isPossibleTarget"
            (click)="clickCol(col)"
            (mouseover)="hoverCol(col)"
            (mouseleave)="hoverCol()">
@@ -154,6 +154,7 @@
         <!-- Empty Slot for defender -->
         <div class="panel-card" *ngIf="!col.defendingCard" 
              [class.empty-slot]="!col.hoverDefender"
+             [class.is-possible-target]="col.isPossibleTarget"
              (mouseover)="col.hoverDefender && hoverCard.emit(col.hoverDefender)" (mouseleave)="clearHover.emit()">
           <img [hidden]="col.hoverDefender">
           <img [hidden]="!col.hoverDefender" [src]="'/assets/images/cards/' + col.hoverDefender?.image">

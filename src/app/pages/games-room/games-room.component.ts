@@ -77,28 +77,31 @@ export class GamesRoomComponent {
       };
     }
 
+    const wallOfIce = getCardById('c000056');
+    console.log(wallOfIce);
+
     const deck1 = [
       getCardById('c000004'), // Mountain
       getCardById('c000003'), // Swamp
       getCardById('c000003'), // Swamp
       getCardById('c000005'), // Forest
-      getCardById('c000028'), // Drudge Skeletons
-      getCardById('c000002'), // Plains
-      getCardById('c000055'), // Unholy Strength
-      getCardById('c000057'), // Disenchantment
-      getCardById('c000055'), // Unholy Strength
-      getCardById('c000057'), // Disenchantment
-      getCardById('c000032'), // Lightning Bolt
+      getCardById('c000052'), // Mons's Goblin Raiders (1/1)
+      // getCardById('c000028'), // Drudge Skeletons
+      // getCardById('c000002'), // Plains
+      // getCardById('c000055'), // Unholy Strength
+      // getCardById('c000057'), // Disenchantment
+      // getCardById('c000055'), // Unholy Strength
+      // getCardById('c000057'), // Disenchantment
+      // getCardById('c000032'), // Lightning Bolt
       getCardById('c000056'), // Wall of Ice (0/7)
       getCardById('c000041'), // Elvish Archers (2/1)
-      getCardById('c000001'), // Island
-      getCardById('c000001'), // Island
-      getCardById('c000038'), // Counter Spell
-      getCardById('c000038'), // Counter Spell
-      getCardById('c000032'), // lightning bolt
+      // getCardById('c000001'), // Island
+      // getCardById('c000001'), // Island
+      // getCardById('c000038'), // Counter Spell
+      // getCardById('c000038'), // Counter Spell
+      // getCardById('c000032'), // lightning bolt
       getCardById('c000005'), // Forest
       getCardById('c000003'), // Swamp
-      getCardById('c000052'), // Mons's Goblin Raiders (1/1)
       getCardById('c000044'), // Giant Spider (2/4)
       getCardById('c000046'), // Granite Gargoyle (2/2)
       getCardById('c000047'), // Grizzly Bears (2/2)
@@ -173,16 +176,17 @@ export class GamesRoomComponent {
       getCardById('c000003'), // Swamp
       getCardById('c000002'), // plains
       getCardById('c000025'), // Bad Moon
-      getCardById('c000028'), // Drudge Skeletons
-      getCardById('c000055'), // Unholy Strength
-      getCardById('c000057'), // Disenchantment
-      getCardById('c000053'), // Ornithopter
+      // getCardById('c000028'), // Drudge Skeletons
+      // getCardById('c000055'), // Unholy Strength
+      // getCardById('c000057'), // Disenchantment
+      getCardById('c000053'), // Ornithopter (0/2) - Flying
       getCardById('c000032'), // Lightning Bolt
-      getCardById('c000032'), // Lightning Bolt
+      // getCardById('c000032'), // Lightning Bolt
+      // getCardById('c000043'), // Gian Growth
       getCardById('c000043'), // Gian Growth
-      getCardById('c000043'), // Gian Growth
-      getCardById('c000041'), // Elvish Archers (2/1)
-      getCardById('c000046'), // Granite Gargoyle (2/2)
+      getCardById('c000041'), // Elvish Archers (2/1) - First Strike
+      getCardById('c000046'), // Granite Gargoyle (2/2) - Flying
+      getCardById('c000039'), // Craw Wurm (6/4) - Trample
       getCardById('c000047'), // Grizzly Bears (2/2)
       getCardById('c000048'), // Hill Giant (3/3)
       getCardById('c000049'), // Hurloon Minotaur (2/3)

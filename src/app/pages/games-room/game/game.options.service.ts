@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 import { EPhase, TAction, TCard, TCardLocation, TGameState, TGameDBState, TGameCard, TGameCards, TActionParams, TPlayer, TCardType, TCardSemiLocation, TCardAnyLocation, TCast, TGameOption, ESubPhase, TEffect } from '../../../core/types';
 import { compareLocations, getCards } from './gameLogic/game.utils';
-import { runEvent } from './gameLogic/game.card-logic';
 import { extendCardLogic } from './gameLogic/game.card-specifics';
 
 
@@ -23,7 +22,7 @@ export class GameOptionsService {
     state.player1.selectableAction = null; state.player1.selectableTarget = null;
     state.player2.selectableAction = null; state.player2.selectableTarget = null;
 
-    state.cards.forEach(card => extendCardLogic(card)); // Extend card specific functions
+    // state.cards.forEach(card => extendCardLogic(card)); // Extend card specific functions
 
     const playerBNum = playerANum === '1' ? '2' : '1';
     const playerA = playerANum === '1' ? state.player1 : state.player2;
@@ -55,16 +54,15 @@ export class GameOptionsService {
     const playingCard = state.cards.find(c => c.status === 'summon:selectingTargets');
     if (playingCard) {  // Selecting target
       // runEvent(state, playingCard.gId, 'onTargetLookup');
-      let possibleTargets: Array<string> = [];
-      if (playingCard.onTargetLookup) { possibleTargets = playingCard.onTargetLookup(state).possibleTargets; }
+      const { possibleTargets } = extendCardLogic(playingCard).onTargetLookup(state);
       possibleTargets.forEach(target => {
         if (target === 'playerA') {
           state.options.push({ action: 'summon-spell', params: { gId: playingCard.gId, targets: ['player' + playerANum] }});
-          state.player1.selectableTarget = { text: `Select target player ${state.player1.name}`, value: 'player' + playerANum };
+          playerA.selectableTarget = { text: `Select target player ${playerA.name}`, value: 'player' + playerANum };
 
         } else if (target === 'playerB') {
           state.options.push({ action: 'summon-spell', params: { gId: playingCard.gId, targets: ['player' + playerBNum] }});
-          state.player1.selectableTarget = { text: `Select target player ${state.player1.name}`, value: 'player' + playerBNum };            
+          playerB.selectableTarget = { text: `Select target player ${playerB.name}`, value: 'player' + playerBNum };
 
         } else { // Card target
           const targetCard = state.cards.find(c => c.gId === target);
@@ -120,24 +118,22 @@ export class GameOptionsService {
         state.options.push({ action: 'cancel-defense', params: {}, text: 'Reset you defending selection' });
         state.options.push({ action: 'submit-defense', params: {}, text: 'Defend with selected creatures' });
 
-        const canBlockCreature = (attackingCard: TGameCard, defendingCard: TGameCard) => {
-          if (attackingCard.isFlying && !defendingCard.isFlying) { return false; }
-          return true;
-        }
-
         // You may select a creature to defend your opponents attack
-        tableA.filter(c => c.type === 'creature' && !c.isTapped && c.status !== 'combat:defending').forEach(card => {
-          const option: TGameOption = { action: 'select-defending-creature', params: { gId: card.gId }, text: `Defend with ${card.name}` };
-          state.options.push(option);
-          card.selectableAction = option;
+        tableA.filter(c => c.type === 'creature' && c.status !== 'combat:defending').forEach(card => {
+          if (extendCardLogic(card).canDefend(state)) {
+            const option: TGameOption = { action: 'select-defending-creature', params: { gId: card.gId }, text: `Defend with ${card.name}` };
+            state.options.push(option);
+            card.selectableAction = option;
+          }
         });
 
         // You may select the opponent's attacking creature as a target of your defending creature
         const defenderToAssign = state.cards.find(c => c.status === 'combat:selectingTarget');
         if (defenderToAssign) {
-          tableB.filter(c => c.status === 'combat:attacking').forEach(attackingCard => {
-            if (canBlockCreature(attackingCard, defenderToAssign)) {
-              const params = { gId: defenderToAssign.gId, targets: [attackingCard.gId] };
+          extendCardLogic(defenderToAssign).canBlock(state).forEach(attackingId => {
+            const attackingCard = state.cards.find(c => c.gId === attackingId);
+            if (attackingCard) {
+              const params = { gId: defenderToAssign.gId, targets: [attackingId] };
               const option: TGameOption = { action: 'select-defending-creature', params, text: `Defend ${attackingCard.name} with ${defenderToAssign.name}` };
               state.options.push(option);
               attackingCard.selectableAction = option;
@@ -224,8 +220,8 @@ export class GameOptionsService {
       const isAttackOn = !!tableA.filter(c => c.status === 'combat:attacking').length; // Are you leading an attack?
 
       if (state.subPhase === 'selectAttack') {
-        tableA.filter(c => c.type === 'creature' && !c.isTapped && c.status !== 'sickness').forEach(card => {
-          if (card.status !== 'combat:attacking') {
+        tableA.filter(c => c.type === 'creature' && c.status !== 'combat:attacking').forEach(card => {
+          if (extendCardLogic(card).canAttack(state)) {
             const option: TGameOption = { action: 'select-attacking-creature', params: { gId: card.gId }, text: `Attack with ${card.name}` };
             state.options.push(option);
             card.selectableAction = option;
