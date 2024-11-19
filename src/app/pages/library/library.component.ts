@@ -90,6 +90,7 @@ export class LibraryComponent {
     card.isFlying      = !!card.isFlying;
     card.isTrample     = !!card.isTrample;
     card.isFirstStrike = !!card.isFirstStrike;
+    card.isHaste       = !!card.isHaste;
     card.isWall        = !!card.isWall;
     const docObj = card.keyFilter((v,k) => k !== 'id') as Partial<TCard>; // Remove the field .id
     // const docObj = card.keyFilter('name, image, color, type, attack, defense, cast, text, readyToPlay') as Partial<TCard>;
@@ -111,12 +112,14 @@ export class LibraryComponent {
       cast    : [0,0,0,0,0,0],
       text    : '',
       type    : 'land',
-      attack        : 0,
-      defense       : 0,
-      isWall        : false,
-      isFlying      : false,
-      isTrample     : false,
-      isFirstStrike : false,
+      attack          : 0,
+      defense         : 0,
+      isWall          : false,
+      isFlying        : false,
+      isTrample       : false,
+      isFirstStrike   : false,
+      isHaste         : false,
+      colorProtection : null,
       readyToPlay: false,
     };
     console.log('New Card:', card);

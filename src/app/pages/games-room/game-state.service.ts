@@ -61,7 +61,8 @@ export class GameStateService {
         this.library = [];
         ref.forEach(doc => {
           const card = doc.data() as TCard;
-          const cardProps = 'cast, color, name, image, text, type, attack, defense, isFlying, isTrample, isFirstStrike, isWall'
+          const cardProps = 'cast, color, name, image, text, type, attack, defense, '
+                          + 'isFlying, isTrample, isFirstStrike, isWall, isHaste, colorProtection'
           const filteredCard = card.keyFilter(cardProps);
           this.library.push({ id: doc.id, ...filteredCard } as TCard);
         });

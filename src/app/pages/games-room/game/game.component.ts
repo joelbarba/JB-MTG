@@ -16,6 +16,7 @@ import { DialogSpellStackComponent } from './dialog-spell-stack/dialog-spell-sta
 import { checkMana } from './gameLogic/game.utils';
 import { HoverTipDirective } from '../../../core/common/internal-lib/bf-tooltip/bf-tooltip.directive';
 import { PanelEffectsComponent } from './panel-effects/panel-effects.component';
+import { ManaArrayComponent } from './mana-array/mana-array.component';
 
 export interface ICard {
   img: string;
@@ -67,6 +68,7 @@ export interface ISummonOp {
     PanelGraveyardComponent,
     PanelEffectsComponent,
     HoverTipDirective,
+    ManaArrayComponent,
   ],
   templateUrl: './game.component.html',
   styleUrls: ['./game.component.scss'],
@@ -182,6 +184,8 @@ export class GameComponent {
   ngOnDestroy() {
     this.subs.forEach(sub => sub.unsubscribe());
   }
+
+
 
   // Debugging tools
   debugPanel = false;
@@ -570,7 +574,7 @@ export class GameComponent {
     if (this.summonOp.status !== 'off') {
       if (!waitingManaCard && !selectingManaCard && !selectingTargetCard) { this.summonOp.turnOff(); } // Cancel operation no longer needed
       this.mainInfo = this.summonOp.text;
-      this.itemInfo = this.summonOp.text;          
+      // this.itemInfo = this.summonOp.text;
     }
   }
 
@@ -653,7 +657,7 @@ export class GameComponent {
     this.summonOp.status = status;
 
     if (status === 'waitingMana') {
-      this.summonOp.text = `You need to generate enough mana to summon ${card.name}`;
+      this.summonOp.text = `You need to generate mana to summon ${card.name}:`;
 
     } else if (status === 'selectingMana') {
       this.summonOp.text = `Please select the mana from your mana pool you want to use to summon ${card.name}`;

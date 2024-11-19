@@ -69,8 +69,6 @@ export class GamesRoomComponent {
         isTapped: false,
         status: null,
         targets: [],
-        // possibleTargets: [],
-        // neededTargets: 0,
         turnDamage: 0,
         turnAttack: 0,
         turnDefense: 0,
@@ -175,14 +173,14 @@ export class GamesRoomComponent {
       getCardById('c000003'), // Swamp
       getCardById('c000003'), // Swamp
       getCardById('c000002'), // plains
+      getCardById('c000032'), // Lightning Bolt
+      getCardById('c000043'), // Gian Growth
       getCardById('c000025'), // Bad Moon
       // getCardById('c000028'), // Drudge Skeletons
       // getCardById('c000055'), // Unholy Strength
       // getCardById('c000057'), // Disenchantment
       getCardById('c000053'), // Ornithopter (0/2) - Flying
       getCardById('c000032'), // Lightning Bolt
-      // getCardById('c000032'), // Lightning Bolt
-      // getCardById('c000043'), // Gian Growth
       getCardById('c000043'), // Gian Growth
       getCardById('c000041'), // Elvish Archers (2/1) - First Strike
       getCardById('c000046'), // Granite Gargoyle (2/2) - Flying

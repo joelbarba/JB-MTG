@@ -64,7 +64,6 @@ export const getTime = (): string => {
 
 export const randomId = (prefix = ''): string => { return prefix + (Math.round((Math.random() * 1000)) + ((new Date()).getTime() * 1000)); };
 
-
 // Moves a card from its current location to another.
 // If toLocation is deck, hand, tble or grav, the player number is added from the current location
 // Ex:  moveCard(state, 'tble'):   'hand1' ---> 'tble1'   or   'hand2' ---> 'tble2'
@@ -96,14 +95,6 @@ export const compareLocations = (locationA: TCardLocation, locationB: TCardAnyLo
   return semiLocA === locationB;
 }
 
-
-// Common logic to summons a creature
-export const summonCreature = (nextState: TGameState, gId: string) => {
-  const card = nextState.cards.find(c => c.gId === gId);
-  if (!card) { return; }
-  moveCard(nextState, card.gId, 'tble');
-  card.status = 'sickness';
-}
 
 
 

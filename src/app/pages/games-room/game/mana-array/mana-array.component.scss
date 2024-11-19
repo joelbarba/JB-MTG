@@ -1,0 +1,14 @@
+@import '../game.vars.scss';
+
+.mana {
+  margin-left: 5px; 
+  img {
+    border-radius: 100%;
+    padding: 1px;
+    // background: black; 
+    background: #656565;
+  }
+}
+:host.md {
+  .mana img { max-height: 28px; }
+}

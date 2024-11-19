@@ -30,10 +30,12 @@ export type TCard = {
   type    : TCardType;
   attack  : number;
   defense : number;
-  isWall        : boolean;
-  isFlying      : boolean;
-  isTrample     : boolean;
-  isFirstStrike : boolean;
+  isWall        : boolean;  // They cannot attack, only defend
+  isFlying      : boolean;  // Cannot be blocked by a non flying creatures
+  isTrample     : boolean;  // Deals the excess damage (over defenders toughness) to the player
+  isFirstStrike : boolean;  // When dealing combat damage, if that kills the other attacking/defender, they don't receive any damage
+  isHaste       : boolean;  // No summoning sickness
+  colorProtection: TColor | null; // Cannot be blocked, targeted, enchanted or damage by sources of this color
   readyToPlay: boolean;
 };
 

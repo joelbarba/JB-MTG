@@ -153,7 +153,12 @@
           <bf-btn *ngFor="let gBtn of globalButtons" style="margin-left: 15px;"
                   [bfText]="gBtn.text" [bfIcon]="gBtn.icon" (bfClick)="gBtn.clickFn()">
           </bf-btn>
-          <span [hidden]="!mainInfo || itemInfo" class="main-info">{{mainInfo}}</span>
+          <span [hidden]="!mainInfo || itemInfo" class="main-info">
+            <span>{{mainInfo}}</span>
+            <span *ngIf="summonOp.status === 'waitingMana'">
+              <mana-array style="margin-left: 5px;" class="md" [mana]="summonOp.cast"></mana-array>
+            </span>
+          </span>
           <span [hidden]="!itemInfo" class="main-info">{{itemInfo}}</span>
         </div>
         <!-- -------------------------------------------------------------------- -->

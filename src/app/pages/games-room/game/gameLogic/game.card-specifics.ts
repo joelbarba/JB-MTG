@@ -1,5 +1,5 @@
-import { TEffect, TGameCard, TGameState } from "../../../../core/types";
-import { getCards, killDamagedCreatures, moveCard, moveCardToGraveyard, randomId, summonCreature } from "./game.utils";
+import { TColor, TEffect, TGameCard, TGameState } from "../../../../core/types";
+import { getCards, killDamagedCreatures, moveCard, moveCardToGraveyard, randomId } from "./game.utils";
 
 
 // ------------------------ SPECIFIC EVENTS for every CARD ------------------------
@@ -27,7 +27,10 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     const card = getCard(nextState);
     const cardPlayer = card.controller === '1' ? nextState.player1 : nextState.player2;
     const targetId = card.targets[0]; // code of the first target (playerX, gId, ...)
-    return { card, targetId, cardPlayer, ...getCards(nextState) };
+    const { tableStack } = getCards(nextState);
+    const noProtection = (c: TGameCard) => !c.colorProtection || card.color !== c.colorProtection; 
+    const targetCreatures = () => tableStack.filter(c => c.type === 'creature').filter(noProtection);
+    return { card, targetId, cardPlayer, noProtection, targetCreatures, ...getCards(nextState) };
   }
 
 
@@ -50,7 +53,9 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
 
   const commonCreature = () => {
     card.onSummon = (nextState: TGameState) => {
-      summonCreature(nextState, gId);
+      const { card } = getShorts(nextState);
+      moveCard(nextState, card.gId, 'tble');
+      card.status = card.isHaste ? null : 'sickness';
     };
     card.canAttack = (nextState: TGameState) => {
       const { card } = getShorts(nextState);
@@ -65,6 +70,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
       if (!card || card.isTapped) { return []; };
       const defendingCard = card;
       return table.filter(c => c.status === 'combat:attacking')
+        .filter(attackingCard => !attackingCard.colorProtection || attackingCard.colorProtection !== defendingCard.color)
         .filter(attackingCard => !attackingCard.isFlying || defendingCard.isFlying)
         .map(c => c.gId);
     };
@@ -144,15 +150,15 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
 
   function c000032_LightningBolt() {
     card.onTargetLookup = (nextState: TGameState) => {
-      const { tableStack } = getShorts(nextState);
-      const possibleTargets = tableStack.filter(c => c.type === 'creature').map(c => c.gId);
+      const { targetCreatures } = getShorts(nextState);
+      const possibleTargets = targetCreatures().map(c => c.gId);
       possibleTargets.push('playerA');
       possibleTargets.push('playerB');
       return { neededTargets: 1, possibleTargets }; // Target must be any playing creature + any player
     };
     card.onSummon = (nextState: TGameState) => {
-      const { tableStack, targetId } = getShorts(nextState);
-      const targetCreature = tableStack.find(c => c.gId === targetId && c.type === 'creature');
+      const { targetCreatures, targetId } = getShorts(nextState);
+      const targetCreature = targetCreatures().find(c => c.gId === targetId);
       if      (targetId === 'player1') { nextState.player1.life -= 3; } // Deals 3 points of damage to player1
       else if (targetId === 'player2') { nextState.player2.life -= 3; } // Deals 3 points of damage to player2
       else if (targetCreature) { targetCreature.turnDamage += 3; } // Deals 3 points of damage to target creature
@@ -162,8 +168,8 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
 
   function c000043_GiantGrowth() {
     card.onTargetLookup = (nextState: TGameState) => {
-      const { tableStack } = getShorts(nextState);
-      const possibleTargets = tableStack.filter(c => c.type === 'creature').map(c => c.gId);
+      const { targetCreatures } = getShorts(nextState);
+      const possibleTargets = targetCreatures().map(c => c.gId);
       return { neededTargets: 1, possibleTargets }; // Target must be any playing creature
     };
     card.onSummon = (nextState: TGameState) => {
@@ -172,10 +178,10 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
       moveCardToGraveyard(nextState, gId);
     }
     card.onEffect = (nextState: TGameState, effectId: string) => { // Add +3/+3 to target creature
-      const { tableStack } = getShorts(nextState);
+      const { targetCreatures } = getShorts(nextState);
       const effect = nextState.effects.find(e => e.id === effectId);
       const effectTargetId = effect?.targets[0]; // The card that the card's effect is targetting
-      const targetCreature = tableStack.find(c => c.gId === effectTargetId && c.type === 'creature');
+      const targetCreature = targetCreatures().find(c => c.gId === effectTargetId);
       if (targetCreature) { // target must be a creature on the table or stack
         targetCreature.turnAttack  += 3;
         targetCreature.turnDefense += 3;
@@ -185,8 +191,9 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
 
   function c000038_Counterspell() {
     card.onTargetLookup = (nextState: TGameState) => {
-      const { stack } = getShorts(nextState);
-      return { neededTargets: 1, possibleTargets: stack.map(c => c.gId) }; // Target must be a spell in the stack
+      const { stack, noProtection } = getShorts(nextState);
+      const possibleTargets = stack.filter(noProtection).map(c => c.gId);
+      return { neededTargets: 1, possibleTargets }; // Target must be a spell in the stack
     };
     card.onSummon = (nextState: TGameState) => {
       const { targetId } = getShorts(nextState);
@@ -202,8 +209,8 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
       moveCard(nextState, gId, 'tble');
     }
     card.onEffect = (nextState: TGameState, effectId: string) => { // Add +1/+1 to all black creatures
-      const { tableStack } = getShorts(nextState);
-      const blackCreatures = tableStack.filter(c => c.type === 'creature' && c.color === 'black');
+      const { targetCreatures } = getShorts(nextState);
+      const blackCreatures = targetCreatures().filter(c => c.color === 'black');
       const effect = nextState.effects.find(e => e.id === effectId);
       if (effect) { effect.targets = blackCreatures.map(c => c.gId); } // Update the effect with all the current black creatures
       blackCreatures.forEach(creature => {
@@ -216,8 +223,8 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
 
   function c000055_UnholyStrength() {
     card.onTargetLookup = (nextState: TGameState) => {
-      const { tableStack } = getShorts(nextState);
-      const possibleTargets = tableStack.filter(c => c.type === 'creature').map(c => c.gId);
+      const { targetCreatures } = getShorts(nextState);
+      const possibleTargets = targetCreatures().map(c => c.gId);
       return { neededTargets: 1, possibleTargets }; // Target must be any playing creature
     };
     card.onSummon = (nextState: TGameState) => {
@@ -226,10 +233,10 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
       moveCard(nextState, gId, 'tble');
     }
     card.onEffect = (nextState: TGameState, effectId: string) => { // Add +2/+1 to target creature
-      const { tableStack } = getShorts(nextState);
+      const { targetCreatures } = getShorts(nextState);
       const effect = nextState.effects.find(e => e.id === effectId);
       const effectTargetId = effect?.targets[0]; // The card that the card's effect is targetting
-      const targetCreature = tableStack.find(c => c.gId === effectTargetId && c.type === 'creature');
+      const targetCreature = targetCreatures().find(c => c.gId === effectTargetId);
       if (targetCreature) {
         targetCreature.turnAttack += 2;
         targetCreature.turnDefense += 1;
@@ -239,13 +246,13 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
 
   function c000057_Disenchantment() {
     card.onTargetLookup = (nextState: TGameState) => {
-      const { tableStack } = getShorts(nextState);
-      const possibleTargets = tableStack.filter(c => c.type === 'enchantment' || c.type === 'artifact').map(c => c.gId);
+      const { tableStack, noProtection } = getShorts(nextState);
+      const possibleTargets = tableStack.filter(c => (c.type === 'enchantment' || c.type === 'artifact') && noProtection(c)).map(c => c.gId);
       return { neededTargets: 1, possibleTargets }; // Target must be any playing enchantment or artifact
     };
     card.onSummon = (nextState: TGameState) => {
-      const { tableStack, targetId } = getShorts(nextState);
-      const targetCard = tableStack.find(c => c.gId === targetId && (c.type === 'enchantment' || c.type === 'artifact'));
+      const { tableStack, targetId, noProtection } = getShorts(nextState);
+      const targetCard = tableStack.filter(c => (c.type === 'enchantment' || c.type === 'artifact') && noProtection(c)).find(c => c.gId === targetId);
       if (targetCard) {
         moveCardToGraveyard(nextState, targetCard.gId); // Destroy the enchantment or artifact
         moveCardToGraveyard(nextState, gId); // Destroy Disenchantment too
@@ -258,7 +265,11 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     card.targetBlockers = (nextState: TGameState) => {
       const { card, table } = getShorts(nextState);
       if (!card || card.isTapped) { return []; }; // Does not fly, but can block flying creatures
-      return table.filter(c => c.status === 'combat:attacking').map(c => c.gId); 
+      const defendingCard = card;
+      return table
+        .filter(c => c.status === 'combat:attacking')
+        .filter(c => !c.colorProtection || c.colorProtection !== defendingCard.color)
+        .map(c => c.gId); 
     };
   }
 
