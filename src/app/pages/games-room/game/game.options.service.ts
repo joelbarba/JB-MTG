@@ -130,7 +130,7 @@ export class GameOptionsService {
         // You may select the opponent's attacking creature as a target of your defending creature
         const defenderToAssign = state.cards.find(c => c.status === 'combat:selectingTarget');
         if (defenderToAssign) {
-          extendCardLogic(defenderToAssign).canBlock(state).forEach(attackingId => {
+          extendCardLogic(defenderToAssign).targetBlockers(state).forEach(attackingId => {
             const attackingCard = state.cards.find(c => c.gId === attackingId);
             if (attackingCard) {
               const params = { gId: defenderToAssign.gId, targets: [attackingId] };

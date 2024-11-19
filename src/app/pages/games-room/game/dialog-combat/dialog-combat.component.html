@@ -154,13 +154,16 @@
         <!-- Empty Slot for defender -->
         <div class="panel-card" *ngIf="!col.defendingCard" 
              [class.empty-slot]="!col.hoverDefender"
-             [class.is-possible-target]="col.isPossibleTarget"
+             [class.not-selectable]="!col.isPossibleTarget"
              (mouseover)="col.hoverDefender && hoverCard.emit(col.hoverDefender)" (mouseleave)="clearHover.emit()">
           <img [hidden]="col.hoverDefender">
           <img [hidden]="!col.hoverDefender" [src]="'/assets/images/cards/' + col.hoverDefender?.image">
           <span class="damage-points" *ngIf="subPhase === 'afterCombat' && col.attackingCard.turnAttack">
             <span>{{col.attackingCard.turnAttack}}</span>
             <span class="icon-power"></span>
+          </span>
+          <span class="attack-defense" *ngIf="col.hoverDefender">
+            <span>{{col.hoverDefender.turnAttack + '/' + col.hoverDefender.turnDefense}}</span>
           </span>
         </div>
         <!-- defenderLookingForTarget={{defenderLookingForTarget?.name | json}} -->

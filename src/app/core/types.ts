@@ -84,9 +84,6 @@ export type TGameCard = TCard & {
                | 'combat:attacking' | 'combat:defending' | 'combat:selectingTarget';
 
   targets: Array<string>;         // Aarray of gIds, playerA, playerB
-  // possibleTargets: Array<string>; // Aarray of gIds, playerA, playerB (of the possible targets to be selected at that moment)
-  // neededTargets: number;          // Minimum number of targets to complete the summoinng
-
   blockingTarget: string | null;  // For combat: When defending, the gId of the attacking creature this one is blocking
 
   turnDamage: number;
@@ -108,7 +105,7 @@ export type TGameCard = TCard & {
   onTargetLookup: (state: TGameState) => { neededTargets: number, possibleTargets: Array<string> };
   canAttack: (state: TGameState) => boolean;
   canDefend: (state: TGameState) => boolean;
-  canBlock: (state: TGameState) => Array<string>;
+  targetBlockers: (state: TGameState) => Array<string>;
 }
 export type TGameCards = Array<TGameCard>;
 export type TExtGameCard = TGameCard & {

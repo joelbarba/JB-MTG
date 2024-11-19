@@ -165,9 +165,9 @@ export class DialogCombatComponent {
       this.defenderLookingForTarget = this.game.state.cards.find(c => c.status === 'combat:selectingTarget');
       if (this.defenderLookingForTarget) {
         this.mainInfo = `Select what creature you want ${this.defenderLookingForTarget.name} to defend against`;
-        const possibleTargets = extendCardLogic(this.defenderLookingForTarget).canBlock(state);
+        const possibleBlockers = extendCardLogic(this.defenderLookingForTarget).targetBlockers(state);
         this.combatCards.forEach(col => {
-          col.isPossibleTarget = possibleTargets.includes(col.attackingCard.gId);
+          col.isPossibleTarget = possibleBlockers.includes(col.attackingCard.gId);
         });
       }
     }

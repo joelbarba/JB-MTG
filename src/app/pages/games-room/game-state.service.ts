@@ -161,7 +161,7 @@ export class GameStateService {
       'onTargetLookup',
       'canAttack',
       'canDefend',
-      'canBlock',
+      'targetBlockers',
     ]
     dbState.cards = dbState.cards.map(card => card.keyFilter((v,k) => !extFields.includes(k))) as Array<TGameCard>;
     return dbState;
@@ -477,22 +477,24 @@ export class GameStateService {
     const gId = params.gId || '';
     const creature = tableA.find(c => c.gId === gId);
     if (creature) {
+      const possibleBlockers = extendCardLogic(creature).targetBlockers(nextState);
       if (params.targets && params.targets.length) {
         const targetId = params.targets[0]; // For now only 1 blocker allowed
-        nextState.cards.filter(c => c.blockingTarget === targetId).forEach(c => { c.status = null; c.blockingTarget = null }); // unselect previous (if any)
-        creature.status = 'combat:defending';
-        creature.blockingTarget = params.targets[0]; 
+        if (possibleBlockers.includes(targetId)) {
+          nextState.cards.filter(c => c.blockingTarget === targetId).forEach(c => { c.status = null; c.blockingTarget = null }); // unselect previous (if any)
+          creature.status = 'combat:defending';
+          creature.blockingTarget = params.targets[0]; 
+        }
 
       } else {
         nextState.cards.filter(c => c.status === 'combat:selectingTarget').forEach(c => c.status = null); // unselect previous (if any)
         creature.status = 'combat:selectingTarget'; // Manually select the defending target
 
-        // This needs to take in cosideration blocking patters (flying, color protection, ...)
-        // const unblockedAttackers = nextState.cards.filter(c => {
-        //   return c.status === 'combat:attacking' 
-        //       && !nextState.cards.find(d => d.status === 'combat:defending' && d.blockingTarget === c.gId);
-        // });
-        // if (unblockedAttackers.length === 1) { // Automatically select the only none blocked attacker
+        // Automatically select the only none blocked attacker
+        // const unblockedAttackers = nextState.cards
+        //   .filter(att => att.status === 'combat:attacking' && possibleBlockers.includes(att.gId))
+        //   .filter(att => !nextState.cards.find(def => def.blockingTarget === att.gId));
+        // if (unblockedAttackers.length === 1) { 
         //   creature.status = 'combat:defending';
         //   creature.blockingTarget = unblockedAttackers[0].gId;
         // }
@@ -503,7 +505,7 @@ export class GameStateService {
   // action: cancel-defense
   private cancelDefense(nextState: TGameState) {
     const defendingCreatures = nextState.cards.filter(c => c.status === 'combat:defending' || c.status === 'combat:selectingTarget');
-    defendingCreatures.forEach(card => card.status = null);
+    defendingCreatures.forEach(card => { card.status = null; card.blockingTarget = null; });
   }
 
   // action: submit-defense
@@ -552,15 +554,41 @@ export class GameStateService {
       const attackerTxt = `Attacking ${attackingCard.gId} ${attackingCard.name} (${attackingCard.turnAttack}/${attackingCard.turnDefense})`;
 
       if (defendingCard) { // Creatre blocked by another
-        defendingCard.turnDamage = attackingCard.turnAttack;
-        attackingCard.turnDamage = defendingCard.turnAttack;
-        
-        const defenserTxt = `Defending ${defendingCard.gId} ${defendingCard.name} (${attackingCard.turnAttack}/${attackingCard.turnDefense})`;
-        console.log(`${attackerTxt} -----> deals ${attackingCard.turnAttack} points of damage to ${defenserTxt}`);
-        console.log(`${defenserTxt} -----> deals ${defendingCard.turnAttack} points of damage to ${attackerTxt}`);
+        const defenserTxt = `Defending ${defendingCard.gId} ${defendingCard.name} (${defendingCard.turnAttack}/${defendingCard.turnDefense})`;
+
+        let damageToDefender = attackingCard.turnAttack; // Total damage the defending creature will receive
+        let damageToAttacker = defendingCard.turnAttack; // Total damage the attacking creature will receive
+
+        const maxDefense = defendingCard.turnDefense - defendingCard.turnDamage; // Max damage the defender can receive (>= of this value, it dies)
+        let excessDamage = damageToDefender - maxDefense; // Damage exceding the defender's max defense
+
+        // First Strike ability
+        if (attackingCard.isFirstStrike && !defendingCard.isFirstStrike && damageToDefender >= maxDefense) {
+          damageToAttacker = 0; // Attacking creature does not receive damage because it kills defender first strike
+          console.log(`${attackerTxt} -----> kills ${defenserTxt} with FIRST STRIKE and receives no damage`);
+        }
+        if (defendingCard.isFirstStrike && !attackingCard.isFirstStrike) {
+          if (damageToAttacker >= (attackingCard.turnDefense - attackingCard.turnDamage)) { 
+            damageToDefender = 0; // Defending creature does not receive damage because it kills defender first strike
+            excessDamage = 0;
+            console.log(`${defenserTxt} -----> kills ${attackerTxt} with FIRST STRIKE and receives no damage`);
+          } 
+        }
+
+        // Trample ability
+        if (attackingCard.isTrample && excessDamage > 0) { 
+          console.log(`${attackerTxt} -----> also deals the remaining ${excessDamage} points of damage to player ${defendingPlayer.name} (because of TRAMPLE)`);
+          damageToDefender -= excessDamage;
+          totalDamage += excessDamage;
+        }
+
+        defendingCard.turnDamage += damageToDefender;
+        attackingCard.turnDamage += damageToAttacker;
+        console.log(`${attackerTxt} -----> deals ${damageToDefender} points of damage to ${defenserTxt}`);
+        console.log(`${defenserTxt} -----> deals ${damageToAttacker} points of damage to ${attackerTxt}`);
         
       } else { // If the creature is not blocked
-        console.log(`${attackerTxt} -----> deals ${attackingCard.turnAttack} points of damage to player${this.playerANum}`); // You are the defender
+        console.log(`${attackerTxt} -----> deals ${attackingCard.turnAttack} points of damage to player ${defendingPlayer.name}`);
         totalDamage += (attackingCard.turnAttack || 0);
       }
     });

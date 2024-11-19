@@ -129,7 +129,7 @@
           background: transparent;
           border-radius: 11px;
           img { min-height: 200px; }
-          &:not(.is-possible-target) {
+          &.not-selectable {
             // border: 2px solid transparent;
             background: #c1c1c1;
             cursor: not-allowed;

@@ -19,7 +19,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   card.onTargetLookup = (nextState: TGameState) => ({ neededTargets: 0, possibleTargets: [] });
   card.canAttack      = (nextState: TGameState) => true;
   card.canDefend      = (nextState: TGameState) => true;
-  card.canBlock       = (nextState: TGameState) => [];  // Returns a list of gId of the attacking creatues that can block
+  card.targetBlockers = (nextState: TGameState) => [];  // Returns a list of gId of the attacking creatues that can block
 
 
   const getCard = (nextState: TGameState) => nextState.cards.find(c => c.gId === gId) || card;
@@ -60,13 +60,13 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
       const { card } = getShorts(nextState);
       return card && !card.isTapped;
     };
-    card.canBlock = (nextState: TGameState) => {
+    card.targetBlockers = (nextState: TGameState) => {
       const { card, table } = getShorts(nextState);
       if (!card || card.isTapped) { return []; };
       const defendingCard = card;
-      return table.filter(c => c.status === 'combat:attacking').filter(attackingCard => {
-        return !attackingCard.isFlying || defendingCard.isFlying; // Can only block flying if it flies too
-      }).map(c => c.gId);
+      return table.filter(c => c.status === 'combat:attacking')
+        .filter(attackingCard => !attackingCard.isFlying || defendingCard.isFlying)
+        .map(c => c.gId);
     };
   }
 
@@ -253,6 +253,15 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     };
   }
 
+  function c000044_GiantSpider()           { 
+    commonCreature(); 
+    card.targetBlockers = (nextState: TGameState) => {
+      const { card, table } = getShorts(nextState);
+      if (!card || card.isTapped) { return []; }; // Does not fly, but can block flying creatures
+      return table.filter(c => c.status === 'combat:attacking').map(c => c.gId); 
+    };
+  }
+
   // Common Creatures
   function c000052_MonssGoblinRaiders()    { commonCreature(); }
   function c000053_Ornithopter()           { commonCreature(); }
@@ -266,7 +275,6 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   function c000028_DrudgeSkeletons()       { commonCreature(); }
   function c000036_GrayOrge()              { commonCreature(); }
   function c000037_BrassMan()              { commonCreature(); }
-  function c000044_GiantSpider()           { commonCreature(); }
   function c000045_GoblinBalloonBrigade()  { commonCreature(); }
   function c000046_GraniteGargoyle()       { commonCreature(); }
   function c000047_GrizzlyBears()          { commonCreature(); }
@@ -274,9 +282,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   function c000049_HurloonMinotaur()       { commonCreature(); }
   function c000050_IronrootTreefolk()      { commonCreature(); }
   function c000051_LlanowarElves()         { commonCreature(); }
-  function c000056_WallofIce()             { 
-    commonCreature();
-  }
+  function c000056_WallofIce()             { commonCreature(); }
 
 
 
