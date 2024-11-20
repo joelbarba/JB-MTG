@@ -82,8 +82,10 @@ export type TGameCard = TCard & {
   order: number;
   location: TCardLocation;
   isTapped: boolean;
-  status: null | 'summon:waitingMana' | 'summon:selectingMana' | 'summon:selectingTargets' | 'summoning' | 'sickness'
-               | 'combat:attacking' | 'combat:defending' | 'combat:selectingTarget';
+  status: null | 'summon:waitingMana' | 'summon:selectingMana' | 'summon:selectingTargets' 
+               | 'summoning' | 'sickness'
+               | 'ability:waitingMana' | 'ability:selectingMana';
+  combatStatus: null | 'combat:attacking' | 'combat:defending' | 'combat:selectingTarget';
 
   targets: Array<string>;         // Aarray of gIds, playerA, playerB
   blockingTarget: string | null;  // For combat: When defending, the gId of the attacking creature this one is blocking
@@ -99,15 +101,16 @@ export type TGameCard = TCard & {
   targetOf?: Array<TGameCard>;
   uniqueTargetOf?: Array<TGameCard>;
 
-  onSummon: (state: TGameState) => void;
-  onTap: (state: TGameState) => void;
-  onDestroy: (state: TGameState) => void;
-  onDiscard: (state: TGameState) => void;
-  onEffect: (state: TGameState, effectId: string) => void;
-  onTargetLookup: (state: TGameState) => { neededTargets: number, possibleTargets: Array<string> };
-  canAttack: (state: TGameState) => boolean;
-  canDefend: (state: TGameState) => boolean;
-  targetBlockers: (state: TGameState) => Array<string>;
+  onSummon: (state: TGameState) => void;    // What the card does when it's summoned
+  onTap: (state: TGameState) => void;       // What the card does when it's tapped
+  onDestroy: (state: TGameState) => void;   // What the card does when it's destroyed
+  onDiscard: (state: TGameState) => void;   // What the card does when it's discarded
+  onEffect: (state: TGameState, effectId: string) => void;  // What the effect of the card does when it's applied
+  onTargetLookup: (state: TGameState) => { neededTargets: number, possibleTargets: Array<string> }; // Returns the required targets to select when casting
+  canAttack: (state: TGameState) => boolean;  // Whether the creature can be selected to attack
+  canDefend: (state: TGameState) => boolean;  // Whether the creature can be selected to defend
+  targetBlockers: (state: TGameState) => Array<string>; // List of attackers the creature can block
+  getAbilityCost: (state: TGameState) => { mana: TCast, tap: boolean, text: string } | null; // Cost to trigger the card manual ability
 }
 export type TGameCards = Array<TGameCard>;
 export type TExtGameCard = TGameCard & {
@@ -145,6 +148,7 @@ export type TAction = 'start-game'
 | 'cancel-summon'
 | 'select-card-to-discard' 
 | 'tap-land'
+| 'trigger-ability'
 | 'burn-mana'
 | 'select-attacking-creature'
 | 'cancel-attack'

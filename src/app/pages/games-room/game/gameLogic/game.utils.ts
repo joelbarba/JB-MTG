@@ -7,7 +7,7 @@ export const getCards = (state: TGameState, playerANum: '1' | '2' = '1'): {
   deck:  Array<TGameCard>, hand:  Array<TGameCard>, table:  Array<TGameCard>, play:  Array<TGameCard>, graveyard:  Array<TGameCard>,
   deckA: Array<TGameCard>, handA: Array<TGameCard>, tableA: Array<TGameCard>, playA: Array<TGameCard>, graveyardA: Array<TGameCard>, 
   deckB: Array<TGameCard>, handB: Array<TGameCard>, tableB: Array<TGameCard>, playB: Array<TGameCard>, graveyardB: Array<TGameCard>,
-  stack: Array<TGameCard>, tableStack: Array<TGameCard>
+  stack: Array<TGameCard>, tableStack: Array<TGameCard>, tableAStack: Array<TGameCard>
 } => {
   const playerBNum = playerANum === '1' ? '2' : '1';
   const deck        = state.cards.filter(c => c.location.slice(0,4) === 'deck').sort((a, b) => a.order > b.order ? 1 : -1);
@@ -27,7 +27,8 @@ export const getCards = (state: TGameState, playerANum: '1' | '2' = '1'): {
   const graveyardB  = state.cards.filter(c => c.location === 'grav' + playerBNum).sort((a, b) => a.order > b.order ? 1 : -1);
   const stack       = state.cards.filter(c => c.location === 'stack').sort((a, b) => a.order > b.order ? 1 : -1);
   const tableStack  = state.cards.filter(c => c.location === 'stack' || c.location.slice(0,4) === 'tble').sort((a, b) => a.order > b.order ? 1 : -1);
-  return { deck,  hand,  table,  play,  graveyard, stack, tableStack,
+  const tableAStack = state.cards.filter(c => c.location === 'stack' || c.location === 'tble' + playerANum).sort((a, b) => a.order > b.order ? 1 : -1);
+  return { deck,  hand,  table,  play,  graveyard, stack, tableStack, tableAStack,
            deckA, handA, tableA, playA, graveyardA, 
            deckB, handB, tableB, playB, graveyardB };
 }

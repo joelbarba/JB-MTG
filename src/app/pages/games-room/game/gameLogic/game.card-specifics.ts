@@ -1,4 +1,4 @@
-import { TColor, TEffect, TGameCard, TGameState } from "../../../../core/types";
+import { TCast, TColor, TEffect, TGameCard, TGameState } from "../../../../core/types";
 import { getCards, killDamagedCreatures, moveCard, moveCardToGraveyard, randomId } from "./game.utils";
 
 
@@ -11,15 +11,16 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   // But to be 100% pure, we should filter the object from the given nextState in every function --> const card = getCard(nextState);
 
   // Functions to exted: common values
-  card.onSummon       = (nextState: TGameState) => {};
-  card.onTap          = (nextState: TGameState) => {};
+  card.onSummon       = (nextState: TGameState) => { moveCard(nextState, gId, 'tble'); getCard(nextState).status = null; }
+  card.onTap          = (nextState: TGameState) => { getCard(nextState).isTapped = true; }
   card.onDestroy      = (nextState: TGameState) => {};
-  card.onDiscard      = (nextState: TGameState) => { moveCard(nextState, gId, 'grav') };
+  card.onDiscard      = (nextState: TGameState) => moveCard(nextState, gId, 'grav');
   card.onEffect       = (nextState: TGameState, effectId: string) => {};
   card.onTargetLookup = (nextState: TGameState) => ({ neededTargets: 0, possibleTargets: [] });
   card.canAttack      = (nextState: TGameState) => true;
   card.canDefend      = (nextState: TGameState) => true;
   card.targetBlockers = (nextState: TGameState) => [];  // Returns a list of gId of the attacking creatues that can block
+  card.getAbilityCost = (nextState: TGameState) => null; // If ability (not null) paying cost = { mana: [0,0,0,0,0,0], tap: true }
 
 
   const getCard = (nextState: TGameState) => nextState.cards.find(c => c.gId === gId) || card;
@@ -34,7 +35,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   }
 
 
-  const commonLandTap = (manaNum: 0|1|2|3|4|5) => {
+  const commonLand = (manaNum: 0|1|2|3|4|5) => {
     card.onSummon = (nextState: TGameState) => {
       const { card, cardPlayer } = getShorts(nextState);
       if (card.location.slice(0,4) === 'hand' && cardPlayer.summonedLands < 1) {
@@ -56,6 +57,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
       const { card } = getShorts(nextState);
       moveCard(nextState, card.gId, 'tble');
       card.status = card.isHaste ? null : 'sickness';
+      card.combatStatus = null;
     };
     card.canAttack = (nextState: TGameState) => {
       const { card } = getShorts(nextState);
@@ -69,12 +71,14 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
       const { card, table } = getShorts(nextState);
       if (!card || card.isTapped) { return []; };
       const defendingCard = card;
-      return table.filter(c => c.status === 'combat:attacking')
+      return table.filter(c => c.combatStatus === 'combat:attacking')
         .filter(attackingCard => !attackingCard.colorProtection || attackingCard.colorProtection !== defendingCard.color)
         .filter(attackingCard => !attackingCard.isFlying || defendingCard.isFlying)
         .map(c => c.gId);
     };
   }
+
+
 
 
 
@@ -141,11 +145,11 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
 
 
   // Common Lands
-  function c000001_Island()   { commonLandTap(1); } // 1 Blue Mana
-  function c000002_Plains()   { commonLandTap(2); } // 1 White Mana
-  function c000003_Swamp()    { commonLandTap(3); } // 1 Black Mana
-  function c000004_Mountain() { commonLandTap(4); } // 1 Red Mana
-  function c000005_Forest()   { commonLandTap(5); } // 1 Breen Mana
+  function c000001_Island()   { commonLand(1); } // 1 Blue Mana
+  function c000002_Plains()   { commonLand(2); } // 1 White Mana
+  function c000003_Swamp()    { commonLand(3); } // 1 Black Mana
+  function c000004_Mountain() { commonLand(4); } // 1 Red Mana
+  function c000005_Forest()   { commonLand(5); } // 1 Breen Mana
 
 
   function c000032_LightningBolt() {
@@ -267,9 +271,53 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
       if (!card || card.isTapped) { return []; }; // Does not fly, but can block flying creatures
       const defendingCard = card;
       return table
-        .filter(c => c.status === 'combat:attacking')
+        .filter(c => c.combatStatus === 'combat:attacking')
         .filter(c => !c.colorProtection || c.colorProtection !== defendingCard.color)
         .map(c => c.gId); 
+    };
+  }
+
+  function c000011_SolRing() {
+    card.getAbilityCost = () => ({ mana: [0,0,0,0,0,0], tap: true, text: 'Tap to add 2 colorless mana' });
+    card.onTap = (nextState: TGameState) => {
+      const { card, cardPlayer } = getShorts(nextState);
+      cardPlayer.manaPool[0] += 2;
+      card.isTapped = true;
+    };
+  }
+
+
+  // Moxes
+  function moxCommon(colorNum: number, color: TColor) {
+    card.getAbilityCost = () => ({ mana: [0,0,0,0,0,0], tap: true, text: `Tap to add 1 ${color} mana` });
+    card.onTap = (nextState: TGameState) => {
+      const { card, cardPlayer } = getShorts(nextState);
+      cardPlayer.manaPool[colorNum] += 1;
+      card.isTapped = true;
+    };
+  }
+  function c000010_MoxSapphire() { moxCommon(1, 'blue');  }
+  function c000008_MoxPearl()    { moxCommon(2, 'white'); }
+  function c000007_MoxJet()      { moxCommon(3, 'black'); }
+  function c000009_MoxRuby()     { moxCommon(4, 'red');   }
+  function c000006_MoxEmerald()  { moxCommon(5, 'green'); }
+
+  function c000046_GraniteGargoyle() {
+    commonCreature();
+    card.getAbilityCost = () => ({ mana: [0,0,0,0,1,0], tap: false, text: `Pay 1 red mana to add +0/+1` });
+    card.onTap = (nextState: TGameState) => {
+      nextState.effects.push({ scope: 'turn', gId, targets: [], id: randomId('e') });
+    };
+    card.onEffect = (nextState: TGameState, effectId: string) => { // Add +0/+1 to target creature
+      const { card } = getShorts(nextState);
+      card.turnDefense += 1;
+    }    
+  }
+
+  function c000027_DarkRitual() { 
+    card.onSummon = (nextState: TGameState) => { // Adds 3 black mana
+      getShorts(nextState).cardPlayer.manaPool[3] += 3;
+      moveCardToGraveyard(nextState, gId); // Destroy Dark Ritual
     };
   }
 
@@ -282,12 +330,10 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   function c000041_ElvishArchers()         { commonCreature(); }
   function c000042_FireElemental()         { commonCreature(); }
   function c000026_BlackKnight()           { commonCreature(); }
-  function c000027_DarkRitual()            { commonCreature(); }
   function c000028_DrudgeSkeletons()       { commonCreature(); }
   function c000036_GrayOrge()              { commonCreature(); }
   function c000037_BrassMan()              { commonCreature(); }
   function c000045_GoblinBalloonBrigade()  { commonCreature(); }
-  function c000046_GraniteGargoyle()       { commonCreature(); }
   function c000047_GrizzlyBears()          { commonCreature(); }
   function c000048_HillGiant()             { commonCreature(); }
   function c000049_HurloonMinotaur()       { commonCreature(); }
@@ -298,12 +344,6 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
 
 
   // // Pending to be coded......
-  function c000006_MoxEmerald() {}
-  function c000007_MoxJet() {}
-  function c000008_MoxPearl() {}
-  function c000009_MoxRuby() {}
-  function c000010_MoxSapphire() {}
-  function c000011_SolRing() {}
   function c000012_BlackLotus() {}
   function c000013_Bayou() {}
   function c000014_Badlands() {}

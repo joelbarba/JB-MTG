@@ -108,8 +108,8 @@ export class DialogCombatComponent {
     this.subPhase = this.game.state.subPhase;
     this.youControl = (this.game.state.control === this.game.playerANum);
 
-    this.attackingCreatures = this.game.state.cards.filter(c => c.status === 'combat:attacking').sort((a, b) => a.order > b.order ? 1 : -1);
-    this.defendingCreatures = this.game.state.cards.filter(c => c.status === 'combat:defending').sort((a, b) => a.order > b.order ? 1 : -1);
+    this.attackingCreatures = this.game.state.cards.filter(c => c.combatStatus === 'combat:attacking').sort((a, b) => a.order > b.order ? 1 : -1);
+    this.defendingCreatures = this.game.state.cards.filter(c => c.combatStatus === 'combat:defending').sort((a, b) => a.order > b.order ? 1 : -1);
 
     this.combatCards = this.attackingCreatures.map(attackingCard => {
       const defendingCard = this.defendingCreatures.find(c => c.blockingTarget === attackingCard.gId);
@@ -162,7 +162,7 @@ export class DialogCombatComponent {
     }
 
     if (state.control === this.game.playerANum) {
-      this.defenderLookingForTarget = this.game.state.cards.find(c => c.status === 'combat:selectingTarget');
+      this.defenderLookingForTarget = this.game.state.cards.find(c => c.combatStatus === 'combat:selectingTarget');
       if (this.defenderLookingForTarget) {
         this.mainInfo = `Select what creature you want ${this.defenderLookingForTarget.name} to defend against`;
         const possibleBlockers = extendCardLogic(this.defenderLookingForTarget).targetBlockers(state);

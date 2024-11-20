@@ -17,6 +17,7 @@ import { checkMana } from './gameLogic/game.utils';
 import { HoverTipDirective } from '../../../core/common/internal-lib/bf-tooltip/bf-tooltip.directive';
 import { PanelEffectsComponent } from './panel-effects/panel-effects.component';
 import { ManaArrayComponent } from './mana-array/mana-array.component';
+import { extendCardLogic } from './gameLogic/game.card-specifics';
 
 export interface ICard {
   img: string;
@@ -309,9 +310,9 @@ export class GameComponent {
 
     if (this.state.phase === 'combat') {
       const selectableAttackingCreatures = !!options.find(o => o.action === 'select-attacking-creature');
-      const attackingCreatures = !!this.tableA.find(c => c.status === 'combat:attacking');
+      const attackingCreatures = !!this.tableA.find(c => c.combatStatus === 'combat:attacking');
       const selectableDefendingCreatures = !!options.find(o => o.action === 'select-defending-creature');
-      const defendingCreatures = !!this.tableA.find(c => c.status === 'combat:defending');
+      const defendingCreatures = !!this.tableA.find(c => c.combatStatus === 'combat:defending');
 
       // Don't stop at the combat phase if you don't have creatures to attack
       if (this.state.subPhase === 'selectAttack' && !selectableAttackingCreatures && !attackingCreatures) { return advancePhase(); }
@@ -554,7 +555,13 @@ export class GameComponent {
     const waitingManaCard = this.handA.find(c => c.status === 'summon:waitingMana');
     if (waitingManaCard && (this.summonOp.status === 'off' || this.summonOp.gId !== waitingManaCard.gId)) {
       this.startSummonOp(waitingManaCard, 'waitingMana'); // start new summon op
-    } 
+    }
+
+    // If you tried to trigger an ability that costs mana but there is not enough, start a summonOp waiting for the necessary mana
+    const waitingManaCard2 = this.tableA.find(c => c.status === 'ability:waitingMana');
+    if (waitingManaCard2 && (this.summonOp.status === 'off' || this.summonOp.gId !== waitingManaCard2.gId)) {
+      this.startManaOp(waitingManaCard2, 'waitingMana'); // start new mana operation
+    }
     
     // If you tried to summon but a cherry picking is needed for the uncolored mana, do it
     const selectingManaCard = this.handA.find(c => c.status === 'summon:selectingMana');
@@ -572,7 +579,7 @@ export class GameComponent {
     if (this.summonOp.status === 'waitingMana') { this.summonOp.tryToSummon(); }
 
     if (this.summonOp.status !== 'off') {
-      if (!waitingManaCard && !selectingManaCard && !selectingTargetCard) { this.summonOp.turnOff(); } // Cancel operation no longer needed
+      if (!waitingManaCard && !selectingManaCard && !selectingTargetCard && !waitingManaCard2) { this.summonOp.turnOff(); } // Cancel operation no longer needed
       this.mainInfo = this.summonOp.text;
       // this.itemInfo = this.summonOp.text;
     }
@@ -602,7 +609,7 @@ export class GameComponent {
     },
     tryToSummon: () => {
       if (!this.summonOp.card) { return; }
-      const manaStatus = checkMana(this.summonOp.card.cast, this.playerA.manaPool);
+      const manaStatus = checkMana(this.summonOp.cast, this.playerA.manaPool);
       if (manaStatus === 'exact' || manaStatus === 'auto') {
         this.summonOp.turnOff();
         setTimeout(() => this.game.action(this.summonOp.action, this.summonOp.params));
@@ -611,7 +618,7 @@ export class GameComponent {
       else if (manaStatus === 'manual') { // Too many mana of different colors. You need to select
         console.log('Ops, too much mana of different colors. You need to select');        
 
-        const reserveStatus = checkMana(this.summonOp.card.cast, this.summonOp.manaReserved);
+        const reserveStatus = checkMana(this.summonOp.cast, this.summonOp.manaReserved);
         if (reserveStatus === 'exact' || reserveStatus === 'auto') {
           this.summonOp.turnOff();
           setTimeout(() => this.game.action(this.summonOp.action, this.summonOp.params));
@@ -673,6 +680,39 @@ export class GameComponent {
     }
   }
 
+  startManaOp(card: TGameCard, status: 'off' | 'waitingMana' | 'selectingMana' | 'selectingTargets' | 'summoning') {
+    if (this.summonOp.gId !== card.gId) { // Initialize summon operation for the given card
+      const neededMana = extendCardLogic(card).getAbilityCost(this.state)?.mana || [0,0,0,0,0,0];
+      this.summonOp.gId           = card.gId;
+      this.summonOp.card          = card;
+      this.summonOp.params        = { gId: card.gId }; // manaForUncolor = [0,0,0,0,0,0], targets = [];
+      // this.summonOp.title         = `Summoning ${card.name}`;
+      this.summonOp.minimized     = false;
+      this.summonOp.showSummonBtn = false;
+      this.summonOp.cast          = [...neededMana];
+      this.summonOp.manaLeft      = [...neededMana];  // Remaining mana left to summon
+      this.summonOp.manaReserved  = [0,0,0,0,0,0];    // Mana temporarily reserved to summon
+      this.summonOp.action = 'trigger-ability';
+    }
+    this.summonOp.status = status;
+
+    if (status === 'waitingMana') {
+      this.summonOp.text = `To use ${card.name} you need to generate:`;
+
+    } else if (status === 'selectingMana') {
+      this.summonOp.text = `Please select the mana from your mana pool you want to use for ${card.name}`;
+      // Automatically reserve colored mana
+      for (let t = 0; t < Math.min(this.playerA.manaPool[1], card.cast[1]); t++) { this.summonOp.reserveMana(1); }
+      for (let t = 0; t < Math.min(this.playerA.manaPool[2], card.cast[2]); t++) { this.summonOp.reserveMana(2); }
+      for (let t = 0; t < Math.min(this.playerA.manaPool[3], card.cast[3]); t++) { this.summonOp.reserveMana(3); }
+      for (let t = 0; t < Math.min(this.playerA.manaPool[4], card.cast[4]); t++) { this.summonOp.reserveMana(4); }
+      for (let t = 0; t < Math.min(this.playerA.manaPool[5], card.cast[5]); t++) { this.summonOp.reserveMana(5); }
+
+    } else if (status === 'selectingTargets') {
+      this.summonOp.text = `Select target`;
+    }
+  }
+
 
   combatPanel = false;
   combatPanelAttacker: 'A' | 'B' = 'A';
@@ -685,7 +725,7 @@ export class GameComponent {
     if (this.state.phase === 'combat') {
       
       // If you have attacking creatures (you are leading an attack)
-      const attackingCreatures = this.tableA.find(c => c.status === 'combat:attacking');
+      const attackingCreatures = this.tableA.find(c => c.combatStatus === 'combat:attacking');
       if (attackingCreatures) {
         this.combatPanel = true;
         this.combatPanelAttacker = 'A';
@@ -694,8 +734,8 @@ export class GameComponent {
       }
   
       // If the opponent is attacking you
-      const opponentAttack = this.tableB.find(c => c.status === 'combat:attacking');
-      const defendingCreatures = this.tableA.find(c => c.status === 'combat:defending');
+      const opponentAttack = this.tableB.find(c => c.combatStatus === 'combat:attacking');
+      const defendingCreatures = this.tableA.find(c => c.combatStatus === 'combat:defending');
       if (opponentAttack || defendingCreatures) {
         this.combatPanel = true;
         this.combatPanelAttacker = 'B';

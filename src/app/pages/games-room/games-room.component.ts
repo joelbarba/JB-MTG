@@ -83,6 +83,10 @@ export class GamesRoomComponent {
       getCardById('c000003'), // Swamp
       getCardById('c000003'), // Swamp
       getCardById('c000005'), // Forest
+      getCardById('c000011'), // Sol Ring
+      getCardById('c000009'), // Mox Ruby
+      getCardById('c000009'), // Mox Ruby
+      getCardById('c000046'), // Granite Gargoyle (2/2)      
       getCardById('c000052'), // Mons's Goblin Raiders (1/1)
       // getCardById('c000028'), // Drudge Skeletons
       // getCardById('c000002'), // Plains
@@ -93,6 +97,7 @@ export class GamesRoomComponent {
       // getCardById('c000032'), // Lightning Bolt
       getCardById('c000056'), // Wall of Ice (0/7)
       getCardById('c000041'), // Elvish Archers (2/1)
+      getCardById('c000027'), // Dark Ritual
       // getCardById('c000001'), // Island
       // getCardById('c000001'), // Island
       // getCardById('c000038'), // Counter Spell
@@ -100,9 +105,9 @@ export class GamesRoomComponent {
       // getCardById('c000032'), // lightning bolt
       getCardById('c000005'), // Forest
       getCardById('c000003'), // Swamp
-      getCardById('c000044'), // Giant Spider (2/4)
-      getCardById('c000046'), // Granite Gargoyle (2/2)
+      getCardById('c000044'), // Giant Spider (2/4)      
       getCardById('c000047'), // Grizzly Bears (2/2)
+      getCardById('c000036'), // Gray Ogre (2/2)
       getCardById('c000048'), // Hill Giant (3/3)
       getCardById('c000049'), // Hurloon Minotaur (2/3)
       getCardById('c000053'), // Ornithopter
@@ -152,8 +157,7 @@ export class GamesRoomComponent {
       getCardById('c000003'), // swamp
       getCardById('c000005'), // forest
       getCardById('c000005'), // forest
-      getCardById('c000005'), // forest
-      getCardById('c000036'), // gray ogre
+      getCardById('c000005'), // forest      
       getCardById('c000036'), // gray ogre
       getCardById('c000036'), // gray ogre
       getCardById('c000036'), // gray ogre
@@ -172,6 +176,8 @@ export class GamesRoomComponent {
       getCardById('c000005'), // Forest
       getCardById('c000003'), // Swamp
       getCardById('c000003'), // Swamp
+      getCardById('c000027'), // Dark Ritual
+      getCardById('c000027'), // Dark Ritual
       getCardById('c000002'), // plains
       getCardById('c000032'), // Lightning Bolt
       getCardById('c000043'), // Gian Growth

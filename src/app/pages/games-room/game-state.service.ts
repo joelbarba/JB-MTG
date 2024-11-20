@@ -163,6 +163,7 @@ export class GameStateService {
       'canAttack',
       'canDefend',
       'targetBlockers',
+      'getAbilityCost',
     ]
     dbState.cards = dbState.cards.map(card => card.keyFilter((v,k) => !extFields.includes(k))) as Array<TGameCard>;
     return dbState;
@@ -226,6 +227,7 @@ export class GameStateService {
       case 'skip-phase':                this.endPhase(nextState); break;
       case 'draw':                      this.draw(nextState);  break;
       case 'tap-land':                  this.tapLand(nextState, gId); break;
+      case 'trigger-ability':           this.triggerAbility(nextState, gId, manaForUncolor); break;
       case 'untap-card':                this.untapCard(nextState, gId); break;
       case 'untap-all':                 this.untapAll(nextState); break;
       case 'select-attacking-creature': this.selectAttackingCreature(nextState, gId); break;
@@ -310,6 +312,44 @@ export class GameStateService {
       playerA.life -= playerA.manaPool[t];
       playerA.manaPool[t] = 0;
     }
+  }
+
+  private triggerAbility(nextState: TGameState, gId: string, manaForUncolor: TCast) {
+    const { playerA, playerB } = this.getPlayers(nextState);
+
+    const card = nextState.cards.find(c => c.gId === gId);
+    if (card) {
+      const { getAbilityCost, onTap } = extendCardLogic(card);
+      const abilityCost = getAbilityCost(nextState);
+      if (abilityCost) {
+
+        let rightMana = true;
+        const totalManaCost = abilityCost.mana.reduce((v,a) => v + a, 0);
+
+        if (totalManaCost) {
+          rightMana = false;
+          const manaStatus = checkMana(abilityCost.mana, this.playerA().manaPool);
+          if (manaStatus === 'not enough') {
+            card.status = 'ability:waitingMana';
+          }
+          else if (manaStatus === 'exact' || manaStatus === 'auto') {
+            manaForUncolor = calcManaForUncolored(card.cast, playerA.manaPool);
+            rightMana = true;
+          }
+          else if (manaStatus === 'manual') {
+            rightMana = card.cast[0] <= manaForUncolor.reduce((v,a) => v + a, 0);
+            if (!rightMana) { card.status = 'ability:selectingMana'; } // If there is not enough uncolor selected
+          }
+        }
+
+        if (rightMana && (!abilityCost.tap || !card.isTapped)) {
+          if (totalManaCost > 0) { spendMana(abilityCost.mana, playerA.manaPool, manaForUncolor); }
+          onTap(nextState); // It may not always tap the card, but trigger the ability
+          card.status = null;
+        }
+      }
+    }
+
   }
 
   private summonCreature(nextState: TGameState, gId: string, manaForUncolor: TCast) {
@@ -451,14 +491,14 @@ export class GameStateService {
   private selectAttackingCreature(nextState: TGameState, gId: string) {
     const { tableA } = this.getCards(nextState);
     const creature = tableA.find(c => c.gId === gId);
-    if (creature) { creature.status = 'combat:attacking'; creature.isTapped = true; }
+    if (creature) { creature.combatStatus = 'combat:attacking'; creature.isTapped = true; }
   }
   
   // action: cancel-attack
   private cancelAttack(nextState: TGameState) {
-    const attackingCreatures = nextState.cards.filter(c => c.status === 'combat:attacking');
+    const attackingCreatures = nextState.cards.filter(c => c.combatStatus === 'combat:attacking');
     attackingCreatures.forEach(card => {
-      card.status = null;
+      card.combatStatus = null;
       card.isTapped = false;
     });
   }
@@ -482,21 +522,21 @@ export class GameStateService {
       if (params.targets && params.targets.length) {
         const targetId = params.targets[0]; // For now only 1 blocker allowed
         if (possibleBlockers.includes(targetId)) {
-          nextState.cards.filter(c => c.blockingTarget === targetId).forEach(c => { c.status = null; c.blockingTarget = null }); // unselect previous (if any)
-          creature.status = 'combat:defending';
+          nextState.cards.filter(c => c.blockingTarget === targetId).forEach(c => { c.combatStatus = null; c.blockingTarget = null }); // unselect previous (if any)
+          creature.combatStatus = 'combat:defending';
           creature.blockingTarget = params.targets[0]; 
         }
 
       } else {
-        nextState.cards.filter(c => c.status === 'combat:selectingTarget').forEach(c => c.status = null); // unselect previous (if any)
-        creature.status = 'combat:selectingTarget'; // Manually select the defending target
+        nextState.cards.filter(c => c.combatStatus === 'combat:selectingTarget').forEach(c => c.combatStatus = null); // unselect previous (if any)
+        creature.combatStatus = 'combat:selectingTarget'; // Manually select the defending target
 
         // Automatically select the only none blocked attacker
         // const unblockedAttackers = nextState.cards
-        //   .filter(att => att.status === 'combat:attacking' && possibleBlockers.includes(att.gId))
+        //   .filter(att => att.combatStatus === 'combat:attacking' && possibleBlockers.includes(att.gId))
         //   .filter(att => !nextState.cards.find(def => def.blockingTarget === att.gId));
         // if (unblockedAttackers.length === 1) { 
-        //   creature.status = 'combat:defending';
+        //   creature.combatStatus = 'combat:defending';
         //   creature.blockingTarget = unblockedAttackers[0].gId;
         // }
       }
@@ -505,8 +545,8 @@ export class GameStateService {
 
   // action: cancel-defense
   private cancelDefense(nextState: TGameState) {
-    const defendingCreatures = nextState.cards.filter(c => c.status === 'combat:defending' || c.status === 'combat:selectingTarget');
-    defendingCreatures.forEach(card => { card.status = null; card.blockingTarget = null; });
+    const defendingCreatures = nextState.cards.filter(c => c.combatStatus === 'combat:defending' || c.combatStatus === 'combat:selectingTarget');
+    defendingCreatures.forEach(card => { card.combatStatus = null; card.blockingTarget = null; });
   }
 
   // action: submit-defense
@@ -528,7 +568,7 @@ export class GameStateService {
     const { playerA, playerB, attackingPlayer, defendingPlayer } = this.getPlayers(nextState);
 
     // If for whatever reason, the attacking creatures were killed by spells, end the combat
-    const attackingCreatures = nextState.cards.filter(c => c.status === 'combat:attacking');
+    const attackingCreatures = nextState.cards.filter(c => c.combatStatus === 'combat:attacking');
     if (!attackingCreatures.length) { this.endCombat(nextState); }
 
     if (nextState.subPhase === 'attacking') {
@@ -546,8 +586,8 @@ export class GameStateService {
 
   private runCombat(nextState: TGameState) {
     const { playerA, playerB, attackingPlayer, defendingPlayer } = this.getPlayers(nextState);
-    const attackingCreatures = nextState.cards.filter(c => c.status === 'combat:attacking');
-    const defendingCreatures = nextState.cards.filter(c => c.status === 'combat:defending');
+    const attackingCreatures = nextState.cards.filter(c => c.combatStatus === 'combat:attacking');
+    const defendingCreatures = nextState.cards.filter(c => c.combatStatus === 'combat:defending');
 
     let totalDamage = 0;
     attackingCreatures.forEach(attackingCard => {
@@ -604,8 +644,8 @@ export class GameStateService {
   private endCombat(nextState: TGameState) {
     const { playerA, playerB, attackingPlayer, defendingPlayer } = this.getPlayers(nextState);
     killDamagedCreatures(nextState);  // Check those creatures that received more damage than defense, and kill them    
-    nextState.cards.filter(c => c.status?.slice(0,6) === 'combat').forEach(card => {
-      card.status = null;
+    nextState.cards.filter(c => c.combatStatus || c.blockingTarget).forEach(card => {
+      card.combatStatus = null;
       card.blockingTarget = null;
     });
     this.switchPlayerControl(nextState, attackingPlayer);

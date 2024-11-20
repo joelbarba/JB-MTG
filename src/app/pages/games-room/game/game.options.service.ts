@@ -29,7 +29,7 @@ export class GameOptionsService {
     const playerB = playerBNum === '1' ? state.player1 : state.player2;
 
     // const { hand, table } = this.getCards(state, 'playerA'); // Your cards
-    const { handA, handB, tableA, tableB } = getCards(state, playerANum);
+    const { handA, handB, tableA, tableB, tableStack } = getCards(state, playerANum);
 
     // Shortcut to check if the current phase is any of the given
     const isPhase = (...phases: string[]) => phases.includes(state.phase);    
@@ -106,6 +106,17 @@ export class GameOptionsService {
           if (!card.status) { card.selectableAction = option; }
         });
       }
+
+      // You may trigger manual abilities on cards
+      tableStack.filter(c => c.controller === playerANum).forEach(card => {
+        const abilityCost = extendCardLogic(card).getAbilityCost(state);
+        if (abilityCost && (!abilityCost.tap || !card.isTapped)) {
+          const option: TGameOption = { action: 'trigger-ability', params: { gId: card.gId }, text: abilityCost.text };
+          state.options.push(option);
+          card.selectableAction = option;
+        }
+      });
+
       return state; // <---- Skip generic options (it's not your turn)
     }
 
@@ -119,7 +130,7 @@ export class GameOptionsService {
         state.options.push({ action: 'submit-defense', params: {}, text: 'Defend with selected creatures' });
 
         // You may select a creature to defend your opponents attack
-        tableA.filter(c => c.type === 'creature' && c.status !== 'combat:defending').forEach(card => {
+        tableA.filter(c => c.type === 'creature' && c.combatStatus !== 'combat:defending').forEach(card => {
           if (extendCardLogic(card).canDefend(state)) {
             const option: TGameOption = { action: 'select-defending-creature', params: { gId: card.gId }, text: `Defend with ${card.name}` };
             state.options.push(option);
@@ -128,7 +139,7 @@ export class GameOptionsService {
         });
 
         // You may select the opponent's attacking creature as a target of your defending creature
-        const defenderToAssign = state.cards.find(c => c.status === 'combat:selectingTarget');
+        const defenderToAssign = state.cards.find(c => c.combatStatus === 'combat:selectingTarget');
         if (defenderToAssign) {
           extendCardLogic(defenderToAssign).targetBlockers(state).forEach(attackingId => {
             const attackingCard = state.cards.find(c => c.gId === attackingId);
@@ -182,6 +193,15 @@ export class GameOptionsService {
       });
     }
 
+    // You may summon artifacts
+    if (isPhase('pre', 'post')) {
+      handA.filter(c => c.type === 'artifact').forEach(card => {
+        const option: TGameOption = { action: 'summon-spell', params: { gId: card.gId }, text: `Summon ${card.name}` };
+        state.options.push(option);
+        if (!card.status) { card.selectableAction = option; }
+      });
+    }
+
     // You may summon sorceries
     if (isPhase('pre', 'post')) {
       handA.filter(c => c.type === 'sorcery').forEach(card => {
@@ -214,13 +234,25 @@ export class GameOptionsService {
       });
     }
 
+    // You may trigger manual abilities on cards
+    if (isPhase('pre', 'post', 'combat') || spellsAvailable) {
+      tableA.forEach(card => {
+        const abilityCost = extendCardLogic(card).getAbilityCost(state);
+        if (abilityCost && (!abilityCost.tap || !card.isTapped)) {
+          const option: TGameOption = { action: 'trigger-ability', params: { gId: card.gId }, text: abilityCost.text };
+          state.options.push(option);
+          card.selectableAction = option;
+        }
+      });
+    }
+
 
     // Combat
     if (isPhase('combat')) {
-      const isAttackOn = !!tableA.filter(c => c.status === 'combat:attacking').length; // Are you leading an attack?
+      const isAttackOn = !!tableA.filter(c => c.combatStatus === 'combat:attacking').length; // Are you leading an attack?
 
       if (state.subPhase === 'selectAttack') {
-        tableA.filter(c => c.type === 'creature' && c.status !== 'combat:attacking').forEach(card => {
+        tableA.filter(c => c.type === 'creature' && c.combatStatus !== 'combat:attacking').forEach(card => {
           if (extendCardLogic(card).canAttack(state)) {
             const option: TGameOption = { action: 'select-attacking-creature', params: { gId: card.gId }, text: `Attack with ${card.name}` };
             state.options.push(option);
