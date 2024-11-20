@@ -62,11 +62,11 @@ export class LibraryComponent {
   ];
 
   constructor(
-    public auth: AuthService,
-    public shell: ShellService,
+    private shell: ShellService,
+    private auth: AuthService,
     public firestore: Firestore,
   ) {
-
+    this.shell.gameMode('off');
   }
 
   async ngOnInit() {

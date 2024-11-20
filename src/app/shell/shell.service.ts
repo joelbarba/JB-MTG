@@ -4,6 +4,12 @@ import { Injectable } from '@angular/core';
 export class ShellService {
   isCropperPanel = false;
   showMenu = true;
+  showNavBar = true;
 
   constructor() {}
+
+  gameMode(mode: 'on' | 'off' = 'off') {
+    this.showMenu = mode === 'off';
+    this.showNavBar = mode === 'off';
+  }
 }

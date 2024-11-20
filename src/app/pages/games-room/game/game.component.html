@@ -322,20 +322,10 @@
 </div>
 
 
-<!-- Debug Buttons -->
-<div *ngIf="true" hoverTip="eeee"
-     style="position: fixed;top: 76px; left: 10px; background: lightgray; padding: 2px; z-index: 2000; width: 140px; height: 200px;">
-  <!-- <bf-btn (bfClick)="growl.success('test test');" bfText="GROWL" class="full-width"></bf-btn> -->
-  <bf-btn (bfClick)="game.action('refresh')" bfText="REFRESH" class="full-width"></bf-btn>
-  <bf-btn (bfClick)="game.saveStateDebug()" bfText="SAVE STATE" class="full-width" style="margin-top: 5px;"></bf-btn>
-  <bf-btn (bfClick)="game.loadStateDebug()" bfText="LOAD STATE" class="full-width" style="margin-top: 5px;"></bf-btn>
-  <bf-btn *ngIf="!game.debugMode" (bfClick)="game.debugMode = true" bfText="Debug OFF" class="full-width" style="margin-top: 5px;"></bf-btn>
-  <bf-btn *ngIf="game.debugMode" (bfClick)="game.debugMode = false" bfText="Debug ON"  class="full-width" style="margin-top: 5px;"></bf-btn>
-  <bf-btn (bfClick)="debugPanel = !debugPanel"  bfText="Debug Panel" class="full-width" style="margin-top: 5px;"></bf-btn>
-</div>
+
 
 <!-- Debug Panel -->
-<div *ngIf="game.state && debugPanel" style="position: fixed; top: 90px; left: 500px; background: lightgray; padding: 10px; z-index: 2000; right: 10px; bottom: 10px;">
+<div *ngIf="game.state && game.debugPanel" style="position: fixed; top: 90px; left: 500px; background: lightgray; padding: 10px; z-index: 2000; right: 10px; bottom: 10px;">
   <div>
     <br/>You are player={{game.playerANum}}
     <br/>
@@ -367,3 +357,6 @@
   </div>
 
 </div>
+
+
+<game-panel></game-panel>

@@ -7,6 +7,7 @@ import { EPhase, TAction, TCard, TCardLocation, TGameState, TGameDBState, TGameC
 import { calcManaForUncolored, checkMana, getCards, getPlayers, getTime, killDamagedCreatures, moveCard, moveCardToGraveyard, spendMana } from './game/gameLogic/game.utils';
 import { GameOptionsService } from './game/game.options.service';
 import { extendCardLogic } from './game/gameLogic/game.card-specifics';
+import { BfDefer } from '@blueface_npm/bf-ui-lib';
 
 
 
@@ -15,6 +16,7 @@ import { extendCardLogic } from './game/gameLogic/game.card-specifics';
 export class GameStateService {
   library: Array<TCard> = [];
   initPromise!: Promise<void>;
+  firstStateDef!: BfDefer;
 
   gameId!: string;
   gameDocSub!: Unsubscribe;
@@ -32,6 +34,7 @@ export class GameStateService {
   playerBNum: '1' | '2' = '2'; // Your opponent2
 
   debugMode = false;
+  debugPanel = false;
 
   playerA = () => this.playerANum === '1' ? this.state.player1 : this.state.player2;
   playerB = () => this.playerBNum === '1' ? this.state.player1 : this.state.player2;
@@ -53,6 +56,7 @@ export class GameStateService {
     private options: GameOptionsService,
   ) {
     this.loadLibrary();
+    this.firstStateDef = new BfDefer();
   }
 
   loadLibrary() { // Load card library
@@ -74,10 +78,9 @@ export class GameStateService {
 
 
   async activateGame(gameId: string) {
+    this.gameId = gameId;
     await this.auth.profilePromise;
     await this.initPromise; // wait to have all the cards loaded
-
-    this.gameId = gameId;
 
     if (this.gameDocSub) { this.gameDocSub(); } // unsubscribe if previous detected
 
@@ -129,6 +132,7 @@ export class GameStateService {
       this.options.calculateTargetsFrom(this.state);
       this.state$.next(this.state);
       // console.log('New State - Options =', state.options.map(o => `${o.action}:${o.params?.gId}`), state);
+      if (!this.firstStateDef.status) { this.firstStateDef.resolve(); }
     });
   }
 

@@ -18,6 +18,7 @@ import { HoverTipDirective } from '../../../core/common/internal-lib/bf-tooltip/
 import { PanelEffectsComponent } from './panel-effects/panel-effects.component';
 import { ManaArrayComponent } from './mana-array/mana-array.component';
 import { extendCardLogic } from './gameLogic/game.card-specifics';
+import { GamePanelComponent } from "./game-panel/game-panel.component";
 
 export interface ICard {
   img: string;
@@ -70,7 +71,8 @@ export interface ISummonOp {
     PanelEffectsComponent,
     HoverTipDirective,
     ManaArrayComponent,
-  ],
+    GamePanelComponent,
+],
   templateUrl: './game.component.html',
   styleUrls: ['./game.component.scss'],
   encapsulation: ViewEncapsulation.None,
@@ -126,7 +128,7 @@ export class GameComponent {
     public bfConfirm: BfConfirmService,
     public growl: BfGrowlService,
   ) {
-    this.shell.showMenu = false;
+    this.shell.gameMode('on');
   }
 
   async ngOnInit() {
@@ -189,7 +191,6 @@ export class GameComponent {
 
 
   // Debugging tools
-  debugPanel = false;
   debugLocations: Array<TCardLocation> = ['stack', 'deck1', 'deck2', 'hand1', 'hand2', 'tble1', 'tble2', 'grav1', 'grav2', 'off'];
   cardFilter(location: TCardLocation) { return this.state.cards.filter(c => c.location === location); }
   debugCard(card: TGameCard) { console.log(card.name, card); }

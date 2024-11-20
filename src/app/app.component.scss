@@ -1,6 +1,6 @@
 .route-container {
   position: fixed;
-  top: 72px;
+  top: 0;  
   left: 0;  
   bottom: 0;
   right: 0;
@@ -11,5 +11,8 @@
 
   &.show-menu {
     left: 70px;
+  }
+  &.show-nav-bar {
+    top: 72px;
   }
 }

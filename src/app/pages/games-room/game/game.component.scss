@@ -1,6 +1,25 @@
 @import 'game.vars.scss';
 
 
+/*
+Resolutions:
+
+2560x1440
+1920x1024
+1600x900
+1024x768
+
+- left panel
+- card width x height
+- table card width x height
+- panels
+
+*/
+
+$left-panel-width: 430px;
+
+
+
 .game {
 
   .left-panel {
@@ -8,7 +27,7 @@
     left: 0;
     top: 0;
     bottom: 0;
-    width: 430px;
+    width: $left-panel-width;
     background: $gray-light;
     display: flex;
     flex-direction: column;
@@ -32,12 +51,15 @@
     }
 
     .player-A, .player-B {
+      flex: 1;
       background: $gray-dark;
       border: 1px solid $gray-light;
       display: flex;
 
       .left {
         flex: 1 0 auto;
+        display: flex;
+        flex-direction: column;
         .deck {
           padding: 5px;
           background-color: $gray-light;
@@ -66,6 +88,8 @@
           }
         }
         .life {
+          flex: 1;
+          align-items: center;
           color: $white-dark;
           font-size: 60px;
           display: flex;

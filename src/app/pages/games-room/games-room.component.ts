@@ -28,7 +28,7 @@ export class GamesRoomComponent {
     public firestore: Firestore,
     public gameState: GameStateService,
   ) {
-    // this.games$.subscribe(g => console.log(g));
+    this.shell.gameMode('off');
   }
 
   goToGame(gameId: string) {
@@ -39,6 +39,7 @@ export class GamesRoomComponent {
   async createNewGame() {
     const newGame = this.generateGame();
     const docRef = await addDoc(collection(this.firestore, 'games'), newGame);
+    await setDoc(doc(this.firestore, 'gamesChat',    docRef.id), newGame);
     await setDoc(doc(this.firestore, 'gamesHistory', docRef.id), newGame);
 
     console.log('New Game Created', newGame);
@@ -52,7 +53,8 @@ export class GamesRoomComponent {
   }
   async deleteGame(gameId: string) {
     await deleteDoc(doc(this.firestore, 'games', gameId));
-    await deleteDoc(doc(this.firestore, 'history', gameId));
+    await deleteDoc(doc(this.firestore, 'gamesChat', gameId));
+    await deleteDoc(doc(this.firestore, 'gamesHistory', gameId));
   }
 
   generateGame() {

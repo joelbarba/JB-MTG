@@ -1,9 +1,11 @@
 <bf-growl-pop-up></bf-growl-pop-up>
 <bf-tooltip></bf-tooltip>
-<bf-app-navbar></bf-app-navbar>
+
+<bf-app-navbar [class.hide]="!shell.showNavBar"></bf-app-navbar>
 <bf-app-menu [class.hide]="!shell.showMenu"></bf-app-menu>
 
 <div class="container-fluid route-container"
-     [class.show-menu]="shell.showMenu">
+     [class.show-menu]="shell.showMenu"
+     [class.show-nav-bar]="shell.showNavBar">
   <router-outlet/>
 </div>
