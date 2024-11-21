@@ -13,7 +13,7 @@
       <div class="combat-col" *ngFor="let col of combatCards">
 
         <!-- Defending Creature -->
-        <div class="panel-card" *ngIf="col.defendingCard" 
+        <!-- <div class="panel-card" *ngIf="col.defendingCard" 
              [class.is-dying]="col.defendingCard.turnDefense <= col.defendingCard.turnDamage"
              [class.selectable-card]="col.defendingCard.selectableAction || col.defendingCard.selectableTarget"
              (click)="selectCard.emit(col.defendingCard)"
@@ -31,10 +31,13 @@
           <span class="attack-defense" *ngIf="col.defendingCard.type === 'creature'">
             <span>{{col.defendingCard.turnAttack + '/' + col.defendingCard.turnDefense}}</span>
           </span>
-        </div>
+        </div> -->
+        <game-card [card]="col.defendingCard" *ngIf="col.defendingCard" 
+                   from="combatDefenderUp" (click)="selectCard.emit(col.defendingCard)">
+        </game-card>
 
         <!-- Empty Slot for defender -->
-        <div class="panel-card empty-slot" *ngIf="!col.defendingCard"
+        <div class="empty-slot" *ngIf="!col.defendingCard"
              [class.is-hidden]="subPhase === 'selectAttack'">
           <img>
           <span class="damage-points" *ngIf="subPhase === 'afterCombat' && col.attackingCard.turnAttack">
@@ -58,7 +61,7 @@
         </div>
 
         <!-- Attacking Creature -->
-        <div class="panel-card" 
+        <!-- <div class="panel-card" 
              [class.is-dying]="col.attackingCard.turnDefense <= col.attackingCard.turnDamage"
              [class.selectable-card]="col.attackingCard.selectableAction || col.attackingCard.selectableTarget"
              (click)="selectCard.emit(col.attackingCard)"
@@ -76,7 +79,10 @@
           <span class="attack-defense" *ngIf="col.attackingCard.type === 'creature'">
             <span>{{col.attackingCard.turnAttack + '/' + col.attackingCard.turnDefense}}</span>
           </span>
-        </div>
+        </div> -->
+        <game-card [card]="col.attackingCard" from="combatAttackerDown"
+                   (click)="selectCard.emit(col.attackingCard)">
+        </game-card>
 
       </div>
     </div>
@@ -96,7 +102,7 @@
            (mouseleave)="hoverCol()">
 
         <!-- Attacking Creature -->
-        <div class="panel-card" 
+        <!-- <div class="panel-card" 
              [class.is-dying]="col.attackingCard.turnDefense <= col.attackingCard.turnDamage"
              [class.selectable-card]="col.attackingCard.selectableAction || col.attackingCard.selectableTarget"
              (click)="selectCard.emit(col.attackingCard)"
@@ -114,7 +120,10 @@
           <span class="attack-defense" *ngIf="col.attackingCard.type === 'creature'">
             <span>{{col.attackingCard.turnAttack + '/' + col.attackingCard.turnDefense}}</span>
           </span>
-        </div>
+        </div> -->
+        <game-card [card]="col.attackingCard" from="combatAttackerUp"
+                   (click)="selectCard.emit(col.attackingCard)">
+        </game-card>
 
         <!-- Damage Arrows -->
         <div class="combat-arrows">
@@ -130,8 +139,32 @@
           </div>
         </div>
 
+        <!-- Empty Slot for defender -->
+        <!-- <div class="panel-card" *ngIf="!col.defendingCard" 
+             [class.empty-slot]="!col.hoverDefender"
+             [class.not-selectable]="!col.isPossibleTarget"
+             (mouseover)="col.hoverDefender && hoverCard.emit(col.hoverDefender)" (mouseleave)="clearHover.emit()">
+          <img [hidden]="col.hoverDefender">
+          <img [hidden]="!col.hoverDefender" [src]="'/assets/images/cards/' + col.hoverDefender?.image">
+          <span class="damage-points" *ngIf="subPhase === 'afterCombat' && col.attackingCard.turnAttack">
+            <span>{{col.attackingCard.turnAttack}}</span>
+            <span class="icon-power"></span>
+          </span>
+          <span class="attack-defense" *ngIf="col.hoverDefender">
+            <span>{{col.hoverDefender.turnAttack + '/' + col.hoverDefender.turnDefense}}</span>
+          </span>
+        </div> -->
+
+        <div class="empty-slot" *ngIf="!col.defendingCard && !col.hoverDefender" 
+             [class.not-selectable]="!col.isPossibleTarget">
+        </div>
+        <game-card [card]="col.hoverDefender" *ngIf="col.hoverDefender" 
+                   [selectable]="false" from="combatDefenderDown">
+        </game-card>
+
+
         <!-- Defending Creature -->
-        <div class="panel-card" *ngIf="col.defendingCard"
+        <!-- <div class="panel-card" *ngIf="col.defendingCard"
              [class.is-dying]="col.defendingCard.turnDefense <= col.defendingCard.turnDamage"
              [class.selectable-card]="col.defendingCard.selectableAction || col.defendingCard.selectableTarget"
              (click)="selectCard.emit(col.defendingCard)"
@@ -149,24 +182,10 @@
           <span class="attack-defense" *ngIf="col.defendingCard.type === 'creature'">
             <span>{{col.defendingCard.turnAttack + '/' + col.defendingCard.turnDefense}}</span>
           </span>
-        </div>
-
-        <!-- Empty Slot for defender -->
-        <div class="panel-card" *ngIf="!col.defendingCard" 
-             [class.empty-slot]="!col.hoverDefender"
-             [class.not-selectable]="!col.isPossibleTarget"
-             (mouseover)="col.hoverDefender && hoverCard.emit(col.hoverDefender)" (mouseleave)="clearHover.emit()">
-          <img [hidden]="col.hoverDefender">
-          <img [hidden]="!col.hoverDefender" [src]="'/assets/images/cards/' + col.hoverDefender?.image">
-          <span class="damage-points" *ngIf="subPhase === 'afterCombat' && col.attackingCard.turnAttack">
-            <span>{{col.attackingCard.turnAttack}}</span>
-            <span class="icon-power"></span>
-          </span>
-          <span class="attack-defense" *ngIf="col.hoverDefender">
-            <span>{{col.hoverDefender.turnAttack + '/' + col.hoverDefender.turnDefense}}</span>
-          </span>
-        </div>
-        <!-- defenderLookingForTarget={{defenderLookingForTarget?.name | json}} -->
+        </div> -->
+        <game-card [card]="col.defendingCard" *ngIf="col.defendingCard"
+                   from="combatDefenderDown" (click)="selectCard.emit(col.defendingCard)">
+        </game-card>
 
       </div>
     </div>

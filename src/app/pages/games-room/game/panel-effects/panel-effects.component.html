@@ -8,26 +8,36 @@
     <div *ngFor="let effect of effectCards">
       <!-- Effect {{effect.id}} ({{effect.scope}}) -->
       <span class="owner-text">{{effect.card?.owner === game.playerANum ? 'Yours' : "Opponent's"}}</span>
-      <div class="panel-card" *ngIf="effect.card"
+      <!-- <div class="panel-card" *ngIf="effect.card"
            [class.selectable-card]="effect.card.selectableAction || effect.card.selectableTarget"
            (click)="selectCard.emit(effect.card); end.emit()"
            (mouseover)="hoverCard.emit(effect.card)" (mouseleave)="clearHover.emit()">
         <img [src]="'/assets/images/cards/' + effect.card.image">
-      </div>
+      </div> -->
+      <game-card *ngIf="effect.card" 
+        [card]="effect.card" 
+        from="panelEffects"
+        (click)="selectCard.emit(effect.card); end.emit()"
+      ></game-card>
     </div>
+
+
   </div>  
 
   <div><span class="icon-arrow-down"></span></div>
 
   <div class="main-card">
     <span class="owner-text">{{card.owner === game.playerANum ? 'Yours' : "Opponent's"}}</span>
-    <div class="panel-card" 
+    <!-- <div class="panel-card" 
         [class.is-dying]="card.turnDefense <= card.turnDamage"
         [class.selectable-card]="card.selectableAction || card.selectableTarget"
         (click)="selectCard.emit(card); end.emit()"
         (mouseover)="hoverCard.emit(card)" (mouseleave)="clearHover.emit()">
       <img [src]="'/assets/images/cards/' + card.image">
-    </div>
+    </div> -->
+    <game-card [card]="card" from="panelEffects"
+               (click)="selectCard.emit(card); end.emit()">
+    </game-card>
   </div>
 
   <div class="btns-box">

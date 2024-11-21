@@ -29,3 +29,36 @@ $dialog-selecting-mana-bg: azure;
 $dialog-spell-stack-bg: honeydew;
 $dialog-combat-bg: ivory;
 $panel-graveyard-bg: azure;
+
+
+// Different resolutions sizes
+/*
+Resolutions: (top brower options ~ 220px)
+
+2560x1440   ---> 
+1920x1024   ---> max-height: 1220px
+1600x900    ---> max-height: 680 
+1024x768    ---> max-height: 550
+
+
+- left panel
+- card width x height
+- table card width x height
+- panels
+
+*/
+// Use it as:   var(--card-width)
+:root {
+  --left-panel-width: 430px;
+  --card-width: 150px;
+  --card-height: 210px;
+  --card-border: 4px;
+}
+@media screen and (max-height: 1220px) {
+  :root {
+    --left-panel-width: 300px;
+    --card-width: 100px;
+    --card-height: 140px;
+  }
+}
+

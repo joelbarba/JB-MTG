@@ -1,0 +1,58 @@
+<div class="game-card empty" [class]="from" [class.back-card]="back" *ngIf="!card"> 
+  <img *ngIf="back"  src="/assets/images/cards/card_back.jpg">
+  <img *ngIf="!back" src="/assets/images/cards/empty.png">
+  <div *ngIf="count !== null" class="deck-count">{{count}}</div>
+</div>
+<div class="game-card" *ngIf="card"
+     [class]="from + ' type-' + card.type"
+     [class.back-card]="back"
+     [class.selectable-card]="selectable && (!!card.selectableAction || !!card.selectableTarget)"
+     [class.is-tapped]="card.isTapped"
+     [class.is-summoning]="card.status === 'summon:waitingMana' || card.status === 'summon:selectingMana' || card.status === 'summon:selectingTargets' || card.status === 'summoning'"
+     [class.is-sick]="card.status === 'sickness'"
+     [class.is-selected-attack]="card.combatStatus === 'combat:attacking'"
+     [class.is-selected-defense]="card.combatStatus === 'combat:defending'"
+     [class.is-dying]="card.type === 'creature' && (card.turnDefense <= card.turnDamage || (shadow && shadow.defense <= shadow.damage))"
+     [class.has-targets]="!!card.targets.length"
+     [hoverTip]="card.selectableAction?.text || ''" tipId="card"     
+     (mouseenter)="!back && game.hoverCard$.next(card)"
+     (mouseleave)="!back && game.hoverCard$.next(null)">
+     
+  <img [src]="'/assets/images/cards/' + (back ? 'card_back.jpg' : card.image)">
+
+  <span class="damage-points" *ngIf="card.turnDamage || shadow?.damage">
+    <span>{{shadow?.damage || card.turnDamage}}</span>
+    <span class="icon-power"></span>
+  </span>
+
+  <span class="attack-defense delta" *ngIf="card.type === 'creature' && shadow?.delta">{{shadow?.delta}}</span>
+  <span class="attack-defense shado" *ngIf="card.type === 'creature' && shadow?.force">{{shadow?.force}}</span>
+  <span class="attack-defense" [class.turn]="shadow?.delta" *ngIf="card.type === 'creature'">
+    {{card.turnAttack + '/' + card.turnDefense}}
+  </span>
+
+  <div *ngIf="card.targetOf?.length || card.targets.length"
+      style="position: absolute; font-size: 11px; top: -17px; left: 0px;">
+    {{card.owner === game.playerANum ? 'Yours' : "Opponent's"}}
+  </div>
+
+  <span class="effects-badge" *ngIf="from !== 'panelEffects' && card.effectsFrom?.length"
+        (click)="game.effectsBadge$.next({ card, ev: $event })"
+        [hoverTip]="'There are ' + card.effectsFrom?.length + ' effects applied on this card'" tipId="badge">
+    <span>{{card.effectsFrom?.length}}</span>
+  </span>
+
+  <div *ngIf="game.debugMode" class="debug-box">
+    gId={{card.gId}}
+    <br/>status={{card.status}}
+    <br/>combatStatus={{card.combatStatus}}
+    <br/>defense={{card.turnDefense}}
+    <br/>damage={{card.turnDamage}}
+  </div>
+</div>
+
+
+
+
+
+

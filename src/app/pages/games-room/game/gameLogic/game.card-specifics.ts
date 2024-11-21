@@ -6,6 +6,7 @@ import { getCards, killDamagedCreatures, moveCard, moveCardToGraveyard, randomId
 
 export const extendCardLogic = (card: TGameCard): TGameCard => {
   const gId = card.gId;
+  if (card.hasOwnProperty('onSummon')) { return card; }
   // The card object when extended is a reference of the nextState at the begining of the reducer
   // so it always points to the cards of the same state is passed on the functions.
   // But to be 100% pure, we should filter the object from the given nextState in every function --> const card = getCard(nextState);
@@ -47,6 +48,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
       const { card, cardPlayer } = getShorts(nextState);
       if (!card.isTapped && card.location.slice(0,4) === 'tble') {
         cardPlayer.manaPool[manaNum] += 1;
+        // if (manaNum === 1) { cardPlayer.manaPool[manaNum] += 1; }
         card.isTapped = true;
       } 
     };

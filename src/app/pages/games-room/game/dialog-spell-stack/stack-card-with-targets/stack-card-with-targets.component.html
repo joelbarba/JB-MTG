@@ -16,21 +16,21 @@
     <span *ngIf="item.targetOf.length" class="icon-arrow-down"></span>
     
     <!-- Target Card -->
-    <div class="panel-card" *ngIf="item.card"
+    <!-- <div class="panel-card" *ngIf="item.card"
          [class.selectable-card]="!!item.card.selectableAction || !!item.card.selectableTarget"
-         [class.is-dying]="item.card.type === 'creature' && item.shadowDefense <= item.shadowDamage"
+         [class.is-dying]="item.card.type === 'creature' && item.shadow.defense <= item.shadow.damage"
          [class.has-targets]="!!item.card.targets.length"
          [class]="item.card.type + '-' + item.card.location"
          (click)="selectCard.emit(item.card)"
          (mouseover)="hoverCard.emit(item.card)" (mouseleave)="clearHover.emit()">
       <img [src]="'/assets/images/cards/' + item.card.image">
-      <span class="damage-points" *ngIf="item.shadowDamage">
-        <span>{{item.shadowDamage}}</span>
+      <span class="damage-points" *ngIf="item.shadow.damage">
+        <span>{{item.shadow.damage}}</span>
         <span class="icon-power"></span>
       </span>
-      <span class="attack-defense delta" *ngIf="item.card.type === 'creature' && item.shadowDelta">{{item.shadowDelta}}</span>
-      <span class="attack-defense shado" *ngIf="item.card.type === 'creature' && item.shadowForce">{{item.shadowForce}}</span>
-      <span class="attack-defense" [class.turn]="item.shadowDelta" *ngIf="item.card.type === 'creature'">{{item.card.turnAttack + '/' + item.card.turnDefense}}</span>
+      <span class="attack-defense delta" *ngIf="item.card.type === 'creature' && item.shadow.delta">{{item.shadow.delta}}</span>
+      <span class="attack-defense shado" *ngIf="item.card.type === 'creature' && item.shadow.force">{{item.shadow.force}}</span>
+      <span class="attack-defense" [class.turn]="item.shadow.delta" *ngIf="item.card.type === 'creature'">{{item.card.turnAttack + '/' + item.card.turnDefense}}</span>
       
       <div *ngIf="item.targetOf.length || item.card.targets.length" style="position: absolute; font-size: 11px; top: -17px; left: 0px;">
         {{item.card.owner === game.playerANum ? 'Yours' : "Opponent's"}}
@@ -39,16 +39,22 @@
         gId={{item.card.gId}}
         <br/>status={{item.card.status}}
         <br/>turnDefense={{item.card.turnDefense}}
-        <br/>shadowDefense={{item.shadowDefense}}
+        <br/>shadowDefense={{item.shadow.defense}}
       </div>
-    </div>
+    </div> -->
+    <game-card [card]="item.card" *ngIf="item.card"
+      from="stack"
+      [shadow]="item.shadow"
+      (click)="selectCard.emit(item.card)"
+      (mouseover)="hoverCard.emit(item.card)" (mouseleave)="clearHover.emit()">
+    </game-card>
 
     <!-- Target Player -->
     <div class="panel-user" *ngIf="item.player" 
          (click)="selectPlayer.emit(item.player)"
          [class.selectable-card]="!!item.player.selectableAction || !!item.player.selectableTarget">
-      <span class="damage-points" *ngIf="item.shadowDamage">
-        <span>{{item.shadowDamage}}</span>
+      <span class="damage-points" *ngIf="item.shadow.damage">
+        <span>{{item.shadow.damage}}</span>
         <span class="icon-power"></span>
       </span>
       <span class="icon-user3"></span>

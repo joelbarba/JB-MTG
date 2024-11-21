@@ -7,6 +7,7 @@ import { ISummonOp, ITargetOp } from '../game.component';
 import { GameStateService } from '../../game-state.service';
 import { TActionParams, TGameCard, TGameState, TPlayer } from '../../../../core/types';
 import { Subscription } from 'rxjs';
+import { GameCardComponent } from "../game-card/game-card.component";
 
 @Component({
   selector: 'panel-graveyard',
@@ -16,16 +17,15 @@ import { Subscription } from 'rxjs';
     BfDnDModule,
     TranslateModule,
     FormsModule,
-    BfUiLibModule,    
-  ],
+    BfUiLibModule,
+    GameCardComponent
+],
   templateUrl: './panel-graveyard.component.html',
   styleUrl: './panel-graveyard.component.scss'
 })
 export class PanelGraveyardComponent {
   @Input({ required: true }) playerLetter!: 'A' | 'B';
   @Output() selectCard  = new EventEmitter<TGameCard>();
-  @Output() hoverCard   = new EventEmitter<any>();
-  @Output() clearHover  = new EventEmitter<any>();
   @Output() end         = new EventEmitter<any>();
   minimized = false;
   stateSub!: Subscription;

@@ -9,6 +9,7 @@ import { ESubPhase, TActionParams, TGameCard, TGameState } from '../../../../cor
 import { Subscription } from 'rxjs';
 import { HoverTipDirective } from '../../../../core/common/internal-lib/bf-tooltip/bf-tooltip.directive';
 import { extendCardLogic } from '../gameLogic/game.card-specifics';
+import { GameCardComponent } from "../game-card/game-card.component";
 
 type TCol = {
   attackingCard: TGameCard;
@@ -27,8 +28,8 @@ type TCol = {
     TranslateModule,
     FormsModule,
     BfUiLibModule,
-    HoverTipDirective,
-  ],
+    GameCardComponent,
+],
   templateUrl: './dialog-combat.component.html',
   styleUrl: './dialog-combat.component.scss'
 })

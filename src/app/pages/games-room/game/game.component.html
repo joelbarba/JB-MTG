@@ -3,15 +3,23 @@
     <div class="player-B">
 
       <div class="left">
-        <div class="deck">
-          <div class="deck-card">
+        <div class="deck">          
+          <!-- <div class="deck-card">
             <img [src]="'/assets/images/cards/card_back.jpg'">
             <div class="deck-count">{{deckBCount}}</div>
           </div>
           <div class="grav-card" [class.empty]="!topGravB" (click)="graveyardPanel = graveyardPanel === 'B' ? null : 'B'">
             <img *ngIf="topGravB" [src]="'/assets/images/cards/' + topGravB.image">
             <img *ngIf="!topGravB" [src]="'/assets/images/cards/empty.png'">
-          </div>
+          </div> -->
+          <game-card [card]="null" from="deckB"
+                     [back]="true"
+                     [count]="deckBCount">
+          </game-card>
+          <game-card [card]="topGravB" from="gravB"
+                    [class.empty]="!topGravB"
+                    (click)="graveyardPanel = graveyardPanel === 'B' ? null : 'B'">
+          </game-card>
         </div>
   
         <div class="life" 
@@ -51,14 +59,26 @@
         </div>
 
         <div class="deck">
-          <div class="deck-card" [class.selectable-card]="canIDraw" (click)="drawCard()">
+          <!-- <div class="deck-card" [class.selectable-card]="canIDraw" (click)="drawCard()">
             <img [src]="'/assets/images/cards/card_back.jpg'">
             <div class="deck-count">{{deckACount}}</div>
-          </div>
-          <div class="grav-card" [class.empty]="!topGravA" (click)="graveyardPanel = graveyardPanel === 'A' ? null : 'A'">
+          </div> -->
+          <game-card [card]="null" from="deckA"
+                     [back]="true"
+                     [count]="deckACount"
+                     [class.selectable]="canIDraw"
+                     (click)="drawCard()">
+          </game-card>
+
+
+          <!-- <div class="grav-card" [class.empty]="!topGravA" (click)="graveyardPanel = graveyardPanel === 'A' ? null : 'A'">
             <img *ngIf="topGravA" [src]="'/assets/images/cards/' + topGravA.image">
             <img *ngIf="!topGravA" [src]="'/assets/images/cards/empty.png'">
-          </div>
+          </div> -->
+          <game-card [card]="topGravA" from="gravA"
+                     [class.empty]="!topGravA"
+                     (click)="graveyardPanel = graveyardPanel === 'A' ? null : 'A'">
+          </game-card>
         </div>
 
       </div>
@@ -101,16 +121,18 @@
           <span [class.hide]="!isHandBExp" class="icon-arrow-up22"></span>
         </div>
         <div *ngIf="!handB.length" class="no-cards">No Cards on the Hand</div>
-        <div *ngFor="let card of handB" class="hand-card" [class.back-card]="true">
+
+        <!-- <div *ngFor="let card of handB" class="hand-card" [class.back-card]="true">
           <img [src]="'/assets/images/cards/card_back.jpg'">
-        </div>
+        </div> -->
+        <game-card *ngFor="let card of handB" [card]="card" from="handB" [back]="true"></game-card>
       </div>
 
       <div class="play-box"
            bfDropContainer
           (bfDrop)="moveCardPosition($event)" 
           (dblclick)="autoPositionGameCards()">
-        <div *ngFor="let card of displayTableB"
+        <!-- <div *ngFor="let card of displayTableB"
               class="play-card"
               [class.selectable-card]="!!card.selectableAction || !!card.selectableTarget"
               [class.is-tapped]="card.isTapped"
@@ -137,10 +159,20 @@
           </span>
           <div *ngIf="game.debugMode" style="position: absolute; bottom: 30px; margin-left: 5px; color: white; background: black;">
             gId={{card.gId}}
-            <!-- <br/>status={{card.status}} -->
+            <br/>status={{card.status}}
             <br/>damage={{card.turnDamage}}
           </div>
-        </div>
+        </div> -->
+        <game-card *ngFor="let card of displayTableB" [card]="card" from="tbleB"
+          [style.left.px]="card.posX"
+          [style.top.px]="card.posY"
+          [style.z-index]="card.zInd"
+          [bfDraggable]="card"
+          (dragstart)="dragStart($event, card)"
+          (click)="selectCardFromTable(card)"
+          (mouseenter)="game.hoverCard$.next(card)"
+          (mouseleave)="game.hoverCard$.next(null)">
+        </game-card>
 
 
         <!-- ----------------------------- Info Box ----------------------------- -->
@@ -193,9 +225,10 @@
           <span [class.hide]="isHandAExp" class="icon-arrow-down22"></span>
           <span [class.hide]="!isHandAExp" class="icon-arrow-up22"></span>
         </div>
-        <div *ngIf="!handA.length" class="no-cards">No Cards on your Hand</div>
-        <div *ngFor="let card of handA" 
-             class="hand-card" [class.selectable-card]="isHandCardSelectable(card)"
+        <div *ngIf="!handA.length" class="no-cards">No Cards on your Hand</div>        
+        <!-- <div *ngFor="let card of handA" 
+             class="hand-card"
+             [class.selectable-card]="isHandCardSelectable(card)"
              [class.is-summoning]="!!card.status"
              (click)="selectCardFromYourHand(card)"
              [hoverTip]="card.selectableAction?.text || ''"
@@ -204,11 +237,16 @@
           <img [src]="'/assets/images/cards/' + card.image">
           <div *ngIf="game.debugMode" style="position: absolute; bottom: 60px; margin-left: 5px; color: white; background: black;">
             gId={{card.gId}}
-            <!-- <br/>action={{card.selectableAction?.action}} -->
             <br/>status={{card.status}}
             <br/>combatStatus={{card.combatStatus}}
           </div>
-        </div>
+        </div> -->
+        <game-card *ngFor="let card of handA"  [card]="card" from="handA"
+          (click)="selectCardFromYourHand(card)"
+          [hoverTip]="card.selectableAction?.text || ''"
+          (mouseenter)="game.hoverCard$.next(card)"
+          (mouseleave)="game.hoverCard$.next(null)">
+        </game-card>
       </div>
 
       <div class="play-box"
@@ -218,7 +256,7 @@
 
         <!-- isDragging={{bfDnD.isDragging}} -->
         <!-- activeContainer={{bfDnD.activeContainer | json}} -->
-        <div *ngFor="let card of displayTableA" 
+        <!-- <div *ngFor="let card of displayTableA" 
              class="play-card"
              [class.selectable-card]="!!card.selectableAction || !!card.selectableTarget"
              [class.is-tapped]="card.isTapped"
@@ -250,9 +288,20 @@
             gId={{card.gId}}
             <br/>status={{card.status}}
             <br/>combatStatus={{card.combatStatus}}
-            <!-- <br/>damage={{card.turnDamage}} -->
+            <br/>damage={{card.turnDamage}}
           </div>
-        </div>
+        </div> -->
+        <game-card *ngFor="let card of displayTableA" [card]="card" from="tbleA"
+          [style.left.px]="card.posX"
+          [style.top.px]="card.posY"
+          [style.z-index]="card.zInd"
+          [bfDraggable]="card"
+          (dragstart)="dragStart($event, card)"
+          (click)="selectCardFromTable(card)"
+          (mouseenter)="game.hoverCard$.next(card)"
+          (mouseleave)="game.hoverCard$.next(null)">
+        </game-card>
+
       </div>
 
     </div>
@@ -262,8 +311,6 @@
   <panel-graveyard *ngIf="graveyardPanel"
     [playerLetter]="graveyardPanel"
     (selectCard)="selectCard($event)"
-    (hoverCard)="hoverCard($event)"
-    (clearHover)="clearHover()"
     (end)="graveyardPanel = null">
   </panel-graveyard>
 
@@ -282,15 +329,15 @@
   </div>
 
   <!-- Dialog: Selecting Mana (cherry pick on summoning) -->
-  <dialog-selecting-mana *ngIf="summonOp.status === 'selectingMana'" [summonOp]="summonOp"></dialog-selecting-mana>
+  <dialog-selecting-mana 
+    *ngIf="summonOp.status === 'selectingMana'" 
+    [summonOp]="summonOp">
+  </dialog-selecting-mana>
 
   <dialog-combat 
     *ngIf="combatPanel"
     [attacker]="combatPanelAttacker"    
-    (selectCard)="selectCard($event)"    
-    (hoverCard)="hoverCard($event)"
-    (clearHover)="clearHover()"
-    (selectEffects)="selectEffectsBadge($event)"
+    (selectCard)="selectCard($event)"
     (end)="combatPanel = false">
   </dialog-combat>
 
@@ -298,8 +345,6 @@
   <panel-effects *ngIf="effectsPanelCard"
     [card]="effectsPanelCard"
     (selectCard)="selectCard($event)"
-    (hoverCard)="hoverCard($event)"
-    (clearHover)="clearHover()"
     (end)="effectsPanelCard = null">
   </panel-effects>
 
@@ -309,8 +354,6 @@
     [panelSize]="spellStackPanelSize"
     (selectCard)="selectCard($event)"
     (selectPlayer)="selectPlayer($event)"
-    (hoverCard)="hoverCard($event)"
-    (clearHover)="clearHover()"
     (end)="spellStackPanel = false" >
   </dialog-spell-stack>
   <!-- spellStackPanelSize={{spellStackPanelSize}} -->

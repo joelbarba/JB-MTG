@@ -87,24 +87,25 @@ export class GamesRoomComponent {
       getCardById('c000005'), // Forest
       getCardById('c000011'), // Sol Ring
       getCardById('c000009'), // Mox Ruby
+      getCardById('c000001'), // Island
+      getCardById('c000001'), // Island
+      getCardById('c000038'), // Counter Spell
+      getCardById('c000038'), // Counter Spell
+      getCardById('c000032'), // lightning bolt
       getCardById('c000009'), // Mox Ruby
       getCardById('c000046'), // Granite Gargoyle (2/2)      
       getCardById('c000052'), // Mons's Goblin Raiders (1/1)
-      // getCardById('c000028'), // Drudge Skeletons
-      // getCardById('c000002'), // Plains
+      getCardById('c000028'), // Drudge Skeletons
+      getCardById('c000002'), // Plains
+      getCardById('c000055'), // Unholy Strength
+      getCardById('c000057'), // Disenchantment
       // getCardById('c000055'), // Unholy Strength
       // getCardById('c000057'), // Disenchantment
-      // getCardById('c000055'), // Unholy Strength
-      // getCardById('c000057'), // Disenchantment
-      // getCardById('c000032'), // Lightning Bolt
+      getCardById('c000032'), // Lightning Bolt
       getCardById('c000056'), // Wall of Ice (0/7)
       getCardById('c000041'), // Elvish Archers (2/1)
       getCardById('c000027'), // Dark Ritual
-      // getCardById('c000001'), // Island
-      // getCardById('c000001'), // Island
-      // getCardById('c000038'), // Counter Spell
-      // getCardById('c000038'), // Counter Spell
-      // getCardById('c000032'), // lightning bolt
+
       getCardById('c000005'), // Forest
       getCardById('c000003'), // Swamp
       getCardById('c000044'), // Giant Spider (2/4)      

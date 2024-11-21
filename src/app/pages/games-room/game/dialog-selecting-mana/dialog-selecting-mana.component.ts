@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { BfConfirmService, BfDnDModule, BfDnDService, BfUiLibModule } from '@blueface_npm/bf-ui-lib';
 import { ISummonOp } from '../game.component';
+import { GameCardComponent } from "../game-card/game-card.component";
+import { ManaArrayComponent } from "../mana-array/mana-array.component";
 
 @Component({
   selector: 'dialog-selecting-mana',
@@ -13,8 +15,10 @@ import { ISummonOp } from '../game.component';
     BfDnDModule,
     TranslateModule,
     FormsModule,
-    BfUiLibModule,    
-  ],
+    BfUiLibModule,
+    GameCardComponent,
+    ManaArrayComponent,
+],
   templateUrl: './dialog-selecting-mana.component.html',
   styleUrl: './dialog-selecting-mana.component.scss'
 })

@@ -19,6 +19,7 @@ import { PanelEffectsComponent } from './panel-effects/panel-effects.component';
 import { ManaArrayComponent } from './mana-array/mana-array.component';
 import { extendCardLogic } from './gameLogic/game.card-specifics';
 import { GamePanelComponent } from "./game-panel/game-panel.component";
+import { GameCardComponent } from "./game-card/game-card.component";
 
 export interface ICard {
   img: string;
@@ -44,17 +45,6 @@ export interface ISummonOp {
   cancel: () => void
 }
 
-
-// export type TPanel =
-//   'selecting-mana'
-// | 'selecting-discard'
-// | 'summon-event-A'
-// | 'summon-event-B'
-// | 'combat-A'
-// | 'combat-B'
-// | 'spell-stack';
-
-
 @Component({
   selector: 'app-game',
   standalone: true,
@@ -72,6 +62,7 @@ export interface ISummonOp {
     HoverTipDirective,
     ManaArrayComponent,
     GamePanelComponent,
+    GameCardComponent
 ],
   templateUrl: './game.component.html',
   styleUrls: ['./game.component.scss'],
@@ -136,6 +127,22 @@ export class GameComponent {
     console.log('Entering Game ID', gameId);
     await this.game.activateGame(gameId);
 
+    this.subs.push(this.game.hoverCard$.subscribe(hoveringCard => {
+      if (hoveringCard) {
+        this.fullCardImg = hoveringCard.image;
+        // this.itemInfo = hoveringCard.selectableAction?.text || '';
+      } else {
+        // this.itemInfo = '';
+      }
+    }));
+    this.subs.push(this.game.effectsBadge$.subscribe(item => {
+      this.effectsPanelCard = item.card;
+      if (item.ev) { item.ev.stopPropagation(); }
+    }));
+
+
+
+
     this.subs.push(this.game.state$.subscribe(state => { // React on state changes
       this.stateTime = new Date();
       this.mainInfo = '';
@@ -185,6 +192,7 @@ export class GameComponent {
   }
 
   ngOnDestroy() {
+    this.game.deactivateGame();
     this.subs.forEach(sub => sub.unsubscribe());
   }
 
@@ -303,11 +311,8 @@ export class GameComponent {
     // Always skip maintenance (for now)
     if (this.state.phase === 'maintenance') { return advancePhase(); }
 
-    // Automatically draw if you can't only draw 1 card
-    if (this.state.phase === 'draw' && options.filter(o => o.action === 'draw').length === 1) { return advancePhase(() => this.game.action('draw')); }
-
-    // Don't stop at the draw pahse if you can't draw more cards
-    if (this.state.phase === 'draw' && !options.find(o => o.action === 'draw')) { return advancePhase(); }
+    // Automatically draw if you can only draw 1 card
+    // if (this.state.phase === 'draw' && options.filter(o => o.action === 'draw').length === 1) { return advancePhase(() => this.game.action('draw')); }
 
     if (this.state.phase === 'combat') {
       const selectableAttackingCreatures = !!options.find(o => o.action === 'select-attacking-creature');
@@ -345,19 +350,22 @@ export class GameComponent {
     if (reason === 'player1win' && this.game.playerANum === '2') { modalConf.htmlContent = `Sorry, you lost this game.`; }
     if (reason === 'player2win' && this.game.playerANum === '1') { modalConf.htmlContent = `Sorry, you lost this game.`; }
     modalConf.htmlContent += `<br/><br/>Go back to play more games`;
-    this.bfConfirm.open(modalConf).then(_ => this.router.navigate(['game']));
+    this.bfConfirm.open(modalConf).then(_ => {
+      this.game.deactivateGame();
+      this.router.navigate(['game']);
+    });
   }
 
 
 
-  hoverHandCard(card: TGameCard) { this.hoverCard(card); }
-  hoverTableCard(card: TGameCard) { this.hoverCard(card); }
+  // hoverHandCard(card: TGameCard) { this.hoverCard(card); }
+  // hoverTableCard(card: TGameCard) { this.hoverCard(card); }
   hoverCard(card: TGameCard) {
-    this.fullCardImg = card.image;
-    this.itemInfo = card.selectableAction?.text || '';
+  //   this.fullCardImg = card.image;
+  //   this.itemInfo = card.selectableAction?.text || '';
   }
   clearHover() {
-    this.itemInfo = '';
+  //   this.itemInfo = '';
   }
 
 
@@ -595,7 +603,7 @@ export class GameComponent {
     manaLeft    : [0, 0, 0, 0, 0, 0] as TCast,
     manaReserved: [0, 0, 0, 0, 0, 0] as TCast,
     reserveMana: (poolNum: number) => {
-      if (this.summonOp.manaLeft[poolNum] > 0) { // Use it as colored mana
+      if (poolNum > 0 && this.summonOp.manaLeft[poolNum] > 0) { // Use it as colored mana
         this.summonOp.manaLeft[poolNum] -= 1;
         this.summonOp.manaReserved[poolNum] += 1;
       }
@@ -787,10 +795,7 @@ export class GameComponent {
     }
   }
 
-  selectEffectsBadge(card: TGameCard, ev?: MouseEvent) {
-    this.effectsPanelCard = card;
-    if (ev) { ev.stopPropagation(); }
-  }
+
 
   selectCardFromTable(card: TExtGameCard) {
     this.focusPlayCard(card);

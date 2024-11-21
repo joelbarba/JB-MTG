@@ -8,6 +8,7 @@ import { GameStateService } from '../../../game-state.service';
 import { TActionParams, TGameCard, TGameState, TPlayer } from '../../../../../core/types';
 import { Subscription } from 'rxjs';
 import { TStackTree } from '../dialog-spell-stack.component';
+import { GameCardComponent } from "../../game-card/game-card.component";
 
 @Component({
   selector: 'stack-card-with-targets',
@@ -17,8 +18,9 @@ import { TStackTree } from '../dialog-spell-stack.component';
     BfDnDModule,
     TranslateModule,
     FormsModule,
-    BfUiLibModule,    
-  ],
+    BfUiLibModule,
+    GameCardComponent,
+],
   templateUrl: './stack-card-with-targets.component.html',
   styleUrl: './stack-card-with-targets.component.scss'
 })

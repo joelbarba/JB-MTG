@@ -20,13 +20,6 @@
   right: calc(50% - 400px);
   bottom: calc(50% - 200px);
 
-  .panel-card {
-    padding: 3px;
-    border: 1px solid black;
-    background: white;
-    border-radius: 5px;
-    img { max-height: 200px; }
-  }
   .mana-count { 
     padding: 0 30px;
     display: flex;

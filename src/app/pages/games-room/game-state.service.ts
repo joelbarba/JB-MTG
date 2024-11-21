@@ -36,6 +36,12 @@ export class GameStateService {
   debugMode = false;
   debugPanel = false;
 
+
+  // This is to interact accross game components (should be in an independent service actually)
+  hoverCard$ = new Subject<TGameCard | null>;
+  effectsBadge$ = new Subject<{ card: TGameCard, ev: MouseEvent }>;
+
+
   playerA = () => this.playerANum === '1' ? this.state.player1 : this.state.player2;
   playerB = () => this.playerBNum === '1' ? this.state.player1 : this.state.player2;
 
@@ -312,7 +318,7 @@ export class GameStateService {
 
   private discardCard(nextState: TGameState, gId: string) {
     const card = nextState.cards.find(c => c.gId === gId);
-    if (card && card.onDiscard) { card.onDiscard(nextState); }
+    if (card) { extendCardLogic(card).onDiscard(nextState); }
   }
 
   private burnMana(nextState: TGameState) {

@@ -44,14 +44,17 @@ $arrows-color: $text-color;
     align-items: center;
     position: relative;
   }
-  .panel-card {
-    padding: 3px;
-    border: 1px solid black;
-    background: white;
-    border-radius: 5px;
+  game-card {
     margin: 7.5px;
-    img { max-height: 200px; }
   }
+  // .panel-card {
+  //   padding: 3px;
+  //   border: 1px solid black;
+  //   background: white;
+  //   border-radius: 5px;
+  //   margin: 7.5px;
+  //   img { max-height: 200px; }
+  // }
   .owner-text {
     position: relative;
     top: 10px;

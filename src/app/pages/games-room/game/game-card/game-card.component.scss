@@ -1,0 +1,196 @@
+@import 'variables';
+@import '../game.vars.scss';
+
+
+.game-card {
+  position: relative;
+  padding: calc(var(--card-border) - 1px);
+  border: 1px solid black;
+  background: white;
+  border-radius: 5px;
+  transition-duration: 150ms;
+  img {
+    position: absolute;
+    top    : calc(var(--card-border));
+    left   : calc(var(--card-border));
+    right  : calc(var(--card-border));
+    bottom : calc(var(--card-border));
+    height : calc(100% - calc(var(--card-border) * 2));
+    width  : calc(100% - calc(var(--card-border) * 2));
+  }
+
+  // Default size
+  width: var(--card-width);   // 150
+  height: var(--card-height); // 210
+
+
+  .damage-points {
+    position: absolute;
+    left: calc(50% - 30px);
+    top: 20px;
+    font-size: 60px;
+    font-weight: 600;
+    -webkit-text-stroke: 2px #fff;
+    color: red;
+    .icon-power { font-size: 30px; }
+  }
+
+  .attack-defense {
+    position: absolute;
+    right: 9px;
+    bottom: -5px;
+    text-align: center;
+    font-size: 40px;
+    font-weight: 600;
+    -webkit-text-stroke: 2px #000000;
+    color: #ffffff;
+  }
+
+  .effects-badge {
+    position: absolute;
+    right: 0;
+    left: 0;
+    top: -12px;
+    text-align: center;
+    span {
+      font-size: 16px;
+      font-weight: 500;
+      color: #ffffff;
+      background: orange;
+      border-radius: 4px;
+      padding: 2px 12px;
+      cursor: pointer;
+    }
+  }
+
+  .deck-count {
+    position: absolute;
+    bottom: 33px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 30px;
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  .debug-box {
+    position: absolute;
+    bottom: 30px;
+    margin-left: 5px;
+    color: white;
+    background: black;
+  }
+
+  &.selectable-card {
+    cursor: pointer;
+    box-shadow: 0px 0px 3px 3px #009688;
+    &:hover {
+      // background-color: #00ff2d75 !important;
+      // border-color: #00ff2d75 !important;
+      box-shadow: 0px 0px 3px 3px #FFEB3B;
+    }
+  }
+
+
+  &.is-sick { opacity: 0.35; } // for summon sickness (creatures)
+  &.is-hidden { opacity: 0; }
+  &.empty { background: black; }
+
+  
+  // HAND Location specific styles:
+  &.handA, &.handB {
+    &.is-summoning { // hand card waiting for cast mana
+      opacity: 0.5;
+      transform: translateY(-20px);
+    }
+    .attack-defense { display: none; }
+  } 
+
+  // TABLE Location specific styles:
+  &.tbleA, &.tbleB { 
+  // Smaller size for the table
+    max-width: calc(var(--card-width) * 0.81);    // 121
+    max-height: calc(var(--card-height) * 0.81);  // 170
+    &.is-selected-attack, &.is-selected-defense {  display: none; } // table card when seleced for combat
+    &.is-tapped {
+      // transform-origin: center;
+      margin-left: 30px !important;
+      transform: rotate(90deg);
+    }
+  }
+
+  // GRAVEYARD Location specific styles:
+  &.gravA, &.gravB {
+    opacity: 0.5;
+    // &.empty { background: black; }
+    cursor: pointer;
+    .damage-points { display: none; }
+    .attack-defense { display: none; }
+  }
+  &.panelGrav {
+    .damage-points { display: none; }
+    .attack-defense { display: none; }
+  }
+
+  // STACK Location specific styles:
+  &.stack {
+    &.is-dying { box-shadow: 0px 0px 9px 9px #F44336; }
+    &.has-targets:not(.selectable-card) {
+      &.type-sorcery, &.type-interruption, &.type-enchantment {
+        box-shadow: 0px 0px 15px 5px #87c96c;
+        animation-duration: 1.8s;
+        animation-iteration-count: infinite;
+        animation-name: casting-bg-ani;
+        @keyframes casting-bg-ani {
+          0%    { box-shadow: 0px 0px 15px 5px #87c96c; }
+          50%   { box-shadow: 0px 0px  5px 2px #87c96c; }
+        }
+      }
+    }
+    .attack-defense {
+      animation-duration: 2s;
+      animation-iteration-count: infinite;
+      &.delta {
+        animation-name: attack-defense-delta-ani;
+        @keyframes attack-defense-delta-ani {
+          0%    { bottom: 60px; opacity: 1; }
+          70%   { bottom: -5px; opacity: 0.1; }
+          100%  { bottom: -5px; opacity: 0; }
+        }
+      }
+      &.turn {
+        animation-name: attack-defense-turn-ani;
+        @keyframes attack-defense-turn-ani {
+          0%    { opacity: 1; }
+          30%   { opacity: 1; }
+          80%   { opacity: 0; }
+          100%  { opacity: 0; }
+        }
+      }
+      &.shado {
+        animation-name: attack-defense-shadow-ani;
+        @keyframes attack-defense-shadow-ani {
+          0%    { opacity: 0; }
+          30%   { opacity: 0; }
+          80%   { opacity: 1; }
+          100%  { opacity: 1; }
+        }
+      }
+    }
+  }
+}
+
+
+
+
+
+
+
+:host {
+  display: block;
+  .game-card.back-card  {
+    background-color: black; 
+    border: none;
+    // margin: 3.5px 5px;
+  }
+}

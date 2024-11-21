@@ -14,10 +14,11 @@ export type TStackTree = {
   card: TGameCard | null,
   player: TPlayer | null,
   targetOf: Array<TStackTree>,
-  shadowDamage: number,
-  shadowDefense: number;  // turnDefense (after the stack runs)
-  shadowForce: string;  // (4/4) Future Attack/Defense (after the stack runs)
-  shadowDelta: string;  // (+3/-2) Difference between real turnAttack/defense and shadowAttack/defense
+  shadow: { damage: number, defense: number, force: string, delta: string };
+  // shadowDamage: number,
+  // shadowDefense: number;  // turnDefense (after the stack runs)
+  // shadowForce: string;  // (4/4) Future Attack/Defense (after the stack runs)
+  // shadowDelta: string;  // (+3/-2) Difference between real turnAttack/defense and shadowAttack/defense
 };
 
 @Component({
@@ -149,11 +150,11 @@ export class DialogSpellStackComponent {
 
       if (target === 'player1' || target === 'player2') {
         const player = target === 'player1' ? state.player1 : state.player2;
-        return { card: null, player, targetOf, shadowDamage: 0, shadowDefense: 0, shadowForce: '', shadowDelta: '' };
+        return { card: null, player, targetOf, shadow: { damage: 0, defense: 0, force: '', delta: '' }};
 
       } else {
         const card = state.cards.find(c => c.gId === target) || null;
-        return { card, player: null, targetOf, shadowDamage: 0, shadowDefense: 0, shadowForce: '', shadowDelta: '' };
+        return { card, player: null, targetOf, shadow: { damage: 0, defense: 0, force: '', delta: '' }};
       }
     }
     this.rootTargets = Array.from(rootTargets).sort((a,b) => a > b ? 1:-1).map((target: string) => expandTreeCard(target));
@@ -167,23 +168,23 @@ export class DialogSpellStackComponent {
     this.rootTargets.filter(i => !!i.card).forEach(item => {
       const fakeMatch = fakeState.cards.find(c => c.gId === item.card?.gId);
       if (fakeMatch && item.card) {
-        item.shadowDamage = fakeMatch.turnDamage || 0;
-        item.shadowDefense = fakeMatch.turnDefense;
+        item.shadow.damage = fakeMatch.turnDamage || 0;
+        item.shadow.defense = fakeMatch.turnDefense;
 
         if (item.card.turnAttack !== fakeMatch.turnAttack || item.card.turnDefense !== fakeMatch.turnDefense) {
-          item.shadowForce = `${fakeMatch.turnAttack}/${fakeMatch.turnDefense}`;
+          item.shadow.force = `${fakeMatch.turnAttack}/${fakeMatch.turnDefense}`;
           const deltaA = fakeMatch.turnAttack - item.card.turnAttack;
           const deltaD = fakeMatch.turnDefense - item.card.turnDefense;
           if (deltaA !== 0 || deltaD !== 0) {
-            item.shadowDelta = (deltaA > 0 ? '+' : '') + deltaA + '/' + (deltaD > 0 ? '+' : '') + deltaD;
+            item.shadow.delta = (deltaA > 0 ? '+' : '') + deltaA + '/' + (deltaD > 0 ? '+' : '') + deltaD;
           }
         }
 
       }
     });
     this.rootTargets.filter(i => !!i.player).forEach(item => {
-      if (item.player?.num === '1') { item.shadowDamage = state.player1.life - fakeState.player1.life; }
-      if (item.player?.num === '2') { item.shadowDamage = state.player2.life - fakeState.player2.life; }
+      if (item.player?.num === '1') { item.shadow.damage = state.player1.life - fakeState.player1.life; }
+      if (item.player?.num === '2') { item.shadow.damage = state.player2.life - fakeState.player2.life; }
     });
 
 

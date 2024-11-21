@@ -1,25 +1,6 @@
 @import 'game.vars.scss';
 
 
-/*
-Resolutions:
-
-2560x1440
-1920x1024
-1600x900
-1024x768
-
-- left panel
-- card width x height
-- table card width x height
-- panels
-
-*/
-
-$left-panel-width: 430px;
-
-
-
 .game {
 
   .left-panel {
@@ -27,7 +8,7 @@ $left-panel-width: 430px;
     left: 0;
     top: 0;
     bottom: 0;
-    width: $left-panel-width;
+    width: var(--left-panel-width);
     background: $gray-light;
     display: flex;
     flex-direction: column;
@@ -65,27 +46,30 @@ $left-panel-width: 430px;
           background-color: $gray-light;
           display: flex;
           justify-content: space-between;
-          .deck-card, .grav-card {
-            padding: 3px;
-            position: relative;
-            border: 1px solid black;
-            background: white;
-            border-radius: 5px;
-            cursor: pointer;
-            img { max-height: 200px; }
-            &.empty { background-color: black; }
-            &.deck-card { background-color: black; }
-            &.grav-card { opacity: 0.5; }
-            .deck-count {
-              position: absolute;
-              bottom: 32px;
-              left: 0;
-              right: 0;
-              text-align: center;
-              font-size: 30px;
-              color: rgba(255, 255, 255, 0.5);
-            }
+          game-card {
+            &.selectable { cursor: pointer; }
           }
+          // .deck-card, .grav-card {
+          //   padding: 3px;
+          //   position: relative;
+          //   border: 1px solid black;
+          //   background: white;
+          //   border-radius: 5px;
+          //   cursor: pointer;
+          //   img { max-height: 200px; }
+          //   &.empty { background-color: black; }
+          //   &.deck-card { background-color: black; }
+          //   &.grav-card { opacity: 0.5; }
+          //   .deck-count {
+          //     position: absolute;
+          //     bottom: 32px;
+          //     left: 0;
+          //     right: 0;
+          //     text-align: center;
+          //     font-size: 30px;
+          //     color: rgba(255, 255, 255, 0.5);
+          //   }
+          // }
         }
         .life {
           flex: 1;
@@ -141,7 +125,7 @@ $left-panel-width: 430px;
 
   .board-panel {
     position: absolute;
-    left: 430px;
+    left: var(--left-panel-width);
     right: 0;
     top: 0;
     bottom: 0;
@@ -218,17 +202,18 @@ $left-panel-width: 430px;
         }
 
         display: flex;
-        .hand-card {
-          flex: 1;
-          margin: 2.5px 4px;
-          padding: 3px;
-          border: 1px solid black;
-          background: white;
-          border-radius: 5px;
-          &.back-card { background-color: black; border: none; margin: 3.5px 5px; }
-          img { max-height: 200px; }
-          transition-duration: 150ms;
-        }
+        game-card { margin: 2.5px 4px; }
+        // .hand-card {
+        //   flex: 1;
+        //   margin: 2.5px 4px;
+        //   padding: 3px;
+        //   border: 1px solid black;
+        //   background: white;
+        //   border-radius: 5px;
+        //   &.back-card { background-color: black; border: none; margin: 3.5px 5px; }
+        //   img { max-height: 200px; }
+        //   transition-duration: 150ms;
+        // }
       }
 
       .play-box {
@@ -238,51 +223,52 @@ $left-panel-width: 430px;
         top: 0;
         bottom: 0;
         padding: 15px;
-        .play-card {
-          position: absolute;
-          margin: 2.5px 4px;
-          padding: 3px;
-          border: 1px solid black;
-          background: white;
-          border-radius: 5px;
-          img { max-height: 160px; }
-          .damage-points {
-            position: absolute;
-            left: calc(50% - 30px);
-            top: 20px;
-            font-size: 60px;
-            font-weight: 600;
-            -webkit-text-stroke: 2px #fff;
-            color: red;
-            .icon-power { font-size: 30px; }
-          }
-          .attack-defense {
-            position: absolute;
-            right: 9px;
-            bottom: -5px;
-            text-align: center;
-            font-size: 40px;
-            font-weight: 600;
-            -webkit-text-stroke: 2px #000000;
-            color: #ffffff;
-          }
-          .effects-badge {
-            position: absolute;
-            right: 0;
-            left: 0;
-            top: -12px;
-            text-align: center;
-            span {
-              font-size: 16px;
-              font-weight: 500;
-              color: #ffffff;
-              background: orange;
-              border-radius: 4px;
-              padding: 2px 12px;
-              cursor: pointer;
-            }
-          }
-        }
+        game-card { position: absolute; }
+        // .play-card {
+        //   position: absolute;
+        //   margin: 2.5px 4px;
+        //   padding: 3px;
+        //   border: 1px solid black;
+        //   background: white;
+        //   border-radius: 5px;
+        //   img { max-height: 160px; }
+        //   .damage-points {
+        //     position: absolute;
+        //     left: calc(50% - 30px);
+        //     top: 20px;
+        //     font-size: 60px;
+        //     font-weight: 600;
+        //     -webkit-text-stroke: 2px #fff;
+        //     color: red;
+        //     .icon-power { font-size: 30px; }
+        //   }
+        //   .attack-defense {
+        //     position: absolute;
+        //     right: 9px;
+        //     bottom: -5px;
+        //     text-align: center;
+        //     font-size: 40px;
+        //     font-weight: 600;
+        //     -webkit-text-stroke: 2px #000000;
+        //     color: #ffffff;
+        //   }
+        //   .effects-badge {
+        //     position: absolute;
+        //     right: 0;
+        //     left: 0;
+        //     top: -12px;
+        //     text-align: center;
+        //     span {
+        //       font-size: 16px;
+        //       font-weight: 500;
+        //       color: #ffffff;
+        //       background: orange;
+        //       border-radius: 4px;
+        //       padding: 2px 12px;
+        //       cursor: pointer;
+        //     }
+        //   }
+        // }
       }
 
     }
@@ -348,32 +334,32 @@ $left-panel-width: 430px;
   }
 }
 
-.selectable-card {
-  cursor: pointer;
-  box-shadow: 0px 0px 3px 3px #009688;
-  &:hover {
-    // background-color: #00ff2d75 !important;
-    // border-color: #00ff2d75 !important;
-    box-shadow: 0px 0px 3px 3px #FFEB3B;
-  }
-}
+// .selectable-card {
+//   cursor: pointer;
+//   box-shadow: 0px 0px 3px 3px #009688;
+//   &:hover {
+//     // background-color: #00ff2d75 !important;
+//     // border-color: #00ff2d75 !important;
+//     box-shadow: 0px 0px 3px 3px #FFEB3B;
+//   }
+// }
 
-.play-card.is-tapped {
-  // transform-origin: center;
-  margin-left: 30px !important;
-  transform: rotate(90deg);
-}
-.play-card.is-sick { // for summon sickness (creatures)
-  opacity: 0.35;
-}
-.play-card.is-selected-attack, .play-card.is-selected-defense { // when combat
-  display: none;
-}
+// .play-card.is-tapped {
+//   // transform-origin: center;
+//   margin-left: 30px !important;
+//   transform: rotate(90deg);
+// }
+// .play-card.is-sick { // for summon sickness (creatures)
+//   opacity: 0.35;
+// }
+// .play-card.is-selected-attack, .play-card.is-selected-defense { // when combat
+//   display: none;
+// }
 
-.hand-card.is-summoning {
-  opacity: 0.5;
-  transform: translateY(-20px);
-}
+// .hand-card.is-summoning {
+//   opacity: 0.5;
+//   transform: translateY(-20px);
+// }
 
 
 
