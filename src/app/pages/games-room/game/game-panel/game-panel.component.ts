@@ -3,7 +3,7 @@ import { CommonModule, DOCUMENT, ViewportScroller } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { DocumentReference, Firestore, collection, doc, getDoc, getDocs, onSnapshot, query, setDoc, DocumentData, Unsubscribe } from '@angular/fire/firestore';
-import { BfConfirmService, BfUiLibModule } from '@blueface_npm/bf-ui-lib';
+import { BfConfirmService, BfGrowlService, BfUiLibModule } from '@blueface_npm/bf-ui-lib';
 import { GameStateService } from '../../game-state.service';
 import { Router } from '@angular/router';
 import { getTime } from '../gameLogic/game.utils';
@@ -25,14 +25,13 @@ type TChatMsg = { text: string, isYou: boolean };
   styleUrl: './game-panel.component.scss'
 })
 export class GamePanelComponent {
-  isOpen = true;
+  isOpen = false;
   chatDocSub!: Unsubscribe;
   
   text = '';
   allMsgs: Array<{ time: string, isYou: boolean, text: string }> = [];
   chatHistory: Array<{ time: string, isYou: boolean, text: string }> = [];
   playerBName = '';
-  doc: Document;
 
   @ViewChild('chatHist', {read: ElementRef, static: false}) chatHist!: ElementRef;
 
@@ -40,10 +39,9 @@ export class GamePanelComponent {
     public game: GameStateService,
     public router: Router,
     public firestore: Firestore,
-    private scroller: ViewportScroller,
-    @Inject(DOCUMENT) document: Document,
+    public growl: BfGrowlService,
   ) {
-    this.doc = document;
+
   }
 
   ngOnInit() {
@@ -52,6 +50,7 @@ export class GamePanelComponent {
 
       this.chatHistory = [];
       this.playerBName = this.game.playerB().name;
+      let firstLoad = true;
       
       if (this.chatDocSub) { this.chatDocSub(); } // unsubscribe if previous detected
       this.chatDocSub = onSnapshot(chatColRef, (colQuery) => {
@@ -80,11 +79,15 @@ export class GamePanelComponent {
           }
         }
 
+        if (!firstLoad && newMsgs.length && !this.isOpen) {
+          const text = newMsgs.filter(m => !m.isYou).reduce((a,v) => `${a}<br/>${v.text}`, '');
+          this.growl.pushMsg({ text: `New chat message: <b>${text}</b>`, timeOut: 3000, msgIcon: 'icon-bubble-lines3', msgType: 'success' });
+        }
+
         setTimeout(() => this.scrollToBottom(), 300);
+        firstLoad = false;
       });
-      
-      setTimeout(() => this.scrollToBottom(), 300);
-    });    
+    });
   }
 
   ngOnChanges() { }
@@ -98,6 +101,22 @@ export class GamePanelComponent {
   // onStateChanges(state: TGameState) {
   //   const playerB = this.game.playerANum === '1' ? state.player2 : state.player1;
   // }
+
+  panelPinned = false;
+  clickToSwitch() {
+    this.isOpen = !this.isOpen;
+    this.panelPinned = this.isOpen;
+  }
+  hoverToOpen() {
+    console.log('hooooovering');
+    if (!this.isOpen) {
+      this.isOpen = true;
+      // setTimeout(() => this.isOpen && (this.panelPinned = true), 5000);
+    }
+  }
+  hoverToClose() {
+    if (!this.panelPinned) { this.isOpen = false; }
+  }
 
   postChat(text: string) {
     const time = getTime().replace(' ', '_');
@@ -113,6 +132,7 @@ export class GamePanelComponent {
 
 
   exitGame() {
+    this.game.deactivateGame();
     this.router.navigate(['/game']);
   }
 

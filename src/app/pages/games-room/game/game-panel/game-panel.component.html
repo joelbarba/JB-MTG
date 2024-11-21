@@ -1,13 +1,25 @@
-<div class="game-panel" [class.is-open]="isOpen" *ngIf="game.state">
-  <div class="pin-btn flex-center" [class.is-open]="isOpen" (click)="isOpen = !isOpen">
-    <span [class.hide]="isOpen"  class="icon-previous2"></span>
-    <span [class.hide]="!isOpen" class="icon-next2"></span>
+<div class="game-panel" [class.is-open]="isOpen" *ngIf="game.state" (mouseleave)="hoverToClose()">
+  <div class="pin-btn flex-center" [class.is-open]="isOpen" (click)="clickToSwitch()">
+    <span [class.hide]="isOpen && panelPinned"  class="icon-previous2"></span>
+    <span [class.hide]="!isOpen || !panelPinned" class="icon-next2"></span>
   </div>
 
-  <div class="panel-content">
+  <div class="panel-content" (click)="panelPinned = true">
+    <div class="hover-opener" (mouseover)="hoverToOpen()"></div>
     <h1>Game</h1>
     <div class="text-right" style="margin-bottom: 20px;">
       <bf-btn bfText="Exit Game" bfIcon="icon-esc" (bfClick)="exitGame()"></bf-btn>
+
+      <!-- Debug Buttons -->
+      <div *ngIf="true">
+        <!-- <bf-btn (bfClick)="growl.success('test test');" bfText="GROWL" class="full-width"></bf-btn> -->
+        <bf-btn (bfClick)="game.action('refresh')" bfText="REFRESH" ></bf-btn>
+        <bf-btn (bfClick)="game.saveStateDebug()" bfText="SAVE STATE"></bf-btn>
+        <bf-btn (bfClick)="game.loadStateDebug()" bfText="LOAD STATE"></bf-btn>
+        <bf-btn *ngIf="!game.debugMode" (bfClick)="game.debugMode = true" bfText="Debug OFF"></bf-btn>
+        <bf-btn *ngIf="game.debugMode" (bfClick)="game.debugMode = false" bfText="Debug ON" ></bf-btn>
+        <bf-btn (bfClick)="game.debugPanel = !game.debugPanel"  bfText="Debug Panel"></bf-btn>
+      </div>
     </div>
     
 
@@ -20,7 +32,9 @@
         </div>
       </div>
 
-      <bf-input class="text-input" bfLabel="New Message:" [(ngModel)]="text" (bfOnEnter)="postChat(text)"></bf-input>
+      <bf-input class="text-input" bfLabel="New Message:" [bfAutoFocus]="true"
+                [(ngModel)]="text" (bfOnEnter)="postChat(text)">
+      </bf-input>
     </div>
 
 
@@ -30,14 +44,5 @@
 
 
 
-  <!-- Debug Buttons -->
-  <div *ngIf="false" style="position: fixed; top: 5px; left: 10px; background: lightgray; padding: 2px; z-index: 2000; width: 140px; height: 200px;">
-    <!-- <bf-btn (bfClick)="growl.success('test test');" bfText="GROWL" class="full-width"></bf-btn> -->
-    <bf-btn (bfClick)="game.action('refresh')" bfText="REFRESH" class="full-width"></bf-btn>
-    <bf-btn (bfClick)="game.saveStateDebug()" bfText="SAVE STATE" class="full-width" style="margin-top: 5px;"></bf-btn>
-    <bf-btn (bfClick)="game.loadStateDebug()" bfText="LOAD STATE" class="full-width" style="margin-top: 5px;"></bf-btn>
-    <bf-btn *ngIf="!game.debugMode" (bfClick)="game.debugMode = true" bfText="Debug OFF" class="full-width" style="margin-top: 5px;"></bf-btn>
-    <bf-btn *ngIf="game.debugMode" (bfClick)="game.debugMode = false" bfText="Debug ON"  class="full-width" style="margin-top: 5px;"></bf-btn>
-    <bf-btn (bfClick)="game.debugPanel = !game.debugPanel"  bfText="Debug Panel" class="full-width" style="margin-top: 5px;"></bf-btn>
-  </div>
+
 </div>

@@ -15,7 +15,7 @@ import { BfDefer } from '@blueface_npm/bf-ui-lib';
 @Injectable({ providedIn: 'root' })
 export class GameStateService {
   library: Array<TCard> = [];
-  initPromise!: Promise<void>;
+  libraryDef!: BfDefer;
   firstStateDef!: BfDefer;
 
   gameId!: string;
@@ -60,27 +60,26 @@ export class GameStateService {
   }
 
   loadLibrary() { // Load card library
-    this.initPromise = new Promise(resolve => {
-      getDocs(collection(this.firestore, 'cards')).then((ref: QuerySnapshot<DocumentData>) => {
-        this.library = [];
-        ref.forEach(doc => {
-          const card = doc.data() as TCard;
-          const cardProps = 'cast, color, name, image, text, type, attack, defense, '
-                          + 'isFlying, isTrample, isFirstStrike, isWall, isHaste, colorProtection'
-          const filteredCard = card.keyFilter(cardProps);
-          this.library.push({ id: doc.id, ...filteredCard } as TCard);
-        });
-        // console.log(this.library);
-        resolve();
+    this.libraryDef = new BfDefer();
+    getDocs(collection(this.firestore, 'cards')).then((ref: QuerySnapshot<DocumentData>) => {
+      this.library = [];
+      ref.forEach(doc => {
+        const card = doc.data() as TCard;
+        const cardProps = 'cast, color, name, image, text, type, attack, defense, '
+                        + 'isFlying, isTrample, isFirstStrike, isWall, isHaste, colorProtection'
+        const filteredCard = card.keyFilter(cardProps);
+        this.library.push({ id: doc.id, ...filteredCard } as TCard);
       });
-    });   
+      // console.log(this.library);
+      this.libraryDef.resolve()
+    });
   }
 
 
   async activateGame(gameId: string) {
     this.gameId = gameId;
     await this.auth.profilePromise;
-    await this.initPromise; // wait to have all the cards loaded
+    await this.libraryDef.promise; // wait to have all the cards loaded
 
     if (this.gameDocSub) { this.gameDocSub(); } // unsubscribe if previous detected
 
@@ -90,13 +89,13 @@ export class GameStateService {
       const dbState = docQuery.data();
       // console.log('DB onSnapshot() from -->', source, nextState);
       
-      if (!this.state) { this.initState(dbState); } // First load of the game
+      if (!this.firstStateDef.status) { this.initState(dbState); } // First load of the game
       
       // Propagate changes from DB
       if (source === 'server') {
         console.log('DB onSnapshot(): New State from -->', source);
         
-        if (!this.state || this.state.id === dbState.id - 1) {
+        if (!this.firstStateDef.status || this.state.id === dbState.id - 1) {
           // console.log('DB onSnapshot() --> New state from remote ACTION: ', dbState.lastAction);
           this.dbState$.next(dbState);
 
@@ -132,8 +131,14 @@ export class GameStateService {
       this.options.calculateTargetsFrom(this.state);
       this.state$.next(this.state);
       // console.log('New State - Options =', state.options.map(o => `${o.action}:${o.params?.gId}`), state);
-      if (!this.firstStateDef.status) { this.firstStateDef.resolve(); }
+      if (!this.firstStateDef.status) { this.firstStateDef.resolve(); } // <--- First time we load the state
     });
+  }
+
+  deactivateGame() {
+    if (this.gameDocSub) { this.gameDocSub(); }
+    if (this.gameStateSub) { this.gameStateSub.unsubscribe(); }
+    this.firstStateDef = new BfDefer();
   }
 
 
