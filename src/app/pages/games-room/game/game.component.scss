@@ -46,30 +46,7 @@
           background-color: $gray-light;
           display: flex;
           justify-content: space-between;
-          game-card {
-            &.selectable { cursor: pointer; }
-          }
-          // .deck-card, .grav-card {
-          //   padding: 3px;
-          //   position: relative;
-          //   border: 1px solid black;
-          //   background: white;
-          //   border-radius: 5px;
-          //   cursor: pointer;
-          //   img { max-height: 200px; }
-          //   &.empty { background-color: black; }
-          //   &.deck-card { background-color: black; }
-          //   &.grav-card { opacity: 0.5; }
-          //   .deck-count {
-          //     position: absolute;
-          //     bottom: 32px;
-          //     left: 0;
-          //     right: 0;
-          //     text-align: center;
-          //     font-size: 30px;
-          //     color: rgba(255, 255, 255, 0.5);
-          //   }
-          // }
+          game-card { &.selectable { cursor: pointer; } }
         }
         .life {
           flex: 1;
@@ -203,17 +180,6 @@
 
         display: flex;
         game-card { margin: 2.5px 4px; }
-        // .hand-card {
-        //   flex: 1;
-        //   margin: 2.5px 4px;
-        //   padding: 3px;
-        //   border: 1px solid black;
-        //   background: white;
-        //   border-radius: 5px;
-        //   &.back-card { background-color: black; border: none; margin: 3.5px 5px; }
-        //   img { max-height: 200px; }
-        //   transition-duration: 150ms;
-        // }
       }
 
       .play-box {
@@ -224,51 +190,6 @@
         bottom: 0;
         padding: 15px;
         game-card { position: absolute; }
-        // .play-card {
-        //   position: absolute;
-        //   margin: 2.5px 4px;
-        //   padding: 3px;
-        //   border: 1px solid black;
-        //   background: white;
-        //   border-radius: 5px;
-        //   img { max-height: 160px; }
-        //   .damage-points {
-        //     position: absolute;
-        //     left: calc(50% - 30px);
-        //     top: 20px;
-        //     font-size: 60px;
-        //     font-weight: 600;
-        //     -webkit-text-stroke: 2px #fff;
-        //     color: red;
-        //     .icon-power { font-size: 30px; }
-        //   }
-        //   .attack-defense {
-        //     position: absolute;
-        //     right: 9px;
-        //     bottom: -5px;
-        //     text-align: center;
-        //     font-size: 40px;
-        //     font-weight: 600;
-        //     -webkit-text-stroke: 2px #000000;
-        //     color: #ffffff;
-        //   }
-        //   .effects-badge {
-        //     position: absolute;
-        //     right: 0;
-        //     left: 0;
-        //     top: -12px;
-        //     text-align: center;
-        //     span {
-        //       font-size: 16px;
-        //       font-weight: 500;
-        //       color: #ffffff;
-        //       background: orange;
-        //       border-radius: 4px;
-        //       padding: 2px 12px;
-        //       cursor: pointer;
-        //     }
-        //   }
-        // }
       }
 
     }
@@ -334,40 +255,12 @@
   }
 }
 
-// .selectable-card {
-//   cursor: pointer;
-//   box-shadow: 0px 0px 3px 3px #009688;
-//   &:hover {
-//     // background-color: #00ff2d75 !important;
-//     // border-color: #00ff2d75 !important;
-//     box-shadow: 0px 0px 3px 3px #FFEB3B;
-//   }
-// }
-
-// .play-card.is-tapped {
-//   // transform-origin: center;
-//   margin-left: 30px !important;
-//   transform: rotate(90deg);
-// }
-// .play-card.is-sick { // for summon sickness (creatures)
-//   opacity: 0.35;
-// }
-// .play-card.is-selected-attack, .play-card.is-selected-defense { // when combat
-//   display: none;
-// }
-
-// .hand-card.is-summoning {
-//   opacity: 0.5;
-//   transform: translateY(-20px);
-// }
-
-
 
 
 // ---------------- Dragging Styles ---------------
-.play-card.is-dragging { opacity: 0; }
+.game-card.is-dragging { opacity: 0; }
 .bf-drag-ghost {
-  .play-card {
+  .game-card {
     padding: 3px;
     border: 1px solid black;
     background: white;
