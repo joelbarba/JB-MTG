@@ -1,7 +1,25 @@
-$gray-dark: #3c3c3c;
-$gray-light: #616161;
+
+// Main Game Layout
+$gray-dark: #3c3c3c;    // Left panel player/mana bg
+$gray-light: #616161;   // Left panel full card bg
 // $gray-light2: #757575;
-$white-dark: gainsboro;
+$white-dark: gainsboro; // Left panel text color (player + mana pool)
+
+$player-selectable-color: #00968852;  // Player bg when selectable
+$player-selectable-hover: #009688;    // Player bg when selectable and hovering
+
+$hand-box-bg: #9ba5a5;  // Hand box panel bg
+$info-box-bg: rgb(235 235 235);
+
+$game-panel-bg: #dddddd;
+
+// $player-in-control-bg: floralwhite;
+// $player-in-control-bg: aliceblue;
+// $player-in-control-bg: ghostwhite;
+// $player-in-control-bg: ivory;
+// $player-in-control-bg: azure;
+$player-in-control-bg: honeydew;
+$player-in-waiting-bg: mix(azure, black, 40%);
 
 
 // Panel Size
@@ -17,18 +35,16 @@ $table-center-bottom: calc($table-height / 2);
 $table-center-top: calc($table-top + $table-center-bottom);
 
 
-// $player-in-control-bg: floralwhite;
-// $player-in-control-bg: aliceblue;
-// $player-in-control-bg: ghostwhite;
-// $player-in-control-bg: ivory;
-// $player-in-control-bg: azure;
-$player-in-control-bg: honeydew;
-$player-in-waiting-bg: mix(azure, black, 40%);
+
 
 $dialog-selecting-mana-bg: azure;
 $dialog-spell-stack-bg: honeydew;
 $dialog-combat-bg: ivory;
 $panel-graveyard-bg: azure;
+
+
+
+
 
 
 // Different resolutions sizes
@@ -46,19 +62,87 @@ Resolutions: (top brower options ~ 220px)
 - table card width x height
 - panels
 
+card ratio (210/150) = 1.4
+w  150 --> 100
+h  210 --> 140
+
 */
+
+
 // Use it as:   var(--card-width)
 :root {
   --left-panel-width: 430px;
-  --card-width: 150px;
-  --card-height: 210px;
+  --right-panel-width: 650px;
   --card-border: 4px;
+  --card-width : 150px;
+  --card-height: 210px;
+  --full-card-border: 11px;
+  --font-size-ref: 20px;
+  --phases-col-width: 60px;
+
+  --full-card-max-height: calc(var(--left-panel-width) * 1.4);
 }
-@media screen and (max-height: 1220px) {
+
+@media screen and (max-height: 1050px) { 
   :root {
-    --left-panel-width: 300px;
-    --card-width: 100px;
-    --card-height: 140px;
+    --left-panel-width: 360px;
+    --right-panel-width: 550px;
+    --card-width : 120px;
+    --card-height: 168px;
+    --card-border: 3px;
+    --full-card-border: 9px;
+    --font-size-ref: 16px;
+    --phases-col-width: 55px;
   }
 }
 
+@media screen and (max-height: 900px) { 
+  :root {
+    --left-panel-width: 300px;
+    --card-width : 100px;
+    --card-height: 140px;
+    --card-border: 2px;
+    --font-size-ref: 13px;
+    --full-card-border: 8px;
+  }
+}
+
+
+
+// @media screen and (max-height: 1220px) {
+//   :root {
+//     --full-card-max-width: 300px;
+//     --full-card-max-height: 420px;
+//   }
+// }
+// @media screen and (max-height: 1000px) {
+//   :root {
+//     --left-panel-width: 300px;
+//     --card-width: 115px;
+//     --card-height: 160px;
+//     --card-border: 3px;
+//     --full-card-max-width: 300px;
+//     --full-card-max-height: 420px;
+//   }
+// }
+
+
+
+// ----- Smaller resolutions resize -----------
+// .game.md {
+//   .left-panel {
+//     width: 300px;
+//     .full-card .card-border img { max-width: 270px; border-width: 8px; border-radius: 12px; }
+//     .player-A, .player-B {
+//       .left {
+//         .deck img { max-height: 130px; }
+//         .life { font-size: 40px; }
+//       }
+//       .mana-pool .mana {
+//         img { height: 24px; }
+//         span { font-size: 18px; }        
+//       }      
+//     }
+//   }
+//   .board-panel { left: 300px; }
+// }

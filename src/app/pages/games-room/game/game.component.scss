@@ -16,23 +16,33 @@
 
     .full-card {
       padding: 10px;
+      flex: 1 1 auto;
+      position: relative;
+      max-width: var(--left-panel-width);
+      max-height: var(--full-card-max-height);
       .card-border {
-        flex: 1;
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
         display: flex;
         justify-content: center;
         align-items: center;
+        // border: 10px solid black;
         img { 
-          height: 100%;
-          width: 100%;
-          max-width: 410px;
-          border: 10px solid white;
-          border-radius: 14px;
+          max-height: calc(100% - 20px);
+          max-width: calc(100% - 20px);
+          border: var(--full-card-border) solid white;
+          border-radius: 12px;
         }
       }
     }
 
     .player-A, .player-B {
-      flex: 1;
+      flex: 0 0 auto;
+      height: calc(calc(100% - var(--full-card-max-height)) / 2);
+      min-height: calc(102px + var(--card-height));
       background: $gray-dark;
       border: 1px solid $gray-light;
       display: flex;
@@ -52,21 +62,22 @@
           flex: 1;
           align-items: center;
           color: $white-dark;
-          font-size: 60px;
+          font-size: calc(var(--font-size-ref) * 3);  // xl = 60
           display: flex;
           justify-content: center;
           &.is-selectable {
             cursor: pointer;
             transition-duration: 0.4s;
             // box-shadow: 0px 0px 5px 3px #009688;
-            background: #00968852;            
-            &:hover { background: #009688; }
+            background: $player-selectable-color;
+            &:hover { background: $player-selectable-hover; }
           }
         }
       }
 
       .mana-pool {
-        flex: 0 1 113px;
+        flex: 0 1 auto;
+        width: calc(var(--left-panel-width) - calc(var(--card-width) * 2) - 20px);
         background: $gray-dark;
         border-left: 1px solid $gray-light;
         display: flex;
@@ -80,15 +91,15 @@
           align-items: center;
           img { 
             flex: 0 1 auto;
-            height: 30px;
             padding: 0 8px;
+            height: calc(var(--font-size-ref) * 1.5); // xl = 30px
           }
           span {
             flex: 1 0 auto; 
             text-align: center;
-            font-size: 30px;
             color: $white-dark;
             font-weight: bold;
+            font-size: calc(var(--font-size-ref) * 1.5); // xl = 30px
             // margin-right: 4px;
           }
         }
@@ -106,7 +117,7 @@
     right: 0;
     top: 0;
     bottom: 0;
-    background-color: azure;
+    background-color: $player-in-control-bg;
 
     display: flex;
     flex-direction: column;
@@ -116,7 +127,7 @@
       .phases-box {
         background-color: $gray-dark;
         position: absolute;
-        width: 60px;
+        width: var(--phases-col-width); // xl = 60px;
         left: 0;
         top: 0;
         bottom: 0;
@@ -126,7 +137,7 @@
         padding: 2.5px 5px;
         .phase {
           flex: 1;
-          font-size: 40px;
+          font-size: calc(var(--font-size-ref) * 2); // xl = 40px
           text-align: center;
           border: 1px solid $gray-light;
           border-radius: 3px;
@@ -143,18 +154,18 @@
       .hand-box {
         z-index: 1000;
         border: 1px solid $gray-dark;
-        position: absolute;        
-        left: 65px;
+        position: absolute;
+        left: calc(var(--phases-col-width) + 5px); // xl = 65px;
         padding: 5px;
-        min-width: 160px;        
-        background: #9ba5a5;
+        min-width: calc(var(--card-width) + 10px); // xl = 160px;
+        background: $hand-box-bg;        
         transform-origin: top;
         transition: transform 350ms cubic-bezier(.05,.5,.2,.9);
 
         .box-button {
           position: absolute;
-          background-color: #9ba5a5;
-          border: 1px solid black;          
+          background-color: $hand-box-bg;
+          border: 1px solid black;
           left: -1px;
           width: 80px;
           height: 30px;
@@ -174,8 +185,8 @@
           color: $gray-light;
           font-size: 20px;
           padding: 30% 0;
-          min-height: 220px;
-          max-width: 135px;
+          min-height: calc(var(--card-height) + 10px); // xl = 220px;
+          max-width: calc(var(--card-weight) - 15px); // xl = 135px;
         }
 
         display: flex;
@@ -184,7 +195,7 @@
 
       .play-box {
         position: absolute;
-        left: 60px;
+        left: var(--phases-col-width); // xl = 60px;
         right: 0;
         top: 0;
         bottom: 0;
@@ -202,13 +213,12 @@
       left: 0;
       // right: 0;
       padding: 5px;
-      background: rgba(179, 179, 179, 0.3);
       display: flex;
       align-items: center;
       border-top-right-radius: 6px;
       z-index: 600;
       box-shadow: 3px -4px 5px 1px rgb(97 97 97 / 18%);
-      background: rgb(235 235 235);
+      background: $info-box-bg;
       .main-info {
         margin: 0 15px;
         display: flex;
@@ -220,8 +230,8 @@
       &.in-control { background-color: $player-in-control-bg; }
       &.in-waiting { background-color: $player-in-waiting-bg; }
       .hand-box {
-        top: -221px;
-        &.expanded { transform: translateY(220px); }
+        top: calc(-11px - var(--card-height)); // xl = -221px;
+        &.expanded { transform: translateY(calc(var(--card-height) + 10px)); } // xl = 220px
         border-bottom-right-radius: 5px;
         .box-button {
           bottom: -30px;
@@ -239,8 +249,8 @@
       &.in-control { background-color: $player-in-control-bg; }
       &.in-waiting { background-color: $player-in-waiting-bg; }
       .hand-box {
-        bottom: -221px;
-        &.expanded { transform: translateY(-220px); }
+        bottom: calc(-11px - var(--card-height)); // xl = -221
+        &.expanded { transform: translateY(calc(-10px - var(--card-height))); } // xl = -220px
         border-top-right-radius: 5px;
         .box-button {
           top: -30px;
@@ -271,24 +281,7 @@
 }
 
 
-// ----- Smaller resolutions resize -----------
-.game.md {
-  .left-panel {
-    width: 300px;
-    .full-card .card-border img { max-width: 270px; border-width: 8px; border-radius: 12px; }
-    .player-A, .player-B {
-      .left {
-        .deck img { max-height: 130px; }
-        .life { font-size: 40px; }
-      }
-      .mana-pool .mana {
-        img { height: 24px; }
-        span { font-size: 18px; }        
-      }      
-    }
-  }
-  .board-panel { left: 300px; }
-}
+
 
 
 .dialog-box {
