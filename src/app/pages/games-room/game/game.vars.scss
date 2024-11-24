@@ -1,18 +1,66 @@
+/*  Resolutions:
+
+2560x1440   ---> 
+1920x1024   ---> max-height: 1220px
+1600x900    ---> max-height: 680 
+1024x768    ---> max-height: 550
+
+card ratio (210/150) = 1.4
+w  150 --> 120 --> 100
+h  210 --> 168 --> 140
+
+*/
+// Use it as:   var(--card-width)
+:root {
+  --size-ref: 100px;
+  --left-panel-width: 430px;
+  --right-panel-width: 650px;
+  --card-border: 4px;
+  --card-width : 150px;
+  --card-height: 210px;
+  --full-card-border: 11px;
+  --phases-col-width: 60px;
+  --full-card-max-height: calc(var(--left-panel-width) * 1.4);
+}
+
+@media screen and (max-height: 1050px) { 
+  :root {
+    --size-ref: 80px;
+    --left-panel-width: 360px;
+    --right-panel-width: 550px;
+    --card-width : 120px;
+    --card-height: 168px;
+    --card-border: 3px;
+    --full-card-border: 9px;
+    --phases-col-width: 55px;
+  }
+}
+
+@media screen and (max-height: 900px) { 
+  :root {
+    --size-ref: 66px;
+    --left-panel-width: 300px;
+    --right-panel-width: 450px;
+    --card-width : 100px;
+    --card-height: 140px;
+    --card-border: 2px;
+    --full-card-border: 8px;
+    --phases-col-width: 50px;
+  }
+}
+
+
+
+
+
 
 // Main Game Layout
 $gray-dark: #3c3c3c;    // Left panel player/mana bg
 $gray-light: #616161;   // Left panel full card bg
-// $gray-light2: #757575;
 $white-dark: gainsboro; // Left panel text color (player + mana pool)
-
-$player-selectable-color: #00968852;  // Player bg when selectable
-$player-selectable-hover: #009688;    // Player bg when selectable and hovering
-
 $hand-box-bg: #9ba5a5;  // Hand box panel bg
 $info-box-bg: rgb(235 235 235);
-
 $game-panel-bg: #dddddd;
-
 // $player-in-control-bg: floralwhite;
 // $player-in-control-bg: aliceblue;
 // $player-in-control-bg: ghostwhite;
@@ -20,129 +68,107 @@ $game-panel-bg: #dddddd;
 // $player-in-control-bg: azure;
 $player-in-control-bg: honeydew;
 $player-in-waiting-bg: mix(azure, black, 40%);
-
-
-// Panel Size
-
-$table-left: 490px; // Width of the left panel
-$table-width: calc(100% - $table-left);
-$table-center-right: calc($table-width / 2);
-$table-center-left: calc($table-left + $table-center-right);
-
-$table-top: 72px; // Height of the navbar
-$table-height: calc(100% - $table-top);  
-$table-center-bottom: calc($table-height / 2);
-$table-center-top: calc($table-top + $table-center-bottom);
+$player-selectable-color: #00968852;  // Player bg when selectable
+$player-selectable-hover: #009688;    // Player bg when selectable and hovering
+$card-selectable-color: #009688;    // Border shadow for selectable cards
+$card-selectable-hover: #FFEB3B;    // Border shadow for selectable cards when hovering
+$card-is-dying-color: #F44336;      // Border shadow when dying creature
+$card-stack-highlight: #87c96c;     // When a spell with target in the stack
 
 
 
-
+// Panels
 $dialog-selecting-mana-bg: azure;
 $dialog-spell-stack-bg: honeydew;
 $dialog-combat-bg: ivory;
 $panel-graveyard-bg: azure;
 
+$table-center-y: 50%;
+$table-width: calc(100% - var(--left-panel-width) - var(--phases-col-width));
+$table-center-right: calc($table-width / 2);
+$table-center-left: calc(var(--left-panel-width) + var(--phases-col-width) + $table-center-right);
 
+@mixin panel-basics() {
+  position: fixed;
+  z-index: 1000;
+  border: 1px solid #737373;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 11px 9px 15px 2px #676767;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  h2 { font-size: calc(var(--size-ref) * 0.35); }
 
+  .btns-box {
+    display: flex;
+    width: 100%;
+    justify-content: end;
+    align-items: center;
+    bf-btn { margin-left: 15px; }
+    .main-info {
+      margin: 0 15px;
+      flex: 1;
+      text-align: left;
+    }
+  }
 
-
-
-// Different resolutions sizes
-/*
-Resolutions: (top brower options ~ 220px)
-
-2560x1440   ---> 
-1920x1024   ---> max-height: 1220px
-1600x900    ---> max-height: 680 
-1024x768    ---> max-height: 550
-
-
-- left panel
-- card width x height
-- table card width x height
-- panels
-
-card ratio (210/150) = 1.4
-w  150 --> 100
-h  210 --> 140
-
-*/
-
-
-// Use it as:   var(--card-width)
-:root {
-  --left-panel-width: 430px;
-  --right-panel-width: 650px;
-  --card-border: 4px;
-  --card-width : 150px;
-  --card-height: 210px;
-  --full-card-border: 11px;
-  --font-size-ref: 20px;
-  --phases-col-width: 60px;
-
-  --full-card-max-height: calc(var(--left-panel-width) * 1.4);
-}
-
-@media screen and (max-height: 1050px) { 
-  :root {
-    --left-panel-width: 360px;
-    --right-panel-width: 550px;
-    --card-width : 120px;
-    --card-height: 168px;
-    --card-border: 3px;
-    --full-card-border: 9px;
-    --font-size-ref: 16px;
-    --phases-col-width: 55px;
+  .close-btn, .min-btn {
+    position: absolute;
+    top: 0;
+    right: 0;
+    font-size: 30px;
+    background: mediumaquamarine;
+    padding: 0 20px;
+    // line-height: 30px;
+    border-top-right-radius: 9px;
+    cursor: pointer;
+  }
+  &.minimized {
+    height: 40px;
+    width: 300px;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+    top: unset;
+    left: unset;
+    .min-btn { left: 0; line-height: 38px; }
   }
 }
 
-@media screen and (max-height: 900px) { 
-  :root {
-    --left-panel-width: 300px;
-    --card-width : 100px;
-    --card-height: 140px;
-    --card-border: 2px;
-    --font-size-ref: 13px;
-    --full-card-border: 8px;
+@mixin fixed-panel($padding-left, $padding-top, $vertical-offset) {
+  top   : calc($padding-top - $vertical-offset);
+  bottom: calc($padding-top + $vertical-offset);
+  right : $padding-left;
+  left: calc(var(--left-panel-width) + var(--phases-col-width) + $padding-left);
+}
+
+@mixin resizable-panel($padding-top, $padding-left, $vertical-offset) {
+  @include fixed-panel($padding-top, $padding-left, 0px);
+
+  &:not(.minimized) {
+
+    &.h-cards-len-1 { left: calc($table-center-left - 380px); right: calc($table-center-right - 380px); }
+    &.h-cards-len-2 { left: calc($table-center-left - 430px); right: calc($table-center-right - 430px); }
+    &.h-cards-len-3 { left: calc($table-center-left - 480px); right: calc($table-center-right - 480px); }
+    &.h-cards-len-4 { left: calc($table-center-left - 510px); right: calc($table-center-right - 510px); }
+    &.h-cards-len-5 { left: calc($table-center-left - 580px); right: calc($table-center-right - 580px); }
+    &.h-cards-len-6 { left: calc($table-center-left - 630px); right: calc($table-center-right - 630px); }
+    &.h-cards-len-7 { left: calc($table-center-left - 680px); right: calc($table-center-right - 680px); }
+    &.h-cards-len-8 { left: calc($table-center-left - 730px); right: calc($table-center-right - 730px); }
+    &.h-cards-len-9 { left: calc($table-center-left - 780px); right: calc($table-center-right - 780px); }
+  
+    $top    : calc($table-center-y - 110px - $vertical-offset);
+    $bottom : calc($table-center-y - 110px + $vertical-offset);
+    $card-h-mar: calc(var(--card-height) * 1.1 / 2);
+
+    &.v-cards-len-1 { top: max($padding-top, calc($top - ($card-h-mar * 1))); bottom: max($padding-top, calc($bottom - ($card-h-mar * 1))); }
+    &.v-cards-len-2 { top: max($padding-top, calc($top - ($card-h-mar * 2))); bottom: max($padding-top, calc($bottom - ($card-h-mar * 2))); }
+    &.v-cards-len-3 { top: max($padding-top, calc($top - ($card-h-mar * 3))); bottom: max($padding-top, calc($bottom - ($card-h-mar * 3))); }
   }
 }
 
 
 
-// @media screen and (max-height: 1220px) {
-//   :root {
-//     --full-card-max-width: 300px;
-//     --full-card-max-height: 420px;
-//   }
-// }
-// @media screen and (max-height: 1000px) {
-//   :root {
-//     --left-panel-width: 300px;
-//     --card-width: 115px;
-//     --card-height: 160px;
-//     --card-border: 3px;
-//     --full-card-max-width: 300px;
-//     --full-card-max-height: 420px;
-//   }
-// }
-
-
-
-// ----- Smaller resolutions resize -----------
-// .game.md {
-//   .left-panel {
-//     width: 300px;
-//     .full-card .card-border img { max-width: 270px; border-width: 8px; border-radius: 12px; }
-//     .player-A, .player-B {
-//       .left {
-//         .deck img { max-height: 130px; }
-//         .life { font-size: 40px; }
-//       }
-//       .mana-pool .mana {
-//         img { height: 24px; }
-//         span { font-size: 18px; }        
-//       }      
-//     }
-//   }
-//   .board-panel { left: 300px; }
-// }

@@ -1,4 +1,4 @@
-import { Component, ViewEncapsulation } from '@angular/core';
+import { asNativeElements, Component, ElementRef, ViewEncapsulation } from '@angular/core';
 import { AuthService } from '../../../core/common/auth.service';
 import { ShellService } from '../../../shell/shell.service';
 import { CommonModule } from '@angular/common';
@@ -76,6 +76,7 @@ export class GameComponent {
   subs: Array<Subscription> = []; // subscriptions to unsubscribe
   positions: { [key: string]: { posX: number, posY: number, zInd: number } } = {};  // Extended info for the cards (its position on the table)
   stateTime = new Date();
+  windowHeight = 0;
 
   // ----- Game State Snapshots --------
   state!: TGameState;
@@ -118,6 +119,7 @@ export class GameComponent {
     public router: Router,
     public bfConfirm: BfConfirmService,
     public growl: BfGrowlService,
+    private hostElement: ElementRef,
   ) {
     this.shell.gameMode('on');
   }
@@ -194,6 +196,18 @@ export class GameComponent {
   ngOnDestroy() {
     this.game.deactivateGame();
     this.subs.forEach(sub => sub.unsubscribe());
+  }
+
+  ngAfterViewChecked() {
+    const height = this.hostElement.nativeElement.getBoundingClientRect().height;
+    if (height && height !== this.windowHeight) {
+      this.windowHeight = height;
+      localStorage.setItem('windowHeight', this.windowHeight + '');
+    }
+  }
+  ngAfterViewInit() {
+    this.windowHeight = this.hostElement.nativeElement.getBoundingClientRect().height;
+    if (!this.windowHeight) { this.windowHeight = Number.parseInt(localStorage.getItem('windowHeight') || '0', 10); }
   }
 
 
@@ -312,7 +326,10 @@ export class GameComponent {
     if (this.state.phase === 'maintenance') { return advancePhase(); }
 
     // Automatically draw if you can only draw 1 card
-    // if (this.state.phase === 'draw' && options.filter(o => o.action === 'draw').length === 1) { return advancePhase(() => this.game.action('draw')); }
+    if (this.state.phase === 'draw' && options.filter(o => o.action === 'draw').length === 1) { return advancePhase(() => this.game.action('draw')); }
+
+    // Automatically skip draw if you can't draw more cards
+    if (this.state.phase === 'draw' && !options.find(o => o.action === 'draw')) { return advancePhase(); }
 
     if (this.state.phase === 'combat') {
       const selectableAttackingCreatures = !!options.find(o => o.action === 'select-attacking-creature');
@@ -471,18 +488,22 @@ export class GameComponent {
     this.displayTableA = allTableCards.filter(c => c.grid === 'A');
     this.displayTableB = allTableCards.filter(c => c.grid === 'B');
 
+    let cardWidth = 121, cardHeight = 170, gap = 15; // 150 * 0.81, 210 * 0.81
+    if (this.windowHeight <= 1050) { cardWidth = 97; cardHeight = 136; gap = 12; }
+    if (this.windowHeight <= 900)  { cardWidth = 81; cardHeight = 113; gap = 10; }
+
     // Once the grid is constructed, give coordinates to every card
     tableGridA.forEach((arr, col) => {
       arr.forEach((card, ind) => {
-        card.posX = 20 + (col * 135);
-        card.posY = 20 + (ind * 30);
+        card.posX = 20 + (col * (cardWidth + gap));
+        card.posY = 20 + (ind * gap * 2);
         card.zInd = 100 + ind;
       })
     });
     tableGridB.forEach((arr, col) => {
       arr.forEach((card, ind) => {
-        card.posX = 20 + (col * 135);
-        card.posY = 280 + (ind * 30);
+        card.posX = 20 + (col * (cardWidth + gap));
+        card.posY = 280 + (ind * gap * 2);
         card.zInd = 100 + (col * 15) + ind;
       })
     });

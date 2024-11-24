@@ -176,6 +176,8 @@ export class GamesRoomComponent {
 
     const deck2 = [
       getCardById('c000004'), // Mountain
+      getCardById('c000004'), // Mountain
+      getCardById('c000005'), // Forest
       getCardById('c000005'), // Forest
       getCardById('c000003'), // Swamp
       getCardById('c000003'), // Swamp

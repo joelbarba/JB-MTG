@@ -108,7 +108,6 @@ export class GamePanelComponent {
     this.panelPinned = this.isOpen;
   }
   hoverToOpen() {
-    console.log('hooooovering');
     if (!this.isOpen) {
       this.isOpen = true;
       // setTimeout(() => this.isOpen && (this.panelPinned = true), 5000);

@@ -43,17 +43,17 @@ $arrows-color: $text-color;
       padding: 35px 5px 5px;
       border-radius: 10px;
       position: relative;
-      .icon-user3 { font-size: 140px; }
+      .icon-user3 { font-size: calc(var(--size-ref) * 1.40); }
       .damage-points {
         position: absolute;
-        line-height: 60px;
-        left: calc(50% - 30px);
+        line-height: calc(var(--size-ref) * 0.60);
+        left: calc(50% - (var(--size-ref) * 0.30));
         top: 0;
-        font-size: 60px;
+        font-size: calc(var(--size-ref) * 0.60);
         font-weight: 600;
         -webkit-text-stroke: 2px #fff;
         color: red;
-        .icon-power { font-size: 30px; }
+        .icon-power { font-size: calc(var(--size-ref) * 0.30); }
       }
       &.selectable-card { background: #b8e1de; &:hover { background: rgba(#FFEB3B, 0.2); }}
     }

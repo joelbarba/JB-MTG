@@ -1,41 +1,15 @@
 @import '../game.vars.scss';
 
 .spell-stack {
-  position: fixed;
-  z-index: 1000;
   background: $dialog-spell-stack-bg;
-  border: 1px solid #737373;
-  padding: 15px;
-  border-radius: 10px;
-  box-shadow: 11px 9px 15px 2px #676767;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: space-between;
-  h2 { font-size: 30px; max-width: calc(100% - 70px); } // title
+  @include panel-basics();
+  @include resizable-panel(25px, 25px, 15%);
 
-
-
-  left: calc($table-center-left - 1000px);
-  right: calc($table-center-right - 1000px);
-  top: calc($table-center-top - 590px); 
-  bottom: calc($table-center-bottom - 380px);
-
-  &.h-cards-len-1 { left: calc($table-center-left - 380px); right: calc($table-center-right - 380px); }
-  &.h-cards-len-2 { left: calc($table-center-left - 430px); right: calc($table-center-right - 430px); }
-  &.h-cards-len-3 { left: calc($table-center-left - 480px); right: calc($table-center-right - 480px); }
-  &.h-cards-len-4 { left: calc($table-center-left - 510px); right: calc($table-center-right - 510px); }
-  &.h-cards-len-5 { left: calc($table-center-left - 580px); right: calc($table-center-right - 580px); }
-  &.h-cards-len-6 { left: calc($table-center-left - 630px); right: calc($table-center-right - 630px); }
-  &.h-cards-len-7 { left: calc($table-center-left - 680px); right: calc($table-center-right - 680px); }
-  &.h-cards-len-8 { left: calc($table-center-left - 730px); right: calc($table-center-right - 730px); }
-  &.h-cards-len-9 { left: calc($table-center-left - 780px); right: calc($table-center-right - 780px); }
-
-  &.v-cards-len-1 { top: calc($table-center-top - 340px); bottom: calc($table-center-bottom - 70px); }
-  &.v-cards-len-2 { top: calc($table-center-top - 560px); bottom: calc($table-center-bottom - 120px); }
-  &.v-cards-len-3 { top: calc($table-center-top - 590px); bottom: calc($table-center-bottom - 310px); }
-
+  &.v-cards-len-3 {
+    top: 25px; 
+    bottom: unset;
+    height: calc(240px + (var(--card-height) * 3.3));
+  }
 
   .stack-box {
     flex: 1;
@@ -48,8 +22,6 @@
     margin-bottom: 15px;
     .stack {
       display: flex;
-      // height: calc(100% - 10px);
-      // align-items: center;      
       stack-card-with-targets { padding: 20px; }
     }
     &.has-scroll {
@@ -82,38 +54,4 @@
     bf-btn { transform: scale(2); }
   }
 
-  .btns-box {
-    display: flex;
-    width: 100%;
-    justify-content: end;
-    align-items: center;
-    bf-btn { margin-left: 15px; }
-    .main-info {
-      margin: 0 15px;
-      flex: 1;
-      text-align: left;
-    }
-  }
-
-  .min-btn {
-    position: absolute;
-    top: 0;
-    right: 0;
-    font-size: 30px;
-    background: mediumaquamarine;
-    padding: 0 20px;
-    line-height: 30px;
-    border-top-right-radius: 9px;
-    cursor: pointer;
-  }
-  &.minimized {
-    height: 40px;
-    width: 300px;
-    right: 0;
-    bottom: 0;
-    overflow: hidden;
-    top: unset;
-    left: unset;
-    .min-btn { left: 0; line-height: 38px; }
-  }
 }

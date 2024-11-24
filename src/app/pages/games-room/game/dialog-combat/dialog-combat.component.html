@@ -85,7 +85,13 @@
         <!-- Empty Slot for defender -->
         <div class="empty-slot" *ngIf="!col.defendingCard && !col.hoverDefender" 
              [class.not-selectable]="!col.isPossibleTarget">
+          <span class="damage-points" *ngIf="subPhase === 'afterCombat' && col.attackingCard.turnAttack">
+            <span>{{col.attackingCard.turnAttack}}</span>
+            <span class="icon-power"></span>
+          </span>
         </div>
+
+
         <game-card [card]="col.hoverDefender" *ngIf="col.hoverDefender" 
                    [selectable]="false" from="combatDefenderDown">
         </game-card>

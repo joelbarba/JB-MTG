@@ -48,7 +48,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
       const { card, cardPlayer } = getShorts(nextState);
       if (!card.isTapped && card.location.slice(0,4) === 'tble') {
         cardPlayer.manaPool[manaNum] += 1;
-        // if (manaNum === 1) { cardPlayer.manaPool[manaNum] += 1; }
+        // if (manaNum === 1) { cardPlayer.manaPool[manaNum] += 1; } // extra blue
         card.isTapped = true;
       } 
     };

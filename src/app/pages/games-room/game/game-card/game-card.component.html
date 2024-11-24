@@ -1,4 +1,6 @@
-<div class="game-card empty" [class]="from" [class.back-card]="back" *ngIf="!card"> 
+<div class="game-card empty" 
+     [class]="from" [class.back-card]="back" *ngIf="!card"
+     [class.selectable-card]="selectable">
   <img *ngIf="back"  src="/assets/images/cards/card_back.jpg">
   <img *ngIf="!back" src="/assets/images/cards/empty.png">
   <div *ngIf="count !== null" class="deck-count">{{count}}</div>
@@ -31,8 +33,7 @@
     {{card.turnAttack + '/' + card.turnDefense}}
   </span>
 
-  <div *ngIf="card.targetOf?.length || card.targets.length"
-      style="position: absolute; font-size: 11px; top: -17px; left: 0px;">
+  <div class="owner" *ngIf="from === 'stack' && (card.targetOf?.length || card.targets.length)">
     {{card.owner === game.playerANum ? 'Yours' : "Opponent's"}}
   </div>
 

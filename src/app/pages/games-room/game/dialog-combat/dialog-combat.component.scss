@@ -1,40 +1,12 @@
 @import '../game.vars.scss';
 
 .combat {
-  position: fixed;
-  z-index: 1000;
   background: $dialog-combat-bg;
-  border: 1px solid #737373;
-  padding: 15px;
-  border-radius: 10px;
-  box-shadow: 11px 9px 15px 2px #676767;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: space-between;
-  h2 { font-size: 35px; } // title
+  @include panel-basics();
+  @include resizable-panel(25px, 25px, 0px);
 
-  // &.md {}
-  top: 75px;
-  left: calc(40% - 400px);
-  right: calc(40% - 400px);
-  bottom: calc(50%);
-
-  top: $table-top + 3px; 
-  bottom: calc($table-center-bottom - 60px);
-  left: calc($table-center-left - 1000px);
-  right: calc($table-center-right - 1000px);
-
-  &.h-cards-len-1 { left: calc($table-center-left - 370px); right: calc($table-center-right - 370px); }
-  &.h-cards-len-2 { left: calc($table-center-left - 420px); right: calc($table-center-right - 420px); }
-  &.h-cards-len-3 { left: calc($table-center-left - 470px); right: calc($table-center-right - 470px); }
-  &.h-cards-len-4 { left: calc($table-center-left - 520px); right: calc($table-center-right - 520px); }
-  &.h-cards-len-5 { left: calc($table-center-left - 570px); right: calc($table-center-right - 570px); }
-  &.h-cards-len-6 { left: calc($table-center-left - 620px); right: calc($table-center-right - 620px); }
-  &.h-cards-len-7 { left: calc($table-center-left - 670px); right: calc($table-center-right - 670px); }
-  &.h-cards-len-8 { left: calc($table-center-left - 720px); right: calc($table-center-right - 720px); }
-  &.h-cards-len-9 { left: calc($table-center-left - 770px); right: calc($table-center-right - 770px); }
+  top: calc(var(--size-ref) * 0.35);
+  height: calc(var(--size-ref) * 6.50);
 
   .arena {
     padding: 0 15px;
@@ -51,7 +23,7 @@
       .combat-col {
         display: flex;
         flex-direction: column;
-        justify-content: space-evenly;
+        justify-content: center;
         &.is-selectable { cursor: pointer; }
 
         game-card { margin: 0 20px; }
@@ -59,14 +31,14 @@
         .combat-arrows {
           display: flex;
           justify-content: space-evenly;
-          // padding: 5px 20px;
+          margin: 2px 0;
           padding: 4px 20px 1px;
           .combat-arrow { position: relative; }
-          .icon-power, .icon-shield2 { font-size: 12px; }
-          .icon-arrow-up16   { font-size: 32px; }
-          .icon-arrow-down16 { font-size: 32px; }
+          .icon-power, .icon-shield2 { font-size: calc(var(--size-ref) * 0.12); }
+          .icon-arrow-up16   { font-size: calc(var(--size-ref) * 0.32); }
+          .icon-arrow-down16 { font-size: calc(var(--size-ref) * 0.32); }
           .damage { 
-            font-size: 20px; 
+            font-size: calc(var(--size-ref) * 0.20);
             // color: red;
             font-weight: 500;
             position: absolute;
@@ -88,44 +60,23 @@
             background: #c1c1c1;
             cursor: not-allowed;
           }
+          position: relative;
+          .damage-points {
+            position: absolute;
+            left: calc(50% - calc(var(--size-ref) * 0.3)); // xl = 30
+            top: calc(var(--size-ref) * 0.23);
+            font-size: calc(var(--size-ref) * 0.6);
+            font-weight: 600;
+            -webkit-text-stroke: 2px #fff;
+            color: red;
+            .icon-power { 
+              font-size: calc(var(--size-ref) * 0.3); // xl = 30px;
+            }
+          }
         }
       }
     }
   
   }
 
-
-  .btns-box {
-    display: flex;
-    width: 100%;
-    justify-content: end;
-    align-items: center;
-    bf-btn { margin-left: 15px; }
-    .main-info {
-      margin: 0 15px;
-      flex: 1;
-      text-align: left;
-    }
-  }
-  .min-btn {
-    position: absolute;
-    top: 0;
-    right: 0;
-    font-size: 30px;
-    background: mediumaquamarine;
-    padding: 0 20px;
-    line-height: 30px;
-    border-top-right-radius: 9px;
-    cursor: pointer;
-  }
-  &.minimized {
-    height: 40px;
-    width: 300px;
-    right: 0;
-    bottom: 0;
-    overflow: hidden;
-    top: unset;
-    left: unset;
-    .min-btn { left: 0; line-height: 38px; }
-  }
 }

@@ -6,10 +6,12 @@
         <div class="deck">
           <game-card [card]="null" from="deckB"
                      [back]="true"
+                     [selectable]="false"
                      [count]="deckBCount">
           </game-card>
           <game-card [card]="topGravB" from="gravB"
                     [class.empty]="!topGravB"
+                    [selectable]="false"
                     (click)="graveyardPanel = graveyardPanel === 'B' ? null : 'B'">
           </game-card>
         </div>
@@ -54,11 +56,12 @@
           <game-card [card]="null" from="deckA"
                      [back]="true"
                      [count]="deckACount"
-                     [class.selectable]="canIDraw"
+                     [selectable]="canIDraw"
                      (click)="drawCard()">
           </game-card>
           <game-card [card]="topGravA" from="gravA"
                      [class.empty]="!topGravA"
+                     [selectable]="false"
                      (click)="graveyardPanel = graveyardPanel === 'A' ? null : 'A'">
           </game-card>
         </div>
@@ -238,12 +241,7 @@
     (end)="combatPanel = false">
   </dialog-combat>
 
-  <!-- Effects Floating Panel -->
-  <panel-effects *ngIf="effectsPanelCard"
-    [card]="effectsPanelCard"
-    (selectCard)="selectCard($event)"
-    (end)="effectsPanelCard = null">
-  </panel-effects>
+
 
 
   <dialog-spell-stack 
@@ -256,7 +254,12 @@
   <!-- spellStackPanelSize={{spellStackPanelSize}} -->
   <!-- panel={{panel}} -->
 
-
+  <!-- Effects Floating Panel -->
+  <panel-effects *ngIf="effectsPanelCard"
+    [card]="effectsPanelCard"
+    (selectCard)="selectCard($event)"
+    (end)="effectsPanelCard = null">
+  </panel-effects>
 
 
 </div>

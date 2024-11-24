@@ -15,10 +15,6 @@ export type TStackTree = {
   player: TPlayer | null,
   targetOf: Array<TStackTree>,
   shadow: { damage: number, defense: number, force: string, delta: string };
-  // shadowDamage: number,
-  // shadowDefense: number;  // turnDefense (after the stack runs)
-  // shadowForce: string;  // (4/4) Future Attack/Defense (after the stack runs)
-  // shadowDelta: string;  // (+3/-2) Difference between real turnAttack/defense and shadowAttack/defense
 };
 
 @Component({

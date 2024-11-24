@@ -1,31 +1,16 @@
 @import '../game.vars.scss';
 
 .graveyard-panel {
-  position: fixed;
-  z-index: 1000;
   background: $panel-graveyard-bg;
-  border: 1px solid #737373;
-  padding: 15px;
-  border-radius: 10px;
-  box-shadow: 11px 9px 15px 2px #676767;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: space-between;
-  h2 { font-size: 35px; } // title
 
-
-
-  left: calc($table-center-left - 1000px);
-  right: calc($table-center-right - 1000px);
-  top: calc($table-center-top - 590px); 
-  bottom: calc($table-center-bottom - 380px);
+  @include panel-basics();
+  @include fixed-panel(40px, 40px, 0px);
 
   .card-list {
     display: flex;
     align-items: center;
-    game-card { margin: 0 15px; }
+    flex-wrap: wrap;
+    game-card { margin: 15px; }
   }
 
   .btns-box {
