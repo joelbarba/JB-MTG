@@ -20,6 +20,8 @@ import { ShellService } from '../shell.service';
   ]
 })
 export class MenuComponent {
+  isAdmin = false;
+
   constructor(
     private translate: TranslateService,
     private appTranslate: AppTranslateService,
@@ -29,6 +31,6 @@ export class MenuComponent {
   }
   
   ngOnInit() {
-
+    this.auth.profilePromise.then(profile => this.isAdmin = profile.isAdmin);
   }
 }

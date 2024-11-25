@@ -16,11 +16,7 @@ export class BfTooltipService {
   // The arrow is already 6px, so consider >= 6
   private topMargin = 12; 
 
-
-
-  constructor() {
-
-  }
+  constructor() {}
 
   activate(text: string, tipId: string, rect: DOMRect) {
     if (text) {
@@ -46,6 +42,14 @@ export class BfTooltipService {
         this.top = -200;
       }
     }, 500);
+  }
+
+
+  flush() {
+    this.isOn = false;
+    this.left = -200;
+    this.top = -200;
+    this.currHost = '';
   }
 
   // deactivate(tipId: string) {

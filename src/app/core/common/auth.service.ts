@@ -4,6 +4,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { BfGrowlService, BfLoadingBarService } from '@blueface_npm/bf-ui-lib';
 import { BehaviorSubject, firstValueFrom, Observable, Subject } from 'rxjs';
 import { IProfile } from './interfaces';
+import { doc, Firestore, getDoc } from '@angular/fire/firestore';
 import { 
   Auth,
   signInWithEmailAndPassword, 
@@ -14,6 +15,7 @@ import {
   UserInfo,
   updateProfile,
 } from '@angular/fire/auth';
+import { TUser } from '../../pages/users/users.component';
 
 
 const httpOptions = { headers: new HttpHeaders({ 'Content-Type':  'application/json' }) };
@@ -37,7 +39,8 @@ export class AuthService {
     private http: HttpClient,
     private router: Router,
     private route: ActivatedRoute,
-    private auth: Auth,
+    private firebaseAuth: Auth,
+    public firestore: Firestore,
   ) {
 
     // Set loading bar configuration
@@ -61,13 +64,18 @@ export class AuthService {
     this.profilePromise = new Promise((resolve, reject) => {
       
       // This observable fires every time there is an Auth profile change (log in/out/app load)
-      onAuthStateChanged(auth, (user) => {
+      onAuthStateChanged(this.firebaseAuth, (user) => {
         if (user) {
           console.log('Auth Session Detected. You are:', user.displayName);
           this.firebaseUser = user;
-          const profile = this.mapProfile(user);
-          this.profile$.next(profile);
-          return resolve(profile);
+          this.mapProfile(user).then(profile => {
+            if (profile.isEnabled) {
+              this.profile$.next(profile);
+              return resolve(profile);
+            } else {
+              reject();
+            }
+          });
 
         } else { // User is signed out
           console.log('No Auth Session');
@@ -85,9 +93,9 @@ export class AuthService {
 
   // Request log in (initiate session)
   requestLogin(username: string, password: string): Promise<IProfile | undefined> {
-    const promise = signInWithEmailAndPassword(this.auth, username, password).then((data: UserCredential) => {
+    const promise = signInWithEmailAndPassword(this.firebaseAuth, username, password).then((data: UserCredential) => {
       console.log('User logged in', data);
-      return this.mapProfile(data.user) as IProfile;
+      return this.mapProfile(data.user);
     });
 
     // Wait .2sec after the login, to engage the loading of the home page with the same loading bar
@@ -95,18 +103,31 @@ export class AuthService {
     return promise;
   }
 
-  private mapProfile(user: UserInfo): IProfile { 
+  private async mapProfile(user: UserInfo): Promise<IProfile> { 
     // https://firebase.google.com/docs/reference/js/auth.user
     // console.log('token',        user.accessToken);
     // console.log('photoUrl',     user.photoURL);
-    // console.log('uid',          user.uid);
+    console.log('uid',          user.uid);
     // console.log('displayName',  user.displayName);
     const profile = {
       userId      : user.uid,
       displayName : user.displayName || '',
       email       : user.email || '',
       photoURL    : user.photoURL || '',
+      isAdmin     : false,
+      isEnabled   : false,
     };
+
+    // Fetch /users document and add the custom data
+    const docSnap = await getDoc(doc(this.firestore, 'users', user.uid));
+    if (docSnap.exists()) {
+      const data = docSnap.data() as TUser;
+      profile.isAdmin = data.isAdmin;
+      profile.isEnabled = data.isEnabled;
+    }
+
+    if (!profile.isEnabled) { this.requestLogout(); }
+
     return profile;
   }
 
@@ -146,7 +167,7 @@ export class AuthService {
 
   // Clear all profile data
   private clearProfile() {
-    return signOut(this.auth).then(() => {
+    return signOut(this.firebaseAuth).then(() => {
       this.profile$.next(undefined);
     }).catch(error => console.error('Error with Firebase log out', error));
   }

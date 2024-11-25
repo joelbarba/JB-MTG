@@ -7,9 +7,23 @@ $quaternary_color : #2E4856;
 $warning_color    : #BC451A;
 $extra_color      : #6F1E00;
 
+$primary_color    : #18cacd;
+$secondary_color  : #57c16f;
+$tertiary_color   : #F17B3F;
+$quaternary_color : #3f8cca;
+$warning_color    : #e84e3a;
+$extra_color      : #a766b2;
+
+$primary_color    : royalblue;
+$secondary_color  : #57c16f;
+$tertiary_color   : #18cacd;
+$quaternary_color : #2E4856;
+$warning_color    : #e84e3a;
+$extra_color      : #F17B3F;
+
 
 @import "./default-vars.scss";
-@import "./globals.scss";
+@import "../globals.scss";
 
 $growl-border: rgba($white, 0.4);
 

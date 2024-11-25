@@ -1,0 +1,71 @@
+<h2>{{ 'page.label.users' | translate }}</h2>
+<div class="page">
+
+  <div class="users-list">
+
+    <div class="row whiteBg">
+      <bf-input class="col-6 flat" bfIcon="icon-search" [(ngModel)]="usersList.filterText" (ngModelChange)="usersList.filter($event)"></bf-input>
+      <bf-btn class="col-6 text-right" bfText="New User" bfIcon="icon-plus" (bfClick)="prepareNewUser()"></bf-btn>
+    </div>
+    <div class="row">
+      <div class="col-12">
+        <ul class="list-unstyled table-list">
+          <li class="list-header">
+            <bf-list-header-col class="col-2" colTitle="Name"     fieldName="name"      [orderConf]="usersList.orderConf"></bf-list-header-col>
+            <bf-list-header-col class="col-4" colTitle="Email"    fieldName="email"     [orderConf]="usersList.orderConf"></bf-list-header-col>
+            <bf-list-header-col class="col-3" colTitle="Uid"      fieldName="uid"       [orderConf]="usersList.orderConf"></bf-list-header-col>
+            <bf-list-header-col class="col-1" colTitle="Admin"    fieldName="isAdmin"   [orderConf]="usersList.orderConf"></bf-list-header-col>
+            <bf-list-header-col class="col-1" colTitle="Enabled"  fieldName="isEnabled" [orderConf]="usersList.orderConf"></bf-list-header-col>
+            <bf-list-header-col class="col-2" colTitle=""></bf-list-header-col>
+          </li>
+    
+          <bf-list-placeholder [hidden]="usersList.loadingStatus > 1" [bfColumns]="[1, 2, 4, 4, 1]"></bf-list-placeholder>
+          <li class="list-row" [hidden]="usersList.loadingStatus <= 1" *ngFor="let user of usersList.renderList$ | async"
+             [class.is-disabled]="!user.isEnabled">
+            <div class="col-2">{{user.name}}</div>
+            <div class="col-4">{{user.email}}</div>
+            <div class="col-3">{{user.uid}}</div>
+            <div class="col-1">{{user.isAdmin}}</div>
+            <div class="col-1">{{user.isEnabled}}</div>
+            <div class="col-1 text-right">
+              <!-- <bf-btn bfType="delete" (bfClick)="deleteUser(user)"></bf-btn> -->
+              <bf-btn bfType="edit"   (bfClick)="prepareEditUser(user)"></bf-btn>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <div class="row whiteBg">
+      <bf-list-paginator class="col-12" [bfCtrl]="usersList" [bfShowSelector]="true"></bf-list-paginator>
+    </div>
+
+  </div>
+
+  <div class="new-user whiteBg" *ngIf="newUser && !editUser">
+    <h3>New User</h3>
+    <bf-input bfLabel="Name" [(ngModel)]="newUser.name"></bf-input>
+    <bf-input bfLabel="Email" [(ngModel)]="newUser.email"></bf-input>
+    <bf-input bfLabel="Password" [(ngModel)]="newUser.pass"></bf-input>
+    <bf-switch bfLabel="Is Admin" [(ngModel)]="newUser.isAdmin" bfLabelPos="left"></bf-switch>
+    <bf-switch bfLabel="Is Enabled" [(ngModel)]="newUser.isEnabled" bfLabelPos="left"></bf-switch>
+    <div class="btns-box">
+      <bf-btn bfText="Create User" bfIcon="icon-plus" [bfDisabled]="btnDisabled" (bfClick)="createUser()"></bf-btn>
+    </div>
+  </div>
+
+
+  <div class="edit-user whiteBg" *ngIf="editUser">
+    <h3>Edit User: {{editUser.name}}</h3>
+    <bf-input bfLabel="Name" [(ngModel)]="editUser.name"></bf-input>
+    <bf-input bfLabel="Email" [(ngModel)]="editUser.email"></bf-input>
+    <bf-switch bfLabel="Is Admin" [(ngModel)]="editUser.isAdmin" bfLabelPos="left"></bf-switch>
+    <bf-switch bfLabel="Is Enabled" [(ngModel)]="editUser.isEnabled" bfLabelPos="left"></bf-switch>
+    <div class="btns-box">
+      <!-- <bf-btn bfText="Cancel" bfIcon="icon-cross" (bfClick)="editUser = undefined"></bf-btn> -->
+      <bf-btn bfText="Delete User" bfIcon="icon-cross" class="warning" (bfClick)="deleteUser()"></bf-btn>
+      <bf-btn bfText="Reset Password" bfIcon="icon-cross" class="extra" (bfClick)="resetPassword()"></bf-btn>
+      <bf-btn bfText="Update User" bfIcon="icon-plus" [bfDisabled]="btnDisabled" (bfClick)="updateUser()"></bf-btn>
+    </div>
+  </div>
+  
+</div>

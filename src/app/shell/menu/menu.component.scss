@@ -6,7 +6,7 @@
   bottom: 0;
   left: 0;
   width: 70px;
-  background-color: $secondary_color;
+  background-color: $quaternary_color;
 }
 
 nav.menu {
@@ -23,7 +23,7 @@ nav.menu {
       width: 100%;
       justify-content: center;
       display: flex;
-      &:hover { background: $primary_color; }
+      &:hover { background: $tertiary_color; }
       a.menu-link {
         padding: 12px 0;
         color: $white;

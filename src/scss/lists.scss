@@ -1,0 +1,61 @@
+$list-header-color: $white;
+$list-header-bg: $primary_color;
+$list-pijama-bg: $primary_color;
+
+ul.table-list {
+  background-color: $white;
+  box-shadow: 0 1px 2px rgba(34, 36, 38, 0.15);
+  margin-bottom: 0;
+  padding-left: 0;
+  list-style: none;
+
+  flex: 0 0 100%;
+  max-width: 100%;
+  li.list-header, li.list-row  {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  li.list-header {
+    width: 100%;
+    padding: 10px 10px 10px;
+    word-break: break-word;
+    background: $list-header-bg;
+    color: $list-header-color;
+    border-top-right-radius: 3px;
+    border-top-left-radius: 3px;
+
+    .list-header-col-title {
+      font-size: 15px;
+      font-weight: 500;
+      line-height: 1;
+      letter-spacing: 1px;
+    }
+  }
+  li.list-row {
+    width: 100%;
+    min-height: 48px; padding: 7.5px 10px;
+    word-break: break-word;
+    &:nth-child(even) { background: rgba($list-pijama-bg, 0.08); }
+    &:nth-child(odd) { background: $white; }
+
+    [class*="col-"] {
+      align-items: center;
+      display: flex;
+      &.text-right { justify-content: flex-end; } // emulate text-align classes
+
+      font-size: 14px;
+      font-weight: normal; // 500;
+      line-height: normal;
+      //line-height: 1;
+      //letter-spacing: 1px;
+    }
+
+    [class*="col-"].ellipsis { display: inline; } // For just text cols with ellipsis overflow
+    bf-status-badge[class*="col-"] { line-height: $line-height-base; } // @Todo: make status badge height independent of the line height
+  }
+
+  bf-btn + bf-btn { margin-left: 15px; }
+
+}

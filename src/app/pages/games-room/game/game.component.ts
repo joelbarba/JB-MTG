@@ -20,6 +20,7 @@ import { ManaArrayComponent } from './mana-array/mana-array.component';
 import { extendCardLogic } from './gameLogic/game.card-specifics';
 import { GamePanelComponent } from "./game-panel/game-panel.component";
 import { GameCardComponent } from "./game-card/game-card.component";
+import { BfTooltipService } from '../../../core/common/internal-lib/bf-tooltip/bf-tooltip.service';
 
 export interface ICard {
   img: string;
@@ -120,6 +121,7 @@ export class GameComponent {
     public bfConfirm: BfConfirmService,
     public growl: BfGrowlService,
     private hostElement: ElementRef,
+    private tooltipService: BfTooltipService,
   ) {
     this.shell.gameMode('on');
   }
@@ -150,6 +152,7 @@ export class GameComponent {
       this.mainInfo = '';
       this.itemInfo = '';
       this.globalButtons = [];
+      this.tooltipService.flush();
 
       // console.log('New State:', state);      
       this.state = state;

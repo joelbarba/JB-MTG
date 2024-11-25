@@ -3,6 +3,8 @@ export interface IProfile {
   displayName: string;
   email: string;
   photoURL: string;
+  isAdmin: boolean;
+  isEnabled: boolean;
   // countryCode: string;
   // timeZone: string;
 }
