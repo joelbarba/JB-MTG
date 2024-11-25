@@ -2,7 +2,7 @@ import { Component, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
 import { TranslateModule } from '@ngx-translate/core';
 import { CommonModule } from '@angular/common';
 import { BfLangList, AppTranslateService } from '../../core/common/app-translate.service';
-import { BfUiLibModule } from '@blueface_npm/bf-ui-lib';
+import { BfGrowlModule, BfGrowlService, BfUiLibModule } from '@blueface_npm/bf-ui-lib';
 import { BfAvatarComponent } from '../../core/common/internal-lib/bf-avatar/bf-avatar.component';
 import { AuthService } from '../../core/common/auth.service';
 // import { SubSink } from 'subsink';
@@ -30,11 +30,13 @@ export class NavbarComponent implements OnInit, OnDestroy {
   language$ = this.appTranslate.language$;
   lang = '';
   displayName = '';
+  email = '';
 
 
   constructor(
     public readonly auth: AuthService,
     public readonly appTranslate: AppTranslateService,
+    private growl: BfGrowlService,
   ) {
   }
 
@@ -42,7 +44,8 @@ export class NavbarComponent implements OnInit, OnDestroy {
     // const customer$ = this.bfStore.selectedCustomer$.pipe(filter(customer => !!customer));
     this.auth.profilePromise.then(profile => {
       // console.log('PROFILE PROMISE', profile);
-      this.displayName = profile.displayName;
+      this.displayName = profile.name;
+      this.email = profile.email;
     });
 
     this.auth.profile$.subscribe(profile => {
@@ -74,6 +77,8 @@ export class NavbarComponent implements OnInit, OnDestroy {
   }
 
   updateProfile() {
-    this.auth.updateProfile({ displayName: this.displayName });
+    this.auth.updateProfile({ displayName: this.displayName, email: this.email }).then(() => {
+      this.growl.success(`Profile updated`);
+    });
   }
 }

@@ -1,11 +1,8 @@
-export interface IProfile {
-  userId: string;
-  displayName: string;
+export type TUser = {
+  name: string;
   email: string;
-  photoURL: string;
+  uid: string;
   isAdmin: boolean;
   isEnabled: boolean;
-  // countryCode: string;
-  // timeZone: string;
+  sats: number;
 }
-

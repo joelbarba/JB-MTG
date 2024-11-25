@@ -39,9 +39,11 @@ nav.navbar {
       // }
     }
   }
-
-
 }
+
+$profile-panel-height: 400px;
+$profile-panel-width: 370px;
+
 .profile-box {
   z-index: 100;
   box-shadow: 0 2px 3px rgba(34, 36, 38, 0.15);
@@ -50,8 +52,8 @@ nav.navbar {
   position: fixed;
   top: 62px;
   right: 5px;
-  width: 370px;
-  height: 320px;
+  width: $profile-panel-width;
+  height: $profile-panel-height;
   background: white;
   padding: 20px 25px 5px;
 
@@ -59,15 +61,15 @@ nav.navbar {
   transition-timing-function: cubic-bezier(.05,.5,.2,.9);
   transition-property: transform;
   transform-origin: top;
-  transform: translate(0, -340px);
+  transform: translate(0, calc(-20px - $profile-panel-height));
   &.expanded { transform: translate(0, 0); }
 
   p { margin: 2px 0; }
 
   .profile-bottom {
     position: absolute;
-    bottom: 10px;
-    right: 20px;
+    bottom: 25px;
+    right: 25px;
     left: 25px;
     bf-btn { margin-top: 21px; }
   }

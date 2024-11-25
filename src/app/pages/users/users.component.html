@@ -41,25 +41,31 @@
 
   </div>
 
-  <div class="new-user whiteBg" *ngIf="newUser && !editUser">
-    <h3>New User</h3>
-    <bf-input bfLabel="Name" [(ngModel)]="newUser.name"></bf-input>
-    <bf-input bfLabel="Email" [(ngModel)]="newUser.email"></bf-input>
-    <bf-input bfLabel="Password" [(ngModel)]="newUser.pass"></bf-input>
-    <bf-switch bfLabel="Is Admin" [(ngModel)]="newUser.isAdmin" bfLabelPos="left"></bf-switch>
-    <bf-switch bfLabel="Is Enabled" [(ngModel)]="newUser.isEnabled" bfLabelPos="left"></bf-switch>
-    <div class="btns-box">
+  <div class="new-user whiteBg row" *ngIf="newUser && !editUser">
+    <h3 class="col-12">New User</h3>
+    <bf-input class="col-5" bfLabel="Name" [(ngModel)]="newUser.name"></bf-input>
+    <bf-input class="col-7" bfLabel="Email" [(ngModel)]="newUser.email"></bf-input>
+    <bf-input class="col-5" bfLabel="Credit (sats)" [(ngModel)]="newUser.sats"></bf-input>
+    <bf-input class="col-7" bfLabel="Password" [(ngModel)]="newUser.pass"></bf-input>
+    <bf-switch class="col-12" bfLabel="Is Admin" [(ngModel)]="newUser.isAdmin" bfLabelPos="left"></bf-switch>
+    <bf-switch class="col-12" bfLabel="Is Enabled" [(ngModel)]="newUser.isEnabled" bfLabelPos="left"></bf-switch>
+    <div class="btns-box col-12">
       <bf-btn bfText="Create User" bfIcon="icon-plus" [bfDisabled]="btnDisabled" (bfClick)="createUser()"></bf-btn>
     </div>
   </div>
 
 
-  <div class="edit-user whiteBg" *ngIf="editUser">
-    <h3>Edit User: {{editUser.name}}</h3>
-    <bf-input bfLabel="Name" [(ngModel)]="editUser.name"></bf-input>
-    <bf-input bfLabel="Email" [(ngModel)]="editUser.email"></bf-input>
-    <bf-switch bfLabel="Is Admin" [(ngModel)]="editUser.isAdmin" bfLabelPos="left"></bf-switch>
-    <bf-switch bfLabel="Is Enabled" [(ngModel)]="editUser.isEnabled" bfLabelPos="left"></bf-switch>
+  <div class="edit-user whiteBg row" *ngIf="editUser">
+    <h3 class="col-12">Edit User: {{editUser.name}}</h3>
+    <bf-input class="col-5"   bfLabel="Name"          [(ngModel)]="editUser.name"></bf-input>
+    <bf-input class="col-7"   bfLabel="Email"         [(ngModel)]="editUser.email"></bf-input>
+    <bf-input class="col-5"   bfLabel="Credit (sats)" [(ngModel)]="editUser.sats"></bf-input>
+    <bf-input class="col-7"   bfLabel="Password"      [ngModel]="''" [bfDisabled]="true"></bf-input>
+    <bf-switch class="col-12" bfLabel="Is Admin"      [(ngModel)]="editUser.isAdmin"   bfLabelPos="left"></bf-switch>
+    <bf-switch class="col-12" bfLabel="Is Enabled"    [(ngModel)]="editUser.isEnabled" bfLabelPos="left"></bf-switch>
+    <div class="btns-box col-12">
+
+
     <div class="btns-box">
       <!-- <bf-btn bfText="Cancel" bfIcon="icon-cross" (bfClick)="editUser = undefined"></bf-btn> -->
       <bf-btn bfText="Delete User" bfIcon="icon-cross" class="warning" (bfClick)="deleteUser()"></bf-btn>

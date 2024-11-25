@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { BfGrowlService, BfLoadingBarService } from '@blueface_npm/bf-ui-lib';
 import { BehaviorSubject, firstValueFrom, Observable, Subject } from 'rxjs';
-import { IProfile } from './interfaces';
+import { TUser } from './interfaces';
 import { doc, Firestore, getDoc } from '@angular/fire/firestore';
 import { 
   Auth,
@@ -15,7 +15,6 @@ import {
   UserInfo,
   updateProfile,
 } from '@angular/fire/auth';
-import { TUser } from '../../pages/users/users.component';
 
 
 const httpOptions = { headers: new HttpHeaders({ 'Content-Type':  'application/json' }) };
@@ -23,10 +22,10 @@ const httpOptions = { headers: new HttpHeaders({ 'Content-Type':  'application/j
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  profilePromise: Promise<IProfile>; // Loading profile promise. This is resolved once after loading
+  profilePromise: Promise<TUser>; // Loading profile promise. This is resolved once after loading
 
-  profile ?: IProfile;
-  profile$ = new BehaviorSubject<IProfile | undefined>(undefined);
+  profile ?: TUser;
+  profile$ = new BehaviorSubject<TUser | undefined>(undefined);
 
   profileUserId ?: string;
   profileUserName ?: string;
@@ -55,8 +54,8 @@ export class AuthService {
 
     this.profile$.subscribe(profile => {      
       this.profile = profile;
-      this.profileUserName = profile?.displayName || '';
-      this.profileUserId = profile?.userId;
+      this.profileUserName = profile?.name || '';
+      this.profileUserId = profile?.uid;
     });
 
 
@@ -92,7 +91,7 @@ export class AuthService {
   }
 
   // Request log in (initiate session)
-  requestLogin(username: string, password: string): Promise<IProfile | undefined> {
+  requestLogin(username: string, password: string): Promise<TUser | undefined> {
     const promise = signInWithEmailAndPassword(this.firebaseAuth, username, password).then((data: UserCredential) => {
       console.log('User logged in', data);
       return this.mapProfile(data.user);
@@ -103,19 +102,20 @@ export class AuthService {
     return promise;
   }
 
-  private async mapProfile(user: UserInfo): Promise<IProfile> { 
+  private async mapProfile(user: UserInfo): Promise<TUser> { 
     // https://firebase.google.com/docs/reference/js/auth.user
     // console.log('token',        user.accessToken);
     // console.log('photoUrl',     user.photoURL);
-    console.log('uid',          user.uid);
+    // console.log('uid',          user.uid);
     // console.log('displayName',  user.displayName);
     const profile = {
-      userId      : user.uid,
-      displayName : user.displayName || '',
-      email       : user.email || '',
-      photoURL    : user.photoURL || '',
-      isAdmin     : false,
-      isEnabled   : false,
+      // photoURL  : user.photoURL || '',
+      uid       : user.uid,
+      name      : user.displayName || '',
+      email     : user.email || '',
+      isAdmin   : false,
+      isEnabled : false,
+      sats      : 0,
     };
 
     // Fetch /users document and add the custom data
@@ -156,10 +156,8 @@ export class AuthService {
     }
   }
 
-  updateProfile(data: any) {
-    updateProfile(this.firebaseUser, data).then(() => {
-      console.log('NAME updated');  
-    });
+  updateProfile(data: any): Promise<void> {
+    return updateProfile(this.firebaseUser, data);
   }
 
 

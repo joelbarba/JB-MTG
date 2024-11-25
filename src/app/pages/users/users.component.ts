@@ -1,24 +1,16 @@
 import { Component, ViewEncapsulation } from '@angular/core';
-import { AuthService } from '../../core/common/auth.service';
 import { ShellService } from '../../shell/shell.service';
 import { CommonModule } from '@angular/common';
-import { Firestore, QuerySnapshot, QueryDocumentSnapshot, DocumentData, setDoc, updateDoc, Unsubscribe, onSnapshot, DocumentReference, DocumentSnapshot, addDoc, deleteDoc } from '@angular/fire/firestore';
-import { getDocs, getDoc, collection, doc } from '@angular/fire/firestore';
-import { Observable, Subject } from 'rxjs';
-import { collectionData } from 'rxfire/firestore';
-import { TCard } from '../../core/types';
+import { Firestore, QuerySnapshot, setDoc, Unsubscribe, onSnapshot, deleteDoc } from '@angular/fire/firestore';
+import { collection, doc } from '@angular/fire/firestore';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { BfConfirmService, BfGrowlService, BfListHandler, BfUiLibModule } from '@blueface_npm/bf-ui-lib';
+import { Subject } from 'rxjs';
 import { Auth, createUserWithEmailAndPassword, sendEmailVerification, sendPasswordResetEmail, updateProfile } from '@angular/fire/auth';
+import { TUser } from '../../core/common/interfaces';
 
-export type TUser = {
-  name: string;
-  email: string;
-  uid: string;
-  isAdmin: boolean;
-  isEnabled: boolean;
-}
+
 
 @Component({
   selector: 'app-users',
@@ -85,7 +77,8 @@ export class UsersComponent {
   }
 
   prepareNewUser() {
-    this.newUser = { name: '', email: '', pass: '', isAdmin: false, isEnabled: false };
+    this.newUser = { name: '', email: '', pass: '', sats: 100000, isAdmin: false, isEnabled: false };
+    this.editUser = undefined;
     this.btnDisabled = false;
   }
 
@@ -165,6 +158,7 @@ export class UsersComponent {
         email     : this.editUser.email,
         isAdmin   : this.editUser.isAdmin,
         isEnabled : this.editUser.isEnabled,
+        sats      : this.editUser.sats,
       };
       setDoc(doc(this.firestore, 'users', this.editUser.uid), userDoc).then(docRef => {
         this.growl.success(`User ${userDoc.name} updated successfuly`);

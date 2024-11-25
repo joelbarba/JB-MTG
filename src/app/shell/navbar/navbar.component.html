@@ -20,23 +20,12 @@
 
 <div class="profile-box" [class.expanded]="isProfileExpanded" *ngIf="!!auth?.profile">
   <div class="row">
-    <h2 class="col-12 mt-2 mb-4">{{auth.profileUserName}}</h2>
-    <div class="col-12">
-      <bf-input bfLabel="Name" [(ngModel)]="displayName"></bf-input>
-      <bf-btn bfText="Save Profile" (bfClick)="updateProfile()"></bf-btn>
-    </div>
+    <h2 class="col-8">Profile</h2>    
+    <bf-input class="col-12" bfLabel="Name"  [(ngModel)]="displayName"></bf-input>
+    <bf-input class="col-12" bfLabel="Email" [(ngModel)]="email"></bf-input>
 
-    <!-- <p class="col-4"><b translate>view.common.username</b>:</p>   <p class="col-8">{{auth.profile?.username}}</p> -->
-    <p class="col-4"><b translate>view.common.email</b>:</p>      <p class="col-8">{{auth.profile?.email}}</p>
-    <!-- <p class="col-4"><b>time_zone:</b></p>                        <p class="col-8">{{auth.profile?.time_zone}}</p> -->
-    <!-- <div class="col-12">Selected language: {{ language$ | async }}</div> -->
-    <!-- <div class="col-12">Selected localeId: {{ localeId$ | async }}</div>     -->
-
-  </div>
-
-  <div class="row profile-bottom">
     <bf-dropdown *ngIf="languages"
-      class="col-7 full-width"
+      class="col-12 full-width"
       bfLabel="view.common.language"
       [(ngModel)]="lang"
       (ngModelChange)="appTranslate.changeLanguage($event)"
@@ -45,7 +34,11 @@
       bfRender="name"
       bfPlaceholder="views.dropdown.placeholder">
     </bf-dropdown>
-    <bf-btn class="col-5" bfIcon="icon-switch" bfText="views.common.logout" (bfClick)="auth.requestLogout()"></bf-btn>
   </div>
 
+  <div class="profile-bottom row">
+    <bf-btn class="col-6 full-width" bfIcon="icon-arrow-right3" bfText="Save Profile" (bfClick)="updateProfile()"></bf-btn>
+    <bf-btn class="col-6 full-width" bfIcon="icon-switch" bfText="views.common.logout" (bfClick)="auth.requestLogout()"></bf-btn>    
+  </div>
+  
 </div>
