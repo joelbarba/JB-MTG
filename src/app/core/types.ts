@@ -28,6 +28,7 @@ export type TCard = {
   image   : string;
   text    : string;
   type    : TCardType;
+  price   : number;
   attack  : number;
   defense : number;
   isWall        : boolean;  // They cannot attack, only defend
@@ -37,7 +38,9 @@ export type TCard = {
   isHaste       : boolean;  // No summoning sickness
   colorProtection: TColor | null; // Cannot be blocked, targeted, enchanted or damage by sources of this color
   readyToPlay: boolean;
+  units: Array<{ ref: string, owner: string }>;
 };
+export type TCardNoUnits = Omit<TCard, 'units'>;
 
 export type TCardLocation = 'off' | 'stack'
   | 'deck1' | 'hand1' | 'tble1' | 'grav1'
@@ -75,7 +78,7 @@ export type TGameDBState = {
 export type TGameState = TGameDBState & { options: Array<TGameOption> };
 export type TGameHistory = TGameState & { history: Array<TGameOption & { time: string, player: '1' | '2' }>; }
 
-export type TGameCard = TCard & {
+export type TGameCard = TCardNoUnits & {
   gId: string;
   owner: '1' | '2';       // player 1 | player 2
   controller: '1' | '2';  // player 1 | player 2

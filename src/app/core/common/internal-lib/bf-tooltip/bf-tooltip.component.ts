@@ -52,8 +52,9 @@ import { Subscription } from 'rxjs';
 export class BfTooltipComponent implements OnChanges {
   text = '';
   textSub !: Subscription;
-  textHalfWidth = 0;
-  textHeight = 0;
+
+  left = 0;
+  top = 0;
 
   @ViewChild('tooltipRef', { read: ElementRef, static: false }) tooltipRef!: ElementRef;
 
@@ -68,8 +69,19 @@ export class BfTooltipComponent implements OnChanges {
       this.text = text;
       setTimeout(() => {
         const rect = this.tooltipRef.nativeElement.getBoundingClientRect();
-        this.textHalfWidth = Math.round(rect.width / 2);
-        this.textHeight = Math.round(rect.height);
+        const textHalfWidth = Math.round(rect.width / 2);
+        const textHalfHeigth = Math.round(rect.height / 2);
+        const textHeight = Math.round(rect.height);
+
+        if (this.tooltip.tipSide === 'top') {
+          this.left = this.tooltip.left - textHalfWidth;
+          this.top = this.tooltip.top - textHeight;
+        }
+        else if (this.tooltip.tipSide === 'right') {
+          this.left = this.tooltip.left;
+          this.top = this.tooltip.top - textHalfHeigth;
+        }
+
         // console.log('component: rect 1/2 width = ', this.textHalfWidth);
       });
     })

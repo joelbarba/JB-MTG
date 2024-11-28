@@ -10,8 +10,5 @@
     max-height: calc(var(--size-ref) * 0.32); // xl = 32px;
   }
 }
-:host.md {
-  .mana img {
-    max-height: calc(var(--size-ref) * 0.28); // xl = 28px; 
-  }
-}
+:host.md .mana img { max-height: calc(var(--size-ref) * 0.28); }
+:host.sm .mana img { max-height: calc(var(--size-ref) * 0.22); }

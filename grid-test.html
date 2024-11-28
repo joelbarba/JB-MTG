@@ -5,7 +5,7 @@
 <head>
   <meta name="description" content="Webpage description goes here" />
   <meta charset="utf-8">
-  <title>Flex Box Test</title>
+  <title>Css Grid</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="author" content="">
   <style>
@@ -14,13 +14,30 @@
       position: fixed;      
       left: 100px;
       width: 1500px;
-      height: 150px;
+      height: 850px;
       /* border: 1px solid black; */
       /* background: aliceblue; */
       background: #3f5773;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+
+      display: grid;
+      /* grid-template-columns: 40% calc(60% - 300px) 300px; */
+      /* grid-template-columns: 1fr 1fr 300px; */
+      /* grid-template-columns: 300px auto 300px; */
+      /* grid-auto-rows: 1fr; */
+      /* grid-template-columns: 1fr 1fr 2fr; */
+      /* grid-template-rows: 50% 20%; */
+      /* grid-template: 50% 30% 20%; */
+      /* grid: 50% 30% 20%; */
+      /* grid-gap: 15px; */
+
+      /* grid-template-columns: 300px auto 300px; */
+      /* grid-auto-rows: minmax(100px, auto); */
+      /* grid-auto-rows: minmax(auto, 100px); */
+      /* grid-auto-rows: minmax(100px, 200px); */
+
+      grid-template-columns: 400px auto;
+      /* grid-template-rows: auto; */
+
     }
     #container1 { top: 100px; }
     #container2 { top: 300px; }
@@ -29,23 +46,32 @@
     .item {
       /* border: 1px solid black; */
       padding: 30px 0px;
+      /* margin: 15px; */
     }
     .itemSpan {
       background: #dfdfdf;
       min-width: 320px;
       display: inline-block;
     }
-    .item1 {
-      background: cornflowerblue;      
+    .item1 { 
+      background: cornflowerblue;
+      grid-column: 1 / 2;
+      grid-row: 1 / 2;
     }
     .item2 {
-      background: yellow;
-      flex: 1 0 auto;
+      background: yellow; 
+      grid-column: 1 / 2;
+      grid-row: 2 / 3;
     }
     .item3 {
-      background: red;
-      flex: 0 0 500px;
+      background: red; 
+      grid-column: 2 / 3;
+      grid-row: 1 / 3;      
     }
+    .item4 { background: greenyellow; }
+    .item5 { background: orange; }
+    .item6 { background: rebeccapurple; }
+    .item7 { background: cyan; }
 
     .mark {
       position: absolute;
@@ -65,20 +91,22 @@
 
 
   <span>
-    display: flex;<br>
-    justify-content: space-between; ======> Makes the items align left, center , right<br>
-    align-items: center; =================> Makes the items align vertically at the center<br>
+    display: grid;<br>
   </span>  
 
   <div class="container" id="container1">
-    <div class="item item1" style="flex: 1 0 auto;" ><span class="itemSpan"></span><span class="itemOut"></span></div>
-    <div class="item item2" style="flex: 1 0 auto;" ><span class="itemSpan"></span><span class="itemOut"></span></div>
-    <div class="item item3" style="flex: 1 0 500px;"><span class="itemSpan"></span><span class="itemOut"></span></div>
+    <div class="item item1"><span class="itemSpan"></span><span class="itemOut">Track1</span></div>
+    <div class="item item2"><span class="itemSpan"></span><span class="itemOut">Track2</span></div>
+    <div class="item item3"><span class="itemSpan"></span><span class="itemOut">Track3</span></div>
+    <!-- <div class="item item4"><span class="itemSpan"></span><span class="itemOut">Track4</span></div>
+    <div class="item item5"><span class="itemSpan"></span><span class="itemOut">Track5</span></div>
+    <div class="item item6"><span class="itemSpan"></span><span class="itemOut">Track6</span></div>
+    <div class="item item7"><span class="itemSpan"></span><span class="itemOut">Track7</span></div> -->
     <div class="mark" id="mark300">500px</div>
     <div class="mark" id="markEnd">1500px</div>
   </div>
 
-  <div class="container" id="container2">
+  <!-- <div class="container" id="container2">
     <div class="item item1" style="flex: 1 1 auto;" ><span class="itemSpan"></span><span class="itemOut"></span></div>
     <div class="item item2" style="flex: 1 1 auto;" ><span class="itemSpan"></span><span class="itemOut"></span></div>
     <div class="item item3" style="flex: 1 1 500px;"><span class="itemSpan"></span><span class="itemOut"></span></div>
@@ -94,32 +122,17 @@
     <div class="item item1" style="flex: 0 1 auto;" ><span class="itemSpan"></span><span class="itemOut"></span></div>
     <div class="item item2" style="flex: 0 1 auto;" ><span class="itemSpan"></span><span class="itemOut"></span></div>
     <div class="item item3" style="flex: 0 1 500px;"><span class="itemSpan"></span><span class="itemOut"></span></div>
-  </div>
+  </div> -->
 
 
-
-
-  <div style="position: absolute; left: 30px; bottom: 30px;">
-    <br><b>flex-grow</b> → 	Grow if necessary (like min-width). 
-    <br>0 = Do not make it bigger to fulfill (take default width). 
-    <br>X = Grow it to the "X/Nth with" of the full container (with N elements).
-    <br>
-    <br><b>flex-shrink</b> → 	Shrink if necessary (like max-width). 
-    <br>0 = Do not shrink or cut the width if larger. 
-    <br>X = Cut it to max "X/Nth" if the width is larger than that.
-    <br>    
-    <br><b>flex-basis</b> →	This defines the default size of the element before the remaining space is distributed. It can be a length (e.g. 300px, 20%, 5rem, etc.) or a keyword. 
-    <br>The "auto" keyword means "look at my width or height property".
-    <br>This means that you can set a fixed size to the element, and the rest of the container will be automatically fulfilled according to the remaining space
-  </div>
 
   <script>
     let moving = false;
-    const minWidth = 500;
+    const minWidth = 200;
     const container1 = document.getElementById('container1');
-    const container2 = document.getElementById('container2');
-    const container3 = document.getElementById('container3');
-    const container4 = document.getElementById('container4');
+    // const container2 = document.getElementById('container2');
+    // const container3 = document.getElementById('container3');
+    // const container4 = document.getElementById('container4');
     const markEnd = document.getElementById('markEnd');
     const items = document.getElementsByClassName('item');
     const itemSpans = document.getElementsByClassName('itemSpan');
@@ -127,21 +140,22 @@
       Array.from(items).forEach(item => {
         const itemSpan = item.getElementsByClassName('itemSpan')[0];
         const itemOut = item.getElementsByClassName('itemOut')[0];
-        itemSpan.innerHTML = `flex: ${item.style.flex}`
-        itemSpan.innerHTML += `<br>inner width = ${Math.round(itemSpan.getBoundingClientRect().width)}px`;
-        itemOut.innerHTML   = `<br>outer width = ${Math.round(item.getBoundingClientRect().width)}px`;
+        const innerSize = itemSpan.getBoundingClientRect();
+        const outerSize = item.getBoundingClientRect();
+        itemSpan.innerHTML = `    inner width = ${Math.round(innerSize.width)}px, height = ${Math.round(innerSize.height)}px`;
+        itemOut.innerHTML  = `<br>outer width = ${Math.round(outerSize.width)}px, height = ${Math.round(outerSize.height)}px`;
       });
     }
-    updateItemsCont();
+    setTimeout(() => updateItemsCont(), 50);
 
     document.addEventListener('click', ev => moving = !moving);
     document.addEventListener('mousemove', ev => {
       if (moving) {
         let pos = Math.min(1500, Math.max(minWidth, ev.pageX - 100));
         container1.style.width = pos + 'px';
-        container2.style.width = pos + 'px';
-        container3.style.width = pos + 'px';
-        container4.style.width = pos + 'px';
+        // container2.style.width = pos + 'px';
+        // container3.style.width = pos + 'px';
+        // container4.style.width = pos + 'px';
         updateItemsCont();
         const totalWidth = container1.getBoundingClientRect().width;
         markEnd.innerHTML = `${totalWidth}px`;

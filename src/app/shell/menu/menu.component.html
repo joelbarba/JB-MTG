@@ -1,13 +1,12 @@
 <nav class="menu" *ngIf="auth.profile">
   <ul class="menu-nav">
 
-    <li class="menu-item"><a class="menu-link" routerLink="/home">    <span class="icon-home">    </span></a></li>
-    <li class="menu-item"><a class="menu-link" routerLink="/cards">   <span class="icon-book">    </span></a></li>
-    <li class="menu-item"><a class="menu-link" routerLink="/library"> <span class="icon-library"> </span></a></li>
-    <li class="menu-item"><a class="menu-link" routerLink="/shop">    <span class="icon-toggle">  </span></a></li>
-    <li class="menu-item"><a class="menu-link" routerLink="/game">    <span class="icon-flag7">   </span></a></li>
-    <li *ngIf="isAdmin" class="menu-item"><a class="menu-link" routerLink="/users">   <span class="icon-users2">  </span></a></li>
-    <li *ngIf="isAdmin" class="menu-item"><a class="menu-link" routerLink="/settings"><span class="icon-cog2"></span></a></li>
+    <li *ngFor="let entry of menu" class="menu-item"  [class.active]="activePath === entry.path"
+        [hoverTip]="entry.name" tipSide="right">
+      <a class="menu-link" [routerLink]="'/' + entry.path" *ngIf="!entry.adminOnly || isAdmin">
+        <span [class]="entry.icon"></span>
+      </a>
+    </li>
 
   </ul>
 </nav>

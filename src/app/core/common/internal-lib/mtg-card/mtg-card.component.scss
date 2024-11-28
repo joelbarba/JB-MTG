@@ -1,0 +1,54 @@
+@import 'variables';
+
+
+@mixin border-adjustment($card-border) {
+  padding: calc($card-border - 1px);
+  border-radius: calc($card-border + 1px);
+  img {
+    position: absolute;
+    top    : $card-border;
+    left   : $card-border;
+    right  : $card-border;
+    bottom : $card-border;
+    height : calc(100% - ($card-border * 2));
+    width  : calc(100% - ($card-border * 2));
+  }
+}
+
+.mtg-card {
+  position: relative;
+  border: 1px solid black;
+  background: white;
+  border-radius: 5px;
+  transition-duration: 150ms;
+  
+  // Default size (md)
+  width : 150px;
+  height: 210px;
+  @include border-adjustment(4px);
+}
+
+:host {
+  display: block;
+  .mtg-card.back-card  {
+    background-color: black; 
+    border: none;
+    // margin: 3.5px 5px;
+  }
+
+  &.xs .mtg-card {
+    width: 100px; height: 140px;
+    @include border-adjustment(2px);
+  }
+  &.sm .mtg-card {
+    width: 120px; height: 168px;
+    @include border-adjustment(3px);
+  }
+  &.lg .mtg-card {
+    width: 450px;
+    height: 630px;    
+    @include border-adjustment(11px);
+  }
+
+}
+

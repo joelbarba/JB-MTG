@@ -15,4 +15,9 @@
   &.show-nav-bar {
     top: 72px;
   }
+
+  &.scrollable {
+    overflow: auto;
+    padding-bottom: 50px;
+  }
 }

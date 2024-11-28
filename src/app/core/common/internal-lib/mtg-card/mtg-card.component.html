@@ -1,0 +1,13 @@
+<div class="mtg-card back-card" *ngIf="!card">
+  <img src="/assets/images/cards/card_back.jpg">
+</div>
+
+<div class="mtg-card" *ngIf="card" [class.back-card]="back">
+  <img [src]="'/assets/images/cards/' + (back ? 'card_back.jpg' : card.image)">
+</div>
+
+
+
+
+
+

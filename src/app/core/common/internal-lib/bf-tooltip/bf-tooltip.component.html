@@ -1,8 +1,8 @@
-<div class="bf-tooltip" 
-     [class.is-on]="tooltip.isOn" 
-     #tooltipRef
-     [style.left.px]="tooltip.left - textHalfWidth" [style.top.px]="tooltip.top - textHeight">
-     <!-- , left={{tooltip.left}}, hw={{textHalfWidth}} -->
+<div class="bf-tooltip" #tooltipRef
+     [class.is-on]="tooltip.isOn"
+     [class]="'side-' + tooltip.tipSide"
+     [style.left.px]="left" 
+     [style.top.px]="top">
   <span>{{text}}</span>
   <div class="arrow-rect"></div>
 </div>

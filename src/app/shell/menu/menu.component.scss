@@ -24,6 +24,7 @@ nav.menu {
       justify-content: center;
       display: flex;
       &:hover { background: $tertiary_color; }
+      &.active { background: darken($tertiary_color, 5%); }
       a.menu-link {
         padding: 12px 0;
         color: $white;

@@ -3,7 +3,7 @@ import { Subject, Subscription, map } from 'rxjs';
 import { AuthService } from '../../core/common/auth.service';
 import { ShellService } from '../../shell/shell.service';
 import { DocumentReference, Firestore, QuerySnapshot, collection, doc, getDoc, getDocs, onSnapshot, query, setDoc, DocumentData, Unsubscribe } from '@angular/fire/firestore';
-import { EPhase, TAction, TCard, TCardLocation, TGameState, TGameDBState, TGameCard, TGameCards, TActionParams, TPlayer, TCardType, TCardSemiLocation, TCardAnyLocation, TCast, TGameOption, ESubPhase, TEffect } from '../../core/types';
+import { EPhase, TAction, TCard, TCardLocation, TGameState, TGameDBState, TGameCard, TGameCards, TActionParams, TPlayer, TCardType, TCardSemiLocation, TCardAnyLocation, TCast, TGameOption, ESubPhase, TEffect, TCardNoUnits } from '../../core/types';
 import { calcManaForUncolored, checkMana, getCards, getPlayers, getTime, killDamagedCreatures, moveCard, moveCardToGraveyard, spendMana } from './game/gameLogic/game.utils';
 import { GameOptionsService } from './game/game.options.service';
 import { extendCardLogic } from './game/gameLogic/game.card-specifics';
@@ -14,7 +14,7 @@ import { BfDefer } from '@blueface_npm/bf-ui-lib';
 
 @Injectable({ providedIn: 'root' })
 export class GameStateService {
-  library: Array<TCard> = [];
+  library: Array<TCardNoUnits> = [];
   libraryDef!: BfDefer;
   firstStateDef!: BfDefer;
 
@@ -74,7 +74,7 @@ export class GameStateService {
         const cardProps = 'cast, color, name, image, text, type, attack, defense, '
                         + 'isFlying, isTrample, isFirstStrike, isWall, isHaste, colorProtection'
         const filteredCard = card.keyFilter(cardProps);
-        this.library.push({ id: doc.id, ...filteredCard } as TCard);
+        this.library.push({ id: doc.id, ...filteredCard } as TCardNoUnits);
       });
       // console.log(this.library);
       this.libraryDef.resolve()

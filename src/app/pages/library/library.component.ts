@@ -11,14 +11,10 @@ import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { BfConfirmService, BfUiLibModule } from '@blueface_npm/bf-ui-lib';
 import { EPhase, TGameState, TGameCard, TExtGameCard, TPlayer, TAction, TCast } from '../../core/types';
+import { ManaArrayComponent } from "../games-room/game/mana-array/mana-array.component";
+import { MtgCardComponent } from '../../core/common/internal-lib/mtg-card/mtg-card.component';
 
-interface Card {
-  // Define the structure of a single card document
-  id: string;
-  title: string;
-  description: string;
-  // Add other fields as needed
-}
+
 
 @Component({
   selector: 'app-library',
@@ -28,38 +24,17 @@ interface Card {
     TranslateModule,
     FormsModule,
     BfUiLibModule,
-  ],
+    MtgCardComponent,
+],
   templateUrl: './library.component.html',
   styleUrl: './library.component.scss',
   encapsulation: ViewEncapsulation.None,
 })
 export class LibraryComponent {
   
-  // cardsCol = collection(this.firestore, 'cards');
-  // cards$ = collectionData(this.cardsCol, { idField: 'id' }) as Observable<TCard[]>;
-  
+  hoverCard: TCard | null = null;
   selectedCard: TCard | null = null;
   cards: Array<TCard> = [];
-
-  isEdit = true;
-
-  colors = [
-    { value: 'uncolored'}, 
-    { value: 'blue'}, 
-    { value: 'black'}, 
-    { value: 'white'},
-    { value: 'red'},
-    { value: 'green'},
-  ];
-  cardTypes = [
-    { value: 'land'}, 
-    { value: 'creature'}, 
-    { value: 'instant'}, 
-    { value: 'interruption'}, 
-    { value: 'artifact'},
-    { value: 'sorcery'},
-    { value: 'enchantment'},
-  ];
 
   constructor(
     private shell: ShellService,
@@ -77,56 +52,24 @@ export class LibraryComponent {
   }
 
 
+  unitsData = {
+    total  : 0, // total number of units
+    owned  : 0, // total number of units you own
+    others : 0, // total number of units someone else owns
+    free   : 0, // total number of units nobody owns
+  }
 
   selectCard(card: TCard) {
     this.selectedCard = card;
-    this.isEdit = true;
-  }
-
-  async saveCard(card: TCard) {
-    card.cast = card.cast.map((v: number | string) => Number.parseInt(v as string, 10)) as TCast;
-    if (typeof card.attack === 'string') { card.attack = Number.parseInt(card.attack, 10); }
-    if (typeof card.defense === 'string') { card.defense = Number.parseInt(card.defense, 10); }
-    card.isFlying      = !!card.isFlying;
-    card.isTrample     = !!card.isTrample;
-    card.isFirstStrike = !!card.isFirstStrike;
-    card.isHaste       = !!card.isHaste;
-    card.isWall        = !!card.isWall;
-    const docObj = card.keyFilter((v,k) => k !== 'id') as Partial<TCard>; // Remove the field .id
-    // const docObj = card.keyFilter('name, image, color, type, attack, defense, cast, text, readyToPlay') as Partial<TCard>;
-    console.log('Saving Card', docObj);
-    await updateDoc(doc(this.firestore, 'cards', card.id), docObj);
-    this.isEdit = false;
-  }
-
-
-  async newCard() {
-    const lastId = this.cards.at(-1)?.id;
-    if (!lastId) { return; }
-    const id = 'c' + ((Number.parseInt(lastId.slice(1)) + 1) + '').padStart(6, '0');
-    const card: TCard = {
-      id,
-      name    : 'New Card',
-      image   : 'image',
-      color   : 'uncolored',
-      cast    : [0,0,0,0,0,0],
-      text    : '',
-      type    : 'land',
-      attack          : 0,
-      defense         : 0,
-      isWall          : false,
-      isFlying        : false,
-      isTrample       : false,
-      isFirstStrike   : false,
-      isHaste         : false,
-      colorProtection : null,
-      readyToPlay: false,
+    console.log(this.selectedCard.units);
+    const units = this.selectedCard.units || [];
+    this.unitsData = {
+      total   : units.length,
+      owned   : units.filter(u => u.owner === 'you').length,
+      others  : units.filter(u => u.owner !== 'you' && u.owner).length,
+      free    : units.filter(u => !u.owner).length,
     };
-    console.log('New Card:', card);
-    await setDoc(doc(this.firestore, 'cards', id), card);
-    this.cards.push(card);
-    this.selectCard(card);
+
   }
 
-  numArr(num: number): Array<number> { return Array.from(Array(num).keys()) }
 }

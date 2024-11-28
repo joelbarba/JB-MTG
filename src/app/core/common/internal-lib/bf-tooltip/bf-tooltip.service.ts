@@ -7,6 +7,7 @@ export class BfTooltipService {
   left = -200;
   top = -200;
   currHost = '';
+  tipSide: 'top' | 'right' | 'bottom' | 'left' = 'top';
 
   text$: Subject<string> = new Subject();
 
@@ -14,15 +15,24 @@ export class BfTooltipService {
 
   // How high from the top of the host the tooltip is placed
   // The arrow is already 6px, so consider >= 6
-  private topMargin = 12; 
+  private margin = 12; 
 
   constructor() {}
 
-  activate(text: string, tipId: string, rect: DOMRect) {
+  activate(text: string, tipId: string, tipSide: 'top' | 'right' | 'bottom' | 'left', rect: DOMRect) {
     if (text) {
       this.isOn = true;
-      this.left = rect.left + Math.round(rect.width / 2);
-      this.top = rect.top - this.topMargin;
+      this.tipSide = tipSide;
+
+      if (tipSide === 'right') {
+        this.left = rect.right + this.margin;
+        this.top = rect.top + Math.round(rect.height / 2);
+      } 
+      else { // top by default
+        this.left = rect.left + Math.round(rect.width / 2);
+        this.top = rect.top - this.margin;
+      }
+
       this.currHost = tipId;
       this.text$.next(text);
 

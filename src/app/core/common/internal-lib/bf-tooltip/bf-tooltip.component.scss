@@ -17,15 +17,24 @@ $border-color: #d1d1d1;
 
     .arrow-rect {
       z-index: 9000;
-      position: absolute;
-      left: calc(50% - 6px);
-      bottom: -7px;
+      position: absolute;      
       width: 12px;
       height: 12px;
       transform: rotate(45deg);
       background: $bg-color;
+    }
+    
+    &.side-top .arrow-rect {
+      left: calc(50% - 6px);
+      bottom: -7px;
       border-right: 1px solid $border-color;
       border-bottom: 1px solid $border-color;
+    }
+    &.side-right .arrow-rect {
+      left: -7px;
+      top: calc(50% - 6px);
+      border-bottom: 1px solid #d1d1d1;
+      border-left: 1px solid #d1d1d1;
     }
 
     transition-duration: 300ms;

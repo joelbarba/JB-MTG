@@ -1,1 +1,134 @@
-<p>settings works!</p>
+<h2>Settings</h2>
+
+<div class="page">
+
+  <div class="details">
+    <div *ngIf="selectedCard">
+     
+      <div class="card-data">
+        <div class="row whiteBg">
+          <h3 class="col-12">Details: {{selectedCard.id}}</h3>
+
+          <bf-input class="col-6" bfLabel="Name"  [(ngModel)]="selectedCard.name"></bf-input>
+          <bf-input class="col-6" bfLabel="Image" [(ngModel)]="selectedCard.image"></bf-input>
+
+          <div class="col-12" style="display: flex;">
+            <bf-label style="flex: 1" bfText="Cast" class="block"></bf-label>
+            <bf-input style="flex: 1" bfLabel="X"      [(ngModel)]="selectedCard.cast[0]"></bf-input>
+            <bf-input style="flex: 1" bfLabel="Blue"   [(ngModel)]="selectedCard.cast[1]"></bf-input>
+            <bf-input style="flex: 1" bfLabel="White"  [(ngModel)]="selectedCard.cast[2]"></bf-input>
+            <bf-input style="flex: 1" bfLabel="Black"  [(ngModel)]="selectedCard.cast[3]"></bf-input>
+            <bf-input style="flex: 1" bfLabel="Red"    [(ngModel)]="selectedCard.cast[4]"></bf-input>
+            <bf-input style="flex: 1" bfLabel="Green"  [(ngModel)]="selectedCard.cast[5]"></bf-input>
+          </div>
+
+          <bf-dropdown bfLabel="Color" class="col-4"
+                [(ngModel)]="selectedCard.color"
+                bfRender="value"
+                bfSelect="value"
+                [bfRequired]="true"
+                [bfList]="colors">
+          </bf-dropdown>
+          <bf-dropdown bfLabel="Type" class="col-4"
+                [(ngModel)]="selectedCard.type"
+                bfRender="value"
+                bfSelect="value"
+                [bfRequired]="true"
+                [bfList]="cardTypes">
+          </bf-dropdown>
+          <bf-input *ngIf="selectedCard.type === 'creature'" class="col-2" bfLabel="Attack" [(ngModel)]="selectedCard.attack"></bf-input>
+          <bf-input *ngIf="selectedCard.type === 'creature'" class="col-2" bfLabel="Defense" [(ngModel)]="selectedCard.defense"></bf-input>
+
+          <div class="col-12" *ngIf="selectedCard.type === 'creature'" style="margin: 15px 0;">
+            <bf-checkbox style="margin-right: 10px;" bfLabel="Flying"       [(ngModel)]="selectedCard.isFlying"></bf-checkbox>
+            <bf-checkbox style="margin-right: 10px;" bfLabel="Trample"      [(ngModel)]="selectedCard.isTrample"></bf-checkbox>
+            <bf-checkbox style="margin-right: 10px;" bfLabel="First Strike" [(ngModel)]="selectedCard.isFirstStrike"></bf-checkbox>
+            <bf-checkbox style="margin-right: 10px;" bfLabel="Haste"        [(ngModel)]="selectedCard.isHaste"></bf-checkbox>
+            <bf-checkbox style="margin-right: 10px;" bfLabel="Wall"         [(ngModel)]="selectedCard.isWall"></bf-checkbox>
+          </div>
+
+          <!-- <bf-input class="col-12" bfLabel="Text" [(ngModel)]="selectedCard.text"></bf-input> -->
+
+          <bf-input class="col-4" bfLabel="Price (sats)" [(ngModel)]="selectedCard.price"></bf-input>
+
+          <bf-dropdown bfLabel="Color Protection" class="col-6 flat" *ngIf="selectedCard.type === 'creature'"
+                [(ngModel)]="selectedCard.colorProtection"
+                bfRender="value"
+                bfSelect="value"
+                [bfList]="colors">
+          </bf-dropdown>
+
+          
+
+          <bf-checkbox class="col-12" bfLabel="Ready to play" [(ngModel)]="selectedCard.readyToPlay" style="margin-right: 100px;"></bf-checkbox>
+
+          <div class="col-12" style="margin-top: 50px;">
+            <bf-btn class="full-width" bfText="Save Card Data" bfType="save" (bfClick)="saveCard(selectedCard)"></bf-btn>
+          </div>
+
+        </div>
+
+        <div class="full-card">          
+          <mtg-card [card]="selectedCard" class="lg"></mtg-card>        
+        </div>
+
+      </div>
+
+      <h4 style="margin-top: -30px;">
+        <bf-btn bfText="+1 Unit" bfType="add" style="margin-right: 15px;" (bfClick)="createUnit()"></bf-btn>
+        <span>Units ({{units.length}}):</span>
+      </h4>
+      <div>
+        <ul class="list-unstyled table-list header" *ngIf="units.length">
+          <li class="list-header">
+            <bf-list-header-col class="col-5" colTitle="Ref"></bf-list-header-col>
+            <bf-list-header-col class="col-5" colTitle="Owner"></bf-list-header-col>
+            <bf-list-header-col class="col-2" colTitle=""></bf-list-header-col>
+          </li>
+        </ul>
+      </div>
+
+    </div>
+
+    <div class="units-list" *ngIf="selectedCard">
+
+      <ul class="list-unstyled table-list content">
+        <li class="list-row" *ngFor="let unit of units">
+          <div class="col-5 ref-font">{{unit.ref}}</div>
+          <div class="col-5">
+            <!-- {{unit.ownerName || 'Free'}} -->
+             <bf-dropdown class="flat"
+              [(ngModel)]="unit.owner"
+              [bfList]="users"
+              bfRender="name"
+              bfEmptyLabel="Free"
+             ></bf-dropdown>
+          </div>
+          <div class="col-2 text-right">
+            <bf-btn bfType="delete-icon" (bfClick)="deleteUnit(unit)"></bf-btn>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+  </div>
+
+
+
+
+  <div class="list">
+    <div class="row whiteBg" style="margin-top: 0;">
+      <bf-input class="col-4 flat" bfIcon="icon-search" [(ngModel)]="filterText" (ngModelChange)="filterList($event)"></bf-input>
+      <bf-checkbox class="col-2 pad-input" bfLabel="Not Ready To Play"></bf-checkbox>
+      <bf-btn class="col-6 text-right" bfIcon="icon-plus" bfText="New Card" (bfClick)="newCard()"></bf-btn>
+    </div>
+
+    <div class="all-cards">
+      <div class="card-wrapper" *ngFor="let card of cards" (click)="selectCard(card)">
+        {{card.id}}
+        <mtg-card [card]="card" class="sm"></mtg-card>
+      </div>
+    </div>
+  </div>
+  
+</div>

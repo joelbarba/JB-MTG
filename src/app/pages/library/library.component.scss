@@ -1,31 +1,37 @@
+h2 {
+  padding: 15px 15px 0 15px;
+}
+
 .page {
+  padding: 0 15px 15px 15px;
   display: flex;
+
   .list {
     padding: 15px;
     flex: 4;
+    display: flex;
+    flex-wrap: wrap;
   
     .card-wrapper {
       display: inline-block;
-      margin: 2.5px 4px;
+      margin: 5px 7px;
       text-align: center;
-      .card {
-        padding: 3px;
-        border: 1px solid black;
-        background: white;
-        border-radius: 5px;
+      max-width: 120px;
+      mtg-card { 
         cursor: pointer;
-        img { max-height: 160px; }
-        &:hover {
-          border: 3px solid #00ff2d;
-          padding: 1px;
-        }
       }
+      // &:hover {
+      //   border: 3px solid #00ff2d;
+      //   margin: 2px 4px;
+      //   border-radius: 8px;
+      // }
+      span { font-size: 12px; }
     }
   }
   
   .details {
-    flex: 1;
-    border-left: 1px solid black;
+    flex: 0 0 510px;
+    border-right: 1px solid black;
     padding: 15px;
   }
 }
