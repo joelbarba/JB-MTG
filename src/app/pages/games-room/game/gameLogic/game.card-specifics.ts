@@ -1,5 +1,6 @@
+import { randomId } from "../../../../core/common/commons";
 import { TCast, TColor, TEffect, TGameCard, TGameState } from "../../../../core/types";
-import { getCards, killDamagedCreatures, moveCard, moveCardToGraveyard, randomId } from "./game.utils";
+import { getCards, killDamagedCreatures, moveCard, moveCardToGraveyard } from "./game.utils";
 
 
 // ------------------------ SPECIFIC EVENTS for every CARD ------------------------

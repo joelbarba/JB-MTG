@@ -1,4 +1,4 @@
-import { Component, ViewEncapsulation } from '@angular/core';
+import { Component, HostListener, Renderer2, ViewEncapsulation } from '@angular/core';
 import { AuthService } from '../../core/common/auth.service';
 import { ShellService } from '../../shell/shell.service';
 import { CommonModule } from '@angular/common';
@@ -6,11 +6,10 @@ import { Firestore, QuerySnapshot, QueryDocumentSnapshot, DocumentData, setDoc, 
 import { getDocs, getDoc, collection, doc } from '@angular/fire/firestore';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { BfGrowlService, BfUiLibModule } from '@blueface_npm/bf-ui-lib';
+import { BfGrowlService, BfListHandler, BfUiLibModule } from '@blueface_npm/bf-ui-lib';
 import { MtgCardComponent } from "../../core/common/internal-lib/mtg-card/mtg-card.component";
-import { TCard, TCast } from '../../core/types';
-import { TUser } from '../../core/common/interfaces';
-import { randomUnitId } from '../games-room/game/gameLogic/game.utils';
+import { TCard, TCast, TUser } from '../../core/types';
+import { cardOrderList, cardTypes, colors, randomUnitId } from '../../core/common/commons';
 
 @Component({
   selector: 'app-settings',
@@ -23,34 +22,16 @@ import { randomUnitId } from '../games-room/game/gameLogic/game.utils';
     MtgCardComponent,
 ],
   templateUrl: './settings.component.html',
-  styleUrl: './settings.component.scss'
+  styleUrl: './settings.component.scss',
 })
 export class SettingsComponent {
-
-  filterText = '';
+  users: Array<TUser> = [];  
+  cardsList: BfListHandler;
   
-  selectedCard: TCard | null = null;
-  cards: Array<TCard> = [];
-  users: Array<TUser> = [];
+  selCard: TCard | null = null;
 
-
-  colors = [
-    { value: 'uncolored'}, 
-    { value: 'blue'}, 
-    { value: 'black'}, 
-    { value: 'white'},
-    { value: 'red'},
-    { value: 'green'},
-  ];
-  cardTypes = [
-    { value: 'land'}, 
-    { value: 'creature'}, 
-    { value: 'instant'}, 
-    { value: 'interruption'}, 
-    { value: 'artifact'},
-    { value: 'sorcery'},
-    { value: 'enchantment'},
-  ];
+  colors = colors;
+  cardTypes = cardTypes;
 
   constructor(
     private shell: ShellService,
@@ -59,41 +40,65 @@ export class SettingsComponent {
     public growl: BfGrowlService,
   ) {
     this.shell.gameMode('off');
+    this.cardsList = new BfListHandler({
+      listName      : 'cards-list',
+      filterFields  : ['name'],
+      orderFields   : ['id'],
+      orderReverse  : false,
+      rowsPerPage   : 50000,
+    });
+    // this.cardsList.orderList = cardOrderList;
+    this.cardsList.orderList = (list: Array<TCard>) => {
+      list.sort((a,b) => a.id > b.id ? 1 : -1);
+      return list;
+    };
   }
 
   async ngOnInit() {
     const snapshot: QuerySnapshot<DocumentData> = await getDocs(collection(this.firestore, 'cards'));
-    this.cards = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as TCard));
-    this.cards.sort((a,b) => a.id > b.id ? 1 : -1);
+    const cards = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as TCard));
+    this.cardsList.load(cards);
 
     const snapshotUsers: QuerySnapshot<DocumentData> = await getDocs(collection(this.firestore, 'users'));
     this.users = snapshotUsers.docs.map(doc => ({ uid: doc.id, ...doc.data() } as TUser));
     this.users.sort((a,b) => a.name > b.name ? 1 : -1);
 
     // console.log(this.cards);
-    this.selectCard(this.cards[0]);
+    this.selectCard(this.cardsList.loadedList[0]);
+
   }
 
-  filterList(text: string) {
-    
+
+
+  @HostListener('window:keyup', ['$event'])
+  keyEvent(ev: KeyboardEvent) {
+    if (ev.code === 'ArrowLeft' || ev.code === 'ArrowRight') {
+    const list = this.cardsList.loadedList;
+    const ind = list.indexOf(this.selCard);
+      if (ev.code === 'ArrowLeft' && ind > 0) { this.selectCard(list[ind -1]); }
+      if (ev.code === 'ArrowRight' && ind < list.length - 1) { this.selectCard(list[ind + 1]); }
+    }
+    ev.stopPropagation();
   }
+
+  
 
 
   units: Array<{ ref: string, owner: TUser | null }> = [];
   selectCard(card: TCard) {
-    this.selectedCard = card;
-    console.log(this.selectedCard);
-    this.selectedCard.units = this.selectedCard.units || [];
-    this.units = this.selectedCard.units.map(unit => {
+    this.selCard = card;
+    console.log(this.selCard);
+    this.selCard.units = this.selCard.units || [];
+    this.units = this.selCard.units.map(unit => {
       return { ref: unit.ref, owner: this.users.find(u => u.uid === unit.owner) || null };
     });
   }
 
 
   createUnit() {
-    if (this.selectedCard) {
+    if (this.selCard) {
       const joelOwner = this.users.find(u => u.uid === '4cix25Z3DPNgcTFy4FcsYmXjdSi1') || null;
-      this.units.push({ ref: this.selectedCard.id + '.' + randomUnitId(20), owner: joelOwner });
+      this.units.push({ ref: this.selCard.id + '.' + randomUnitId(20), owner: joelOwner });
       // this.growl.success('New unit added');
     }
   }
@@ -118,11 +123,12 @@ export class SettingsComponent {
     // const docObj = card.keyFilter('name, image, color, type, attack, defense, cast, text, readyToPlay') as Partial<TCard>;
     console.log('Saving Card', docObj);
     await updateDoc(doc(this.firestore, 'cards', card.id), docObj);
+    this.growl.success(`Card ${card.name} updated`);
   }
 
 
   async newCard() {
-    const lastId = this.cards.at(-1)?.id;
+    const lastId = this.cardsList.loadedList.at(-1)?.id;
     if (!lastId) { return; }
     const id = 'c' + ((Number.parseInt(lastId.slice(1)) + 1) + '').padStart(6, '0');
     const card: TCard = {
@@ -142,12 +148,13 @@ export class SettingsComponent {
       isFirstStrike   : false,
       isHaste         : false,
       colorProtection : null,
+      maxInDeck       : 4,
       readyToPlay     : false,
       units           : [],
     };
     console.log('New Card:', card);
     await setDoc(doc(this.firestore, 'cards', id), card);
-    this.cards.push(card);
+    this.cardsList.load(this.cardsList.loadedList.push(card));
     this.selectCard(card);
   }
 

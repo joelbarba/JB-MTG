@@ -2,7 +2,7 @@
 
 <div class="page">
   <div class="details">
-    <mtg-card [card]="hoverCard || selectedCard" class="lg"></mtg-card>
+    <mtg-card [cardImg]="hoverCard?.image || selectedCard?.image" class="lg"></mtg-card>
     <div *ngIf="selectedCard">
       <div>{{selectedCard.name}}</div>
       <div>Price: {{selectedCard.price}} sats</div>
@@ -17,7 +17,7 @@
          (mouseenter)="hoverCard = card"
          (click)="selectCard(card)">
 
-      <mtg-card [card]="card" class="sm"></mtg-card>
+      <mtg-card [cardImg]="card.image" class="sm"></mtg-card>
       <span>{{card.name}}</span>
       <!-- <br><span>6000 sats</span> -->
 

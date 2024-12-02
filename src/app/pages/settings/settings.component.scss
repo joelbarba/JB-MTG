@@ -27,7 +27,13 @@
         display: inline-block;
         margin: 2.5px 4px;
         text-align: center;
-        mtg-card { cursor: pointer; }
+        mtg-card {
+          cursor: pointer;
+          &.selected {
+            box-shadow: 0px 0px 3px 3px #00d4ff;
+            border-radius: 4px;
+          }
+        }
       }
     }
   
@@ -57,7 +63,6 @@
     .units-list {
       overflow: auto;
     }
-
     .ref-font { font-family: monospace; }
   }
 }

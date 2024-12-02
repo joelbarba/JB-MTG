@@ -51,30 +51,7 @@ export const getPlayers = (state: TGameState, playerANum: '1' | '2'): {
   return { player1, player2, playerA, playerB, turnPlayer, controlPlayer, attackingPlayer, defendingPlayer };
 }
 
-export const getTime = (): string => {
-  const time = new Date();
-  let timeStr = (time.getFullYear() + '').padStart(4, '0') + '-';
-  timeStr += ((time.getMonth() + 1) + '').padStart(2, '0') + '-';
-  timeStr += (time.getDay() + '').padStart(2, '0') + ' ';
-  timeStr += (time.getHours() + '').padStart(2, '0') + ':';
-  timeStr += (time.getMinutes() + '').padStart(2, '0') + ':';
-  timeStr += (time.getSeconds() + '').padStart(2, '0') + '.';
-  timeStr += (time.getMilliseconds() + '').padStart(3, '0');
-  return timeStr
-}
 
-export const randomId = (prefix = ''): string => { return prefix + (Math.round((Math.random() * 1000)) + ((new Date()).getTime() * 1000)); };
-export const randomUnitId = (length = 20) => {
-  let result = '';
-  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  const charactersLength = characters.length;
-  let counter = 0;
-  while (counter < length) {
-    result += characters.charAt(Math.floor(Math.random() * charactersLength));
-    counter += 1;
-  }
-  return result;
-}
 
 // Moves a card from its current location to another.
 // If toLocation is deck, hand, tble or grav, the player number is added from the current location

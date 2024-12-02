@@ -3,7 +3,6 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { BfGrowlService, BfLoadingBarService } from '@blueface_npm/bf-ui-lib';
 import { BehaviorSubject, firstValueFrom, Observable, Subject } from 'rxjs';
-import { TUser } from './interfaces';
 import { doc, Firestore, getDoc } from '@angular/fire/firestore';
 import { 
   Auth,
@@ -15,6 +14,7 @@ import {
   UserInfo,
   updateProfile,
 } from '@angular/fire/auth';
+import { TUser } from '../types';
 
 
 const httpOptions = { headers: new HttpHeaders({ 'Content-Type':  'application/json' }) };
@@ -116,6 +116,7 @@ export class AuthService {
       isAdmin   : false,
       isEnabled : false,
       sats      : 0,
+      decks     : [],
     };
 
     // Fetch /users document and add the custom data

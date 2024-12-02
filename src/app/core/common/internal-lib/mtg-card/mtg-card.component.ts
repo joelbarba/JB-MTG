@@ -13,7 +13,8 @@ import { CommonModule } from '@angular/common';
   styleUrl: './mtg-card.component.scss'
 })
 export class MtgCardComponent {
-  @Input() card!: TCard | null;
+  // @Input() card!: TCard | null;
+  @Input() cardImg?: string;
   @Input() back = false;
 
   constructor() {

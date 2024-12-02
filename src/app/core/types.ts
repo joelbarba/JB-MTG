@@ -37,6 +37,7 @@ export type TCard = {
   isFirstStrike : boolean;  // When dealing combat damage, if that kills the other attacking/defender, they don't receive any damage
   isHaste       : boolean;  // No summoning sickness
   colorProtection: TColor | null; // Cannot be blocked, targeted, enchanted or damage by sources of this color
+  maxInDeck?: number;    // Max number of the same card you can have in a deck (1, 4, undefined=as many as you want)
   readyToPlay: boolean;
   units: Array<{ ref: string, owner: string }>;
 };
@@ -167,3 +168,20 @@ export type TActionParams = {
   manaForUncolor?: TCast,
   targets?: Array<string> 
 }
+
+
+export type TUser = {
+  name: string;
+  email: string;
+  uid: string;
+  isAdmin: boolean;
+  isEnabled: boolean;
+  sats: number;
+  decks: Array<TDeckRef>;
+}
+export type TDeckRef = {
+  id: string;
+  deckName: string;
+  cards: Array<string>;  // unit ref
+}
+export type TUnitCard = Omit<TCard, 'units'> & { ref: string };

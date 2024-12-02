@@ -6,8 +6,8 @@ import { DocumentReference, Firestore, collection, doc, getDoc, getDocs, onSnaps
 import { BfConfirmService, BfGrowlService, BfUiLibModule } from '@blueface_npm/bf-ui-lib';
 import { GameStateService } from '../../game-state.service';
 import { Router } from '@angular/router';
-import { getTime } from '../gameLogic/game.utils';
 import { Subscription } from 'rxjs';
+import { getTime } from '../../../../core/common/commons';
 
 type TDBChatMsg = { player: string, text: string };
 type TChatMsg = { text: string, isYou: boolean };

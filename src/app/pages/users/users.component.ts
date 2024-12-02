@@ -8,7 +8,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { BfConfirmService, BfGrowlService, BfListHandler, BfUiLibModule } from '@blueface_npm/bf-ui-lib';
 import { Subject } from 'rxjs';
 import { Auth, createUserWithEmailAndPassword, sendEmailVerification, sendPasswordResetEmail, updateProfile } from '@angular/fire/auth';
-import { TUser } from '../../core/common/interfaces';
+import { TUser } from '../../core/types';
 
 
 
@@ -77,7 +77,7 @@ export class UsersComponent {
   }
 
   prepareNewUser() {
-    this.newUser = { name: '', email: '', pass: '', sats: 100000, isAdmin: false, isEnabled: false };
+    this.newUser = { name: '', email: '', pass: '', sats: 100000, isAdmin: false, isEnabled: false, decks: [] };
     this.editUser = undefined;
     this.btnDisabled = false;
   }

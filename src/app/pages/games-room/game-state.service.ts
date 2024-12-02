@@ -4,10 +4,11 @@ import { AuthService } from '../../core/common/auth.service';
 import { ShellService } from '../../shell/shell.service';
 import { DocumentReference, Firestore, QuerySnapshot, collection, doc, getDoc, getDocs, onSnapshot, query, setDoc, DocumentData, Unsubscribe } from '@angular/fire/firestore';
 import { EPhase, TAction, TCard, TCardLocation, TGameState, TGameDBState, TGameCard, TGameCards, TActionParams, TPlayer, TCardType, TCardSemiLocation, TCardAnyLocation, TCast, TGameOption, ESubPhase, TEffect, TCardNoUnits } from '../../core/types';
-import { calcManaForUncolored, checkMana, getCards, getPlayers, getTime, killDamagedCreatures, moveCard, moveCardToGraveyard, spendMana } from './game/gameLogic/game.utils';
+import { calcManaForUncolored, checkMana, getCards, getPlayers, killDamagedCreatures, moveCard, moveCardToGraveyard, spendMana } from './game/gameLogic/game.utils';
 import { GameOptionsService } from './game/game.options.service';
 import { extendCardLogic } from './game/gameLogic/game.card-specifics';
 import { BfDefer } from '@blueface_npm/bf-ui-lib';
+import { getTime } from '../../core/common/commons';
 
 
 

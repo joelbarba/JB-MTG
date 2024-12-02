@@ -1,6 +1,6 @@
 import { Directive, HostBinding, ElementRef, HostListener, Input } from '@angular/core';
 import { BfTooltipService } from './bf-tooltip.service';
-import { randomId } from '../../../../pages/games-room/game/gameLogic/game.utils';
+import { randomId } from '../../commons';
 
 @Directive({ 
   selector: '[hoverTip]',
