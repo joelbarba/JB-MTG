@@ -111,8 +111,8 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     case 'c000023':  c000023_AncestralRecall();       break;
     case 'c000024':  c000024_Armageddon();            break;
     case 'c000025':  c000025_BadMoon();               break; // ok
-    case 'c000026':  c000026_BlackKnight();           break;
-    case 'c000027':  c000027_DarkRitual();            break;
+    case 'c000026':  c000026_BlackKnight();           break; // ok
+    case 'c000027':  c000027_DarkRitual();            break; // ok
     case 'c000028':  c000028_DrudgeSkeletons();       break;
     case 'c000029':  c000029_Fork();                  break;
     case 'c000030':  c000030_HowlingMine();           break;
@@ -120,29 +120,42 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     case 'c000032':  c000032_LightningBolt();         break; // ok
     case 'c000033':  c000033_ShivanDragon();          break;
     case 'c000034':  c000034_TimeWalk();              break;
-    case 'c000035':  c000035_HowlingMine();           break;
+    case 'c000035':  c000035_KirdApe();               break;
     case 'c000036':  c000036_GrayOrge();              break; // ok
     case 'c000037':  c000037_BrassMan();              break;
     case 'c000038':  c000038_Counterspell();          break; // ok
-    case 'c000039':  c000039_CrawWurm();              break;
-    case 'c000040':  c000040_EarthElemental();        break;
-    case 'c000041':  c000041_ElvishArchers();         break;
-    case 'c000042':  c000042_FireElemental();         break;
+    case 'c000039':  c000039_CrawWurm();              break; // ok
+    case 'c000040':  c000040_EarthElemental();        break; // ok
+    case 'c000041':  c000041_ElvishArchers();         break; // ok
+    case 'c000042':  c000042_FireElemental();         break; // ok
     case 'c000043':  c000043_GiantGrowth();           break; // ok
-    case 'c000044':  c000044_GiantSpider();           break;
+    case 'c000044':  c000044_GiantSpider();           break; // ok
     case 'c000045':  c000045_GoblinBalloonBrigade();  break;
-    case 'c000046':  c000046_GraniteGargoyle();       break;
-    case 'c000047':  c000047_GrizzlyBears();          break;
-    case 'c000048':  c000048_HillGiant();             break;
-    case 'c000049':  c000049_HurloonMinotaur();       break;
-    case 'c000050':  c000050_IronrootTreefolk();      break;
+    case 'c000046':  c000046_GraniteGargoyle();       break; // ok
+    case 'c000047':  c000047_GrizzlyBears();          break; // ok
+    case 'c000048':  c000048_HillGiant();             break; // ok
+    case 'c000049':  c000049_HurloonMinotaur();       break; // ok
+    case 'c000050':  c000050_IronrootTreefolk();      break; // ok
     case 'c000051':  c000051_LlanowarElves();         break;
-    case 'c000052':  c000052_MonssGoblinRaiders();    break;
-    case 'c000053':  c000053_Ornithopter();           break;
-    case 'c000054':  c000054_SavannahLions();         break;
-    case 'c000055':  c000055_UnholyStrength();        break;
-    case 'c000056':  c000056_WallofIce();             break;
+    case 'c000052':  c000052_MonssGoblinRaiders();    break; // ok
+    case 'c000053':  c000053_Ornithopter();           break; // ok
+    case 'c000054':  c000054_SavannahLions();         break; // ok
+    case 'c000055':  c000055_UnholyStrength();        break; // ok
+    case 'c000056':  c000056_WallofIce();             break; // ok
     case 'c000057':  c000057_Disenchantment();        break; // ok
+    case 'c000058':  c000058_Shatter();               break;
+    case 'c000059':  c000059_Shatterstorm();          break;
+    case 'c000060':  c000060_Disintegrate();          break;
+    case 'c000061':  c000061_DemonicTutor();          break;
+    case 'c000062':  c000062_EyeForAnEye();           break;
+    case 'c000063':  c000063_IvoryTower();            break;
+    case 'c000064':  c000064_ManaFlare();             break;
+    case 'c000065':  c000065_Terror();                break;
+    case 'c000066':  c000066_WarpArtifact();          break;
+    case 'c000067':  c000067_Weakness();              break;
+    case 'c000068':  c000068_WheelOfFortune();        break;
+    case 'c000069':  c000069_WrathOfGod();            break;
+    case 'c000070':  c000070_HowlFromBeyond();        break;
     default: console.warn('Card ID not found', card.id); 
   }
 
@@ -365,7 +378,20 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   function c000031_HypnoticSpecter() {}
   function c000033_ShivanDragon() {}
   function c000034_TimeWalk() {}
-  function c000035_HowlingMine() {}
+  function c000035_KirdApe() {}
+  function c000058_Shatter() {}
+  function c000059_Shatterstorm() {}
+  function c000060_Disintegrate() {}
+  function c000061_DemonicTutor() {}
+  function c000062_EyeForAnEye() {}
+  function c000063_IvoryTower() {}
+  function c000064_ManaFlare() {}
+  function c000065_Terror() {}
+  function c000066_WarpArtifact() {}
+  function c000067_Weakness() {}
+  function c000068_WheelOfFortune() {}
+  function c000069_WrathOfGod() {}
+  function c000070_HowlFromBeyond() {}
 
   return card;
 }

@@ -12,6 +12,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { BfConfirmService, BfGrowlService, BfListHandler, BfUiLibModule } from '@blueface_npm/bf-ui-lib';
 import { MtgCardComponent } from '../../core/common/internal-lib/mtg-card/mtg-card.component';
 import { cardOrderList, cardTypes, colors, randomUnitId } from '../../core/common/commons';
+import { HoverTipDirective } from '../../core/common/internal-lib/bf-tooltip/bf-tooltip.directive';
 
 type TDeckEdit = { id: string, deckName: string, cards: Array<TUnitCard> };
 
@@ -24,6 +25,7 @@ type TDeckEdit = { id: string, deckName: string, cards: Array<TUnitCard> };
     FormsModule,
     BfUiLibModule,
     MtgCardComponent,
+    HoverTipDirective,
   ],
   templateUrl: './your-cards.component.html',
   styleUrl: './your-cards.component.scss',
@@ -36,6 +38,8 @@ export class YourCardsComponent {
   
   hoveringCard: TCard | null = null;
   hoveringUnit: TUnitCard | null = null;
+  selCard: TCard | null = null;
+  selUnit: TUnitCard | null = null;
 
   isGrouped = true;
   isDeckGrouped = true;
@@ -44,6 +48,12 @@ export class YourCardsComponent {
   cardTypes = cardTypes;
 
   showDecks = true;
+
+
+  decks: Array<TDeckEdit> = [];
+  selDeck?: TDeckEdit;
+  deckName = '';
+  groupDeckCards: Array<TCard> = [];
 
 
 
@@ -62,7 +72,7 @@ export class YourCardsComponent {
       orderReverse  : false,
       rowsPerPage   : 50000,
     });
-    // this.cardsList.orderList = cardOrderList;
+    this.cardsList.orderList = cardOrderList;
   }
 
   async ngOnInit() {
@@ -106,14 +116,20 @@ export class YourCardsComponent {
     }
   }
 
-  hoverCard(card: TCard) {
-    this.hoveringCard = card;
-    this.hoveringUnit = null;
+
+  switchShowDecks() {
+    this.showDecks = !this.showDecks;
+    if (!this.showDecks) { this.selDeck = undefined; }
   }
 
-  hoverUnit(unit: TUnitCard) {
-    this.hoveringCard = null;
-    this.hoveringUnit = unit;
+  hoverCard(card?: TCard) {
+    this.hoveringCard = card || this.selCard;
+    this.hoveringUnit = this.hoveringCard ? null : this.selUnit;
+  }
+
+  hoverUnit(unit?: TUnitCard) {
+    this.hoveringUnit = unit || this.selUnit;
+    this.hoveringCard = this.hoveringUnit ? null : this.selCard;
   }
 
   unitsInDeck(cardId: string): number {
@@ -132,11 +148,15 @@ export class YourCardsComponent {
   }
 
   selectUnit(unit: TUnitCard) {
+    this.selUnit = unit;
+    this.selCard = null;
     this.hoverUnit(unit);
     this.moveUnitToDeck(unit);
   }
 
   selectCard(card: TCard) {
+    this.selCard = card;
+    this.selUnit = null;
     this.hoverCard(card);
     if (this.showDecks && this.selDeck) {
       if (!this.isCardInDeck(card)) { // If not all units are in the deck
@@ -179,23 +199,38 @@ export class YourCardsComponent {
 
 
 
-  // @HostListener('window:keyup', ['$event'])
-  // keyEvent(ev: KeyboardEvent) {
-  //   // if (ev.code === 'ArrowLeft' || ev.code === 'ArrowRight') {
-  //   // const list = this.cardsList.loadedList;
-  //   // const ind = list.indexOf(this.selCard);
-  //   //   if (ev.code === 'ArrowLeft' && ind > 0) { this.selectCard(list[ind -1]); }
-  //   //   if (ev.code === 'ArrowRight' && ind < list.length - 1) { this.selectCard(list[ind + 1]); }
-  //   // }
-  //   ev.stopPropagation();
-  // }
+  @HostListener('window:keyup', ['$event'])
+  keyEvent(ev: KeyboardEvent) {
+    const CARDS_PER_ROW = 7; // TODO: Calculate that dynamically
+    // console.log(ev.code);
+    if (ev.code === 'ArrowLeft' || ev.code === 'ArrowRight' || ev.code === 'ArrowDown' || ev.code === 'ArrowUp') {
+      const list = this.cardsList.loadedList;
+      if (this.isGrouped) {
+        const ind = list.indexOf(list.find(c => c.id === this.selCard?.id)) || 0;
+        if (ev.code === 'ArrowLeft')  { this.selCard = list[Math.max(ind - 1, 0)]; }
+        if (ev.code === 'ArrowRight') { this.selCard = list[Math.min(ind + 1, list.length - 1)]; }
+        if (ev.code === 'ArrowDown')  { this.selCard = list[Math.min(ind + CARDS_PER_ROW, list.length - 1)]; }
+        if (ev.code === 'ArrowUp')    { this.selCard = list[Math.max(ind - CARDS_PER_ROW, 0)]; }
+        if (this.selCard) { this.hoverCard(this.selCard); this.selUnit = null; }
+      }
+      else {
+        const ind = list.indexOf(list.find(c => c.ref === this.selUnit?.ref)) || 0;
+        if (ev.code === 'ArrowLeft')  { this.selUnit = list[Math.max(ind - 1, 0)]; }
+        if (ev.code === 'ArrowRight') { this.selUnit = list[Math.min(ind + 1, list.length - 1)]; }
+        if (ev.code === 'ArrowDown')  { this.selUnit = list[Math.min(ind + CARDS_PER_ROW, list.length - 1)]; }
+        if (ev.code === 'ArrowUp')    { this.selUnit = list[Math.max(ind - CARDS_PER_ROW, 0)]; }
+        if (this.selUnit) { this.hoverUnit(this.selUnit); this.selCard = null; }
+      }
+    }
+    if (ev.code === 'Space' || ev.code === 'Enter' || ev.code === 'NumpadEnter') {
+      if (this.isGrouped && this.selCard) { this.selectCard(this.selCard); }
+      if (!this.isGrouped && this.selUnit) { this.selectUnit(this.selUnit); }
+    }
+    ev.stopPropagation();
+  }
 
 
 
-  decks: Array<TDeckEdit> = [];
-  selDeck?: TDeckEdit;
-  deckName = '';
-  groupDeckCards: Array<TCard> = [];
 
   async loadDecks() {
     if (this.auth.profileUserId) {

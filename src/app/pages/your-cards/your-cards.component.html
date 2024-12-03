@@ -46,7 +46,7 @@
       <bf-btn class="flex-1 text-right" 
               [bfText]="showDecks ? 'Hide Your Decks': 'Show Your Decks'"
               [bfIcon]="showDecks ? 'icon-arrow-right3': 'icon-arrow-left6'"
-              (bfClick)="showDecks = !showDecks">
+              (bfClick)="switchShowDecks()">
       </bf-btn>
     </div>
 
@@ -82,18 +82,21 @@
     <!-- All Card Units -->
     <div class="all-cards" *ngIf="!isGrouped">
       <div class="card-wrapper" *ngFor="let unit of cardsList.renderList$ | async" 
-           (mouseenter)="hoverUnit(unit)" (click)="selectUnit(unit)">
+           [hoverTip]="selDeck && !isUnitInDeck(unit) ? 'Click to add it to the deck' : ''"
+           (mouseenter)="hoverUnit(unit)" (mouseleave)="hoverUnit()" (click)="selectUnit(unit)">
         <div class="card-name">{{unit.name}}</div>
         <mtg-card [cardImg]="unit.image" class="sm"
-          [class.is-in-deck]="isUnitInDeck(unit)">
+                  [class.selected]="selUnit?.ref === unit.ref"
+                  [class.is-in-deck]="isUnitInDeck(unit)">
         </mtg-card>
       </div>
     </div>
 
     <!-- All Grouped Cards -->
     <div class="all-cards" *ngIf="isGrouped">
-      <div class="card-wrapper" *ngFor="let card of cardsList.renderList$ | async" 
-           (mouseenter)="hoverCard(card)" (click)="selectCard(card)">
+      <div class="card-wrapper" *ngFor="let card of cardsList.renderList$ | async"
+           [hoverTip]="selDeck && !isCardInDeck(card) ? 'Click to add it to the deck' : ''"
+           (mouseenter)="hoverCard(card)" (mouseleave)="hoverCard()" (click)="selectCard(card)">
         <div class="card-name" *ngIf="card.units">
           <!-- {{card.units.length}} x {{card.name}} -->
           <!-- <span class="count">{{card.units.length}}</span> x {{card.name}} -->
@@ -101,7 +104,8 @@
           <span>({{card.units.length - unitsInDeck(card.id)}})</span>
         </div>
         <mtg-card [cardImg]="card.image" class="sm"
-          [class.is-in-deck]="isCardInDeck(card)">
+                  [class.selected]="selCard?.id === card.id"
+                  [class.is-in-deck]="isCardInDeck(card)">
         </mtg-card>
       </div>
     </div>
@@ -161,7 +165,9 @@
 
       <!-- All Units in Deck -->
       <div class="deck-editor-list" *ngIf="!isDeckGrouped">
-        <div class="card-wrapper" *ngFor="let unit of selDeck.cards" (mouseenter)="hoverUnit(unit)" (click)="removeUnitFromDeck(unit)">
+        <div class="card-wrapper" *ngFor="let unit of selDeck.cards" 
+             [hoverTip]="'Click to remove it'"
+             (mouseenter)="hoverUnit(unit)" (mouseleave)="hoverUnit()" (click)="removeUnitFromDeck(unit)">
           <div class="card-name">{{unit.name}}</div>
           <mtg-card [cardImg]="unit.image" class="sm"></mtg-card>
         </div>
@@ -169,7 +175,9 @@
 
       <!-- Grouped Cards in Deck -->
       <div class="deck-editor-list" *ngIf="isDeckGrouped">
-        <div class="card-wrapper" *ngFor="let card of groupDeckCards" (mouseenter)="hoverCard(card)" (click)="removeCardFromDeck(card)">
+        <div class="card-wrapper" *ngFor="let card of groupDeckCards"
+             [hoverTip]="card.units.length > 1 ? 'Click to remove 1' : 'Click to remove it'"
+             (mouseenter)="hoverCard(card)" (mouseleave)="hoverCard()" (click)="removeCardFromDeck(card)">
           <div class="card-name">
             <span class="count">{{card.units.length}}</span> x {{card.name}}
           </div>
