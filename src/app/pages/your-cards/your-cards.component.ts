@@ -1,12 +1,12 @@
 import { Component, HostListener, ViewEncapsulation } from '@angular/core';
 import { AuthService } from '../../core/common/auth.service';
 import { ShellService } from '../../shell/shell.service';
-import { CommonModule } from '@angular/common';
+import { CommonModule, formatNumber } from '@angular/common';
 import { Firestore, QuerySnapshot, QueryDocumentSnapshot, DocumentData, setDoc, updateDoc, deleteDoc } from '@angular/fire/firestore';
 import { getDocs, getDoc, collection, doc } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
 import { collectionData } from 'rxfire/firestore';
-import { TCard, TDeckRef, TUnitCard, TUser } from '../../core/types';
+import { TCard, TDeckRef, TMarketCard, TUnitCard, TUser } from '../../core/types';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { BfConfirmService, BfGrowlService, BfListHandler, BfUiLibModule } from '@blueface_npm/bf-ui-lib';
@@ -15,6 +15,8 @@ import { cardOrderList, cardTypes, colors, randomUnitId } from '../../core/commo
 import { HoverTipDirective } from '../../core/common/internal-lib/bf-tooltip/bf-tooltip.directive';
 
 type TDeckEdit = { id: string, deckName: string, cards: Array<TUnitCard> };
+
+
 
 @Component({
   selector: 'app-your-cards',
@@ -47,7 +49,7 @@ export class YourCardsComponent {
   colors = colors;
   cardTypes = cardTypes;
 
-  showDecks = true;
+  showDecks = false;
 
 
   decks: Array<TDeckEdit> = [];
@@ -79,9 +81,9 @@ export class YourCardsComponent {
     await this.auth.profilePromise;
     await this.loadCards();
     await this.loadDecks();
-    // this.selectCard(this.yourCards[0]);
     this.selectCard(this.groupedCards[0]);
-    this.editDeck(this.decks[0]);
+    // this.selectCard(this.yourCards[0]);
+    // this.editDeck(this.decks[0]);
   }
 
   async loadCards() {
@@ -92,9 +94,8 @@ export class YourCardsComponent {
     this.yourCards = [];
     this.groupedCards.forEach(card => {
       const cardWithoutUnits = card.keyFilter((v,k) => k !== 'units') as Omit<TCard, 'units'>;
-      card.units.filter(u => u.owner === this.auth.profileUserId).forEach(unit => {
-        this.yourCards.push({ ...cardWithoutUnits, ref: unit.ref });
-      });
+      card.units = card.units.filter(u => u.owner === this.auth.profileUserId);
+      card.units.forEach(unit => this.yourCards.push({ ...cardWithoutUnits, ref: unit.ref }));
     });
     this.switchGrouped();
   }
@@ -199,35 +200,36 @@ export class YourCardsComponent {
 
 
 
-  @HostListener('window:keyup', ['$event'])
-  keyEvent(ev: KeyboardEvent) {
-    const CARDS_PER_ROW = 7; // TODO: Calculate that dynamically
-    // console.log(ev.code);
-    if (ev.code === 'ArrowLeft' || ev.code === 'ArrowRight' || ev.code === 'ArrowDown' || ev.code === 'ArrowUp') {
-      const list = this.cardsList.loadedList;
-      if (this.isGrouped) {
-        const ind = list.indexOf(list.find(c => c.id === this.selCard?.id)) || 0;
-        if (ev.code === 'ArrowLeft')  { this.selCard = list[Math.max(ind - 1, 0)]; }
-        if (ev.code === 'ArrowRight') { this.selCard = list[Math.min(ind + 1, list.length - 1)]; }
-        if (ev.code === 'ArrowDown')  { this.selCard = list[Math.min(ind + CARDS_PER_ROW, list.length - 1)]; }
-        if (ev.code === 'ArrowUp')    { this.selCard = list[Math.max(ind - CARDS_PER_ROW, 0)]; }
-        if (this.selCard) { this.hoverCard(this.selCard); this.selUnit = null; }
-      }
-      else {
-        const ind = list.indexOf(list.find(c => c.ref === this.selUnit?.ref)) || 0;
-        if (ev.code === 'ArrowLeft')  { this.selUnit = list[Math.max(ind - 1, 0)]; }
-        if (ev.code === 'ArrowRight') { this.selUnit = list[Math.min(ind + 1, list.length - 1)]; }
-        if (ev.code === 'ArrowDown')  { this.selUnit = list[Math.min(ind + CARDS_PER_ROW, list.length - 1)]; }
-        if (ev.code === 'ArrowUp')    { this.selUnit = list[Math.max(ind - CARDS_PER_ROW, 0)]; }
-        if (this.selUnit) { this.hoverUnit(this.selUnit); this.selCard = null; }
-      }
-    }
-    if (ev.code === 'Space' || ev.code === 'Enter' || ev.code === 'NumpadEnter') {
-      if (this.isGrouped && this.selCard) { this.selectCard(this.selCard); }
-      if (!this.isGrouped && this.selUnit) { this.selectUnit(this.selUnit); }
-    }
-    ev.stopPropagation();
-  }
+  // @HostListener('window:keyup', ['$event'])
+  // keyEvent(ev: KeyboardEvent) {
+  //   const CARDS_PER_ROW = 7; // TODO: Calculate that dynamically
+  //   // console.log(ev.code);
+  //   if (ev.code === 'ArrowLeft' || ev.code === 'ArrowRight' || ev.code === 'ArrowDown' || ev.code === 'ArrowUp') {
+  //     const list = this.cardsList.loadedList;
+  //     if (this.isGrouped) {
+  //       const ind = list.indexOf(list.find(c => c.id === this.selCard?.id)) || 0;
+  //       if (ev.code === 'ArrowLeft')  { this.selCard = list[Math.max(ind - 1, 0)]; }
+  //       if (ev.code === 'ArrowRight') { this.selCard = list[Math.min(ind + 1, list.length - 1)]; }
+  //       if (ev.code === 'ArrowDown')  { this.selCard = list[Math.min(ind + CARDS_PER_ROW, list.length - 1)]; }
+  //       if (ev.code === 'ArrowUp')    { this.selCard = list[Math.max(ind - CARDS_PER_ROW, 0)]; }
+  //       if (this.selCard) { this.hoverCard(this.selCard); this.selUnit = null; }
+  //     }
+  //     else {
+  //       const ind = list.indexOf(list.find(c => c.ref === this.selUnit?.ref)) || 0;
+  //       if (ev.code === 'ArrowLeft')  { this.selUnit = list[Math.max(ind - 1, 0)]; }
+  //       if (ev.code === 'ArrowRight') { this.selUnit = list[Math.min(ind + 1, list.length - 1)]; }
+  //       if (ev.code === 'ArrowDown')  { this.selUnit = list[Math.min(ind + CARDS_PER_ROW, list.length - 1)]; }
+  //       if (ev.code === 'ArrowUp')    { this.selUnit = list[Math.max(ind - CARDS_PER_ROW, 0)]; }
+  //       if (this.selUnit) { this.hoverUnit(this.selUnit); this.selCard = null; }
+  //     }
+  //   }
+  //   // ev.code === 'Space'
+  //   if (ev.code === 'Enter' || ev.code === 'NumpadEnter') {
+  //     if (this.isGrouped && this.selCard) { this.selectCard(this.selCard); }
+  //     if (!this.isGrouped && this.selUnit) { this.selectUnit(this.selUnit); }
+  //   }
+  //   ev.stopPropagation();
+  // }
 
 
 
@@ -299,6 +301,7 @@ export class YourCardsComponent {
 
   async saveDeck() {
     if (this.selDeck && this.auth.profileUserId) {
+      this.selDeck.deckName = this.deckName;
       const dbDeck = {
         id       : this.selDeck.id,
         deckName : this.selDeck.deckName,
@@ -310,4 +313,80 @@ export class YourCardsComponent {
     }
   }
 
+
+  async askSellUnit(card: TCard, unit: { ref: string, owner: string }) {
+    if (card && unit) {      
+      if (this.auth.profileUserId === this.JOEL_ID) {  return this.sellUnit(card, unit); } // TODO: Remove this
+      
+      const formatPrice = formatNumber(card.price, 'en-US', '1.0-0');
+      let htmlContent = `Are you sure you want to sell 1 <b>${card.name}</b> for <b>${formatPrice}</b> sats?`;
+      const res = await this.confirm.open({ title: `Sell "${card.name}"`, htmlContent, yesButtonText: 'Yes, sell it' });
+      if (res === 'yes') { this.sellUnit(card, unit); }
+    }
+  }
+
+  async sellUnit(card: TCard, unit: { ref: string, owner: string }) {
+    if (typeof card.price === 'string') { card.price = Number.parseInt(card.price || 0, 10); }
+    console.log('Selling Card', card, unit);
+    const docSnap = await getDoc(doc(this.firestore, 'market', card.id));
+    const market = docSnap.data() as TMarketCard;
+    const sellOffer = market.sellOffer.find(o => o.ref === unit.ref);
+    if (sellOffer) {
+      sellOffer.price = card.price;
+    } else {
+      market.sellOffer.push({ ref: unit.ref, price: card.price });
+    }
+    await updateDoc(doc(this.firestore, 'market', card.id), market);
+    
+
+    // If not Joel, sell it to Joel immediately
+    if (this.auth.profileUserId !== this.JOEL_ID) {
+      await this.sellUnitToJoel(card, unit);          
+      this.loadCards();
+    } else {          
+      this.growl.success(`New Sell Offer`);
+    }  
+  }
+
+  JOEL_ID = '4cix25Z3DPNgcTFy4FcsYmXjdSi1';
+
+  async sellUnitToJoel(card: TCard, unit: { ref: string, owner: string }) {  // TODO: Remove this
+    if (typeof card.price === 'string') { card.price = Number.parseInt(card.price || 0, 10); }
+    console.log('Buying unit', unit);
+    
+
+    // Take buyer money
+    let docSnap = await getDoc(doc(this.firestore, 'users', this.JOEL_ID));
+    const newOwner = docSnap.data() as TUser;
+    newOwner.sats -= card.price;
+    await updateDoc(doc(this.firestore, 'users', this.JOEL_ID), { sats: newOwner.sats });
+
+    // Add money to the seller
+    this.auth.spendSats(-card.price);
+    
+    // Change unit owner
+    docSnap = await getDoc(doc(this.firestore, 'cards', card.id));
+    const dbCard = docSnap.data() as TCard;
+    const dbUnit = dbCard.units.find(u => u.ref === unit.ref);
+    if (dbUnit) {
+      dbUnit.owner = this.JOEL_ID;
+      await updateDoc(doc(this.firestore, 'cards', card.id), { units: dbCard.units });
+      card.units.splice(card.units.indexOf(unit), 1);
+      if (!card.units.length) { this.hoverCard(); }
+    }
+
+    // Delete Offer
+    docSnap = await getDoc(doc(this.firestore, 'market', card.id));
+    const market = docSnap.data() as TMarketCard;
+    const offer = market.sellOffer.find(o => o.ref === unit.ref);
+    if (offer) {
+      market.sellOffer.splice(market.sellOffer.indexOf(offer), 1);
+      await updateDoc(doc(this.firestore, 'market', card.id), { sellOffer: market.sellOffer });
+    }
+    this.growl.success(`${card.name} sold for ${formatNumber(card.price, 'en-US', '1.0-0')} sats`);
+  }
+
 }
+
+
+

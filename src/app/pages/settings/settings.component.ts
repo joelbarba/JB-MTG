@@ -70,16 +70,16 @@ export class SettingsComponent {
 
 
 
-  @HostListener('window:keyup', ['$event'])
-  keyEvent(ev: KeyboardEvent) {
-    if (ev.code === 'ArrowLeft' || ev.code === 'ArrowRight') {
-    const list = this.cardsList.loadedList;
-    const ind = list.indexOf(this.selCard);
-      if (ev.code === 'ArrowLeft' && ind > 0) { this.selectCard(list[ind -1]); }
-      if (ev.code === 'ArrowRight' && ind < list.length - 1) { this.selectCard(list[ind + 1]); }
-    }
-    ev.stopPropagation();
-  }
+  // @HostListener('window:keyup', ['$event'])
+  // keyEvent(ev: KeyboardEvent) {
+  //   if (ev.code === 'ArrowLeft' || ev.code === 'ArrowRight') {
+  //   const list = this.cardsList.loadedList;
+  //   const ind = list.indexOf(this.selCard);
+  //     if (ev.code === 'ArrowLeft' && ind > 0) { this.selectCard(list[ind -1]); }
+  //     if (ev.code === 'ArrowRight' && ind < list.length - 1) { this.selectCard(list[ind + 1]); }
+  //   }
+  //   ev.stopPropagation();
+  // }
 
   
 
@@ -124,6 +124,9 @@ export class SettingsComponent {
     console.log('Saving Card', docObj);
     await updateDoc(doc(this.firestore, 'cards', card.id), docObj);
     this.growl.success(`Card ${card.name} updated`);
+
+    const list = this.cardsList.loadedList;
+    this.selectCard(list[Math.min(list.indexOf(card) + 1, list.length - 1)]);
   }
 
 

@@ -185,3 +185,7 @@ export type TDeckRef = {
   cards: Array<string>;  // unit ref
 }
 export type TUnitCard = Omit<TCard, 'units'> & { ref: string };
+export type TMarketCard = {
+  buyOffers: Array<{ ref: string, price: number, userId: string }>;
+  sellOffer: Array<{ ref: string, price: number }>;
+}

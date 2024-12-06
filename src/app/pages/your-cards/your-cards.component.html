@@ -9,7 +9,7 @@
         <mtg-card [cardImg]="hoveringCard.image" class="lg"></mtg-card>        
       </div>
       <h4 class="units-title">
-        <span>Units ({{ hoveringCard.units.length }}):</span>
+        <span>You own {{ hoveringCard.units.length }} units:</span>
       </h4>
       <div>
         <ul class="list-unstyled table-list header" *ngIf="hoveringCard.units.length">
@@ -25,7 +25,9 @@
         <li class="list-row" *ngFor="let unit of hoveringCard.units">
           <div class="col-10 ref-font">{{unit.ref}}</div>
           <div class="col-2 text-right">
-            <!-- <bf-btn bfText="Sell"></bf-btn> -->
+            <bf-btn class="warning" bfText="Sell it" bfIcon="icon-coin-dollar" 
+                    (bfClick)="askSellUnit(hoveringCard, unit)">
+            </bf-btn>
           </div>
         </li>
       </ul>
@@ -146,9 +148,9 @@
 
     <!-- Deck Editor Header -->
     <div class="d-flex" style="margin-bottom: 5px;" *ngIf="selDeck">
-      <h2 class="flex-1">{{ 'Your Deck: ' | translate }}{{selDeck.deckName}} ({{selDeck.cards.length}} cards)</h2>
+      <h2 class="flex-3">{{ 'Your Deck: ' | translate }}{{selDeck.deckName}} ({{selDeck.cards.length}} cards)</h2>
       <bf-btn class="flex-1 text-right" bfText="Back" bfIcon="icon-arrow-left6"
-              (bfClick)="selDeck = undefined">
+              (bfClick)="selDeck = undefined; loadDecks()">
       </bf-btn>
     </div>
 

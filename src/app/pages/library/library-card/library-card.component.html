@@ -1,0 +1,57 @@
+<h2>Library <span *ngIf="card">: {{ card.name }}</span></h2>
+
+<div class="page" *ngIf="card">
+  <div class="details">    
+    <mtg-card [cardImg]="card.image" class="lg"></mtg-card>
+    <div class="card-details">
+      <!-- <div class="name">{{card.name}}</div> -->
+      <div class="quantity">There are <b>{{card.units.length}}</b> units of this card</div>
+      <div class="price">Price: <b>{{ (card.price || 0) | number: '1.0-0' }}</b> sats</div>
+      <div>{{card.id}}</div>
+      <bf-btn style="margin-top: 50px;" class="full-width" bfText="Go Back to the List" bfType="back" (bfClick)="goBack()"></bf-btn>
+    </div>
+  </div>
+
+
+  <div class="list">
+
+    <!-- Search Box -->
+    <div class="row whiteBg" style="margin-top: 0;">
+      <span>Your Credit: {{ (credit$ | async) | number: '1.0-0' }} sats</span>
+      
+      <!-- <bf-input class="col-4 flat" bfIcon="icon-search" [(ngModel)]="cardsList.filterText" (ngModelChange)="cardsList.filter($event)"></bf-input> -->
+      <div class="col-2">
+        <!-- <bf-checkbox class="pad-input" bfLabel="For Sale" [(ngModel)]="cardsList.filters.readyToPlay" (ngModelChange)="filterReadyToPlay($event)"></bf-checkbox> -->
+      </div>
+
+    </div>
+
+    <div class="all-units" *ngIf="card">
+      <div class="unit-wrapper" *ngFor="let unit of extUnits">
+  
+        <mtg-card [cardImg]="card.image" class="xs"></mtg-card>
+        <div class="unit-data">
+          <div class="unit-text-data">
+            <!-- <div class="ref"><b>Id:</b> {{unit.ref}}</div> -->
+            <div class="ref">{{cardId}}.<br/>{{unit.ref}}</div>
+            <div class="owner"><b>Owned by:</b> {{unit.ownerName}}</div>
+            <div class="price" *ngIf="unit.forSale"><b>For Sale:</b> {{unit.price | number: '1.0-0'}} sats</div>
+          </div>
+          <div class="buy-btn">
+            <bf-btn *ngIf="unit.forSale && !unit.isYours" class="full-width secondary" 
+                     bfText="Buy it" bfIcon="icon-coin-dollar"
+                    (bfClick)="buyUnit(unit)">
+            </bf-btn>
+            <!-- <bf-btn *ngIf="unit.isYours" class="full-width warning" 
+                     bfText="Sell it" bfIcon="icon-coin-dollar">
+            </bf-btn> -->
+            <!-- <bf-btn *ngIf="!unit.forSale" class="full-width"  bfText="Make an Offer" bfIcon="icon-coin-dollar" [bfDisabled]="true"></bf-btn> -->
+          </div>
+        </div>
+  
+      </div>
+    </div>
+
+  </div>
+  
+</div>

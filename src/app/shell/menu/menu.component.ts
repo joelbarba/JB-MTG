@@ -30,7 +30,7 @@ export class MenuComponent {
     { name: 'Home',          path: 'home',     icon: 'icon-home',    adminOnly: false, },
     { name: 'Your Cards',    path: 'cards',    icon: 'icon-book',    adminOnly: false, },
     { name: 'Cards Library', path: 'library',  icon: 'icon-library', adminOnly: false, },
-    { name: 'Shop',          path: 'shop',     icon: 'icon-toggle',  adminOnly: false, },
+    // { name: 'Shop',          path: 'shop',     icon: 'icon-toggle',  adminOnly: false, },
     { name: 'Games',         path: 'game',     icon: 'icon-flag7',   adminOnly: false, },
     { name: 'Users',         path: 'users',    icon: 'icon-users2',  adminOnly: true,  },
     { name: 'Settings',      path: 'settings', icon: 'icon-cog2',    adminOnly: true,  },

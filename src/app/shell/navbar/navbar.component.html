@@ -18,7 +18,7 @@
 
 </nav>
 
-<div class="profile-box" [class.expanded]="isProfileExpanded" *ngIf="!!auth?.profile">
+<div class="profile-box" [class.expanded]="isProfileExpanded" *ngIf="auth?.profile$ | async as profile">
   <div class="row">
     <h2 class="col-8">Profile</h2>    
     <bf-input class="col-12" bfLabel="Name"  [(ngModel)]="displayName"></bf-input>
@@ -34,6 +34,10 @@
       bfRender="name"
       bfPlaceholder="views.dropdown.placeholder">
     </bf-dropdown>
+
+    <div class="col-12">
+      <h4>Credit: {{ (profile.sats || 0) | number: '1.0-0' }} sats</h4>
+    </div>
   </div>
 
   <div class="profile-bottom row">

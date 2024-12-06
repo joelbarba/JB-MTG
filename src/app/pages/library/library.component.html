@@ -2,26 +2,61 @@
 
 <div class="page">
   <div class="details">
-    <mtg-card [cardImg]="hoverCard?.image || selectedCard?.image" class="lg"></mtg-card>
-    <div *ngIf="selectedCard">
-      <div>{{selectedCard.name}}</div>
-      <div>Price: {{selectedCard.price}} sats</div>
-      <div>Units: {{unitsData | json}}</div>
+    <mtg-card [cardImg]="hoveringCard?.image" class="lg"></mtg-card>
+    <div class="card-details" *ngIf="hoveringCard">
+      <!-- <div class="name">{{hoveringCard.name}}</div> -->
+      <div class="quantity">There are <b>{{hoveringCard.units.length}}</b> units of this card</div>
+      <div class="price">Price: <b>{{ (hoveringCard.price || 0) | number: '1.0-0' }}</b> sats</div>
+      <!-- <div>{{hoveringCard.id}}</div> -->
+      <!-- <div style="margin-top: 30px;">
+        <bf-btn bfText="Show More Details" bfIcon="icon-file-text" (bfClick)="goToCard(hoveringCard)"></bf-btn>
+      </div> -->
     </div>
   </div>
 
 
-  <div class="list" *ngIf="cards.length">
+  <div class="list">
 
-    <div class="card-wrapper" *ngFor="let card of cards" 
-         (mouseenter)="hoverCard = card"
-         (click)="selectCard(card)">
+    <!-- Search Box -->
+    <div class="row whiteBg" style="margin-top: 0;">
+      <bf-input class="col-4 flat" bfIcon="icon-search" [(ngModel)]="cardsList.filterText" (ngModelChange)="cardsList.filter($event)"></bf-input>
+      <div class="col-2">
+        <bf-checkbox class="pad-input" bfLabel="For Sale" [(ngModel)]="cardsList.filters.readyToPlay" (ngModelChange)="filterReadyToPlay($event)"></bf-checkbox>
+      </div>
 
-      <mtg-card [cardImg]="card.image" class="sm"></mtg-card>
-      <span>{{card.name}}</span>
-      <!-- <br><span>6000 sats</span> -->
+      <!-- Card Type -->
+      <bf-dropdown class="col-3 flat full-width"
+        [bfList]="cardTypes"
+        bfRender="value"
+        bfSelect="value"
+        bfPlaceholder="-- Type --"
+        [(ngModel)]="cardsList.filters.cardType"
+        (ngModelChange)="cardsList.filter($event, 'type')">
+      </bf-dropdown>
 
+      <!-- Color -->
+      <bf-dropdown class="col-3 flat full-width"
+        [bfList]="colors"
+        bfRender="value"
+        bfSelect="value"
+        bfPlaceholder="-- Color --"
+        [(ngModel)]="cardsList.filters.color"
+        (ngModelChange)="cardsList.filter($event, 'color')">
+      </bf-dropdown>
     </div>
+
+    <div class="all-cards"  *ngIf="cardsList.loadingStatus === 2">
+      <div class="card-wrapper" *ngFor="let card of cardsList.renderList$ | async"           
+           (mouseenter)="hoverCard(card)" (mouseleave)="hoverCard()" (click)="goToCard(card)">
+           <!-- (click)="selectCard(card)" (dblclick)="goToCard(card)" -->
+  
+        <mtg-card [cardImg]="card.image" class="sm" [class.selected]="selectedCard?.id === card.id"></mtg-card>
+        <span class="card-name">{{card.name}}</span>
+        <!-- <br><span>6000 sats</span> -->
+  
+      </div>
+    </div>
+
   </div>
   
 </div>

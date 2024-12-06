@@ -1,4 +1,4 @@
-import { Component, ViewEncapsulation } from '@angular/core';
+import { Component, HostListener, ViewEncapsulation } from '@angular/core';
 import { AuthService } from '../../core/common/auth.service';
 import { ShellService } from '../../shell/shell.service';
 import { CommonModule } from '@angular/common';
@@ -9,10 +9,12 @@ import { collectionData } from 'rxfire/firestore';
 import { TCard } from '../../core/types';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { BfConfirmService, BfUiLibModule } from '@blueface_npm/bf-ui-lib';
+import { BfConfirmService, BfListHandler, BfUiLibModule } from '@blueface_npm/bf-ui-lib';
 import { EPhase, TGameState, TGameCard, TExtGameCard, TPlayer, TAction, TCast } from '../../core/types';
 import { ManaArrayComponent } from "../games-room/game/mana-array/mana-array.component";
 import { MtgCardComponent } from '../../core/common/internal-lib/mtg-card/mtg-card.component';
+import { cardOrderList, cardTypes, colors } from '../../core/common/commons';
+import { Router } from '@angular/router';
 
 
 
@@ -31,45 +33,80 @@ import { MtgCardComponent } from '../../core/common/internal-lib/mtg-card/mtg-ca
   encapsulation: ViewEncapsulation.None,
 })
 export class LibraryComponent {
-  
-  hoverCard: TCard | null = null;
+  hoveringCard: TCard | null = null;
   selectedCard: TCard | null = null;
-  cards: Array<TCard> = [];
+
+  cardsList!: BfListHandler;
+
+  colors = colors;
+  cardTypes = cardTypes;
 
   constructor(
     private shell: ShellService,
     private auth: AuthService,
-    public firestore: Firestore,
+    private firestore: Firestore,
+    private router: Router,
   ) {
     this.shell.gameMode('off');
+    this.cardsList = new BfListHandler({
+      listName      : 'cards-list',
+      filterFields  : ['name'],
+      orderFields   : ['id'],
+      orderReverse  : false,
+      rowsPerPage   : 50000,
+    });
+    this.cardsList.orderList = cardOrderList;
   }
 
   async ngOnInit() {
-    const allDocs: QuerySnapshot<DocumentData> = await getDocs(collection(this.firestore, 'cards'));
-    allDocs.forEach((doc: QueryDocumentSnapshot<DocumentData>) => this.cards.push({ id: doc.id, ...doc.data() } as TCard));
-    this.cards.sort((a,b) => a.id > b.id ? 1 : -1);
-    console.log(this.cards);
+    await this.loadCards();
+    this.selectCard(this.cardsList.loadedList[0]);
   }
 
-
-  unitsData = {
-    total  : 0, // total number of units
-    owned  : 0, // total number of units you own
-    others : 0, // total number of units someone else owns
-    free   : 0, // total number of units nobody owns
+  async loadCards() {
+    const snapshot: QuerySnapshot<DocumentData> = await getDocs(collection(this.firestore, 'cards'));
+    const allCards = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as TCard));
+    this.cardsList.load(allCards);
+    console.log(allCards);
   }
 
-  selectCard(card: TCard) {
-    this.selectedCard = card;
-    console.log(this.selectedCard.units);
-    const units = this.selectedCard.units || [];
-    this.unitsData = {
-      total   : units.length,
-      owned   : units.filter(u => u.owner === 'you').length,
-      others  : units.filter(u => u.owner !== 'you' && u.owner).length,
-      free    : units.filter(u => !u.owner).length,
-    };
+  hoverCard(card?: TCard) {
+    this.hoveringCard = card || this.selectedCard;
+  }
 
+  filterReadyToPlay(value: boolean) {
+    if (value) {
+      this.cardsList.filter(true, 'readyToPlay');
+    } else {
+      this.cardsList.resetFilters();
+    }
+  }
+
+  selectCard(card?: TCard) {
+    console.log(card);
+    this.selectedCard = card || null;
+    this.hoverCard(card);
+  }
+
+  goToCard(card: TCard) {
+    this.router.navigate(['library/', card.id]);
+  }
+
+  @HostListener('window:keyup', ['$event'])
+  keyEvent(ev: KeyboardEvent) {
+    const CARDS_PER_ROW = 14; // TODO: Calculate that dynamically
+    // console.log(ev.code);
+    if (ev.code === 'ArrowLeft' || ev.code === 'ArrowRight' || ev.code === 'ArrowDown' || ev.code === 'ArrowUp') {
+      const list = this.cardsList.loadedList;
+      const ind = list.indexOf(this.selectedCard);
+      if (ev.code === 'ArrowLeft')  { this.selectedCard = list[Math.max(ind - 1, 0)]; }
+      if (ev.code === 'ArrowRight') { this.selectedCard = list[Math.min(ind + 1, list.length - 1)]; }
+      if (ev.code === 'ArrowDown')  { this.selectedCard = list[Math.min(ind + CARDS_PER_ROW, list.length - 1)]; }
+      if (ev.code === 'ArrowUp')    { this.selectedCard = list[Math.max(ind - CARDS_PER_ROW, 0)]; }
+      this.selectCard(this.selectedCard || undefined);
+    }
+    // if (ev.code === 'Enter' || ev.code === 'NumpadEnter') { this.selectCard(this.selectedCard || undefined); }
+    ev.stopPropagation();
   }
 
 }

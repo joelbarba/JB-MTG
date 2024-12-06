@@ -49,7 +49,7 @@
 
           <!-- <bf-input class="col-12" bfLabel="Text" [(ngModel)]="selCard.text"></bf-input> -->
 
-          <bf-input class="col-4" bfLabel="Price (sats)" [(ngModel)]="selCard.price"></bf-input>
+          <bf-input class="col-4" bfLabel="Price (sats)" [(ngModel)]="selCard.price" (bfOnEnter)="saveCard(selCard)"></bf-input>
 
           <bf-dropdown bfLabel="Color Protection" class="col-6 flat" *ngIf="selCard.type === 'creature'"
                 [(ngModel)]="selCard.colorProtection"

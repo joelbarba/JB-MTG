@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { BfGrowlService, BfLoadingBarService } from '@blueface_npm/bf-ui-lib';
 import { BehaviorSubject, firstValueFrom, Observable, Subject } from 'rxjs';
-import { doc, Firestore, getDoc } from '@angular/fire/firestore';
+import { doc, Firestore, getDoc, updateDoc } from '@angular/fire/firestore';
 import { 
   Auth,
   signInWithEmailAndPassword, 
@@ -125,6 +125,7 @@ export class AuthService {
       const data = docSnap.data() as TUser;
       profile.isAdmin = data.isAdmin;
       profile.isEnabled = data.isEnabled;
+      profile.sats = data.sats;
     }
 
     if (!profile.isEnabled) { this.requestLogout(); }
@@ -157,10 +158,21 @@ export class AuthService {
     }
   }
 
-  updateProfile(data: any): Promise<void> {
-    return updateProfile(this.firebaseUser, data);
+  async updateProfile(data: any): Promise<void> {
+    if (this.profileUserId) { 
+      await updateDoc(doc(this.firestore, 'users', this.profileUserId), data); 
+      await updateProfile(this.firebaseUser, data);
+    }
   }
 
+  async spendSats(statsSpent: number) {
+    if (this.profile && this.profile.sats >= statsSpent) {
+      this.profile.sats -= statsSpent;
+      await updateDoc(doc(this.firestore, 'users', this.profile.uid), { sats: this.profile.sats });
+      this.profile$.next(this.profile);
+      // this.growl.success(`${this.card?.name} bought for ${price} sats`);
+    }
+  }
 
   // -----------------------------------
 
