@@ -6,7 +6,8 @@
     <div class="card-details" *ngIf="hoveringCard">
       <!-- <div class="name">{{hoveringCard.name}}</div> -->
       <div class="quantity">There are <b>{{hoveringCard.units.length}}</b> units of this card</div>
-      <div class="price">Price: <b>{{ (hoveringCard.price || 0) | number: '1.0-0' }}</b> sats</div>
+      <div class="price">Avg Price: <b>{{ (hoveringCard.price || 0) | number: '1.0-0' }}</b> sats</div>
+      <div>{{hoveringCard.id}}</div>
       <!-- <div>{{hoveringCard.id}}</div> -->
       <!-- <div style="margin-top: 30px;">
         <bf-btn bfText="Show More Details" bfIcon="icon-file-text" (bfClick)="goToCard(hoveringCard)"></bf-btn>
@@ -45,7 +46,7 @@
       </bf-dropdown>
     </div>
 
-    <div class="all-cards"  *ngIf="cardsList.loadingStatus === 2">
+    <div class="all-cards" *ngIf="cardsList.loadingStatus === 2">
       <div class="card-wrapper" *ngFor="let card of cardsList.renderList$ | async"           
            (mouseenter)="hoverCard(card)" (mouseleave)="hoverCard()" (click)="goToCard(card)">
            <!-- (click)="selectCard(card)" (dblclick)="goToCard(card)" -->

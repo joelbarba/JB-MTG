@@ -77,7 +77,7 @@ export class UsersComponent {
   }
 
   prepareNewUser() {
-    this.newUser = { name: '', email: '', pass: '', sats: 100000, isAdmin: false, isEnabled: false, decks: [] };
+    this.newUser = { name: '', email: '', pass: '', sats: 100000, isAdmin: false, isEnabled: false, };
     this.editUser = undefined;
     this.btnDisabled = false;
   }

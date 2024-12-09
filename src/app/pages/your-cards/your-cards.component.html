@@ -23,18 +23,19 @@
     <div class="units-list" *ngIf="hoveringCard && hoveringCard?.units?.length">
       <ul class="list-unstyled table-list content">
         <li class="list-row" *ngFor="let unit of hoveringCard.units">
-          <div class="col-10 ref-font">{{unit.ref}}</div>
-          <div class="col-2 text-right">
-            <bf-btn class="warning" bfText="Sell it" bfIcon="icon-coin-dollar" 
-                    (bfClick)="askSellUnit(hoveringCard, unit)">
-            </bf-btn>
+          <div class="col-8 ref-font">{{unit.ref}}</div>
+          <div class="col-4 text-right" *ngIf="!unit.sellPrice">
+            <bf-btn class="warning" bfText="Sell it" bfIcon="icon-coin-dollar" (bfClick)="askSellUnit(unit)"></bf-btn>
+          </div>
+          <div class="col-4 text-right" *ngIf="unit.sellPrice">
+            <span [hoverTip]="'Offer: ' + unit.sellPrice + ' sats'" style="cursor: pointer;">On Sale</span>
           </div>
         </li>
       </ul>
     </div>
 
     <div class="full-card" *ngIf="hoveringUnit">
-      <mtg-card [cardImg]="hoveringUnit.image" class="lg"></mtg-card>
+      <mtg-card [cardImg]="hoveringUnit.card.image" class="lg"></mtg-card>
       <h4 style="margin-top: 30px;">Ref: {{hoveringUnit.ref}}</h4>
     </div>
 
@@ -86,8 +87,8 @@
       <div class="card-wrapper" *ngFor="let unit of cardsList.renderList$ | async" 
            [hoverTip]="selDeck && !isUnitInDeck(unit) ? 'Click to add it to the deck' : ''"
            (mouseenter)="hoverUnit(unit)" (mouseleave)="hoverUnit()" (click)="selectUnit(unit)">
-        <div class="card-name">{{unit.name}}</div>
-        <mtg-card [cardImg]="unit.image" class="sm"
+        <div class="card-name">{{unit.card.name}}</div>
+        <mtg-card [cardImg]="unit.card.image" class="sm"
                   [class.selected]="selUnit?.ref === unit.ref"
                   [class.is-in-deck]="isUnitInDeck(unit)">
         </mtg-card>
@@ -148,7 +149,7 @@
 
     <!-- Deck Editor Header -->
     <div class="d-flex" style="margin-bottom: 5px;" *ngIf="selDeck">
-      <h2 class="flex-3">{{ 'Your Deck: ' | translate }}{{selDeck.deckName}} ({{selDeck.cards.length}} cards)</h2>
+      <h2 class="flex-3">{{ 'Your Deck: ' | translate }}{{selDeck.deckName}} ({{selDeck.units.length}} cards)</h2>
       <bf-btn class="flex-1 text-right" bfText="Back" bfIcon="icon-arrow-left6"
               (bfClick)="selDeck = undefined; loadDecks()">
       </bf-btn>
@@ -167,17 +168,17 @@
 
       <!-- All Units in Deck -->
       <div class="deck-editor-list" *ngIf="!isDeckGrouped">
-        <div class="card-wrapper" *ngFor="let unit of selDeck.cards" 
+        <div class="card-wrapper" *ngFor="let unit of selDeck.units" 
              [hoverTip]="'Click to remove it'"
              (mouseenter)="hoverUnit(unit)" (mouseleave)="hoverUnit()" (click)="removeUnitFromDeck(unit)">
-          <div class="card-name">{{unit.name}}</div>
-          <mtg-card [cardImg]="unit.image" class="sm"></mtg-card>
+          <div class="card-name">{{unit.card.name}}</div>
+          <mtg-card [cardImg]="unit.card.image" class="sm"></mtg-card>
         </div>
       </div>
 
       <!-- Grouped Cards in Deck -->
       <div class="deck-editor-list" *ngIf="isDeckGrouped">
-        <div class="card-wrapper" *ngFor="let card of groupDeckCards"
+        <div class="card-wrapper" *ngFor="let card of deckGroupedCards"
              [hoverTip]="card.units.length > 1 ? 'Click to remove 1' : 'Click to remove it'"
              (mouseenter)="hoverCard(card)" (mouseleave)="hoverCard()" (click)="removeCardFromDeck(card)">
           <div class="card-name">

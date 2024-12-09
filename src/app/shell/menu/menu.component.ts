@@ -54,7 +54,7 @@ export class MenuComponent {
     this.router.events.subscribe((routeEvent) => {
       if (routeEvent instanceof ActivationEnd) {
         this.activePath = routeEvent.snapshot.routeConfig?.path || '';
-        console.log('Router - ActivationEnd End --->', this.activePath);
+        // console.log('Router - ActivationEnd End --->', this.activePath);
       }
     });
   }

@@ -64,6 +64,7 @@
 
           <div class="col-12" style="margin-top: 50px;">
             <bf-btn class="full-width" bfText="Save Card Data" bfType="save" (bfClick)="saveCard(selCard)"></bf-btn>
+            <!-- <bf-btn class="full-width" bfText="TRANSFER" bfType="save" (bfClick)="dbTransfer()"></bf-btn> -->
           </div>
 
         </div>
@@ -76,13 +77,13 @@
 
       <h4 style="margin-top: -30px;">
         <bf-btn bfText="+1 Unit" bfType="add" style="margin-right: 15px;" (bfClick)="createUnit()"></bf-btn>
-        <span>Units ({{units.length}}):</span>
+        <span>Units ({{selCard.units.length}}):</span>
       </h4>
       <div>
-        <ul class="list-unstyled table-list header" *ngIf="units.length">
+        <ul class="list-unstyled table-list header" *ngIf="selCard.units.length">
           <li class="list-header">
-            <bf-list-header-col class="col-5" colTitle="Ref"></bf-list-header-col>
-            <bf-list-header-col class="col-5" colTitle="Owner"></bf-list-header-col>
+            <bf-list-header-col class="col-6" colTitle="Ref"></bf-list-header-col>
+            <bf-list-header-col class="col-4" colTitle="Owner"></bf-list-header-col>
             <bf-list-header-col class="col-2" colTitle=""></bf-list-header-col>
           </li>
         </ul>
@@ -93,16 +94,16 @@
     <div class="units-list" *ngIf="selCard">
 
       <ul class="list-unstyled table-list content">
-        <li class="list-row" *ngFor="let unit of units">
-          <div class="col-5 ref-font">{{unit.ref}}</div>
-          <div class="col-5">
-            <!-- {{unit.ownerName || 'Free'}} -->
-             <bf-dropdown class="flat"
+        <li class="list-row" *ngFor="let unit of selCard.units; let ind = index">
+          <div class="col-6 ref-font">[{{ind}}] {{unit.ref}}</div>
+          <div class="col-4">
+            {{unit.owner.name}}
+             <!-- <bf-dropdown class="flat"
               [(ngModel)]="unit.owner"
               [bfList]="users"
               bfRender="name"
               bfEmptyLabel="Free"
-             ></bf-dropdown>
+             ></bf-dropdown> -->
           </div>
           <div class="col-2 text-right">
             <bf-btn bfType="delete-icon" (bfClick)="deleteUnit(unit)"></bf-btn>
@@ -119,7 +120,7 @@
   <div class="list">
     <div class="row whiteBg" style="margin-top: 0;">
       <bf-input class="col-4 flat" bfIcon="icon-search" [(ngModel)]="cardsList.filterText" (ngModelChange)="cardsList.filter($event)"></bf-input>
-      <bf-checkbox class="col-2 pad-input" bfLabel="Not Ready To Play"></bf-checkbox>
+      <bf-checkbox class="col-2 pad-input" bfLabel="Only Ready To Play" [(ngModel)]="cardsList.filters.readyToPlay" (ngModelChange)="filterReadyToPlay($event)" ></bf-checkbox>
       <bf-btn class="col-6 text-right" bfIcon="icon-plus" bfText="New Card" (bfClick)="newCard()"></bf-btn>
     </div>
 

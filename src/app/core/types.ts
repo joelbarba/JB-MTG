@@ -39,7 +39,7 @@ export type TCard = {
   colorProtection: TColor | null; // Cannot be blocked, targeted, enchanted or damage by sources of this color
   maxInDeck?: number;    // Max number of the same card you can have in a deck (1, 4, undefined=as many as you want)
   readyToPlay: boolean;
-  units: Array<{ ref: string, owner: string }>;
+  // units: Array<{ ref: string, owner: string }>;
 };
 export type TCardNoUnits = Omit<TCard, 'units'>;
 
@@ -177,15 +177,15 @@ export type TUser = {
   isAdmin: boolean;
   isEnabled: boolean;
   sats: number;
-  decks: Array<TDeckRef>;
+  // decks: Array<TDeckRef>;
 }
 export type TDeckRef = {
   id: string;
   deckName: string;
-  cards: Array<string>;  // unit ref
+  units: Array<string>;  // unit ref
 }
-export type TUnitCard = Omit<TCard, 'units'> & { ref: string };
-export type TMarketCard = {
-  buyOffers: Array<{ ref: string, price: number, userId: string }>;
-  sellOffer: Array<{ ref: string, price: number }>;
-}
+// export type TUnitCard = Omit<TCard, 'units'> & { ref: string };
+// export type TMarketCard = {
+//   buyOffers: Array<{ ref: string, price: number, userId: string }>;
+//   sellOffer: Array<{ ref: string, price: number }>;
+// }

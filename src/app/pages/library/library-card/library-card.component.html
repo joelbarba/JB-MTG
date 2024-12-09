@@ -6,7 +6,7 @@
     <div class="card-details">
       <!-- <div class="name">{{card.name}}</div> -->
       <div class="quantity">There are <b>{{card.units.length}}</b> units of this card</div>
-      <div class="price">Price: <b>{{ (card.price || 0) | number: '1.0-0' }}</b> sats</div>
+      <div class="price">Avg Price: <b>{{ (card.price || 0) | number: '1.0-0' }}</b> sats</div>
       <div>{{card.id}}</div>
       <bf-btn style="margin-top: 50px;" class="full-width" bfText="Go Back to the List" bfType="back" (bfClick)="goBack()"></bf-btn>
     </div>
@@ -27,24 +27,25 @@
     </div>
 
     <div class="all-units" *ngIf="card">
-      <div class="unit-wrapper" *ngFor="let unit of extUnits">
+      <div class="unit-wrapper" *ngFor="let unit of card.units">
   
         <mtg-card [cardImg]="card.image" class="xs"></mtg-card>
         <div class="unit-data">
           <div class="unit-text-data">
             <!-- <div class="ref"><b>Id:</b> {{unit.ref}}</div> -->
-            <div class="ref">{{cardId}}.<br/>{{unit.ref}}</div>
-            <div class="owner"><b>Owned by:</b> {{unit.ownerName}}</div>
-            <div class="price" *ngIf="unit.forSale"><b>For Sale:</b> {{unit.price | number: '1.0-0'}} sats</div>
+            <div class="ref">{{cardId}}.<br/>{{unit.shortRef}}</div>
+            <div class="owner"><b>Owned by:</b> {{unit.owner.name}}</div>
+            <div class="price" *ngIf="unit.sellPrice"><b>For Sale:</b> {{unit.sellPrice | number: '1.0-0'}} sats</div>
           </div>
           <div class="buy-btn">
-            <bf-btn *ngIf="unit.forSale && !unit.isYours" class="full-width secondary" 
+            <bf-btn *ngIf="unit.sellPrice && !unit.isYours" class="full-width secondary" 
                      bfText="Buy it" bfIcon="icon-coin-dollar"
                     (bfClick)="buyUnit(unit)">
             </bf-btn>
-            <!-- <bf-btn *ngIf="unit.isYours" class="full-width warning" 
-                     bfText="Sell it" bfIcon="icon-coin-dollar">
-            </bf-btn> -->
+            <bf-btn *ngIf="unit.isYours" class="full-width warning" 
+                     bfText="Sell it" bfIcon="icon-coin-dollar"
+                    (bfClick)="askSellUnit(unit)">
+            </bf-btn>
             <!-- <bf-btn *ngIf="!unit.forSale" class="full-width"  bfText="Make an Offer" bfIcon="icon-coin-dollar" [bfDisabled]="true"></bf-btn> -->
           </div>
         </div>

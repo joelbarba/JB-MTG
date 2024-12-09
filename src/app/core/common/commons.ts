@@ -1,4 +1,6 @@
-import { TUnitCard } from "../types";
+import { BfListHandler } from "@blueface_npm/bf-ui-lib";
+import { TFullUnit } from "../dataService";
+import { TCard } from "../types";
 
 export const colors = [
   { value: 'uncolored'}, 
@@ -19,33 +21,39 @@ export const cardTypes = [
   { value: 'enchantment'},
 ];
 
-export const cardOrderList = (list: Array<TUnitCard>): Array<TUnitCard> => {
-  list.sort((a: TUnitCard, b: TUnitCard) => {
-    if (a.type !== b.type) {
-      if (a.type === 'land') { return -1; }
-      if (b.type === 'land') { return 1; }
-      if (a.type === 'artifact') { return -1; }
-      if (b.type === 'artifact') { return 1; }
-    } 
-    if (a.color !== b.color) {
-      if (a.color === 'uncolored') { return -1;  }
-      if (b.color === 'uncolored') { return 1; }
-      if (a.color === 'blue')  { return -1; }
-      if (b.color === 'blue')  { return  1; }
-      if (a.color === 'white') { return -1; }
-      if (b.color === 'white') { return  1; }
-      if (a.color === 'black') { return -1; }
-      if (b.color === 'black') { return  1; }
-      if (a.color === 'red')   { return -1; }
-      if (b.color === 'red')   { return  1; }
-      if (a.color === 'green') { return -1; }
-      if (b.color === 'green') { return  1; }
-    }
-    if (a.name !== b.name) { return a.name < b.name ? -1 : 1; }
-    return a.ref < b.ref ? -1 : 1;
-  });
-  return list;
+export const cardOrderFn = (a: TCard, b: TCard) => {
+  if (a.type !== b.type) {
+    if (a.type === 'land') { return -1; }
+    if (b.type === 'land') { return 1; }
+    if (a.type === 'artifact') { return -1; }
+    if (b.type === 'artifact') { return 1; }
+  } 
+  if (a.color !== b.color) {
+    if (a.color === 'uncolored') { return -1;  }
+    if (b.color === 'uncolored') { return 1; }
+    if (a.color === 'blue')  { return -1; }
+    if (b.color === 'blue')  { return  1; }
+    if (a.color === 'white') { return -1; }
+    if (b.color === 'white') { return  1; }
+    if (a.color === 'black') { return -1; }
+    if (b.color === 'black') { return  1; }
+    if (a.color === 'red')   { return -1; }
+    if (b.color === 'red')   { return  1; }
+    if (a.color === 'green') { return -1; }
+    if (b.color === 'green') { return  1; }
+  }
+  if (a.name !== b.name) { return a.name < b.name ? -1 : 1; }
+  return 0;
 };
+
+export const unitOrderFn = (a: TFullUnit, b: TFullUnit) => {
+  const res = cardOrderFn(a.card, b.card);
+  if (res !== 0) { return res; }
+  return a.ref < b.ref ? -1 : 1;
+};
+
+
+
 
 export const getTime = (): string => {
   const time = new Date();

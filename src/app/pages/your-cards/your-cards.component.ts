@@ -4,17 +4,16 @@ import { ShellService } from '../../shell/shell.service';
 import { CommonModule, formatNumber } from '@angular/common';
 import { Firestore, QuerySnapshot, QueryDocumentSnapshot, DocumentData, setDoc, updateDoc, deleteDoc } from '@angular/fire/firestore';
 import { getDocs, getDoc, collection, doc } from '@angular/fire/firestore';
-import { Observable } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 import { collectionData } from 'rxfire/firestore';
-import { TCard, TDeckRef, TMarketCard, TUnitCard, TUser } from '../../core/types';
+import { TCard, TDeckRef } from '../../core/types';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { BfConfirmService, BfGrowlService, BfListHandler, BfUiLibModule } from '@blueface_npm/bf-ui-lib';
 import { MtgCardComponent } from '../../core/common/internal-lib/mtg-card/mtg-card.component';
-import { cardOrderList, cardTypes, colors, randomUnitId } from '../../core/common/commons';
+import { cardOrderFn, unitOrderFn, cardTypes, colors, randomUnitId } from '../../core/common/commons';
 import { HoverTipDirective } from '../../core/common/internal-lib/bf-tooltip/bf-tooltip.directive';
-
-type TDeckEdit = { id: string, deckName: string, cards: Array<TUnitCard> };
+import { DataService, TFullCard, TFullDeck, TFullUnit } from '../../core/dataService';
 
 
 
@@ -35,16 +34,18 @@ type TDeckEdit = { id: string, deckName: string, cards: Array<TUnitCard> };
 })
 export class YourCardsComponent {
   cardsList!: BfListHandler;
-  groupedCards: Array<TCard> = [];
-  yourCards: Array<TUnitCard> = [];
-  
-  hoveringCard: TCard | null = null;
-  hoveringUnit: TUnitCard | null = null;
-  selCard: TCard | null = null;
-  selUnit: TUnitCard | null = null;
 
-  isGrouped = true;
-  isDeckGrouped = true;
+  groupedCards: Array<TFullCard> = [];    // All your cards grouped (all your units together)
+  yourUnits: Array<TFullUnit> = [];       // All your units
+  
+  hoveringCard: TFullCard | null = null;
+  hoveringUnit: TFullUnit | null = null;
+
+  selCard: TFullCard | null = null;   // Current selected card
+  selUnit: TFullUnit | null = null;   // Current selected unit
+
+  isGrouped = true;       // Whether your cards list is grouped (true) or displaying all your units seperately (false)
+  isDeckGrouped = true;   // Whether the cards in the selected deck are displayed grouped (true) or seperately (false)
 
   colors = colors;
   cardTypes = cardTypes;
@@ -52,11 +53,13 @@ export class YourCardsComponent {
   showDecks = false;
 
 
-  decks: Array<TDeckEdit> = [];
-  selDeck?: TDeckEdit;
+  decks: Array<TFullDeck> = [];     // All your decks ---> deck.cards = Array<TFullUnit>
+  selDeck?: TFullDeck;              // Current selected deck
   deckName = '';
-  groupDeckCards: Array<TCard> = [];
 
+  deckGroupedCards: Array<TFullCard> = [];  // Cards of the selected deck grouped (all units of the same card together)
+
+  subs: Array<Subscription> = [];
 
 
   constructor(
@@ -65,6 +68,7 @@ export class YourCardsComponent {
     private firestore: Firestore,
     private growl: BfGrowlService,
     private confirm: BfConfirmService,
+    private dataService: DataService,
   ) {
     this.shell.gameMode('off');
     this.cardsList = new BfListHandler({
@@ -74,38 +78,75 @@ export class YourCardsComponent {
       orderReverse  : false,
       rowsPerPage   : 50000,
     });
-    this.cardsList.orderList = cardOrderList;
+    this.cardsList.orderList = (list) => list.sort(cardOrderFn);
+    this.cardsList.filterList = (list: Array<any>, filterText = ''): Array<any> => {
+      if (!this.isGrouped) {
+        if (this.cardsList.filters.cardType) { list = list.filter(u => u.card.type === this.cardsList.filters.cardType); }
+        if (this.cardsList.filters.color)    { list = list.filter(u => u.card.color === this.cardsList.filters.color); }
+      }
+      return this.cardsList.defaultFilterList(list, filterText, ['name']);
+    };
   }
 
   async ngOnInit() {
     await this.auth.profilePromise;
-    await this.loadCards();
-    await this.loadDecks();
+    await this.dataService.loadPromise;
+
+    this.subs.push(this.dataService.cards$.subscribe(cards => this.loadCards()));
+    this.subs.push(this.dataService.yourDecks$.subscribe(decks => this.loadDecks()));
+
+    this.loadCards();
+    this.loadDecks();
+
     this.selectCard(this.groupedCards[0]);
+
     // this.selectCard(this.yourCards[0]);
     // this.editDeck(this.decks[0]);
   }
 
-  async loadCards() {
-    const snapshot: QuerySnapshot<DocumentData> = await getDocs(collection(this.firestore, 'cards'));
-    const allCards = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as TCard));
-    this.groupedCards = allCards.filter(c => c.units.some(u => u.owner === this.auth.profileUserId));
-    console.log(this.groupedCards);
-    this.yourCards = [];
+  ngOnDestroy() {
+    this.cardsList.destroy();
+    this.subs.forEach(sub => sub.unsubscribe())
+  }
+
+  loadCards() {
+    this.groupedCards = this.dataService.cards.filter(c => c.units.some(u => u.ownerId === this.auth.profileUserId));
+    this.yourUnits = [];
     this.groupedCards.forEach(card => {
-      const cardWithoutUnits = card.keyFilter((v,k) => k !== 'units') as Omit<TCard, 'units'>;
-      card.units = card.units.filter(u => u.owner === this.auth.profileUserId);
-      card.units.forEach(unit => this.yourCards.push({ ...cardWithoutUnits, ref: unit.ref }));
+      card.units = card.units.filter(u => u.ownerId === this.auth.profileUserId);
+      card.units.forEach(unit => this.yourUnits.push(unit));
     });
+    // console.log('Your Grouped Cards', this.groupedCards);
+    // console.log('Your Units', this.yourUnits);
     this.switchGrouped();
+  }
+
+  async loadDecks() {
+    this.decks = this.dataService.yourDecks.map(deck => {
+      return { id: deck.id, deckName: deck.deckName, units: deck.units.sort(unitOrderFn) };
+    })
+  }
+
+  private loadGroupDeck() {
+    if (this.selDeck) {
+      this.deckGroupedCards = [];
+      this.selDeck.units.forEach(unit => {
+        const card = this.groupedCards.find(c => c.id === unit.cardId);
+        const deckCard = this.deckGroupedCards.find(c => c.id === unit.cardId);
+        if (deckCard) { deckCard.units.push(unit); } // Add another unit
+        else if (card) { this.deckGroupedCards.push({ ...card, units: [unit] }); } // Push the whole card
+      });
+    }
   }
 
 
   switchGrouped() {
     if (this.isGrouped) {
+      this.cardsList.orderList = (list) => list.sort(cardOrderFn);
       this.cardsList.load(this.groupedCards);
     } else {
-      this.cardsList.load(this.yourCards);
+      this.cardsList.orderList = (list) => list.sort(unitOrderFn);
+      this.cardsList.load(this.yourUnits);
     }    
   }
 
@@ -123,67 +164,63 @@ export class YourCardsComponent {
     if (!this.showDecks) { this.selDeck = undefined; }
   }
 
-  hoverCard(card?: TCard) {
+  hoverCard(card?: TFullCard) {
     this.hoveringCard = card || this.selCard;
     this.hoveringUnit = this.hoveringCard ? null : this.selUnit;
   }
 
-  hoverUnit(unit?: TUnitCard) {
+  hoverUnit(unit?: TFullUnit) {
     this.hoveringUnit = unit || this.selUnit;
     this.hoveringCard = this.hoveringUnit ? null : this.selCard;
   }
 
-  unitsInDeck(cardId: string): number {
+  unitsInDeck(cardId: string): number { // Number of units in the deck
     if (!this.selDeck || !this.showDecks) { return 0; }
-    return this.selDeck.cards.filter(c => c.id === cardId).length;
+    return this.selDeck.units.filter(c => c.cardId === cardId).length;
   }
 
-  isCardInDeck(card: TCard): boolean {
+  isCardInDeck(card: TFullCard): boolean {
     if (!this.selDeck || !this.showDecks) { return false; }
-    return !!card.units.every(u => this.selDeck?.cards.find(c => c.ref === u.ref));
+    return !!card.units.every(u => this.selDeck?.units.find(du => du.ref === u.ref));
   }
 
-  isUnitInDeck(card: TUnitCard): boolean {
+  isUnitInDeck(card: TFullUnit): boolean {
     if (!this.selDeck || !this.showDecks) { return false; }
-    return !!this.selDeck?.cards.find(c => c.ref === card.ref);
+    return !!this.selDeck?.units.find(c => c.ref === card.ref);
   }
 
-  selectUnit(unit: TUnitCard) {
+  selectUnit(unit: TFullUnit) {
     this.selUnit = unit;
     this.selCard = null;
     this.hoverUnit(unit);
     this.moveUnitToDeck(unit);
   }
 
-  selectCard(card: TCard) {
+  selectCard(card: TFullCard) {
     this.selCard = card;
     this.selUnit = null;
     this.hoverCard(card);
-    if (this.showDecks && this.selDeck) {
-      if (!this.isCardInDeck(card)) { // If not all units are in the deck
-
-        // Find a unit of the card that is not already in the deck
-        const unitRef = card.units.find(u => !this.selDeck?.cards.find(c => c.ref === u.ref));
-        if (unitRef) { this.moveUnitToDeck(this.turnCardToUnit(card, unitRef.ref)); } // Add it to the deck
-      }
+    if (this.showDecks && this.selDeck && !this.isCardInDeck(card)) { // If not all units are in the deck
+      const unit = card.units.find(u => !this.selDeck?.units.find(du => du.ref === u.ref)); // Find a unit that is not already in the deck
+      if (unit) { this.moveUnitToDeck(unit); } // Add it to the deck
     }
   }
 
   // Add / Remove a unit card to/from the selected deck
-  private moveUnitToDeck(unit: TUnitCard) {
+  private moveUnitToDeck(unit: TFullUnit) {
     if (this.showDecks && this.selDeck) {
       if (!this.isUnitInDeck(unit)) { // Add it to the deck
 
-        if (!unit.readyToPlay) {
-          return this.growl.error(`Sorry, ${unit.name} is still not ready to play :(`);
+        if (!unit.card.readyToPlay) {
+          return this.growl.error(`Sorry, ${unit.card.name} is still not ready to play :(`);
         }
-        if (unit.maxInDeck && unit.maxInDeck <= this.selDeck.cards.filter(c => c.id === unit.id).length) {
-          return this.growl.error(`You cannot have more than ${unit.maxInDeck} ${unit.name} in a deck`);
+        if (unit.card.maxInDeck && unit.card.maxInDeck <= this.selDeck.units.filter(u => u.cardId === unit.card.id).length) {
+          return this.growl.error(`You cannot have more than ${unit.card.maxInDeck} ${unit.card.name} in a deck`);
         }
-        console.log(`Adding ${unit.name} (${unit.ref}) to the deck`);
-        this.growl.success(`${unit.name} added to the deck`);
-        this.selDeck.cards.push({ ...unit });
-        this.selDeck.cards = cardOrderList(this.selDeck.cards);
+        console.log(`Adding ${unit.card.name} (${unit.ref}) to the deck`);
+        this.growl.success(`${unit.card.name} added to the deck`);
+        this.selDeck.units.push({ ...unit });
+        this.selDeck.units.sort(unitOrderFn);
 
 
       } else { // Remove it from the deck
@@ -192,13 +229,6 @@ export class YourCardsComponent {
       this.loadGroupDeck();
     }
   }
-
-  private turnCardToUnit(card: TCard, ref: string): TUnitCard {
-    const cardWithoutUnits = card.keyFilter((v,k) => k !== 'units') as Omit<TCard, 'units'>;
-    return { ...cardWithoutUnits, ref };
-  }
-
-
 
   // @HostListener('window:keyup', ['$event'])
   // keyEvent(ev: KeyboardEvent) {
@@ -234,59 +264,46 @@ export class YourCardsComponent {
 
 
 
-  async loadDecks() {
-    if (this.auth.profileUserId) {
-      const decksCol = collection(this.firestore, 'users', this.auth.profileUserId, 'decks');
-      const snapshot: QuerySnapshot<DocumentData> = await getDocs(decksCol);
-      this.decks = snapshot.docs.map(doc => {
-        const data = { ...doc.data() } as TDeckRef;
-        const cards = data.cards.map(ref => this.yourCards.find(c => c.ref === ref)) as Array<TUnitCard>;
-        return { id: doc.id, deckName: data.deckName, cards: cardOrderList(cards) };
-      });
-    }
-  }
+
 
   createNewDeck() {
-    this.editDeck({ id: randomUnitId(), deckName: 'New Deck', cards:  [] });
+    this.editDeck({ id: randomUnitId(), deckName: 'New Deck', units: [] });
   }
 
-  editDeck(deck: TDeckEdit) {
+  editDeck(deck: TFullDeck) {
     this.selDeck = deck;
     this.deckName = deck.deckName;
     this.loadGroupDeck();
   }
 
-  private loadGroupDeck() {
+
+
+  removeUnitFromDeck(unit: TFullUnit) {
     if (this.selDeck) {
-      this.groupDeckCards = [];
-      this.selDeck.cards.forEach(unit => {
-        const unitObj = { ref: unit.ref, owner: this.auth.profileUserId || '' };
-        const card = this.groupDeckCards.find(c => c.id === unit.id);
-        if (card) { card.units.push(unitObj); }
-        else { this.groupDeckCards.push({ ...unit, units: [unitObj] }); }
-      });
+      console.log(`Removing ${unit.card.name} (${unit.ref}) from the deck`);
+      this.growl.error(`${unit.card.name} removed from the deck`);
+      const ind = this.selDeck.units.map(c => c.ref).indexOf(unit.ref);
+      this.selDeck.units.splice(ind, 1);
+      this.selDeck.units.sort(unitOrderFn);
+      const groupedCard = this.deckGroupedCards.find(c => c.id === unit.cardId);
+      if (groupedCard) {
+        groupedCard.units.splice(groupedCard.units.map(c => c.ref).indexOf(unit.ref), 1);
+        if (!groupedCard.units.length) { // If all units are gone
+          this.deckGroupedCards.splice(this.deckGroupedCards.indexOf(groupedCard), 1);
+        }
+      }
     }
   }
 
-  removeUnitFromDeck(unit: TUnitCard) {
-    if (this.selDeck) {
-      console.log(`Removing ${unit.name} (${unit.ref}) from the deck`);
-      this.growl.error(`${unit.name} removed from the deck`);
-      const ind = this.selDeck.cards.map(c => c.ref).indexOf(unit.ref);
-      this.selDeck.cards.splice(ind, 1);
-      this.selDeck.cards = cardOrderList(this.selDeck.cards);
-      this.loadGroupDeck();
-    }
-  }
-
-  removeCardFromDeck(card: TCard) {
+  removeCardFromDeck(card: TFullCard) {
     if (this.selDeck && card.units.length) {
-      const unit = this.turnCardToUnit(card, card.units[card.units.length - 1].ref);
-      this.moveUnitToDeck(unit); // Remove it from the deck
+      const deckUnits = this.selDeck.units.filter(du => du.cardId === card.id);
+      const unitToRemove = deckUnits[deckUnits.length - 1];
+      this.removeUnitFromDeck(unitToRemove);
     }
   }
 
-  deleteDeck(deck: TDeckEdit) {
+  deleteDeck(deck: TFullDeck) {
     this.confirm.open({
       title            : 'Delete Deck',
       htmlContent      : `Are you sure you want to delete your deck <b>${deck.deckName}</b>?`,
@@ -305,7 +322,7 @@ export class YourCardsComponent {
       const dbDeck = {
         id       : this.selDeck.id,
         deckName : this.selDeck.deckName,
-        cards    : this.selDeck.cards.map(card => card.ref)
+        units    : this.selDeck.units.map(card => card.ref),
       }
       console.log('Saving Card', dbDeck);
       await setDoc(doc(this.firestore, 'users', this.auth.profileUserId, 'decks', dbDeck.id), dbDeck);
@@ -314,77 +331,26 @@ export class YourCardsComponent {
   }
 
 
-  async askSellUnit(card: TCard, unit: { ref: string, owner: string }) {
-    if (card && unit) {      
-      if (this.auth.profileUserId === this.JOEL_ID) {  return this.sellUnit(card, unit); } // TODO: Remove this
+  async askSellUnit(unit: TFullUnit) {
+    if (unit) {      
+      const formatPrice = formatNumber(unit.card.price, 'en-US', '1.0-0');
+      let htmlContent = `Are you sure you want to place a sell offer of 1 <b>${unit.card.name}</b> for <b>${formatPrice}</b> sats?`;
       
-      const formatPrice = formatNumber(card.price, 'en-US', '1.0-0');
-      let htmlContent = `Are you sure you want to sell 1 <b>${card.name}</b> for <b>${formatPrice}</b> sats?`;
-      const res = await this.confirm.open({ title: `Sell "${card.name}"`, htmlContent, yesButtonText: 'Yes, sell it' });
-      if (res === 'yes') { this.sellUnit(card, unit); }
+      const decks = this.dataService.yourDecks.filter(deck => deck.units.find(u => u.ref === unit.ref));
+      if (decks.length) {
+        htmlContent += `<br/><br/><b>Warning</b>: This unit is being used in ${decks.length} of your decks:<br/>`;
+        htmlContent += decks.map(deck => `- ${deck.deckName}<br/>`);
+      }
+
+      const res = await this.confirm.open({ title: `Sell "${unit.card.name}"`, htmlContent, yesButtonText: 'Yes, sell it' });
+      if (res === 'yes') {
+        const price = typeof unit.card.price === 'string' ? Number.parseInt(unit.card.price || 0, 10) : unit.card.price;
+        await this.dataService.sellUnit(unit, price);
+        this.growl.success(`New Sell Offer`);
+      }
     }
   }
 
-  async sellUnit(card: TCard, unit: { ref: string, owner: string }) {
-    if (typeof card.price === 'string') { card.price = Number.parseInt(card.price || 0, 10); }
-    console.log('Selling Card', card, unit);
-    const docSnap = await getDoc(doc(this.firestore, 'market', card.id));
-    const market = docSnap.data() as TMarketCard;
-    const sellOffer = market.sellOffer.find(o => o.ref === unit.ref);
-    if (sellOffer) {
-      sellOffer.price = card.price;
-    } else {
-      market.sellOffer.push({ ref: unit.ref, price: card.price });
-    }
-    await updateDoc(doc(this.firestore, 'market', card.id), market);
-    
-
-    // If not Joel, sell it to Joel immediately
-    if (this.auth.profileUserId !== this.JOEL_ID) {
-      await this.sellUnitToJoel(card, unit);          
-      this.loadCards();
-    } else {          
-      this.growl.success(`New Sell Offer`);
-    }  
-  }
-
-  JOEL_ID = '4cix25Z3DPNgcTFy4FcsYmXjdSi1';
-
-  async sellUnitToJoel(card: TCard, unit: { ref: string, owner: string }) {  // TODO: Remove this
-    if (typeof card.price === 'string') { card.price = Number.parseInt(card.price || 0, 10); }
-    console.log('Buying unit', unit);
-    
-
-    // Take buyer money
-    let docSnap = await getDoc(doc(this.firestore, 'users', this.JOEL_ID));
-    const newOwner = docSnap.data() as TUser;
-    newOwner.sats -= card.price;
-    await updateDoc(doc(this.firestore, 'users', this.JOEL_ID), { sats: newOwner.sats });
-
-    // Add money to the seller
-    this.auth.spendSats(-card.price);
-    
-    // Change unit owner
-    docSnap = await getDoc(doc(this.firestore, 'cards', card.id));
-    const dbCard = docSnap.data() as TCard;
-    const dbUnit = dbCard.units.find(u => u.ref === unit.ref);
-    if (dbUnit) {
-      dbUnit.owner = this.JOEL_ID;
-      await updateDoc(doc(this.firestore, 'cards', card.id), { units: dbCard.units });
-      card.units.splice(card.units.indexOf(unit), 1);
-      if (!card.units.length) { this.hoverCard(); }
-    }
-
-    // Delete Offer
-    docSnap = await getDoc(doc(this.firestore, 'market', card.id));
-    const market = docSnap.data() as TMarketCard;
-    const offer = market.sellOffer.find(o => o.ref === unit.ref);
-    if (offer) {
-      market.sellOffer.splice(market.sellOffer.indexOf(offer), 1);
-      await updateDoc(doc(this.firestore, 'market', card.id), { sellOffer: market.sellOffer });
-    }
-    this.growl.success(`${card.name} sold for ${formatNumber(card.price, 'en-US', '1.0-0')} sats`);
-  }
 
 }
 
