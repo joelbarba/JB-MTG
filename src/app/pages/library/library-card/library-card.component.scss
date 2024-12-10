@@ -1,31 +1,40 @@
 h2 { padding: 15px 15px 0 15px; }
 
 .page {
-  padding: 0 15px 15px 0;
+  margin-top: -15px;
   display: flex;
+  height: 100%;
 
   .details {
-    flex: 0 0 480px;
-    border-right: 1px solid black;
-    padding: 15px;
+    // flex: 0 0 480px;
+    flex: 0;
+    padding: 30px 40px 0 40px;
+    border-right: 1px solid #aaa;
     display: flex;
     flex-direction: column;
     align-items: center;
     .card-details {
       text-align: center;
       margin-top: 20px;
-      font-size: 26px;
+      font-size: 1.8em;
     }
   }
 
   .list {
     flex: 4;
     padding: 0 15px;
-    margin-top: -20px;
+    .search-box { margin: 0 -15px 0 0; }
     .all-units {
+      position: absolute;
+      top: 120px;
+      // bottom: 0;
+      max-height: calc(100% - 120px);
+      margin-right: 15px;
+      overflow: auto;
+      margin-left: -7px;
+
       display: flex;
-      flex-wrap: wrap;
-      margin: 0 -7px;
+      flex-wrap: wrap;      
       .unit-wrapper {
         padding: 12px 12px;
         background-color: #ffffff52;

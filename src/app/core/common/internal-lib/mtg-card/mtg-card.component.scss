@@ -35,12 +35,31 @@
     // margin: 3.5px 5px;
   }
 
-  &.xs .mtg-card  { width: 100px; height: 140px; @include border-adjustment(2px); }
+  &.xs .mtg-card  { width: 100px; height: 140px; @include border-adjustment(3px); }
   &.sm .mtg-card  { width: 120px; height: 168px; @include border-adjustment(3px); }
   &.md .mtg-card  { width: 150px; height: 210px; @include border-adjustment(4px); }
-  &.lg .mtg-card  { width: 300px; height: 420px; @include border-adjustment(6px); }
-  &.xl .mtg-card  { width: 400px; height: 560px; @include border-adjustment(8px); }
+  &.lg .mtg-card  { width: 300px; height: 420px; @include border-adjustment(7px); }
+  &.xl .mtg-card  { width: 400px; height: 560px; @include border-adjustment(9px); }
   &.xxl .mtg-card { width: 450px; height: 630px; @include border-adjustment(11px); }
 
+  @media (max-width: 1500px) or (max-height: 1050px) { 
+    &.xs .mtg-card  { width: 75px;  height: 105px; @include border-adjustment(2px); }
+    &.sm .mtg-card  { width: 100px; height: 140px; @include border-adjustment(3px); }
+    &.md .mtg-card  { width: 120px; height: 168px; @include border-adjustment(3px); }
+    &.lg .mtg-card  { width: 150px; height: 210px; @include border-adjustment(4px); }
+    &.xl .mtg-card  { width: 300px; height: 420px; @include border-adjustment(7px); }
+    &.xxl .mtg-card { width: 400px; height: 560px; @include border-adjustment(9px); }
+  }
+
+  @media (max-width: 1000px) or (max-height: 800px) { 
+    &.xs .mtg-card  { width: 60px;  height: 84px;  @include border-adjustment(1px); }
+    &.sm .mtg-card  { width: 75px;  height: 105px; @include border-adjustment(2px); }
+    &.md .mtg-card  { width: 100px; height: 140px; @include border-adjustment(3px); }
+    &.lg .mtg-card  { width: 120px; height: 168px; @include border-adjustment(3px); }
+    &.xl .mtg-card  { width: 150px; height: 210px; @include border-adjustment(4px); }
+    &.xxl .mtg-card { width: 300px; height: 420px; @include border-adjustment(7px); }
+  }
+
 }
+
 

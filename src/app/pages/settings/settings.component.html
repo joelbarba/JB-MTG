@@ -120,8 +120,8 @@
   <div class="list">
     <div class="row whiteBg" style="margin-top: 0;">
       <bf-input class="col-4 flat" bfIcon="icon-search" [(ngModel)]="cardsList.filterText" (ngModelChange)="cardsList.filter($event)"></bf-input>
-      <bf-checkbox class="col-2 pad-input" bfLabel="Only Ready To Play" [(ngModel)]="cardsList.filters.readyToPlay" (ngModelChange)="filterReadyToPlay($event)" ></bf-checkbox>
-      <bf-btn class="col-6 text-right" bfIcon="icon-plus" bfText="New Card" (bfClick)="newCard()"></bf-btn>
+      <bf-checkbox class="col-4 pad-input" bfLabel="Only Ready To Play" [(ngModel)]="cardsList.filters.readyToPlay" (ngModelChange)="filterReadyToPlay($event)" ></bf-checkbox>
+      <bf-btn class="col-4 text-right" bfIcon="icon-plus" bfText="New Card" (bfClick)="newCard()"></bf-btn>
     </div>
 
     <div class="all-cards">

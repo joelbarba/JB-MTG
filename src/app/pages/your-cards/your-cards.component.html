@@ -4,7 +4,9 @@
   <div class="details">
     <h2>{{ 'Card Details' | translate }}</h2>
 
-    <div *ngIf="hoveringCard">     
+    <div class="full-card" *ngIf="!hoveringCard"><mtg-card class="xl" style="opacity: 0;"></mtg-card></div>
+
+    <div *ngIf="hoveringCard">
       <div class="full-card">
         <mtg-card [cardImg]="hoveringCard.image" class="xl"></mtg-card>
       </div>
@@ -24,14 +26,14 @@
     <div class="units-list" *ngIf="hoveringCard && hoveringCard?.units?.length">
       <ul class="list-unstyled table-list content">
         <li class="list-row" *ngFor="let unit of hoveringCard.units">
-          <div class="col-8 ref-font">{{unit.ref}}</div>
-          <div class="col-4 text-right" *ngIf="!unit.sellPrice">
+          <div class="col-9 ref-font">{{unit.ref}}</div>
+          <div class="col-3 text-right" *ngIf="!unit.sellPrice">
             <bf-btn *ngIf="!hoverFromDeck" class="warning" 
-                     bfText="Sell it" bfIcon="icon-coin-dollar"
+                     bfText="Sell it"
                     (bfClick)="askSellUnit(unit)">
             </bf-btn>
           </div>
-          <div class="col-4 on-sale" *ngIf="unit.sellPrice" (click)="askSellUnit(unit)">
+          <div class="col-3 on-sale" *ngIf="unit.sellPrice" (click)="askSellUnit(unit)">
             <span [hoverTip]="'for ' + (unit.sellPrice | number: '1.0-0') + ' sats'" tipSide="right">On Sale</span>
           </div>
         </li>
@@ -49,7 +51,7 @@
   <!-- Your Cards -->
   <div class="list">
     <div class="d-flex" style="margin-bottom: 5px;">
-      <h2 class="flex-1">{{ 'Your Cards' | translate }}</h2>
+      <h2 class="fixed-title flex-1">{{ 'Your Cards' | translate }}</h2>
       <bf-btn class="flex-1 text-right" 
               [bfText]="showDecks ? 'Hide Your Decks': 'Show Your Decks'"
               [bfIcon]="showDecks ? 'icon-arrow-right3': 'icon-arrow-left6'"
@@ -58,9 +60,9 @@
     </div>
 
     <!-- Search Box -->
-    <div class="row whiteBg" style="margin-top: 0;">
-      <bf-input class="col-3 flat" bfIcon="icon-search" [(ngModel)]="cardsList.filterText" (ngModelChange)="cardsList.filter($event)"></bf-input>
-      <div class="col-3">
+    <div class="row whiteBg search-box">
+      <bf-input class="flat" bfIcon="icon-search" [(ngModel)]="cardsList.filterText" (ngModelChange)="cardsList.filter($event)"></bf-input>
+      <div class="checkboxes">
         <bf-checkbox class="pad-input" bfLabel="Group" [(ngModel)]="isGrouped" (ngModelChange)="switchGrouped()" style="margin-right: 15px;"></bf-checkbox>
         <bf-checkbox class="pad-input" bfLabel="Ready" [(ngModel)]="cardsList.filters.readyToPlay" (ngModelChange)="filterReadyToPlay($event)"></bf-checkbox>
       </div>
@@ -107,7 +109,7 @@
         <div class="card-name" *ngIf="card.units">
           <!-- {{card.units.length}} x {{card.name}} -->
           <!-- <span class="count">{{card.units.length}}</span> x {{card.name}} -->
-          <span>{{card.name}} </span>
+          <span class="name-text">{{card.name}} </span>
           <span>({{card.units.length - unitsInDeck(card.id)}})</span>
         </div>
         <mtg-card [cardImg]="card.image" class="sm"
@@ -127,7 +129,7 @@
 
     <!-- Decks List Header -->
     <div class="d-flex" style="margin-bottom: 5px;" *ngIf="!selDeck">
-      <h2 class="flex-1">{{ 'Your Decks' | translate }}</h2>
+      <h2 class="fixed-title flex-1">{{ 'Your Decks' | translate }}</h2>
       <bf-btn class="flex-1 text-right" bfText="Create New Deck" bfType="add"
               (bfClick)="createNewDeck()">
       </bf-btn>
@@ -153,7 +155,7 @@
 
     <!-- Deck Editor Header -->
     <div class="d-flex" style="margin-bottom: 5px;" *ngIf="selDeck">
-      <h2 class="flex-3">{{ 'Your Deck: ' | translate }}{{selDeck.deckName}} ({{selDeck.units.length}} cards)</h2>
+      <h2 class="flex-3">{{ 'Your Deck' | translate }} ({{selDeck.units.length}} cards)</h2>
       <bf-btn class="flex-1 text-right" bfText="Back" bfIcon="icon-arrow-left6"
               (bfClick)="selDeck = undefined; loadDecks()">
       </bf-btn>
@@ -186,7 +188,8 @@
              [hoverTip]="card.units.length > 1 ? 'Click to remove 1' : 'Click to remove it'"
              (mouseenter)="hoverCard(card, true)" (mouseleave)="hoverCard()" (click)="removeCardFromDeck(card)">
           <div class="card-name">
-            <span class="count">{{card.units.length}}</span> x {{card.name}}
+            <span class="count">{{card.units.length}}</span>
+            <span class="name-text">x {{card.name}}</span>
           </div>
           <mtg-card [cardImg]="card.image" class="sm"></mtg-card>
         </div>

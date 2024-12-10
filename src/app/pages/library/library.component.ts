@@ -4,7 +4,7 @@ import { ShellService } from '../../shell/shell.service';
 import { CommonModule } from '@angular/common';
 import { Firestore, QuerySnapshot, QueryDocumentSnapshot, DocumentData, setDoc, updateDoc } from '@angular/fire/firestore';
 import { getDocs, getDoc, collection, doc } from '@angular/fire/firestore';
-import { Observable } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 import { collectionData } from 'rxfire/firestore';
 import { TCard } from '../../core/types';
 import { FormsModule } from '@angular/forms';
@@ -42,6 +42,8 @@ export class LibraryComponent {
   colors = colors;
   cardTypes = cardTypes;
 
+  subs: Array<Subscription> = [];
+
   constructor(
     private shell: ShellService,
     private auth: AuthService,
@@ -64,13 +66,14 @@ export class LibraryComponent {
   async ngOnInit() {
     await this.dataService.loadPromise;
     this.cardsList.load(this.dataService.cards);
-    this.cardsList.subscribeTo(this.dataService.cards$);
+    this.subs.push(this.dataService.cards$.subscribe(cards => this.cardsList.load(cards)));
     this.cardsList.loadingStatus = 2;
     this.hoverCard(this.cardsList.loadedList[0]);
   }
 
   ngOnDestroy() {
     this.cardsList.destroy();
+    this.subs.forEach(sub => sub.unsubscribe())
   }
 
   hoverCard(card?: TFullCard) {
