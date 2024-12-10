@@ -14,6 +14,8 @@ import { MtgCardComponent } from '../../core/common/internal-lib/mtg-card/mtg-ca
 import { cardOrderFn, unitOrderFn, cardTypes, colors, randomUnitId } from '../../core/common/commons';
 import { HoverTipDirective } from '../../core/common/internal-lib/bf-tooltip/bf-tooltip.directive';
 import { DataService, TFullCard, TFullDeck, TFullUnit } from '../../core/dataService';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { SellOfferModalComponent } from '../../core/modals/sellOfferModal/sell-offer-modal.component';
 
 
 
@@ -40,6 +42,7 @@ export class YourCardsComponent {
   
   hoveringCard: TFullCard | null = null;
   hoveringUnit: TFullUnit | null = null;
+  hoverFromDeck = false;  // Whether the card/unit you are hovering is from your cards list (false) of from a deck card editor (true)
 
   selCard: TFullCard | null = null;   // Current selected card
   selUnit: TFullUnit | null = null;   // Current selected unit
@@ -69,6 +72,7 @@ export class YourCardsComponent {
     private growl: BfGrowlService,
     private confirm: BfConfirmService,
     private dataService: DataService,
+    private ngbModal: NgbModal,
   ) {
     this.shell.gameMode('off');
     this.cardsList = new BfListHandler({
@@ -164,14 +168,16 @@ export class YourCardsComponent {
     if (!this.showDecks) { this.selDeck = undefined; }
   }
 
-  hoverCard(card?: TFullCard) {
+  hoverCard(card?: TFullCard, fromDeck = false) {
     this.hoveringCard = card || this.selCard;
     this.hoveringUnit = this.hoveringCard ? null : this.selUnit;
+    this.hoverFromDeck = fromDeck;
   }
 
-  hoverUnit(unit?: TFullUnit) {
+  hoverUnit(unit?: TFullUnit, fromDeck = false) {
     this.hoveringUnit = unit || this.selUnit;
     this.hoveringCard = this.hoveringUnit ? null : this.selCard;
+    this.hoverFromDeck = fromDeck;
   }
 
   unitsInDeck(cardId: string): number { // Number of units in the deck
@@ -332,23 +338,8 @@ export class YourCardsComponent {
 
 
   async askSellUnit(unit: TFullUnit) {
-    if (unit) {      
-      const formatPrice = formatNumber(unit.card.price, 'en-US', '1.0-0');
-      let htmlContent = `Are you sure you want to place a sell offer of 1 <b>${unit.card.name}</b> for <b>${formatPrice}</b> sats?`;
-      
-      const decks = this.dataService.yourDecks.filter(deck => deck.units.find(u => u.ref === unit.ref));
-      if (decks.length) {
-        htmlContent += `<br/><br/><b>Warning</b>: This unit is being used in ${decks.length} of your decks:<br/>`;
-        htmlContent += decks.map(deck => `- ${deck.deckName}<br/>`);
-      }
-
-      const res = await this.confirm.open({ title: `Sell "${unit.card.name}"`, htmlContent, yesButtonText: 'Yes, sell it' });
-      if (res === 'yes') {
-        const price = typeof unit.card.price === 'string' ? Number.parseInt(unit.card.price || 0, 10) : unit.card.price;
-        await this.dataService.sellUnit(unit, price);
-        this.growl.success(`New Sell Offer`);
-      }
-    }
+    const modalRef = this.ngbModal.open(SellOfferModalComponent, { backdrop: 'static', centered: false, size: 'md' });
+    modalRef.componentInstance.unit = unit;
   }
 
 

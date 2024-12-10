@@ -2,7 +2,7 @@
 
 <div class="page" *ngIf="card">
   <div class="details">    
-    <mtg-card [cardImg]="card.image" class="lg"></mtg-card>
+    <mtg-card [cardImg]="card.image" class="xl"></mtg-card>
     <div class="card-details">
       <!-- <div class="name">{{card.name}}</div> -->
       <div class="quantity">There are <b>{{card.units.length}}</b> units of this card</div>
@@ -17,17 +17,19 @@
 
     <!-- Search Box -->
     <div class="row whiteBg" style="margin-top: 0;">
-      <span>Your Credit: {{ (credit$ | async) | number: '1.0-0' }} sats</span>
+      <!-- <span>Your Credit: {{ (credit$ | async) | number: '1.0-0' }} sats</span> -->
       
       <!-- <bf-input class="col-4 flat" bfIcon="icon-search" [(ngModel)]="cardsList.filterText" (ngModelChange)="cardsList.filter($event)"></bf-input> -->
-      <div class="col-2">
-        <!-- <bf-checkbox class="pad-input" bfLabel="For Sale" [(ngModel)]="cardsList.filters.readyToPlay" (ngModelChange)="filterReadyToPlay($event)"></bf-checkbox> -->
+      <div class="col-12">
+        <bf-checkbox class="flat" bfLabel="Show Only Yours"   [(ngModel)]="onlyYours" (ngModelChange)="onlyOthers = false; showList()"></bf-checkbox>
+        <bf-checkbox class="flat" bfLabel="Show Only Others"  [(ngModel)]="onlyOthers" (ngModelChange)="onlyYours = false; showList()"></bf-checkbox>
+        <bf-checkbox class="flat" bfLabel="Show Only On Sale" [(ngModel)]="onlyOnSale" (ngModelChange)="showList()"></bf-checkbox>
       </div>
 
     </div>
 
-    <div class="all-units" *ngIf="card">
-      <div class="unit-wrapper" *ngFor="let unit of card.units">
+    <div class="all-units" *ngIf="units">
+      <div class="unit-wrapper" *ngFor="let unit of units">
   
         <mtg-card [cardImg]="card.image" class="xs"></mtg-card>
         <div class="unit-data">
@@ -35,17 +37,24 @@
             <!-- <div class="ref"><b>Id:</b> {{unit.ref}}</div> -->
             <div class="ref">{{cardId}}.<br/>{{unit.shortRef}}</div>
             <div class="owner"><b>Owned by:</b> {{unit.owner.name}}</div>
-            <div class="price" *ngIf="unit.sellPrice"><b>For Sale:</b> {{unit.sellPrice | number: '1.0-0'}} sats</div>
+            <div class="price" *ngIf="!unit.isYours && unit.sellPrice"><b>For Sale:</b> {{unit.sellPrice | number: '1.0-0'}} sats</div>
+            <div class="price on-sale" *ngIf="unit.isYours && unit.sellPrice" (click)="askSellUnit(unit)">
+              <span hoverTip="Change Your Offer"><b>For Sale:</b> {{unit.sellPrice | number: '1.0-0'}} sats</span>
+            </div>
           </div>
           <div class="buy-btn">
             <bf-btn *ngIf="unit.sellPrice && !unit.isYours" class="full-width secondary" 
                      bfText="Buy it" bfIcon="icon-coin-dollar"
                     (bfClick)="buyUnit(unit)">
             </bf-btn>
-            <bf-btn *ngIf="unit.isYours" class="full-width warning" 
+            <bf-btn *ngIf="unit.isYours && !unit.sellPrice" class="full-width warning" 
                      bfText="Sell it" bfIcon="icon-coin-dollar"
                     (bfClick)="askSellUnit(unit)">
             </bf-btn>
+            <!-- <bf-btn *ngIf="unit.isYours && unit.sellPrice" class="full-width primary" 
+                     bfText="Change Offer" bfIcon="icon-coin-dollar"
+                    (bfClick)="askSellUnit(unit)">
+            </bf-btn> -->
             <!-- <bf-btn *ngIf="!unit.forSale" class="full-width"  bfText="Make an Offer" bfIcon="icon-coin-dollar" [bfDisabled]="true"></bf-btn> -->
           </div>
         </div>

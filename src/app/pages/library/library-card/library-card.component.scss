@@ -1,17 +1,19 @@
 h2 { padding: 15px 15px 0 15px; }
 
 .page {
-  padding: 0 15px 15px 15px;
+  padding: 0 15px 15px 0;
   display: flex;
 
   .details {
-    flex: 0 0 510px;
+    flex: 0 0 480px;
     border-right: 1px solid black;
     padding: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     .card-details {
       text-align: center;
       margin-top: 20px;
-      margin-right: 25px;
       font-size: 26px;
     }
   }
@@ -44,9 +46,18 @@ h2 { padding: 15px 15px 0 15px; }
           width: 100%;
           .unit-text-data div { margin-bottom: 8px; }
           // .buy-btn {  }
+          .on-sale {
+            justify-content: flex-end;
+            text-decoration: underline;
+            transition-duration: 0.3s;
+            cursor: pointer;
+            &:hover { color: black; }
+          }
         }
       }
     }
+
+    bf-checkbox + bf-checkbox { margin-left: 45px; }
   }
 
 }

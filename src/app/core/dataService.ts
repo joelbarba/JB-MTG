@@ -1,8 +1,8 @@
 import { Injectable } from "@angular/core";
 import { AuthService } from "./common/auth.service";
-import { collection, doc, DocumentData, Firestore, getDoc, getDocs, onSnapshot, QueryDocumentSnapshot, QuerySnapshot, setDoc, updateDoc } from "@angular/fire/firestore";
+import { collection, deleteField, doc, DocumentData, Firestore, getDoc, getDocs, onSnapshot, QueryDocumentSnapshot, QuerySnapshot, setDoc, updateDoc } from "@angular/fire/firestore";
 import { TCard, TDeckRef, TUser } from "./types";
-import { Subject } from "rxjs";
+import { BehaviorSubject, map, Subject } from "rxjs";
 import { Unsubscribe } from "firebase/auth";
 import { BfDefer } from "@blueface_npm/bf-ui-lib";
 
@@ -19,11 +19,12 @@ export class DataService {
   units: Array<TDBUnit> = [];
   yourDecks: Array<TFullDeck> = [];
 
-  cards$: Subject<Array<TFullCard>> = new Subject();
-  users$: Subject<Array<TUser>> = new Subject();
-  units$: Subject<Array<TDBUnit>> = new Subject();
-  yourDecks$: Subject<Array<TFullDeck>> = new Subject();
+  cards$: BehaviorSubject<Array<TFullCard>> = new BehaviorSubject([] as Array<TFullCard>);
+  users$: BehaviorSubject<Array<TUser>> = new BehaviorSubject([] as Array<TUser>);
+  units$: BehaviorSubject<Array<TDBUnit>> = new BehaviorSubject([] as Array<TDBUnit>);
+  yourDecks$: BehaviorSubject<Array<TFullDeck>> = new BehaviorSubject([] as Array<TFullDeck>);
 
+  yourCredit$ = this.users$.pipe(map(users => users.find(u => u.uid === this.auth.profileUserId)?.sats || 0));
 
   defaultUser: TUser = {
     uid       : '4cix25Z3DPNgcTFy4FcsYmXjdSi1',
@@ -142,6 +143,9 @@ export class DataService {
   async sellUnit(unit: TFullUnit, sellPrice: number) {
     console.log('Selling Card', unit);
     await updateDoc(doc(this.firestore, 'units', unit.ref), { sellPrice });
+  }
+  async removeSellOffer(unit: TFullUnit) {
+    await updateDoc(doc(this.firestore, 'units', unit.ref), { sellPrice: deleteField() });
   }
 
 }

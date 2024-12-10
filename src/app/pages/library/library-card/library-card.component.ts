@@ -12,6 +12,9 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { map, Subscription } from 'rxjs';
 import { formatNumber } from '@angular/common';
 import { DataService, TFullCard, TFullUnit } from '../../../core/dataService';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { SellOfferModalComponent } from '../../../core/modals/sellOfferModal/sell-offer-modal.component';
+import { HoverTipDirective } from '../../../core/common/internal-lib/bf-tooltip/bf-tooltip.directive';
 
 
 @Component({
@@ -24,6 +27,7 @@ import { DataService, TFullCard, TFullUnit } from '../../../core/dataService';
     BfUiLibModule,
     MtgCardComponent,
     DecimalPipe,
+    HoverTipDirective,
 ],
   templateUrl: './library-card.component.html',
   styleUrl: './library-card.component.scss',
@@ -33,9 +37,14 @@ export class LibraryCardComponent {
   cardId!: string;
   card?: TFullCard;
 
-  cardSub!: Subscription;
+  units: Array<TFullUnit> = []; // Filtered units
 
-  credit$ = this.auth.profile$.pipe(map(p => p?.sats || 0));
+  cardSub!: Subscription;
+  credit$ = this.dataService.yourCredit$;
+
+  onlyYours = false;
+  onlyOthers = false;
+  onlyOnSale = false;
 
   constructor(
     private shell: ShellService,
@@ -46,6 +55,7 @@ export class LibraryCardComponent {
     private router: Router,
     private dataService: DataService,
     private confirm: BfConfirmService,
+    private ngbModal: NgbModal,
   ) {
     this.shell.gameMode('off');
   }
@@ -53,11 +63,9 @@ export class LibraryCardComponent {
   async ngOnInit() {
     this.cardId = this.route.snapshot.paramMap.get('cardId') || '';
     await this.dataService.loadPromise;
-    this.card = this.dataService.cards.find(c => c.id === this.cardId);
+    this.showList();
+    this.cardSub = this.dataService.cards$.subscribe(cards => this.showList());
     // console.log(this.card);
-    this.cardSub = this.dataService.cards$.subscribe(cards => {
-      this.card = cards.find(c => c.id === this.cardId);
-    });
   }  
 
   ngOnDestroy() {
@@ -66,33 +74,53 @@ export class LibraryCardComponent {
 
   goBack() { this.router.navigate(['library/']); }
 
+  showList() {
+    this.card = this.dataService.cards.find(c => c.id === this.cardId);
+    if (this.card) {
+      this.units = this.card.units.filter(unit => {
+        if (this.onlyYours && !unit.isYours) { return false; }
+        if (this.onlyOthers && unit.isYours) { return false; }
+        if (this.onlyOnSale && !unit.sellPrice) { return false; }
+        return true;
+      });
+    }
+  }
+
+
   async buyUnit(unit: TFullUnit) {
-    const formatPrice = formatNumber(unit.card.price, 'en-US', '1.0-0');
-    let htmlContent = `Are you sure you want to buy 1 <b>${unit.card.name}</b> for <b>${formatPrice}</b> sats?`;
-    const res = await this.confirm.open({ title: `Buy "${unit.card.name}"`, htmlContent, yesButtonText: 'Yes, buy it' });
-    if (res === 'yes') {
-      const error = await this.dataService.buyUnit(unit);
-      if (error) { this.growl.error(error); }
-      else { this.growl.success(`${this.card?.name} bought for ${formatNumber(unit.sellPrice || 0, 'en-US', '1.0-0')} sats`); }
+    if (unit.sellPrice) {
+      const formatPrice = formatNumber(unit.sellPrice, 'en-US', '1.0-0');
+      let htmlContent = `Are you sure you want to buy 1 <b>${unit.card.name}</b> for <b>${formatPrice}</b> sats?`;
+      const res = await this.confirm.open({ title: `Buy "${unit.card.name}"`, htmlContent, yesButtonText: 'Yes, buy it' });
+      if (res === 'yes') {
+        const error = await this.dataService.buyUnit(unit);
+        if (error) { this.growl.error(error); }
+        else { this.growl.success(`${this.card?.name} bought for ${formatNumber(unit.sellPrice || 0, 'en-US', '1.0-0')} sats`); }
+      }
     }
   }
 
   async askSellUnit(unit: TFullUnit) {
-    const formatPrice = formatNumber(unit.card.price, 'en-US', '1.0-0');
-    let htmlContent = `Are you sure you want to place a sell offer of 1 <b>${unit.card.name}</b> for <b>${formatPrice}</b> sats?`;
-    
-    const decks = this.dataService.yourDecks.filter(deck => deck.units.find(u => u.ref === unit.ref));
-    if (decks.length) {
-      htmlContent += `<br/><br/><b>Warning</b>: This unit is being used in ${decks.length} of your decks:<br/>`;
-      htmlContent += decks.map(deck => `- ${deck.deckName}<br/>`);
-    }
-
-    const res = await this.confirm.open({ title: `Sell "${unit.card.name}"`, htmlContent, yesButtonText: 'Yes, sell it' });
-    if (res === 'yes') {
-      const price = typeof unit.card.price === 'string' ? Number.parseInt(unit.card.price || 0, 10) : unit.card.price;
-      await this.dataService.sellUnit(unit, price);
-      this.growl.success(`New Sell Offer`);
-    }
+    const modalRef = this.ngbModal.open(SellOfferModalComponent, { backdrop: 'static', centered: false, size: 'md' });
+    modalRef.componentInstance.unit = unit;
   }
+
+  // async askSellUnit(unit: TFullUnit) {
+  //   const formatPrice = formatNumber(unit.card.price, 'en-US', '1.0-0');
+  //   let htmlContent = `Are you sure you want to place a sell offer of 1 <b>${unit.card.name}</b> for <b>${formatPrice}</b> sats?`;
+    
+  //   const decks = this.dataService.yourDecks.filter(deck => deck.units.find(u => u.ref === unit.ref));
+  //   if (decks.length) {
+  //     htmlContent += `<br/><br/><b>Warning</b>: This unit is being used in ${decks.length} of your decks:<br/>`;
+  //     htmlContent += decks.map(deck => `- ${deck.deckName}<br/>`);
+  //   }
+
+  //   const res = await this.confirm.open({ title: `Sell "${unit.card.name}"`, htmlContent, yesButtonText: 'Yes, sell it' });
+  //   if (res === 'yes') {
+  //     const price = typeof unit.card.price === 'string' ? Number.parseInt(unit.card.price || 0, 10) : unit.card.price;
+  //     await this.dataService.sellUnit(unit, price);
+  //     this.growl.success(`New Sell Offer`);
+  //   }
+  // }
 
 }

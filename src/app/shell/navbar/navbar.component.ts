@@ -5,6 +5,7 @@ import { BfLangList, AppTranslateService } from '../../core/common/app-translate
 import { BfGrowlModule, BfGrowlService, BfUiLibModule } from '@blueface_npm/bf-ui-lib';
 import { BfAvatarComponent } from '../../core/common/internal-lib/bf-avatar/bf-avatar.component';
 import { AuthService } from '../../core/common/auth.service';
+import { DataService } from '../../core/dataService';
 // import { SubSink } from 'subsink';
 
 @Component({
@@ -37,6 +38,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
     public readonly auth: AuthService,
     public readonly appTranslate: AppTranslateService,
     private growl: BfGrowlService,
+    public dataService: DataService,
   ) {
   }
 

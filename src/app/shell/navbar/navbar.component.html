@@ -6,6 +6,9 @@
     </a> -->
   </div>
 
+  <div class="navbar-content your-credit">
+    <span>Credit: <b>{{dataService.yourCredit$ | async | number: '1.0-0' }}</b> sats</span>
+  </div>
   <div class="navbar-content">
     <bf-avatar *ngIf="isLoggedIn" 
       class="profile-avatar white-border sm"
