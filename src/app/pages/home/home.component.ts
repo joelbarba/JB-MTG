@@ -5,19 +5,11 @@ import { BfUiLibModule } from 'bf-ui-lib';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { BfLang, BfLangList, AppTranslateService } from '../../core/common/app-translate.service';
 import { BehaviorSubject, Observable, Subject, map, take } from 'rxjs';
-import { Firestore, getDocs, query, collection, collectionData, onSnapshot, where } from '@angular/fire/firestore';
+import { Firestore, getDocs, query, collection, collectionData, onSnapshot, where, Unsubscribe, QuerySnapshot } from '@angular/fire/firestore';
+import { DataService } from '../../core/dataService';
+import { AuthService } from '../../core/common/auth.service';
+import { Router } from '@angular/router';
 
-export interface INote {
-  id?: string;
-  title: string;
-  content: string;
-  order: number;
-  mode: 'text' | 'list';
-  updated: any;
-  created: any;
-  notebookId?: string;
-  $saved?: 'yes' | 'no' | 'saving';  // set to false while typing into the textarea, and true when saved to DB 
-}
 
 @Component({
   selector: 'app-home',
@@ -32,57 +24,44 @@ export interface INote {
   ],
 })
 export class HomeComponent {
-  languages!: BfLangList;
-  localeId$ = this.appTranslate.localeId$;
-  language$ = this.appTranslate.language$;
-  lang = '';
-  
-  title = 'My app';
-  myVariable = 'HEY';
 
-  notesCol = collection(this.firestore, 'notes');
-  notes$ = collectionData(this.notesCol) as Observable<INote[]>;
+  numCards = 0;
+  numDecks = 0;
+  numRequests = 0;
+  numGames = 0;
+
+
+  gamesSub!: Unsubscribe;
 
   constructor(
     private translate: TranslateService,
     private appTranslate: AppTranslateService,
-    // private af: AngularFire,
-    public firestore: Firestore,
+    private firestore: Firestore,
+    private dataService: DataService,
+    private auth: AuthService,
+    private router: Router,
   ) {    
   }
 
 
-  ngOnInit() {
-    this.appTranslate.languagesPromise.then(langs => this.languages = langs);
-    this.appTranslate.transReady.then(() => this.lang = this.appTranslate.currentLanguage);    
+  async ngOnInit() {
+    await this.dataService.loadPromise;
+    this.numCards = this.dataService.cards.reduce((acc, card) => {
+      return acc + card.units.filter(u => u.ownerId === this.auth.profileUserId).length;
+    }, 0);
+
+    await this.dataService.yourDecksPromise;
+    this.numDecks = this.dataService.yourDecks.length;
+
+    this.gamesSub = onSnapshot(collection(this.firestore, 'games'), (snapshot: QuerySnapshot) => {
+      const games = snapshot.docs.map(doc => ({ ...doc.data() } as { status: string }));
+      this.numRequests = games.filter(g => g.status === 'created').length;
+      this.numGames = games.filter(g => g.status === 'playing').length;
+    });
   }
 
-  isSelected(lang: BfLang) {
-    // console.log(lang, this.appTranslate.currentLocale);
-    return this.appTranslate.currentLocale === lang.localeId;
-  }
+  goToYourCards() { this.router.navigate(['cards']); }
+  goToYourDecs() { this.router.navigate(['cards']); }
+  goToGames() { this.router.navigate(['game']); }
 
-  selectLang(code: string) {
-    if (code) { this.appTranslate.changeLanguage(code); }
-  }
-
-  myFunc(e: any) {
-    console.log(e);
-  }
-
-  loadNotes() {
-    // this.notes$ = this.notesCol.snapshotChanges().pipe(
-    //   map(notes => notes
-    //     .map(n => {
-    //       const data = n.payload.doc.data() as INote;
-    //       return { id: n.payload.doc.id, ...data };
-    //     })
-    //     .filter(n => n.id !== '0')
-    //     .sort((a, b) => {
-    //       if (!!a.order || !!b.order) { return (a.order || 0) > (b.order || 0) ? -1 : 1; }
-    //       return a.updated > b.updated ? -1 : 1;
-    //     })
-    //   )
-    // );
-  }
 }
