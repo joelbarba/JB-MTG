@@ -1,18 +1,63 @@
-<h1>Games Room</h1>
+<h2>Games</h2>
 
-<div style="padding: 40px 0;">
-  <button style="font-size: 30px;" (click)="createNewGame()">CREATE NEW GAME</button>
+<div class="page">
+  <div class="games-list">
+
+    <div class="whiteBg filters">
+      <bf-checkbox bfLabel="Show Game Requests sent to you" [(ngModel)]="filters.requested" (ngModelChange)="filterGames()"></bf-checkbox>
+      <bf-checkbox bfLabel="Show Your Game Requests" [(ngModel)]="filters.requesting" (ngModelChange)="filterGames()"></bf-checkbox>
+      <bf-checkbox bfLabel="Show Ongoing Games" [(ngModel)]="filters.ongoing" (ngModelChange)="filterGames()"></bf-checkbox>
+      <bf-checkbox bfLabel="Show Archived Games" [(ngModel)]="filters.archived" (ngModelChange)="filterGames()"></bf-checkbox>
+      <div class="right-btn">
+        <bf-btn bfText="Create New Game" bfType="add" (bfClick)="openNewGameModal()"></bf-btn>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-12">
+        <ul class="list-unstyled table-list" *ngIf="gamesList.loadingStatus === 2">
+          <li class="list-header">
+            <bf-list-header-col class="col-4" colTitle="Status"></bf-list-header-col>
+            <bf-list-header-col class="col-2"></bf-list-header-col>
+            <bf-list-header-col class="col-2" colTitle="Playing Against"></bf-list-header-col>
+            <bf-list-header-col class="col-2" colTitle="Your Deck"></bf-list-header-col>
+            <bf-list-header-col class="col-2" colTitle="Started On"></bf-list-header-col>
+          </li>
+    
+          <li class="list-row" *ngFor="let game of gamesList.renderList$ | async">
+
+
+            <div class="col-2">
+              <bf-btn *ngIf="isAdmin" class="warning" bfIcon="icon-cross" (bfClick)="deleteGame(game.gameId)"></bf-btn>
+              <bf-btn *ngIf="isAdmin" bfIcon="icon-rotate-ccw3" (bfClick)="resetGame(game.gameId)"></bf-btn>
+
+              <bf-btn bfText="Withdraw your Request"   class="warning"   bfIcon="icon-cross" *ngIf="game.op === 'requesting'" (bfClick)="withdrawRequest(game)"></bf-btn>
+              <bf-btn bfText="Accept Request and Play" class="secondary" bfIcon="icon-flag7" *ngIf="game.op === 'requested'" (bfClick)="acceptGameRequest(game)"></bf-btn>
+              <bf-btn bfText="Go to the Game" bfIcon="icon-flag7" *ngIf="game.op === 'ongoing'" (bfClick)="goToGame(game.gameId)"></bf-btn>
+              
+            </div>
+            <!-- <div class="col-1">{{game.op}}</div> -->
+            <div class="col-4">
+              {{game.desc}}
+              <span *ngIf="isAdmin" style="margin-left: 20px;">gameId={{game.gameId}}</span>
+            </div>
+
+            <div class="col-2">
+              <!-- <span>{{game.player1.name + ' - ' + game.player2.name}}</span> -->
+              <span *ngIf="game.youArePlayer1">{{game.player2.name}}</span>
+              <span *ngIf="!game.youArePlayer1">{{game.player1.name}}</span>
+            </div>
+            <div class="col-2">{{ game.deckName }}</div>
+            <div class="col-2">{{ game.created | date: 'medium' }}</div>
+
+          </li>
+        </ul>
+      </div>
+    </div>
+    <!-- <div class="row whiteBg">
+      <bf-list-paginator class="col-12" [bfCtrl]="usersList" [bfShowSelector]="true"></bf-list-paginator>
+    </div> -->
+
+  </div>
+
 </div>
 
-<ul>
-  <li *ngFor="let game of games$ | async" class="d-flex">
-    <button class="flex-1 mr-5" (click)="goToGame(game.id)">GO TO THE GAME</button>
-    <button class="flex-1 mr-5" (click)="resetGame(game.id)">RESET GAME</button>
-    <button class="flex-1 mr-5" (click)="deleteGame(game.id)">DELETE GAME</button>
-    <div class="flex-1">{{game.id}}</div>
-    <div class="flex-3">Created: {{game['created']}}</div>
-    <div class="flex-1">Status: {{game['status']}}</div>
-    <div class="flex-2">Player 1: {{game.player1.name}}</div>
-    <div class="flex-2">Player 2: {{game.player2.name}}</div>
-  </li>
-</ul>

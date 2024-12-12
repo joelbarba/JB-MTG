@@ -1,0 +1,91 @@
+<h2 *ngIf="!playerName">New Game</h2>
+<h2 *ngIf="playerName">Accepting <b>{{playerName}}</b>'request</h2>
+<span class="icon-cross2 close-btn" (click)="close()"></span>
+
+<div class="content">
+
+  <!-- User Opponent Selection -->
+  <div class="users" *ngIf="!playerName">
+    <h3>Opponent</h3>
+    <p>Select who you want to play against</p>
+
+    <bf-input class="" bfIcon="icon-search" 
+              [(ngModel)]="usersList.filterText" 
+              (ngModelChange)="usersList.filter($event)">
+    </bf-input>
+
+    <ul class="list-unstyled table-list" *ngIf="usersList.loadingStatus === 2">
+      <li class="list-header">
+        <bf-list-header-col class="col-12" colTitle="User" fieldName="name" [orderConf]="usersList.orderConf"></bf-list-header-col>
+      </li>
+      <li class="list-row" *ngFor="let user of usersList.renderList$ | async">
+        <div class="list-data" [class.selected]="user.uid === selectedUser?.uid" (click)="selectedUser = user">
+          <div class="icon-user3"></div>
+          <div class="user-name">{{user.name}}</div>
+          <div class="icon-checkmark" *ngIf="user.uid === selectedUser?.uid"></div>
+        </div>
+      </li>
+    </ul>
+
+    <bf-list-paginator [bfCtrl]="usersList" *ngIf="usersList.totalPages > 1"></bf-list-paginator>
+  </div>
+
+  <!-- Opponent when you are accepting a request -->
+  <div class="users" *ngIf="playerName">
+    <h3>Opponent</h3>
+    
+    <span class="icon-user3 big-icon"></span>
+    <p><b>{{playerName}}</b> has challenged you to a new game</p>
+  </div>
+  
+
+  <!-- Your Deck Selection -->
+  <div class="decks">
+    <h3>Your Deck</h3>
+    <p>Select a deck to play with</p>
+
+    <bf-input class="" bfIcon="icon-search" 
+              [(ngModel)]="decksList.filterText" 
+              (ngModelChange)="decksList.filter($event)">
+    </bf-input>
+
+    <ul class="list-unstyled table-list" *ngIf="decksList.loadingStatus === 2">
+      <li class="list-header">
+        <bf-list-header-col class="col-12" colTitle="Deck" fieldName="name" [orderConf]="decksList.orderConf"></bf-list-header-col>
+      </li>
+      <li class="list-row" *ngFor="let deck of decksList.renderList$ | async">
+        <div class="list-data" [class.selected]="deck.id === selectedDeck?.id" (click)="selectedDeck = deck">
+          <bf-btn bfType="view-icon" class="squash"></bf-btn>
+          <!-- <div class="icon-book"></div> -->
+          <div class="deck-name">{{deck.name}}</div>
+          <div class="icon-checkmark" *ngIf="deck.id === selectedDeck?.id"></div>
+        </div>
+      </li>
+    </ul>
+
+    <bf-list-paginator [bfCtrl]="decksList" *ngIf="decksList.totalPages > 1"></bf-list-paginator>
+
+  </div>
+
+
+</div>
+
+
+<div class="bottom-row text-right" *ngIf="!playerName">
+  <div>Start a game against <b>{{selectedUser?.name || '...'}}</b> with your deck <b>{{selectedDeck?.name || '...'}}</b></div>
+  <bf-btn bfText="Send New Game Request" bfIcon="icon-flag7" 
+          [bfDisabled]="!selectedUser || !selectedDeck"
+          [bfAsyncPromise]="blockPr"
+          (bfClick)="blockPr = createRequest()">
+  </bf-btn>
+</div>
+
+<div class="bottom-row text-right" *ngIf="playerName">
+  <div>Start a game against <b>{{playerName}}</b> with your deck <b>{{selectedDeck?.name || '...'}}</b></div>
+  <bf-btn [bfText]="'Accept & Play with ' + playerName"
+          bfIcon="icon-flag7" 
+          [bfDisabled]="!selectedDeck"
+          [bfAsyncPromise]="blockPr"
+          (bfClick)="blockPr = createGame()">
+  </bf-btn>
+</div>

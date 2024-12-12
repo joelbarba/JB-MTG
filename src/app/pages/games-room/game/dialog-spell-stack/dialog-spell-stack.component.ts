@@ -248,7 +248,7 @@ export class DialogSpellStackComponent {
     this.showTimer = this.youControl && state.lastAction?.player !== this.game.playerANum;
     if (this.showTimer) {
       console.log('Init auto Stack release timer. Last Action =', state.lastAction);
-      // this.initTimer(); // TODO: Uncomment this (with config flag)
+      this.initTimer(); // TODO: Uncomment this (with config flag)
     }
   }
 

@@ -2,6 +2,21 @@ export type TColor = 'uncolored' | 'blue' | 'white' | 'black' | 'red' | 'green';
 export type TCast = [number, number, number, number, number, number];
 export type TCardType = 'land' | 'creature' | 'instant' | 'interruption' | 'artifact' | 'sorcery' | 'enchantment';
 
+export type TUser = {
+  name: string;
+  email: string;
+  uid: string;
+  isAdmin: boolean;
+  isEnabled: boolean;
+  sats: number;
+  // decks: Array<TDeckRef>;
+}
+export type TDeckRef = {
+  id: string;
+  deckName: string;
+  units: Array<string>;  // unit ref
+}
+
 export enum EPhase {
   untap       = 'untap',
   maintenance = 'maintenance',
@@ -41,7 +56,6 @@ export type TCard = {
   readyToPlay: boolean;
   // units: Array<{ ref: string, owner: string }>;
 };
-export type TCardNoUnits = Omit<TCard, 'units'>;
 
 export type TCardLocation = 'off' | 'stack'
   | 'deck1' | 'hand1' | 'tble1' | 'grav1'
@@ -75,11 +89,13 @@ export type TGameDBState = {
   effects: Array<TEffect>;
   lastAction?: TGameOption & { time: string, player: '1' | '2' };
   id: number; // sequential order
+  deckId1: string;
+  deckId2: string; // If empty = waiting for player2 to accept request
 }
 export type TGameState = TGameDBState & { options: Array<TGameOption> };
 export type TGameHistory = TGameState & { history: Array<TGameOption & { time: string, player: '1' | '2' }>; }
 
-export type TGameCard = TCardNoUnits & {
+export type TDBGameCard = TCard & {
   gId: string;
   owner: '1' | '2';       // player 1 | player 2
   controller: '1' | '2';  // player 1 | player 2
@@ -97,8 +113,9 @@ export type TGameCard = TCardNoUnits & {
   turnDamage: number;
   turnAttack: number;  // <-- attack + effects
   turnDefense: number; // <-- defense + effects
+}
 
-  // Not in DB (calculated when options)
+export type TGameCard = TDBGameCard & { // Not in DB (calculated when options)
   selectableAction?: null | TGameOption;
   selectableTarget?: null | { text: string, value: string };
   effectsFrom?: Array<TEffect>;
@@ -170,22 +187,3 @@ export type TActionParams = {
 }
 
 
-export type TUser = {
-  name: string;
-  email: string;
-  uid: string;
-  isAdmin: boolean;
-  isEnabled: boolean;
-  sats: number;
-  // decks: Array<TDeckRef>;
-}
-export type TDeckRef = {
-  id: string;
-  deckName: string;
-  units: Array<string>;  // unit ref
-}
-// export type TUnitCard = Omit<TCard, 'units'> & { ref: string };
-// export type TMarketCard = {
-//   buyOffers: Array<{ ref: string, price: number, userId: string }>;
-//   sellOffer: Array<{ ref: string, price: number }>;
-// }

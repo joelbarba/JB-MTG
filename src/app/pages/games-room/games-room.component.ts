@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { Firestore, addDoc, collection, collectionData, deleteDoc, doc, setDoc } from '@angular/fire/firestore';
+import { Firestore, QuerySnapshot, Unsubscribe, addDoc, collection, collectionData, deleteDoc, doc, onSnapshot, setDoc } from '@angular/fire/firestore';
 import { AuthService } from '../../core/common/auth.service';
 import { ShellService } from '../../shell/shell.service';
 import { CommonModule } from '@angular/common';
@@ -7,19 +7,47 @@ import { Observable } from 'rxjs';
 import { EPhase, TCast, TGameCard, TGameDBState, TGameState, TPlayer } from '../../core/types';
 import { Router } from '@angular/router';
 import { GameStateService } from './game-state.service';
+import { TranslateModule } from '@ngx-translate/core';
+import { FormsModule } from '@angular/forms';
+import { BfGrowlService, BfListHandler, BfUiLibModule } from '@blueface_npm/bf-ui-lib';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { NewGameModalComponent } from './new-game-modal/new-game-modal.component';
+import { DataService } from '../../core/dataService';
+
+type TGamePlayStatus = 'requesting' | 'requested' | 'ongoing' | 'won' | 'lost';
+type TGameExt = TGameDBState & {
+  gameId        : string, 
+  op            : TGamePlayStatus, 
+  desc          : string, 
+  youArePlayer1 : boolean, 
+  deckName      : string, 
+  ind           : string 
+};
 
 @Component({
   selector: 'app-games-room',
   standalone: true,
   imports: [
     CommonModule,
+    TranslateModule,
+    FormsModule,
+    BfUiLibModule,
   ],
   templateUrl: './games-room.component.html',
   styleUrl: './games-room.component.scss'
 })
 export class GamesRoomComponent {
-  gamesCol = collection(this.firestore, 'games');
-  games$ = collectionData(this.gamesCol, { idField: 'id'}) as Observable<Array<TGameDBState & { id: string }>>;
+  gamesSub!: Unsubscribe;
+
+  filters = {
+    requesting: true,
+    requested: true,
+    ongoing: true,
+    archived: false,
+  };
+
+  gamesList!: BfListHandler;
+  isAdmin = false;
 
   constructor(
     public auth: AuthService,
@@ -27,330 +55,111 @@ export class GamesRoomComponent {
     public shell: ShellService,
     public firestore: Firestore,
     public gameState: GameStateService,
+    private ngbModal: NgbModal,
+    private dataService: DataService,
+    private growl: BfGrowlService,
   ) {
     this.shell.gameMode('off');
+    this.gamesList = new BfListHandler({
+      listName      : 'games-list',
+      orderFields   : ['ind'],
+      orderReverse  : true,
+      rowsPerPage   : 15,
+    });
   }
+
+  games!: Array<TGameExt>;
+
+  async ngOnInit() {
+    await this.auth.profilePromise;
+    await this.dataService.yourDecksPromise;
+    this.isAdmin = !!this.auth.profile?.isAdmin;
+
+    this.gamesSub = onSnapshot(collection(this.firestore, 'games'), (snapshot: QuerySnapshot) => {
+      this.games = snapshot.docs.map(doc => {
+        const game = { ...doc.data() } as TGameDBState;
+        const gameId = doc.id;
+        let desc = 'This game has already started';
+        let op: TGamePlayStatus = 'ongoing';
+        const timeOrder = (num: number) => (num + '-' + (new Date(game.created)).getTime()).padEnd(15, '0');
+        let ind = timeOrder(3);
+        const youArePlayer1 = game.player1.userId === this.auth.profileUserId;
+        const deckName = this.dataService.yourDecks.find(d => d.id === (youArePlayer1 ? game.deckId1 : game.deckId2))?.deckName || '';
+
+        if (game.status === 'created' && !game.deckId2) {
+          if (!youArePlayer1) {            
+            ind = timeOrder(5); op = 'requested'; desc = `${game.player1.name} wants to play against you`; 
+          } else {
+            ind = timeOrder(4); op = 'requesting'; desc = `Awaiting ${game.player2.name} to answer the game request you sent`;
+          }
+        } else {
+          if ((game.status === 'player1win' && youArePlayer1) || (game.status === 'player2win' && !youArePlayer1)) {
+            ind = timeOrder(2); op = 'won'; desc = `The game is over. You won that game.`;
+          }
+          if ((game.status === 'player1win' && !youArePlayer1) || (game.status === 'player2win' && youArePlayer1)) {
+            ind = timeOrder(1); op = 'lost'; desc = `The game is over. You lost that game.`;
+          }
+        }
+
+        return { ...game, gameId, op, desc, youArePlayer1, deckName, ind };
+      });      
+      this.filterGames();
+    });
+  }
+
+  filterGames() {
+    this.gamesList.load(this.games.filter(game => {
+      if (game.op === 'requested'  && !this.filters.requested) { return false; }
+      if (game.op === 'requesting' && !this.filters.requesting) { return false; }
+      if (game.op === 'ongoing'    && !this.filters.ongoing) { return false; }
+      if ((game.op === 'won' || game.op === 'lost') && !this.filters.archived) { return false; }
+      return true;
+    }));
+  }
+
+  ngOnDestroy() {
+    this.gamesList.destroy();
+    this.gamesSub();
+    // this.subs.forEach(sub => sub.unsubscribe())
+  }
+
 
   goToGame(gameId: string) {
     this.router.navigate(['game/', gameId]);
-    // this.gameState.startGame(gameId);
   }
 
-  async createNewGame() {
-    const newGame = this.generateGame();
-    const docRef = await addDoc(collection(this.firestore, 'games'), newGame);
-    await setDoc(doc(this.firestore, 'gamesChat',    docRef.id), newGame);
-    await setDoc(doc(this.firestore, 'gamesHistory', docRef.id), newGame);
+  openNewGameModal() {
+    const modalRef = this.ngbModal.open(NewGameModalComponent, { backdrop: 'static', centered: false, size: 'lg' });
+    modalRef.result.then(data => {});
+  }
 
-    console.log('New Game Created', newGame);
-    this.goToGame(docRef.id);
+  withdrawRequest(game: TGameExt) {
+    this.deleteGame(game.gameId);
+  }
+
+  acceptGameRequest(game: TGameExt) {
+    const modalRef = this.ngbModal.open(NewGameModalComponent, { backdrop: 'static', centered: false, size: 'lg' });
+    modalRef.componentInstance.gameId = game.gameId;
+    modalRef.componentInstance.playerName = game.player1.name;
+    modalRef.result.then(data => {
+      if (data) {
+        this.goToGame(game.gameId);
+      }
+    });
   }
 
   async resetGame(gameId: string) {
-    const newGame = this.generateGame();
-    await setDoc(doc(this.firestore, 'games', gameId), newGame);
+    // const newGame = this.generateGame();
+    // await setDoc(doc(this.firestore, 'games', gameId), newGame);
     // this.goToGame(gameId);
   }
+
   async deleteGame(gameId: string) {
     await deleteDoc(doc(this.firestore, 'games', gameId));
     await deleteDoc(doc(this.firestore, 'gamesChat', gameId));
     await deleteDoc(doc(this.firestore, 'gamesHistory', gameId));
+    this.growl.success('Game Deleted');
   }
 
-  generateGame() {
-    const getCardById = (id: string): TGameCard => this.gameState.library.find(c => c.id === id) as TGameCard;
-    const generateId = (ind: number) => 'g' + (ind + '').padStart(3, '000');
-    const generateOrder = () => Math.round(Math.random() * 9999);
-    const defaultCardFields = (playerNum: string, order: number) => {      
-      return {
-        gId: '',
-        order, // : generateOrder(), 
-        location: 'deck' + playerNum, 
-        owner: playerNum, 
-        controller: playerNum, 
-        isTapped: false,
-        status: null,
-        targets: [],
-        turnDamage: 0,
-        turnAttack: 0,
-        turnDefense: 0,
-      };
-    }
-
-    const wallOfIce = getCardById('c000056');
-    console.log(wallOfIce);
-
-    const deck1 = [
-      getCardById('c000004'), // Mountain
-      getCardById('c000003'), // Swamp
-      getCardById('c000003'), // Swamp
-      getCardById('c000005'), // Forest
-      getCardById('c000011'), // Sol Ring
-      getCardById('c000009'), // Mox Ruby
-      getCardById('c000001'), // Island
-      getCardById('c000001'), // Island
-      getCardById('c000038'), // Counter Spell
-      getCardById('c000038'), // Counter Spell
-      getCardById('c000032'), // lightning bolt
-      getCardById('c000009'), // Mox Ruby
-      getCardById('c000046'), // Granite Gargoyle (2/2)      
-      getCardById('c000052'), // Mons's Goblin Raiders (1/1)
-      getCardById('c000028'), // Drudge Skeletons
-      getCardById('c000002'), // Plains
-      getCardById('c000055'), // Unholy Strength
-      getCardById('c000057'), // Disenchantment
-      // getCardById('c000055'), // Unholy Strength
-      // getCardById('c000057'), // Disenchantment
-      getCardById('c000032'), // Lightning Bolt
-      getCardById('c000056'), // Wall of Ice (0/7)
-      getCardById('c000041'), // Elvish Archers (2/1)
-      getCardById('c000027'), // Dark Ritual
-
-      getCardById('c000005'), // Forest
-      getCardById('c000003'), // Swamp
-      getCardById('c000044'), // Giant Spider (2/4)      
-      getCardById('c000047'), // Grizzly Bears (2/2)
-      getCardById('c000036'), // Gray Ogre (2/2)
-      getCardById('c000048'), // Hill Giant (3/3)
-      getCardById('c000049'), // Hurloon Minotaur (2/3)
-      getCardById('c000053'), // Ornithopter
-
-      getCardById('c000032'), // Lightning Bolt
-      getCardById('c000043'), // Gian Growth
-      getCardById('c000001'), // Island
-      getCardById('c000001'), // Island
-      getCardById('c000038'), // Counter Spell
-      getCardById('c000038'), // Counter Spell
-      getCardById('c000025'), // Bad Moon
-      getCardById('c000041'), // Elvish Archers (2/1)
-      getCardById('c000025'), // Bad Moon
-      getCardById('c000004'), // Mountain
-      getCardById('c000005'), // Forest
-      getCardById('c000001'), // Island
-      getCardById('c000001'), // Island
-      getCardById('c000001'), // Island
-      getCardById('c000038'), // Counter Spell
-      getCardById('c000038'), // Counter Spell
-      getCardById('c000038'), // Counter Spell
-      getCardById('c000032'), // Lightning Bolt
-      getCardById('c000032'), // Lightning Bolt
-      getCardById('c000043'), // Gian Growth
-      getCardById('c000043'), // Gian Growth
-      // getCardById('c0000'), // 
-      // getCardById('c0000'), // 
-      getCardById('c000053'), // Ornithopter      
-      getCardById('c000001'), // Island
-      getCardById('c000037'), // Brass Man (1/3)
-      getCardById('c000045'), // Goblin Balloon Brigade (1/1)
-      getCardById('c000052'), // Mons's Goblin Raiders (1/1)
-      getCardById('c000004'), // mountain
-      getCardById('c000004'), // mountain
-      getCardById('c000004'), // mountain
-      getCardById('c000004'), // mountain
-      getCardById('c000004'), // mountain
-      getCardById('c000032'), // lightning bolt
-      getCardById('c000032'), // lightning bolt
-      getCardById('c000032'), // lightning bolt
-      getCardById('c000002'), // plains
-      getCardById('c000002'), // plains
-      getCardById('c000002'), // plains
-      getCardById('c000001'), // island
-      getCardById('c000001'), // island
-      getCardById('c000003'), // swamp
-      getCardById('c000003'), // swamp
-      getCardById('c000005'), // forest
-      getCardById('c000005'), // forest
-      getCardById('c000005'), // forest      
-      getCardById('c000036'), // gray ogre
-      getCardById('c000036'), // gray ogre
-      getCardById('c000036'), // gray ogre
-      getCardById('c000036'), // gray ogre
-      getCardById('c000036'), // gray ogre
-      getCardById('c000032'), // lightning bolt
-      getCardById('c000032'), // lightning bolt
-      getCardById('c000032'), // lightning bolt
-      getCardById('c000032'), // lightning bolt
-      getCardById('c000032'), // lightning bolt
-    ].map((card, ind) => ({ ...card, ...defaultCardFields('1', ind) }))
-     .sort((a, b) => a.order > b.order ? 1 : -1);     
-
-    const deck2 = [
-      getCardById('c000004'), // Mountain
-      getCardById('c000004'), // Mountain
-      getCardById('c000005'), // Forest
-      getCardById('c000005'), // Forest
-      getCardById('c000003'), // Swamp
-      getCardById('c000003'), // Swamp
-      getCardById('c000027'), // Dark Ritual
-      getCardById('c000027'), // Dark Ritual
-      getCardById('c000002'), // plains
-      getCardById('c000032'), // Lightning Bolt
-      getCardById('c000043'), // Gian Growth
-      getCardById('c000025'), // Bad Moon
-      // getCardById('c000028'), // Drudge Skeletons
-      // getCardById('c000055'), // Unholy Strength
-      // getCardById('c000057'), // Disenchantment
-      getCardById('c000053'), // Ornithopter (0/2) - Flying
-      getCardById('c000032'), // Lightning Bolt
-      getCardById('c000043'), // Gian Growth
-      getCardById('c000041'), // Elvish Archers (2/1) - First Strike
-      getCardById('c000046'), // Granite Gargoyle (2/2) - Flying
-      getCardById('c000039'), // Craw Wurm (6/4) - Trample
-      getCardById('c000047'), // Grizzly Bears (2/2)
-      getCardById('c000048'), // Hill Giant (3/3)
-      getCardById('c000049'), // Hurloon Minotaur (2/3)
-      getCardById('c000056'), // Wall of Ice (0/7)
-
-      getCardById('c000001'), // Island
-      getCardById('c000001'), // Island
-      getCardById('c000038'), // Counter Spell
-      getCardById('c000038'), // Counter Spell
-      getCardById('c000038'), // Counter Spell      
-      getCardById('c000055'), // Unholy Strength
-      getCardById('c000057'), // Disenchantment
-      getCardById('c000055'), // Unholy Strength
-      // getCardById('c000055'), // Unholy Strength
-      getCardById('c000057'), // Disenchantment
-      getCardById('c000057'), // Disenchantment
-      getCardById('c000041'), // Elvish Archers (2/1)
-      getCardById('c000025'), // Bad Moon
-      getCardById('c000004'), // Mountain
-      getCardById('c000005'), // Forest
-      getCardById('c000044'), // Giant Spider (2/4)
-      getCardById('c000046'), // Granite Gargoyle (2/2)
-      getCardById('c000047'), // Grizzly Bears (2/2)
-      getCardById('c000048'), // Hill Giant (3/3)
-      getCardById('c000049'), // Hurloon Minotaur (2/3)
-      getCardById('c000056'), // Wall of Ice (0/7)
-
-      getCardById('c000052'), // Mons's Goblin Raiders (1/1)
-      getCardById('c000005'), // forest
-      getCardById('c000005'), // forest
-      getCardById('c000032'), // Lightning Bolt
-      getCardById('c000043'), // Gian Growth
-      getCardById('c000001'), // Island
-      getCardById('c000001'), // Island
-
-
-      getCardById('c000043'), // Gian Growth
-      // getCardById('c0000'), // 
-      // getCardById('c0000'), //      
-      getCardById('c000053'), // Ornithopter
-      getCardById('c000041'), // Elvish Archers (2/1)
-      getCardById('c000004'), // mountain
-      getCardById('c000004'), // mountain
-      getCardById('c000002'), // plains
-      getCardById('c000001'), // island
-      getCardById('c000005'), // forest
-      getCardById('c000005'), // forest
-      getCardById('c000036'), // gray ogre (2/2)
-      getCardById('c000037'), // Brass Man (1/3)
-      getCardById('c000045'), // Goblin Balloon Brigade (1/1)
-      getCardById('c000052'), // Mons's Goblin Raiders (1/1)
-      getCardById('c000041'), // Elvish Archers (2/1)
-      getCardById('c000044'), // Giant Spider (2/4)
-      getCardById('c000046'), // Granite Gargoyle (2/2)
-      getCardById('c000047'), // Grizzly Bears (2/2)
-      getCardById('c000048'), // Hill Giant (3/3)
-      getCardById('c000049'), // Hurloon Minotaur (2/3)
-      getCardById('c000056'), // Wall of Ice (0/7)
-      getCardById('c000004'), // mountain
-      getCardById('c000004'), // mountain
-      getCardById('c000004'), // mountain
-      getCardById('c000004'), // mountain
-      getCardById('c000004'), // mountain
-      getCardById('c000032'), // lightning bolt
-      getCardById('c000032'), // lightning bolt
-      getCardById('c000032'), // lightning bolt
-      getCardById('c000036'), // gray ogre
-      getCardById('c000036'), // gray ogre
-      getCardById('c000036'), // gray ogre
-      getCardById('c000032'), // lightning bolt
-      getCardById('c000032'), // lightning bolt
-      getCardById('c000032'), // lightning bolt
-      getCardById('c000004'), // mountain
-      getCardById('c000004'), // mountain
-      getCardById('c000004'), // mountain
-      getCardById('c000004'), // mountain
-      getCardById('c000004'), // mountain
-      getCardById('c000002'), // plains
-      getCardById('c000002'), // plains
-      getCardById('c000002'), // plains
-      getCardById('c000002'), // plains
-      getCardById('c000001'), // island
-      getCardById('c000001'), // island
-      getCardById('c000001'), // island
-      getCardById('c000003'), // swamp
-      getCardById('c000003'), // swamp
-      getCardById('c000003'), // swamp
-      getCardById('c000005'), // forest
-      getCardById('c000005'), // forest
-      getCardById('c000005'), // forest
-      getCardById('c000036'), // gray ogre
-      getCardById('c000036'), // gray ogre
-      getCardById('c000036'), // gray ogre
-      getCardById('c000036'), // gray ogre
-      getCardById('c000036'), // gray ogre
-      getCardById('c000036'), // gray ogre
-      getCardById('c000032'), // lightning bolt
-      getCardById('c000032'), // lightning bolt
-      getCardById('c000032'), // lightning bolt
-      getCardById('c000032'), // lightning bolt
-      getCardById('c000032'), // lightning bolt
-    ].map((card, ind) => ({ ...card, ...defaultCardFields('2', ind) }))
-     .sort((a, b) => a.order > b.order ? 1 : -1);
-
-    deck1.forEach((c, ind) => c.order = ind);
-    deck2.forEach((c, ind) => c.order = ind);
-
-    const cards = deck1.concat(deck2) as Array<TGameCard>;
-    cards.forEach((c, ind) => c.gId = generateId(ind)); // Generate unique identifiers on the game
-
-    cards.filter(c => c.owner === '1' && c.order < 7).forEach(c => c.location = 'hand1');
-    cards.filter(c => c.owner === '2' && c.order < 7).forEach(c => c.location = 'hand2');
-
-    console.log('YOU ARE:', this.auth.profileUserName, this.auth.profileUserId);
-
-    
-    const defaultPlayerValues = {
-      help: '',
-      life: 20,
-      manaPool: [0,0,0,0,0,0] as TCast,
-      drawnCards: 0,
-      summonedLands: 0,
-      stackCall: false,      
-    };
-    
-    const playerYou = { userId: this.auth.profileUserId, name: this.auth.profileUserName, ...defaultPlayerValues };
-    const playerOther = { userId: 'BhyW7MAVP4Xi5fojf3hF7T58tem2', name: 'Bob', ...defaultPlayerValues };
-    if (playerYou.userId === 'BhyW7MAVP4Xi5fojf3hF7T58tem2') { // If you are Bob, set Alice as the other
-      playerOther.userId = '4cix25Z3DPNgcTFy4FcsYmXjdSi1';
-      playerOther.name = 'Alice'
-    }
-    
-    // Randomly set who is player 1 or player 2
-    let player1 = { ...playerYou,   num: '1' } as TPlayer;
-    let player2 = { ...playerOther, num: '2' } as TPlayer;
-    // if (Math.random() * 2 >= 0.5) {
-    //   player1 = { ...playerOther, num: '1' } as TPlayer;
-    //   player2 = { ...playerYou,   num: '2' } as TPlayer;
-    // }    
-
-    const newGame: TGameDBState = {
-      created: new Date() + '',
-      status: 'created',
-      turn: '1',
-      phase: EPhase.untap,
-      subPhase: null,
-      player1,
-      player2,
-      cards,
-      effects: [],
-      control: '1', // Player1 starts
-      id: 0,
-    };
-
-    return newGame;
-  }
 
 }

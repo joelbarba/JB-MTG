@@ -3,7 +3,7 @@ import { Subject, Subscription, map } from 'rxjs';
 import { AuthService } from '../../core/common/auth.service';
 import { ShellService } from '../../shell/shell.service';
 import { DocumentReference, Firestore, QuerySnapshot, collection, doc, getDoc, getDocs, onSnapshot, query, setDoc, DocumentData, Unsubscribe } from '@angular/fire/firestore';
-import { EPhase, TAction, TCard, TCardLocation, TGameState, TGameDBState, TGameCard, TGameCards, TActionParams, TPlayer, TCardType, TCardSemiLocation, TCardAnyLocation, TCast, TGameOption, ESubPhase, TEffect, TCardNoUnits } from '../../core/types';
+import { EPhase, TAction, TCard, TCardLocation, TGameState, TGameDBState, TGameCard, TGameCards, TActionParams, TPlayer, TCardType, TCardSemiLocation, TCardAnyLocation, TCast, TGameOption, ESubPhase, TEffect } from '../../core/types';
 import { calcManaForUncolored, checkMana, getCards, getPlayers, killDamagedCreatures, moveCard, moveCardToGraveyard, spendMana } from './game/gameLogic/game.utils';
 import { GameOptionsService } from './game/game.options.service';
 import { extendCardLogic } from './game/gameLogic/game.card-specifics';
@@ -15,7 +15,7 @@ import { getTime } from '../../core/common/commons';
 
 @Injectable({ providedIn: 'root' })
 export class GameStateService {
-  library: Array<TCardNoUnits> = [];
+  library: Array<TCard> = [];
   libraryDef!: BfDefer;
   firstStateDef!: BfDefer;
 
@@ -75,7 +75,7 @@ export class GameStateService {
         const cardProps = 'cast, color, name, image, text, type, attack, defense, '
                         + 'isFlying, isTrample, isFirstStrike, isWall, isHaste, colorProtection'
         const filteredCard = card.keyFilter(cardProps);
-        this.library.push({ id: doc.id, ...filteredCard } as TCardNoUnits);
+        this.library.push({ id: doc.id, ...filteredCard } as TCard);
       });
       // console.log(this.library);
       this.libraryDef.resolve()
@@ -162,7 +162,7 @@ export class GameStateService {
   }
 
   // Stripe out extended properties that do not need to be on DB
-  private convertToDBState(nextState: TGameState): TGameDBState {
+  convertToDBState(nextState: TGameState): TGameDBState {
     const dbState = nextState.keyFilter((v,k) => k !== 'options') as TGameDBState;
     const extFields = [
       'selectableAction',

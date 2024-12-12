@@ -1,7 +1,7 @@
 import { ActivatedRoute, Router } from '@angular/router';
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { BfGrowlService, BfLoadingBarService } from '@blueface_npm/bf-ui-lib';
+import { BfDefer, BfGrowlService, BfLoadingBarService } from '@blueface_npm/bf-ui-lib';
 import { BehaviorSubject, firstValueFrom, Observable, Subject } from 'rxjs';
 import { doc, Firestore, getDoc, updateDoc } from '@angular/fire/firestore';
 import { 
@@ -23,6 +23,9 @@ const httpOptions = { headers: new HttpHeaders({ 'Content-Type':  'application/j
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   profilePromise: Promise<TUser>; // Loading profile promise. This is resolved once after loading
+  private loginDefer = new BfDefer();
+  logInPromise = this.loginDefer.promise; // It resolves after profilePromise if user is logged in
+                                          // or after the user logs in
 
   profile ?: TUser;
   profile$ = new BehaviorSubject<TUser | undefined>(undefined);
@@ -56,6 +59,7 @@ export class AuthService {
       this.profile = profile;
       this.profileUserName = profile?.name || '';
       this.profileUserId = profile?.uid;
+      if (profile && this.loginDefer.status === 0) { this.loginDefer.resolve(); }
     });
 
 
@@ -91,15 +95,14 @@ export class AuthService {
   }
 
   // Request log in (initiate session)
-  requestLogin(username: string, password: string): Promise<TUser | undefined> {
-    const promise = signInWithEmailAndPassword(this.firebaseAuth, username, password).then((data: UserCredential) => {
-      console.log('User logged in', data);
-      return this.mapProfile(data.user);
-    });
-
+  async requestLogin(username: string, password: string): Promise<TUser | undefined> {
+    const data = await signInWithEmailAndPassword(this.firebaseAuth, username, password)    
+    const profile = await this.mapProfile(data.user);
+    console.log('User logged in - Profile =', profile);
+    return profile;
     // Wait .2sec after the login, to engage the loading of the home page with the same loading bar
-    this.loadingBar.run(promise.then(() => setTimeout(() => {}, 200)));
-    return promise;
+    // this.loadingBar.run(promise.then(() => setTimeout(() => {}, 200)));
+    // return promise;
   }
 
   private async mapProfile(user: UserInfo): Promise<TUser> { 

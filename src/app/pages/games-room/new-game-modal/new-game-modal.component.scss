@@ -1,0 +1,91 @@
+@import 'variables';
+
+:host {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 30px 40px;
+  background: cornsilk;
+}
+
+.close-btn {
+  position: absolute;
+  padding: 10px;
+  top: 5px;
+  right: 5px;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+  transition-duration: 0.3s;
+  background: #bbb;
+  color: #888;
+  &:hover {
+    background: #eee;
+    color: #c7c7c7;
+  }
+}
+
+
+.content {
+  display: flex;
+  width: 100%;
+  margin: 20px 0;
+
+  .users, .decks { 
+    flex: 1; 
+    text-align: center;
+    padding: 25px;
+    background-color: #fff;
+    box-shadow: 0 1px 2px rgba(34, 36, 38, 0.15);
+    border-radius: 3px;
+    .big-icon {
+      font-size: 10em;
+      color: $primary_color;
+    }
+  }
+  .users { margin: 0 10px 0 0; }
+  .decks { margin: 0 0 0 10px; }
+
+  li.list-row {
+    padding: 0 !important;
+    .list-data {
+      flex: 1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      text-align: left;
+      padding: 12px 20px;
+      cursor: pointer;
+      .user-name, .deck-name {
+        flex: 1;
+        margin-left: 10px;
+      }
+      transition-duration: 0.3s;
+      &:hover {
+        box-shadow: 0px 0px 3px 3px $secondary_color;
+      }
+      &.selected {
+        box-shadow: 0px 0px 3px 3px $secondary_color;
+        background: $secondary_color;
+        color: white;
+      }
+    }
+  }
+
+  .decks .list-row {
+    .list-data { padding: 10px 20px; }
+  }
+
+  bf-list-paginator { 
+    display: block;
+    margin: 15px 0 0;
+    width: 100%;
+  }
+}
+
+.bottom-row {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}

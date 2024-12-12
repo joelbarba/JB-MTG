@@ -73,7 +73,7 @@ export class LibraryComponent {
 
   ngOnDestroy() {
     this.cardsList.destroy();
-    this.subs.forEach(sub => sub.unsubscribe())
+    this.subs.forEach(sub => sub.unsubscribe());
   }
 
   hoverCard(card?: TFullCard) {
