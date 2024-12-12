@@ -10,7 +10,7 @@ import {
   ViewChild,
   ViewEncapsulation
 } from '@angular/core';
-import { BfConfirmService, BfUiLibModule } from '@blueface_npm/bf-ui-lib';
+import { BfConfirmService, BfUiLibModule } from 'bf-ui-lib';
 // import { WebApiService } from '../../common/web-api.service';
 import { BfAvatarPickerService } from '../bf-avatar-picker.service';
 import { TranslateModule } from '@ngx-translate/core';

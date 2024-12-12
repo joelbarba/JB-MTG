@@ -1,6 +1,6 @@
 // // 3rd party
 // import { fakeAsync, flush, TestBed } from '@angular/core/testing';
-// import { BfConfirmService } from '@blueface_npm/bf-ui-lib';
+// import { BfConfirmService } from 'bf-ui-lib';
 // // services
 // import { WebApiService } from '@core/common/web-api.service';
 // import { provideAutoSpy, Spy } from 'jasmine-auto-spies';

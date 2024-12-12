@@ -3,7 +3,7 @@ import { RouterOutlet } from '@angular/router';
 import { NavbarComponent } from './shell/navbar/navbar.component';
 import { MenuComponent } from './shell/menu/menu.component';
 import { ShellService } from './shell/shell.service';
-import { BfGrowlModule } from '@blueface_npm/bf-ui-lib';
+import { BfGrowlModule } from 'bf-ui-lib';
 import { BfTooltipComponent } from "./core/common/internal-lib/bf-tooltip/bf-tooltip.component";
 
 

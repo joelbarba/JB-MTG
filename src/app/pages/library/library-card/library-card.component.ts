@@ -4,7 +4,7 @@ import { Firestore, QuerySnapshot, QueryDocumentSnapshot, DocumentData, setDoc, 
 import { getDocs, getDoc, collection, doc } from '@angular/fire/firestore';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { BfConfirmService, BfGrowlService, BfListHandler, BfUiLibModule } from '@blueface_npm/bf-ui-lib';
+import { BfConfirmService, BfGrowlService, BfListHandler, BfUiLibModule } from 'bf-ui-lib';
 import { MtgCardComponent } from '../../../core/common/internal-lib/mtg-card/mtg-card.component';
 import { ShellService } from '../../../shell/shell.service';
 import { AuthService } from '../../../core/common/auth.service';

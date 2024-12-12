@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { BfUiLibModule } from '@blueface_npm/bf-ui-lib';
+import { BfUiLibModule } from 'bf-ui-lib';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { BfLang, BfLangList, AppTranslateService } from '../../core/common/app-translate.service';
 import { BehaviorSubject, Observable, Subject, map, take } from 'rxjs';

@@ -1,4 +1,4 @@
-import { BfListHandler } from "@blueface_npm/bf-ui-lib";
+import { BfListHandler } from "bf-ui-lib";
 import { TFullUnit } from "../dataService";
 import { TCard } from "../types";
 

@@ -3,7 +3,7 @@ import { TranslateLoader } from '@ngx-translate/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { firstValueFrom, Observable, Subject } from 'rxjs';
 import { BfLang } from './app-translate.service';
-import { BfLoadingBarService } from '@blueface_npm/bf-ui-lib';
+import { BfLoadingBarService } from 'bf-ui-lib';
 
 
 // const httpOptions = { headers: new HttpHeaders({ 'Content-Type':  'application/json' }) };

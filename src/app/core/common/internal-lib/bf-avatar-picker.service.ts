@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BfDefer } from '@blueface_npm/bf-ui-lib';
+import { BfDefer } from 'bf-ui-lib';
 import { ShellService } from '../../../shell/shell.service';
 
 

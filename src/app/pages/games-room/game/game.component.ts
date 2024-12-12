@@ -2,7 +2,7 @@ import { asNativeElements, Component, ElementRef, ViewEncapsulation } from '@ang
 import { AuthService } from '../../../core/common/auth.service';
 import { ShellService } from '../../../shell/shell.service';
 import { CommonModule } from '@angular/common';
-import { BfConfirmService, BfDnDModule, BfDnDService, BfGrowlService, BfUiLibModule } from '@blueface_npm/bf-ui-lib';
+import { BfConfirmService, BfDnDModule, BfDnDService, BfGrowlService, BfUiLibModule } from 'bf-ui-lib';
 import { GameStateService } from '../game-state.service';
 import { filter, map, Subscription, timeout } from 'rxjs';
 import { EPhase, TGameState, TGameCard, TExtGameCard, TPlayer, TAction, TCast, TActionParams, ESubPhase, TCardLocation } from '../../../core/types';

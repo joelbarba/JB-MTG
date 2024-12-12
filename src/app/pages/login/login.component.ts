@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { BfLangList, AppTranslateService } from '../../core/common/app-translate.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { BfUiLibModule } from '@blueface_npm/bf-ui-lib';
+import { BfUiLibModule } from 'bf-ui-lib';
 import { TranslateModule } from '@ngx-translate/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../core/common/auth.service';

@@ -2,7 +2,7 @@ import { Component, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
 import { TranslateModule } from '@ngx-translate/core';
 import { CommonModule } from '@angular/common';
 import { BfLangList, AppTranslateService } from '../../core/common/app-translate.service';
-import { BfGrowlModule, BfGrowlService, BfUiLibModule } from '@blueface_npm/bf-ui-lib';
+import { BfGrowlModule, BfGrowlService, BfUiLibModule } from 'bf-ui-lib';
 import { BfAvatarComponent } from '../../core/common/internal-lib/bf-avatar/bf-avatar.component';
 import { AuthService } from '../../core/common/auth.service';
 import { DataService } from '../../core/dataService';

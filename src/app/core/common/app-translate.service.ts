@@ -3,7 +3,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { LangChangeEvent, TranslateService} from '@ngx-translate/core';
 import { BehaviorSubject, firstValueFrom, Observable, of } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { AbstractTranslateService, BfDefer, BfLoadingBarService } from '@blueface_npm/bf-ui-lib';
+import { AbstractTranslateService, BfDefer, BfLoadingBarService } from 'bf-ui-lib';
 
 
 

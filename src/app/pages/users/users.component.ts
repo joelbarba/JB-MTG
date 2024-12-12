@@ -5,7 +5,7 @@ import { Firestore, QuerySnapshot, setDoc, Unsubscribe, onSnapshot, deleteDoc } 
 import { collection, doc } from '@angular/fire/firestore';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { BfConfirmService, BfGrowlService, BfListHandler, BfUiLibModule } from '@blueface_npm/bf-ui-lib';
+import { BfConfirmService, BfGrowlService, BfListHandler, BfUiLibModule } from 'bf-ui-lib';
 import { Subject } from 'rxjs';
 import { Auth, createUserWithEmailAndPassword, sendEmailVerification, sendPasswordResetEmail, updateProfile } from '@angular/fire/auth';
 import { TUser } from '../../core/types';

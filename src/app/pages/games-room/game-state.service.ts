@@ -7,7 +7,7 @@ import { EPhase, TAction, TCard, TCardLocation, TGameState, TGameDBState, TGameC
 import { calcManaForUncolored, checkMana, getCards, getPlayers, killDamagedCreatures, moveCard, moveCardToGraveyard, spendMana } from './game/gameLogic/game.utils';
 import { GameOptionsService } from './game/game.options.service';
 import { extendCardLogic } from './game/gameLogic/game.card-specifics';
-import { BfDefer } from '@blueface_npm/bf-ui-lib';
+import { BfDefer } from 'bf-ui-lib';
 import { getTime } from '../../core/common/commons';
 
 

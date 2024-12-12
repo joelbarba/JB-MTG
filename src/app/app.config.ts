@@ -4,7 +4,7 @@ import { TranslateModule, TranslateLoader} from '@ngx-translate/core';
 import { routes } from './app.routes';
 import { AppTranslateLoader } from './core/common/app-translate-loader.service';
 import { provideHttpClient } from '@angular/common/http';
-import { BfUiLibModule } from "@blueface_npm/bf-ui-lib";
+import { BfUiLibModule } from "bf-ui-lib";
 import { AppTranslateService } from './core/common/app-translate.service';
 
 import { firebaseConfig } from '../../secrets';
@@ -20,7 +20,7 @@ import { getFirestore, provideFirestore } from '@angular/fire/firestore';
 
 
 // Initialize prototypes
-import { BfPrototypes } from '@blueface_npm/bf-ui-lib';
+import { BfPrototypes } from 'bf-ui-lib';
 import { HoverTipDirective } from './core/common/internal-lib/bf-tooltip/bf-tooltip.directive';
 BfPrototypes.run();  // Extend all common prototypes
 

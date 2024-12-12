@@ -1,7 +1,7 @@
 import { CommonModule, formatNumber } from "@angular/common";
 import { Component } from "@angular/core";
 import { FormsModule } from "@angular/forms";
-import { BfConfirmService, BfGrowlService, BfUiLibModule } from "@blueface_npm/bf-ui-lib";
+import { BfConfirmService, BfGrowlService, BfUiLibModule } from "bf-ui-lib";
 import { NgbActiveModal } from "@ng-bootstrap/ng-bootstrap";
 import { TranslateModule } from "@ngx-translate/core";
 import { MtgCardComponent } from "../../common/internal-lib/mtg-card/mtg-card.component";

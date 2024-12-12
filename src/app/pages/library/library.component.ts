@@ -9,7 +9,7 @@ import { collectionData } from 'rxfire/firestore';
 import { TCard } from '../../core/types';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { BfConfirmService, BfListHandler, BfUiLibModule } from '@blueface_npm/bf-ui-lib';
+import { BfConfirmService, BfListHandler, BfUiLibModule } from 'bf-ui-lib';
 import { EPhase, TGameState, TGameCard, TExtGameCard, TPlayer, TAction, TCast } from '../../core/types';
 import { ManaArrayComponent } from "../games-room/game/mana-array/mana-array.component";
 import { MtgCardComponent } from '../../core/common/internal-lib/mtg-card/mtg-card.component';

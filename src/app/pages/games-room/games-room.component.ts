@@ -9,7 +9,7 @@ import { Router } from '@angular/router';
 import { GameStateService } from './game-state.service';
 import { TranslateModule } from '@ngx-translate/core';
 import { FormsModule } from '@angular/forms';
-import { BfGrowlService, BfListHandler, BfUiLibModule } from '@blueface_npm/bf-ui-lib';
+import { BfGrowlService, BfListHandler, BfUiLibModule } from 'bf-ui-lib';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { NewGameModalComponent } from './new-game-modal/new-game-modal.component';
 import { DataService } from '../../core/dataService';

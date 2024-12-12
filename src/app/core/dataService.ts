@@ -4,7 +4,7 @@ import { addDoc, collection, deleteField, doc, DocumentData, Firestore, getDoc, 
 import { EPhase, TCard, TCardLocation, TCast, TDBGameCard, TDeckRef, TGameCard, TGameDBState, TPlayer, TUser } from "./types";
 import { BehaviorSubject, filter, map, Subject } from "rxjs";
 import { Unsubscribe } from "firebase/auth";
-import { BfDefer } from "@blueface_npm/bf-ui-lib";
+import { BfDefer } from "bf-ui-lib";
 
 export type TDBUnit = { ref: string, ownerId: string, sellPrice?: number };
 export type TFullUnit = TDBUnit & { owner: TUser, isYours: boolean; cardId: string, shortRef: string, card: TFullCard };
