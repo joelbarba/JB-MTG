@@ -102,13 +102,17 @@ export class GamesRoomComponent {
         }
 
         return { ...game, gameId, op, desc, youArePlayer1, deckName, ind };
-      });      
+
+      }).filter(game => {
+        return game.player1.userId === this.auth.profileUserId || game.player2.userId === this.auth.profileUserId;
+      });
+
       this.filterGames();
     });
   }
 
   filterGames() {
-    this.gamesList.load(this.games.filter(game => {
+    this.gamesList.load(this.games.filter(game => {      
       if (game.op === 'requested'  && !this.filters.requested) { return false; }
       if (game.op === 'requesting' && !this.filters.requesting) { return false; }
       if (game.op === 'ongoing'    && !this.filters.ongoing) { return false; }
