@@ -1,6 +1,6 @@
 import { randomId } from "../../../../core/common/commons";
 import { TCast, TColor, TEffect, TGameCard, TGameState } from "../../../../core/types";
-import { getCards, killDamagedCreatures, moveCard, moveCardToGraveyard } from "./game.utils";
+import { endGame, getCards, killDamagedCreatures, moveCard, moveCardToGraveyard } from "./game.utils";
 
 
 // ------------------------ SPECIFIC EVENTS for every CARD ------------------------
@@ -30,10 +30,10 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     const card = getCard(nextState);
     const cardPlayer = card.controller === '1' ? nextState.player1 : nextState.player2;
     const targetId = card.targets[0]; // code of the first target (playerX, gId, ...)
-    const { tableStack } = getCards(nextState);
+    const { tableStack, table, stack, deck, hand, play, graveyard } = getCards(nextState, '1'); // Only none A/B groups allowed
     const noProtection = (c: TGameCard) => !c.colorProtection || card.color !== c.colorProtection; 
     const targetCreatures = () => tableStack.filter(c => c.type === 'creature').filter(noProtection);
-    return { card, targetId, cardPlayer, noProtection, targetCreatures, ...getCards(nextState) };
+    return { card, targetId, cardPlayer, noProtection, targetCreatures, table, stack, tableStack, deck, hand, play, graveyard };
   }
 
 
@@ -118,7 +118,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     case 'c000030':  c000030_HowlingMine();           break;
     case 'c000031':  c000031_HypnoticSpecter();       break;
     case 'c000032':  c000032_LightningBolt();         break; // ok
-    case 'c000033':  c000033_ShivanDragon();          break;
+    case 'c000033':  c000033_ShivanDragon();          break; // ok
     case 'c000034':  c000034_TimeWalk();              break;
     case 'c000035':  c000035_KirdApe();               break;
     case 'c000036':  c000036_GrayOrge();              break; // ok
@@ -349,6 +349,29 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     };
   }
 
+  function c000023_AncestralRecall() {
+    card.onTargetLookup = (nextState: TGameState) => {
+      return { neededTargets: 1, possibleTargets: ['playerA', 'playerB'] }; // Target must be a player
+    };
+    card.onSummon = (nextState: TGameState) => {
+      const { targetId, deck } = getShorts(nextState);
+
+      const playerNum = targetId === 'player1' ? '1' : '2';
+      const playerDeck = deck.filter(c => c.owner === playerNum);
+
+      if (playerDeck.length <= 3) {
+        const winner = targetId === 'player1' ? '2' : '1';
+        endGame(nextState, winner);
+
+      } else {
+        moveCard(nextState, playerDeck[0].gId, 'hand');
+        moveCard(nextState, playerDeck[1].gId, 'hand');
+        moveCard(nextState, playerDeck[2].gId, 'hand');
+      }
+      moveCardToGraveyard(nextState, gId);
+    };
+  }
+
   // Common Creatures
   function c000052_MonssGoblinRaiders()    { commonCreature(); }
   function c000053_Ornithopter()           { commonCreature(); }
@@ -383,7 +406,6 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   function c000020_Tundra() {}
   function c000021_UndergroundSea() {}
   function c000022_VolcanicIsland() {}
-  function c000023_AncestralRecall() {}
   function c000024_Armageddon() {}
   function c000029_Fork() {}
   function c000030_HowlingMine() {}

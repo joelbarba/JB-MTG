@@ -3,7 +3,7 @@ import { extendCardLogic } from "./game.card-specifics";
 
 
 // Shortcut for state objects (cards split on locations)
-export const getCards = (state: TGameState, playerANum: '1' | '2' = '1'): { 
+export const getCards = (state: TGameState, playerANum: '1' | '2'): { 
   deck:  Array<TGameCard>, hand:  Array<TGameCard>, table:  Array<TGameCard>, play:  Array<TGameCard>, graveyard:  Array<TGameCard>,
   deckA: Array<TGameCard>, handA: Array<TGameCard>, tableA: Array<TGameCard>, playA: Array<TGameCard>, graveyardA: Array<TGameCard>, 
   deckB: Array<TGameCard>, handB: Array<TGameCard>, tableB: Array<TGameCard>, playB: Array<TGameCard>, graveyardB: Array<TGameCard>,
@@ -124,6 +124,15 @@ export const killDamagedCreatures = (nextState: TGameState, gId?: string) => {
     table.forEach(card => killDamagedCreture(card));
   }
 }
+
+
+// Ends the game and sets the winner (player1win / player2win)
+export const endGame = (nextState: TGameState, winner: '1' | '2') => {
+  console.log('Player', winner, 'won the game');
+  nextState.status = `player${winner}win`;
+}
+
+
 
 // Validates the mana in the mana pool to cast a card
 // - 'not enough' = There not enough mana

@@ -288,6 +288,8 @@ export class DataService {
       'c000010',  // Mox Sapphire
       'c000010',  // Mox Sapphire
       'c000007',  // Mox Jet
+      'c000023',  // Ancestral Recall
+      'c000023',  // Ancestral Recall
       'c000011',  // Sol Ring
       'c000026',  // Black Knight
       'c000025',  // Bad Moon

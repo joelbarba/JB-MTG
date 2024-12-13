@@ -104,7 +104,9 @@ export class GamesRoomComponent {
         return { ...game, gameId, op, desc, youArePlayer1, deckName, ind };
 
       }).filter(game => {
-        return game.player1.userId === this.auth.profileUserId || game.player2.userId === this.auth.profileUserId;
+        if (game.gameId === 'tmpGameState') return false;
+        return game.player1.userId === this.auth.profileUserId 
+            || game.player2.userId === this.auth.profileUserId;
       });
 
       this.filterGames();

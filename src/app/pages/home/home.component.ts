@@ -56,7 +56,8 @@ export class HomeComponent {
     this.numDecks = this.dataService.yourDecks.length;
 
     this.gamesSub = onSnapshot(collection(this.firestore, 'games'), (snapshot: QuerySnapshot) => {
-      const games = snapshot.docs.map(doc => ({ ...doc.data() } as TGameDBState)).filter(game => {
+      const games = snapshot.docs.map(doc => ({ ...doc.data(), gameId: doc.id } as TGameDBState & { gameId: string })).filter(game => {
+        if (game.gameId === 'tmpGameState') return false;
         return game.player1.userId === this.auth.profileUserId 
             || game.player2.userId === this.auth.profileUserId;
       });

@@ -4,7 +4,7 @@ import { AuthService } from '../../core/common/auth.service';
 import { ShellService } from '../../shell/shell.service';
 import { DocumentReference, Firestore, QuerySnapshot, collection, doc, getDoc, getDocs, onSnapshot, query, setDoc, DocumentData, Unsubscribe } from '@angular/fire/firestore';
 import { EPhase, TAction, TCard, TCardLocation, TGameState, TGameDBState, TGameCard, TGameCards, TActionParams, TPlayer, TCardType, TCardSemiLocation, TCardAnyLocation, TCast, TGameOption, ESubPhase, TEffect } from '../../core/types';
-import { calcManaForUncolored, checkMana, getCards, getPlayers, killDamagedCreatures, moveCard, moveCardToGraveyard, spendMana } from './game/gameLogic/game.utils';
+import { calcManaForUncolored, checkMana, endGame, getCards, getPlayers, killDamagedCreatures, moveCard, moveCardToGraveyard, spendMana } from './game/gameLogic/game.utils';
 import { GameOptionsService } from './game/game.options.service';
 import { extendCardLogic } from './game/gameLogic/game.card-specifics';
 import { BfDefer } from 'bf-ui-lib';
@@ -304,7 +304,10 @@ export class GameStateService {
       card.location = this.yourHand();
       this.getPlayers(nextState).playerA.drawnCards += 1;
 
-    } else { this.endGame(nextState, 'B'); } // if no more cards to draw, you lose
+    } else { // if no more cards to draw, you lose
+      const winner = this.playerANum === '1' ? '2' : '1'; // Opponent wins
+      endGame(nextState, winner);   
+    } 
   }
 
   private summonLand(nextState: TGameState, gId: string) {
@@ -709,19 +712,12 @@ export class GameStateService {
     nextState.effects = nextState.effects.filter(e => e.scope !== 'turn'); // Remove effects that last until the end of the turn
 
     // Check if a player is dead
-    if (turnPlayer.life <= 0) { this.endGame(nextState, nextState.turn); return; }
-    // if (playerA.life <= 0) { this.endGame(nextState, 'A'); return; }
-    // if (playerB.life <= 0) { this.endGame(nextState, 'B'); return; }
+    if (turnPlayer.life <= 0) { endGame(nextState, turnPlayer.num); return; }
 
     const newTurnPlayer = this.getPlayers(nextState).turnPlayer;
   }
 
-  // Ends the game and sets the winner (player1win / player2win)
-  private endGame(nextState: TGameState, winner: 'A' | 'B' | '1' | '2') {
-    if (winner === 'A') { winner = this.playerANum; }
-    if (winner === 'B') { winner = this.playerBNum; }
-    nextState.status = `player${winner}win`;
-  }
+
 
 
   // --------------------------- INTERNALS ----------------------------------
