@@ -22,10 +22,11 @@ const httpOptions = { headers: new HttpHeaders({ 'Content-Type':  'application/j
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  profilePromise: Promise<TUser>; // Loading profile promise. This is resolved once after loading
-  private loginDefer = new BfDefer();
-  logInPromise = this.loginDefer.promise; // It resolves after profilePromise if user is logged in
-                                          // or after the user logs in
+  authLoadPromise: Promise<TUser>; // Loading profile promise. This is resolved once after loading
+
+  private profileDefer = new BfDefer();
+  profilePromise: Promise<TUser> = this.profileDefer.promise; // It resolves once a valid profile is loaded (login or load)
+
 
   profile ?: TUser;
   profile$ = new BehaviorSubject<TUser | undefined>(undefined);
@@ -59,12 +60,11 @@ export class AuthService {
       this.profile = profile;
       this.profileUserName = profile?.name || '';
       this.profileUserId = profile?.uid;
-      if (profile && this.loginDefer.status === 0) { this.loginDefer.resolve(); }
+      if (profile && this.profileDefer.status === 0) { this.profileDefer.resolve(profile); }
     });
 
 
-    // profilePromise helps pages wait until the profile is first loaded.
-    this.profilePromise = new Promise((resolve, reject) => {
+    this.authLoadPromise = new Promise((resolve, reject) => {
       
       // This observable fires every time there is an Auth profile change (log in/out/app load)
       onAuthStateChanged(this.firebaseAuth, (user) => {
@@ -91,7 +91,7 @@ export class AuthService {
       });
     });
 
-    this.loadingBar.run(this.profilePromise); // Run the loading spinner until profile ready
+    this.loadingBar.run(this.authLoadPromise); // Run the loading spinner until profile ready
   }
 
   // Request log in (initiate session)

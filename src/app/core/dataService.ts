@@ -51,9 +51,10 @@ export class DataService {
     private firestore: Firestore,
 
   ) {
-    this.auth.profile$.pipe(filter(p => !!p)).subscribe(profile => {      
-      this.loadCards();
-    });
+    // this.auth.profile$.pipe(filter(p => !!p)).subscribe(profile => {      
+    //   this.loadCards();
+    // });
+    this.loadCards();
   }
 
   private async loadCards() {
@@ -127,8 +128,8 @@ export class DataService {
       });
     });
     if (this.isUsersLoaded && this.isUnitsLoaded) {
-      this.loadDefer.resolve(this.cards);
       this.cards$.next(this.cards);
+      this.loadDefer.resolve(this.cards);
     }
   }
 
