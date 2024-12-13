@@ -108,7 +108,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     case 'c000020':  c000020_Tundra();                break;
     case 'c000021':  c000021_UndergroundSea();        break;
     case 'c000022':  c000022_VolcanicIsland();        break;
-    case 'c000023':  c000023_AncestralRecall();       break;
+    case 'c000023':  c000023_AncestralRecall();       break; // ok
     case 'c000024':  c000024_Armageddon();            break;
     case 'c000025':  c000025_BadMoon();               break; // ok
     case 'c000026':  c000026_BlackKnight();           break; // ok
@@ -372,6 +372,21 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     };
   }
 
+  function c000034_TimeWalk() {
+    card.onSummon = (nextState: TGameState) => {
+      const { cardPlayer } = getShorts(nextState);
+      const target = 'player' + cardPlayer.num;
+      nextState.effects.push({ scope: 'endTurn', gId, targets: [target], id: randomId('e') });
+      moveCardToGraveyard(nextState, gId);
+    };
+    card.onEffect = (nextState: TGameState, effectId: string) => { // Add +3/+3 to target creature
+      const { cardPlayer } = getShorts(nextState);
+      nextState.turn = cardPlayer.num;
+      nextState.control = cardPlayer.num;
+      console.log('Time Walk effect');
+    }
+  }
+
   // Common Creatures
   function c000052_MonssGoblinRaiders()    { commonCreature(); }
   function c000053_Ornithopter()           { commonCreature(); }
@@ -410,7 +425,6 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   function c000029_Fork() {}
   function c000030_HowlingMine() {}
   function c000031_HypnoticSpecter() {}  
-  function c000034_TimeWalk() {}
   function c000035_KirdApe() {}
   function c000058_Shatter() {}
   function c000059_Shatterstorm() {}

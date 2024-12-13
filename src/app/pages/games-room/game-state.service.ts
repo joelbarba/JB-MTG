@@ -701,6 +701,14 @@ export class GameStateService {
   private endTurn(nextState: TGameState) {
     const { playerA, playerB, turnPlayer } = this.getPlayers(nextState);
     const { table, tableA } = this.getCards(nextState);
+
+    // Check if a player is dead
+    if (turnPlayer.life <= 0) { endGame(nextState, turnPlayer.num); return; }
+    
+    // Remove effects that last until the end of the turn
+    nextState.effects = nextState.effects.filter(e => e.scope !== 'turn');
+
+    // Set new turn values
     turnPlayer.drawnCards = 0;
     turnPlayer.summonedLands = 0;
     nextState.turn = nextState.turn === '1' ? '2' : '1';  // change current player
@@ -709,12 +717,14 @@ export class GameStateService {
     tableA.filter(c => c.status === 'sickness').forEach(c => c.status = null); // Summon sickness ends
     table.filter(c => c.type === 'creature').forEach(c => c.turnDamage = 0); // Damage on creatures is reset
 
-    nextState.effects = nextState.effects.filter(e => e.scope !== 'turn'); // Remove effects that last until the end of the turn
-
-    // Check if a player is dead
-    if (turnPlayer.life <= 0) { endGame(nextState, turnPlayer.num); return; }
-
     const newTurnPlayer = this.getPlayers(nextState).turnPlayer;
+
+    // Apply end turn effects, and then remove them
+    nextState.effects.filter(e => e.scope === 'endTurn').forEach(effect => {
+      const card = nextState.cards.find(c => c.gId === effect.gId); 
+      if (card) { extendCardLogic(card).onEffect(nextState, effect.id); }
+    });
+    nextState.effects = nextState.effects.filter(e => e.scope !== 'endTurn');
   }
 
 
@@ -758,8 +768,8 @@ export class GameStateService {
       return refCard && (refCard.location.slice(0,4) === 'tble' || refCard.location === 'stack');
     });
 
-    // Apply effects
-    nextState.effects.forEach(effect => {
+    // Apply permenent and turn effects
+    nextState.effects.filter(e => e.scope === 'permanent' || e.scope === 'turn').forEach(effect => {
       // runEvent(nextState, effect.gId, 'onEffect', { effectId: effect.id });
       // Find the logic on the card that generated the effect
       const card = nextState.cards.find(c => c.gId === effect.gId); 

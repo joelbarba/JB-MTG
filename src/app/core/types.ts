@@ -72,7 +72,7 @@ export type TTargetType = {
 export type TEffect = {
   id: string; // Id of the effect
   gId: string; // gId of the card that generated the effect
-  scope: 'permanent' | 'turn';
+  scope: 'permanent' | 'turn' | 'endTurn';
   targets: Array<string>; // Array of gIds or player1 or player2
 }
 
