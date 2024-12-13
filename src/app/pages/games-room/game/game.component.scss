@@ -36,6 +36,7 @@
           max-height: calc(100% - 20px);
           max-width: calc(100% - 20px);
           border: var(--full-card-border) solid white;
+          border-width: 6px;
           border-radius: 12px;
         }
       }
@@ -225,6 +226,15 @@
         margin: 0 15px;
         display: flex;
         align-items: center;
+      }
+
+      @media screen and (max-height: 900px) {
+        bf-btn {
+          transform: scale(0.70);
+          transform-origin: left;
+          height: 26px;
+          margin: -7px -45px 0 -3px;
+        }
       }
     }
 

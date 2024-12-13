@@ -37,9 +37,11 @@
 
 
 
-    <div class="full-card">
+    <div class="full-card" (window:resize)="calcFullCardSize()">
       <div class="card-border">
-        <img [src]="'assets/images/cards/' + fullCardImg"/>
+        <img #fullCardEl [src]="'assets/images/cards/' + fullCard.img"
+             [style.border-width.px]="fullCard.borderWidth"
+             [style.border-radius.px]="fullCard.borderRadius"/>
       </div>
     </div>
 

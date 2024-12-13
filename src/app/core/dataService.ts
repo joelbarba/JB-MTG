@@ -291,16 +291,16 @@ export class DataService {
       'c000011',  // Sol Ring
       'c000026',  // Black Knight
       'c000025',  // Bad Moon
+      'c000026',  // Black Knight
+      'c000055',  // Unholy Strength
+      'c000026',  // Black Knight
+      'c000053',  // Ornithopter
+      'c000055',  // Unholy Strength
+      'c000026',  // Black Knight
+      'c000055',  // Unholy Strength
+      'c000055',  // Unholy Strength
+      'c000053',  // Ornithopter
       'c000027',  // Dark Ritual
-      'c000055',  // Unholy Strength
-      'c000055',  // Unholy Strength
-      'c000055',  // Unholy Strength
-      'c000055',  // Unholy Strength
-      'c000053',  // Ornithopter
-      'c000053',  // Ornithopter
-      'c000026',  // Black Knight
-      'c000026',  // Black Knight
-      'c000026',  // Black Knight
       // 'c000000',  // 
     ];
     const cardsDeck2 = [

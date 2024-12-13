@@ -1,4 +1,4 @@
-import { asNativeElements, Component, ElementRef, ViewEncapsulation } from '@angular/core';
+import { asNativeElements, Component, ElementRef, ViewChild, ViewEncapsulation } from '@angular/core';
 import { AuthService } from '../../../core/common/auth.service';
 import { ShellService } from '../../../shell/shell.service';
 import { CommonModule } from '@angular/common';
@@ -70,7 +70,12 @@ export interface ISummonOp {
   encapsulation: ViewEncapsulation.None,
 })
 export class GameComponent {
-  fullCardImg = 'taiga.jpg';
+  fullCard = {
+    img: 'taiga.jpg',
+    borderWidth  : 12,
+    borderRadius : 12,
+    prevHeight   : 0,
+  }
   cardActionHelp = '';  // Current help message for the hovering card
   isHandBExp = true;  // Whether the hand box B is expanded
   isHandAExp = true;  // Whether the hand box A is expanded
@@ -109,7 +114,7 @@ export class GameComponent {
   mainInfo = '';  // General info for the state
   itemInfo = '';  // Info about a specific item (card, button, ...)
 
-
+  @ViewChild('fullCardEl', { read: ElementRef, static: false }) fullCardEl!: ElementRef;
 
   constructor(
     private route: ActivatedRoute,
@@ -133,7 +138,7 @@ export class GameComponent {
 
     this.subs.push(this.game.hoverCard$.subscribe(hoveringCard => {
       if (hoveringCard) {
-        this.fullCardImg = hoveringCard.image;
+        this.fullCard.img = hoveringCard.image;
         // this.itemInfo = hoveringCard.selectableAction?.text || '';
       } else {
         // this.itemInfo = '';
@@ -201,17 +206,34 @@ export class GameComponent {
     this.subs.forEach(sub => sub.unsubscribe());
   }
 
+
   ngAfterViewChecked() {
     const height = this.hostElement.nativeElement.getBoundingClientRect().height;
     if (height && height !== this.windowHeight) {
       this.windowHeight = height;
       localStorage.setItem('windowHeight', this.windowHeight + '');
     }
+    this.calcFullCardSize();
   }
   ngAfterViewInit() {
     this.windowHeight = this.hostElement.nativeElement.getBoundingClientRect().height;
     if (!this.windowHeight) { this.windowHeight = Number.parseInt(localStorage.getItem('windowHeight') || '0', 10); }
   }
+
+  calcFullCardSize() {
+    if (this.fullCardEl) {
+      const cardHeight = this.fullCardEl.nativeElement.getBoundingClientRect().height;
+      if (Math.abs(this.fullCard.prevHeight - cardHeight) > 30) {
+        console.log('Full Card Height', cardHeight, this.fullCard.prevHeight);
+        this.fullCard.prevHeight = cardHeight;
+        setTimeout(() => {
+          this.fullCard.borderWidth  = Math.max(1, cardHeight * 0.0215);
+          this.fullCard.borderRadius = Math.max(1, cardHeight * 0.0275);
+        });
+      }
+    }
+  }
+
 
 
 
@@ -506,7 +528,7 @@ export class GameComponent {
     tableGridB.forEach((arr, col) => {
       arr.forEach((card, ind) => {
         card.posX = 20 + (col * (cardWidth + gap));
-        card.posY = 280 + (ind * gap * 2);
+        card.posY = (cardHeight * 1.6) + (ind * gap * 2);
         card.zInd = 100 + (col * 15) + ind;
       })
     });
