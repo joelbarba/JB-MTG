@@ -68,8 +68,13 @@ export class NewGameModalComponent {
 
 
   async createRequest() {
-    if (this.selectedUser && this.selectedDeck) {
-      const error = await this.dataService.requestNewGame(this.selectedUser.uid, this.selectedDeck.id);
+    if (this.selectedUser && this.selectedDeck && this.auth.profileUserId && this.auth.profileUserName) {
+      const player1 = {
+        id: this.auth.profileUserId,
+        name: this.auth.profileUserName,
+        deckId: this.selectedDeck.id
+      };
+      const error = await this.dataService.requestNewGame(player1, this.selectedUser.uid);
       if (error) { return this.growl.error(error); }
       this.growl.success(`A new game request has been placed. Wait for ${this.selectedUser.name} to accept it.`);
       this.ngbModal.close({ userId: this.selectedUser?.uid, deckId: this.selectedDeck?.id });

@@ -28,7 +28,7 @@
 
             <div class="col-2">
               <bf-btn *ngIf="isAdmin" class="warning" bfIcon="icon-cross" (bfClick)="deleteGame(game.gameId)"></bf-btn>
-              <bf-btn *ngIf="isAdmin" bfIcon="icon-rotate-ccw3" (bfClick)="resetGame(game.gameId)"></bf-btn>
+              <bf-btn *ngIf="isAdmin" bfIcon="icon-rotate-ccw3" (bfClick)="resetGame(game)"></bf-btn>
 
               <bf-btn bfText="Withdraw your Request"   class="warning"   bfIcon="icon-cross" *ngIf="game.op === 'requesting'" (bfClick)="withdrawRequest(game)"></bf-btn>
               <bf-btn bfText="Accept Request and Play" class="secondary" bfIcon="icon-flag7" *ngIf="game.op === 'requested'" (bfClick)="acceptGameRequest(game)"></bf-btn>

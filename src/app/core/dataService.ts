@@ -163,9 +163,9 @@ export class DataService {
   }
 
 
-  async requestNewGame(opponentId: string, deckId: string): Promise<string | void> {
-    const opponent = this.users.find(u => u.uid === opponentId);
-    if (!opponent) { return 'User Id not found ' + opponentId; }
+  async requestNewGame(player1: { id: string, name: string, deckId: string }, player2Id: string, gameId?: string): Promise<string | void> {
+    const player2 = this.users.find(u => u.uid === player2Id);
+    if (!player2) { return 'User Id not found ' + player2Id; }
 
     const defaultPlayerValues = {
       help: '',
@@ -175,8 +175,8 @@ export class DataService {
       summonedLands: 0,
       stackCall: false,      
     };   
-    const playerYou = { userId: this.auth.profileUserId, name: this.auth.profileUserName, ...defaultPlayerValues };
-    const playerOther = { userId: opponentId, name: opponent.name, ...defaultPlayerValues };
+    const playerYou   = { userId: player1.id, name: player1.name, ...defaultPlayerValues };
+    const playerOther = { userId: player2Id,  name: player2.name, ...defaultPlayerValues };
 
     const newGame: TGameDBState = {
       created: new Date() + '',
@@ -190,18 +190,25 @@ export class DataService {
       effects: [],
       control: '1', // Player1 starts (will shuffle later)
       id: 0,
-      deckId1: deckId,
+      deckId1: player1.deckId,
       deckId2: '', // Waiting for player 2 to accept the request and add a deck
     };
+
     console.log('New Game', newGame);
-    const docRef = await addDoc(collection(this.firestore, 'games'), newGame);
-    await setDoc(doc(this.firestore, 'gamesChat',    docRef.id), newGame);
-    await setDoc(doc(this.firestore, 'gamesHistory', docRef.id), newGame);
+
+    if (gameId) {
+      await setDoc(doc(this.firestore, 'games', gameId), newGame); // this is for testing
+    } else {
+      const docRef = await addDoc(collection(this.firestore, 'games'), newGame);
+      gameId = docRef.id;
+    }
+    await setDoc(doc(this.firestore, 'gamesChat',    gameId), newGame);
+    await setDoc(doc(this.firestore, 'gamesHistory', gameId), newGame);
   }
 
 
 
-  async createNewGame(gameId: string, deckId: string, shuffle = true): Promise<string | void> {
+  async createNewGame(gameId: string, player2DeckId: string, shuffle = false): Promise<string | void> {
     let docSnap = await getDoc(doc(this.firestore, 'games', gameId));
     if (!docSnap.exists()) { return 'Game Id not found: ' + gameId;  }
     const newGame = docSnap.data() as TGameDBState;
@@ -210,23 +217,23 @@ export class DataService {
     docSnap = await getDoc(doc(this.firestore, 'users', newGame.player1.userId, 'decks', newGame.deckId1));
     if (!docSnap.exists()) { return 'Deck Id not found: ' + newGame.deckId1;  }
     const dbDeck1 = docSnap.data() as TDeckRef;
-    const cardsDeck1 = dbDeck1.units.map(u => u.split('.')[0]);
+    let cardsDeck1 = dbDeck1.units.map(u => u.split('.')[0]);
 
 
     // Player 2's deck
-    const fullDeck2 = this.yourDecks.find(d => d.id = deckId);
-    if (!fullDeck2) { return 'Deck Id not found ' + deckId; }
-    const cardsDeck2 = fullDeck2.units.map(u => u.cardId);
-    newGame.deckId2 = deckId;
+    const fullDeck2 = this.yourDecks.find(d => d.id = player2DeckId);
+    if (!fullDeck2) { return 'Deck Id not found ' + player2DeckId; }
+    let cardsDeck2 = fullDeck2.units.map(u => u.cardId);
+    newGame.deckId2 = player2DeckId;
 
     if (cardsDeck1.length <= 8) { return `Deck ${dbDeck1.deckName} has only ${cardsDeck1.length} cards. You need at least 8 cards to play`; }
     if (cardsDeck2.length <= 8) { return `Deck ${fullDeck2.deckName} has only ${cardsDeck2.length} cards. You need at least 8 cards to play`; }
 
     // Randomly set who starts the game
-    // if (shuffle && Math.random() * 2 >= 0.5) { 
+    if (shuffle && Math.random() * 2 >= 0.5) {
       newGame.turn = '2';
       newGame.control = '2';
-    // }  
+    }
 
     // Generate the list of cards
     const generateId = (ind: number) => 'g' + (ind + '').padStart(3, '000');
@@ -250,18 +257,10 @@ export class DataService {
         turnDamage: 0,
         turnAttack: 0,
         turnDefense: 0,
-        // onSummon: () => {},
-        // onTap: () => {},
-        // onDestroy: () => {},
-        // onDiscard: () => {},
-        // onEffect: () => {},
-        // onTargetLookup: () => ({ neededTargets: 0, possibleTargets: [] }),
-        // canAttack: () => false,
-        // canDefend: () => false,
-        // targetBlockers: () => [],
-        // getAbilityCost: () => null,
       } as TDBGameCard;
     }
+
+    [cardsDeck1, cardsDeck2] = this.testDecks();
 
     const deck1 = cardsDeck1.map((cardId, ind) => gameCard(cardId, '1', ind)).filter(c => !!c) as Array<TDBGameCard>;
     const deck2 = cardsDeck2.map((cardId, ind) => gameCard(cardId, '2', ind)).filter(c => !!c) as Array<TDBGameCard>;
@@ -279,6 +278,54 @@ export class DataService {
     // Save newGame changes to DB
     console.log('New Game', newGame);
     await setDoc(doc(this.firestore, 'games', gameId), newGame);
+  }
+
+
+  private testDecks() {
+    const cardsDeck1 = [
+      'c000001',  // Island
+      'c000003',  // Swamp
+      'c000010',  // Mox Sapphire
+      'c000010',  // Mox Sapphire
+      'c000007',  // Mox Jet
+      'c000011',  // Sol Ring
+      'c000026',  // Black Knight
+      'c000025',  // Bad Moon
+      'c000027',  // Dark Ritual
+      'c000055',  // Unholy Strength
+      'c000055',  // Unholy Strength
+      'c000055',  // Unholy Strength
+      'c000055',  // Unholy Strength
+      'c000053',  // Ornithopter
+      'c000053',  // Ornithopter
+      'c000026',  // Black Knight
+      'c000026',  // Black Knight
+      'c000026',  // Black Knight
+      // 'c000000',  // 
+    ];
+    const cardsDeck2 = [
+      'c000005',  // Forest
+      'c000004',  // Mountain
+      'c000006',  // Mox Emerald
+      'c000006',  // Mox Emerald
+      'c000009',  // Mox Ruby
+      'c000009',  // Mox Ruby
+      'c000011',  // Sol Ring
+      'c000033',  // Shivan Dragon
+      'c000046',  // Granite Gargoley
+      'c000053',  // Ornithopter
+      'c000052',  // Mons's Goblin Raiders
+      'c000044',  // Giant Spider
+      'c000041',  // Elvis Archers
+      'c000041',  // Elvis Archers
+      'c000043',  // Giant Growth
+      'c000032',  // Ligthning Bolt
+      'c000032',  // Ligthning Bolt
+      'c000032',  // Ligthning Bolt
+      'c000032',  // Ligthning Bolt
+      // 'c000000',  // 
+    ];
+    return [cardsDeck1, cardsDeck2];
   }
 
 }

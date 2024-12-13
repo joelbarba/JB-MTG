@@ -152,9 +152,12 @@ export class GamesRoomComponent {
     });
   }
 
-  async resetGame(gameId: string) {
-    // const newGame = this.generateGame();
-    // await setDoc(doc(this.firestore, 'games', gameId), newGame);
+  async resetGame(game: TGameExt) {
+    await this.deleteGame(game.gameId);
+    const player1 = { id: game.player1.userId, name: game.player1.name, deckId: game.deckId1 };
+    await this.dataService.requestNewGame(player1, game.player2.userId, game.gameId);
+    await this.dataService.createNewGame(game.gameId, game.deckId2, false);
+    this.growl.success('Game reset');
     // this.goToGame(gameId);
   }
 

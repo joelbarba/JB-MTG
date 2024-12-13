@@ -327,7 +327,19 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     card.onEffect = (nextState: TGameState, effectId: string) => { // Add +0/+1 to target creature
       const { card } = getShorts(nextState);
       card.turnDefense += 1;
-    }    
+    }
+  }
+
+  function c000033_ShivanDragon() {
+    commonCreature();
+    card.getAbilityCost = () => ({ mana: [0,0,0,0,1,0], tap: false, text: `Pay 1 red mana to add +1/+0` });
+    card.onTap = (nextState: TGameState) => {
+      nextState.effects.push({ scope: 'turn', gId, targets: [], id: randomId('e') });
+    };
+    card.onEffect = (nextState: TGameState, effectId: string) => { // Add +1/+0 to target creature
+      const { card } = getShorts(nextState);
+      card.turnAttack += 1;
+    }
   }
 
   function c000027_DarkRitual() { 
@@ -375,8 +387,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   function c000024_Armageddon() {}
   function c000029_Fork() {}
   function c000030_HowlingMine() {}
-  function c000031_HypnoticSpecter() {}
-  function c000033_ShivanDragon() {}
+  function c000031_HypnoticSpecter() {}  
   function c000034_TimeWalk() {}
   function c000035_KirdApe() {}
   function c000058_Shatter() {}

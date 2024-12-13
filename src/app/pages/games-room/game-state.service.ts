@@ -349,7 +349,7 @@ export class GameStateService {
             card.status = 'ability:waitingMana';
           }
           else if (manaStatus === 'exact' || manaStatus === 'auto') {
-            manaForUncolor = calcManaForUncolored(card.cast, playerA.manaPool);
+            manaForUncolor = calcManaForUncolored(abilityCost.mana, playerA.manaPool);
             rightMana = true;
           }
           else if (manaStatus === 'manual') {

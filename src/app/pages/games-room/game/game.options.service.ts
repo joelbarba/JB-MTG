@@ -235,7 +235,9 @@ export class GameOptionsService {
     }
 
     // You may trigger manual abilities on cards
-    if (isPhase('pre', 'post', 'combat') || spellsAvailable) {
+    if ((isPhase('pre', 'post', 'combat') || spellsAvailable)
+        && (state.subPhase !== 'selectAttack' && state.subPhase !== 'selectDefense')
+    ) {
       tableA.forEach(card => {
         const abilityCost = extendCardLogic(card).getAbilityCost(state);
         if (abilityCost && (!abilityCost.tap || !card.isTapped)) {

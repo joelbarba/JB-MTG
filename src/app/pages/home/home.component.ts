@@ -9,6 +9,7 @@ import { Firestore, getDocs, query, collection, collectionData, onSnapshot, wher
 import { DataService } from '../../core/dataService';
 import { AuthService } from '../../core/common/auth.service';
 import { Router } from '@angular/router';
+import { TGameDBState } from '../../core/types';
 
 
 @Component({
@@ -46,6 +47,7 @@ export class HomeComponent {
 
   async ngOnInit() {
     await this.dataService.loadPromise;
+
     this.numCards = this.dataService.cards.reduce((acc, card) => {
       return acc + card.units.filter(u => u.ownerId === this.auth.profileUserId).length;
     }, 0);
@@ -54,7 +56,10 @@ export class HomeComponent {
     this.numDecks = this.dataService.yourDecks.length;
 
     this.gamesSub = onSnapshot(collection(this.firestore, 'games'), (snapshot: QuerySnapshot) => {
-      const games = snapshot.docs.map(doc => ({ ...doc.data() } as { status: string }));
+      const games = snapshot.docs.map(doc => ({ ...doc.data() } as TGameDBState)).filter(game => {
+        return game.player1.userId === this.auth.profileUserId 
+            || game.player2.userId === this.auth.profileUserId;
+      });
       this.numRequests = games.filter(g => g.status === 'created').length;
       this.numGames = games.filter(g => g.status === 'playing').length;
     });
