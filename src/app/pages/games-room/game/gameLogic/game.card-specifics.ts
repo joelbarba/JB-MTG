@@ -119,7 +119,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     case 'c000031':  c000031_HypnoticSpecter();       break;
     case 'c000032':  c000032_LightningBolt();         break; // ok
     case 'c000033':  c000033_ShivanDragon();          break; // ok
-    case 'c000034':  c000034_TimeWalk();              break;
+    case 'c000034':  c000034_TimeWalk();              break; // ok
     case 'c000035':  c000035_KirdApe();               break;
     case 'c000036':  c000036_GrayOrge();              break; // ok
     case 'c000037':  c000037_BrassMan();              break;
@@ -383,8 +383,38 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
       const { cardPlayer } = getShorts(nextState);
       nextState.turn = cardPlayer.num;
       nextState.control = cardPlayer.num;
-      console.log('Time Walk effect');
     }
+  }
+
+  function c000012_BlackLotus() {
+    card.onTargetLookup = (nextState: TGameState) => {
+      return { neededTargets: 1, possibleTargets: ['playerA', 'playerB'] }; // Target must be a player
+    };
+    card.onSummon = (nextState: TGameState) => {
+      const { cardPlayer } = getShorts(nextState);
+      // Should open a modal to select 3 colors
+      moveCardToGraveyard(nextState, gId);
+    };
+  }
+
+  function c000018_Taiga() {
+    card.onTargetLookup = (nextState: TGameState) => {
+      return { neededTargets: 1, possibleTargets: ['playerA', 'playerB'] }; // Target must be a player
+    };
+    card.onSummon = (nextState: TGameState) => {
+      const { card, cardPlayer } = getShorts(nextState);
+      if (card.location.slice(0,4) === 'hand' && cardPlayer.summonedLands < 1) {
+        moveCard(nextState, gId, 'tble');
+        cardPlayer.summonedLands += 1;
+      }
+    };
+    card.onTap = (nextState: TGameState) => {
+      const { card, cardPlayer } = getShorts(nextState);
+      if (!card.isTapped && card.location.slice(0,4) === 'tble') {
+        cardPlayer.manaPool[5] += 1;
+        card.isTapped = true;
+      } 
+    };
   }
 
   // Common Creatures
@@ -410,13 +440,11 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
 
 
   // // Pending to be coded......
-  function c000012_BlackLotus() {}
   function c000013_Bayou() {}
   function c000014_Badlands() {}
   function c000015_Plateau() {}
   function c000016_Savannah() {}
   function c000017_Scrubland() {}
-  function c000018_Taiga() {}
   function c000019_TropicalIsland() {}
   function c000020_Tundra() {}
   function c000021_UndergroundSea() {}

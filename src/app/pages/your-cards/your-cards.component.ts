@@ -16,6 +16,7 @@ import { HoverTipDirective } from '../../core/common/internal-lib/bf-tooltip/bf-
 import { DataService, TFullCard, TFullDeck, TFullUnit } from '../../core/dataService';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { SellOfferModalComponent } from '../../core/modals/sellOfferModal/sell-offer-modal.component';
+import { ActivatedRoute } from '@angular/router';
 
 
 
@@ -73,6 +74,7 @@ export class YourCardsComponent {
     private confirm: BfConfirmService,
     private dataService: DataService,
     private ngbModal: NgbModal,
+    private route: ActivatedRoute,
   ) {
     this.shell.gameMode('off');
     this.cardsList = new BfListHandler({
@@ -93,19 +95,24 @@ export class YourCardsComponent {
   }
 
   async ngOnInit() {
+    if (this.route.snapshot?.routeConfig?.path === 'decks') { this.showDecks = true; }
+    const deckId = this.route.snapshot.paramMap.get('deckId') || '';
+
     await this.auth.profilePromise;
     await this.dataService.loadPromise;
 
     this.subs.push(this.dataService.cards$.subscribe(cards => this.loadCards()));
     this.subs.push(this.dataService.yourDecks$.subscribe(decks => this.loadDecks()));
 
-    this.loadCards();
-    this.loadDecks();
-
     this.selectCard(this.groupedCards[0]);
+    
 
-    // this.selectCard(this.yourCards[0]);
-    // this.editDeck(this.decks[0]);
+    await this.dataService.yourDecksPromise;
+    if (deckId) {
+      console.log('DECK ID', deckId);
+      const deck = this.decks.find(d => d.id === deckId);
+      if (deck) { this.showDecks = true; this.editDeck(deck); }
+    }
   }
 
   ngOnDestroy() {
@@ -165,7 +172,12 @@ export class YourCardsComponent {
 
   switchShowDecks() {
     this.showDecks = !this.showDecks;
-    if (!this.showDecks) { this.selDeck = undefined; }
+    if (!this.showDecks) { 
+      this.selDeck = undefined; 
+      window.history.replaceState(null, 'Your Cards', '/cards');
+    } else {
+      window.history.replaceState(null, 'Your Decks', '/cards/decks');
+    }
   }
 
   hoverCard(card?: TFullCard, fromDeck = false) {
@@ -280,6 +292,24 @@ export class YourCardsComponent {
     this.selDeck = deck;
     this.deckName = deck.deckName;
     this.loadGroupDeck();
+    window.history.pushState(null, 'Your Deck', `/cards/decks/${deck.id}`);
+  }
+
+  goBackToDecks() {
+    this.selDeck = undefined; 
+    this.loadDecks();
+    window.history.pushState(null, 'Your Decks', `/cards/decks`);
+  }
+
+  deckTotals() {
+    if (this.selDeck) {
+      return { 
+        total     : this.selDeck.units.length,
+        lands     : this.selDeck.units.filter(c => c.card.type === 'land').length,
+        noLands   : this.selDeck.units.filter(c => c.card.type !== 'land').length,
+        creatures : this.selDeck.units.filter(c => c.card.type === 'creature').length,
+      };
+    } else { return { total: 0, lands: 0, noLands: 0, creatures : 0 }; }
   }
 
 

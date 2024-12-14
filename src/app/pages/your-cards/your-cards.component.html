@@ -4,7 +4,7 @@
   <div class="details">
     <h2>{{ 'Card Details' | translate }}</h2>
 
-    <div class="full-card" *ngIf="!hoveringCard"><mtg-card class="xl" style="opacity: 0;"></mtg-card></div>
+    <div class="full-card" *ngIf="!hoveringCard && !hoveringUnit"><mtg-card class="xl" style="opacity: 0;"></mtg-card></div>
 
     <div *ngIf="hoveringCard">
       <div class="full-card">
@@ -157,7 +157,7 @@
     <div class="d-flex" style="margin-bottom: 5px;" *ngIf="selDeck">
       <h2 class="flex-3">{{ 'Your Deck' | translate }} ({{selDeck.units.length}} cards)</h2>
       <bf-btn class="flex-1 text-right" bfText="Back" bfIcon="icon-arrow-left6"
-              (bfClick)="selDeck = undefined; loadDecks()">
+              (bfClick)="goBackToDecks()">
       </bf-btn>
     </div>
 
@@ -174,6 +174,9 @@
 
       <!-- All Units in Deck -->
       <div class="deck-editor-list" *ngIf="!isDeckGrouped">
+        <div style="margin-bottom: 10px;">
+          {{deckTotals().lands}} lands + {{deckTotals().noLands}} other = {{deckTotals().total}} cards
+        </div>
         <div class="card-wrapper" *ngFor="let unit of selDeck.units" 
              [hoverTip]="'Click to remove it'"
              (mouseenter)="hoverUnit(unit, true)" (mouseleave)="hoverUnit()" (click)="removeUnitFromDeck(unit)">
@@ -184,6 +187,9 @@
 
       <!-- Grouped Cards in Deck -->
       <div class="deck-editor-list" *ngIf="isDeckGrouped">
+        <div style="margin-bottom: 10px;">
+          {{deckTotals().lands}} lands + {{deckTotals().noLands}} other = {{deckTotals().total}} cards
+        </div>
         <div class="card-wrapper" *ngFor="let card of deckGroupedCards"
              [hoverTip]="card.units.length > 1 ? 'Click to remove 1' : 'Click to remove it'"
              (mouseenter)="hoverCard(card, true)" (mouseleave)="hoverCard()" (click)="removeCardFromDeck(card)">
@@ -192,7 +198,7 @@
             <span class="name-text">x {{card.name}}</span>
           </div>
           <mtg-card [cardImg]="card.image" class="sm"></mtg-card>
-        </div>
+        </div>        
       </div>
 
     </div>

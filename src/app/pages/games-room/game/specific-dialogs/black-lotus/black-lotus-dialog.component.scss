@@ -1,0 +1,10 @@
+@import '../game.vars.scss';
+
+.dialog-container {
+  background: $dialog-selecting-mana-bg;  
+
+  @include panel-basics();
+  @include fixed-panel(17%, 25%, 15%);
+
+
+}

@@ -287,6 +287,8 @@ export class DataService {
       'c000003',  // Swamp
       'c000010',  // Mox Sapphire
       'c000010',  // Mox Sapphire
+      'c000018',  // Taiga
+      'c000012',  // Black Lotus
       'c000007',  // Mox Jet
       'c000034',  // Time Walk
       'c000023',  // Ancestral Recall
