@@ -47,33 +47,46 @@ export class GameOptionsService {
 
     // Actions that you can do during both your turn or opponents turn
     
-    // TARGET SELECTION: If you have a summoning operation, let it cancel
+    // If you have a summoning operation, let it cancel
     const summonCard = handA.find(c => c.status?.slice(0, 7) === 'summon:');
     if (summonCard) { state.options.push({ action: 'cancel-summon', params: {}, text: 'Cancel ' + summonCard.name }); }
+
+    const abilityCard = tableStack.find(c => c.status?.split(':')[0] === 'ability');
+    if (abilityCard) { state.options.push({ action: 'cancel-ability', params: {}, text: 'Cancel Using ' + abilityCard.name }); }
     
-    const playingCard = state.cards.find(c => c.status === 'summon:selectingTargets');
+    // TARGET SELECTION: If you have a card that is selecting targets:
+    const playingCard = state.cards.find(c => c.status?.split(':')[1] === 'selectingTargets');
     if (playingCard) {  // Selecting target
-      // runEvent(state, playingCard.gId, 'onTargetLookup');
+      
+      const statusPrefix = playingCard.status?.split(':')[0]; // summon:... or ability:...
+      const action = statusPrefix === 'summon' ? 'summon-spell' : 'trigger-ability';
+
       const { possibleTargets } = extendCardLogic(playingCard).onTargetLookup(state);
       possibleTargets.forEach(target => {
         if (target === 'playerA') {
-          state.options.push({ action: 'summon-spell', params: { gId: playingCard.gId, targets: ['player' + playerANum] }});
+          state.options.push({ action, params: { gId: playingCard.gId, targets: ['player' + playerANum] }});
           playerA.selectableTarget = { text: `Select target player ${playerA.name}`, value: 'player' + playerANum };
 
         } else if (target === 'playerB') {
-          state.options.push({ action: 'summon-spell', params: { gId: playingCard.gId, targets: ['player' + playerBNum] }});
+          state.options.push({ action, params: { gId: playingCard.gId, targets: ['player' + playerBNum] }});
           playerB.selectableTarget = { text: `Select target player ${playerB.name}`, value: 'player' + playerBNum };
+
+        } else if (target.slice(0,6) === 'custom') { // Custom card selection
+          state.options.push({ action, params: { gId: playingCard.gId, targets: [target.split('-')[1]] } });
 
         } else { // Card target
           const targetCard = state.cards.find(c => c.gId === target);
           if (targetCard) {
             targetCard.selectableTarget = { text: `Select target ${targetCard.name}`, value: targetCard.gId };
-            state.options.push({ action: 'summon-spell', params: { gId: playingCard.gId, targets: [targetCard.gId] } });
+            state.options.push({ action, params: { gId: playingCard.gId, targets: [targetCard.gId] } });
           }
         }
       });
       return state; // <---- Avoid any other action when selecting a target
     }
+
+
+
 
 
     // Actions that you can do during both your turn or opponents turn:

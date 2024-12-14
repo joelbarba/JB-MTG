@@ -21,6 +21,7 @@ import { extendCardLogic } from './gameLogic/game.card-specifics';
 import { GamePanelComponent } from "./game-panel/game-panel.component";
 import { GameCardComponent } from "./game-card/game-card.component";
 import { BfTooltipService } from '../../../core/common/internal-lib/bf-tooltip/bf-tooltip.service';
+import { BlackLotusDialogComponent } from "./specific-dialogs/black-lotus/black-lotus-dialog.component";
 
 export interface ICard {
   img: string;
@@ -63,7 +64,8 @@ export interface ISummonOp {
     HoverTipDirective,
     ManaArrayComponent,
     GamePanelComponent,
-    GameCardComponent
+    GameCardComponent,
+    BlackLotusDialogComponent
 ],
   templateUrl: './game.component.html',
   styleUrls: ['./game.component.scss'],
@@ -224,7 +226,7 @@ export class GameComponent {
     if (this.fullCardEl) {
       const cardHeight = this.fullCardEl.nativeElement.getBoundingClientRect().height;
       if (Math.abs(this.fullCard.prevHeight - cardHeight) > 30) {
-        console.log('Full Card Height', cardHeight, this.fullCard.prevHeight);
+        // console.log('Full Card Height', cardHeight, this.fullCard.prevHeight);
         this.fullCard.prevHeight = cardHeight;
         setTimeout(() => {
           this.fullCard.borderWidth  = Math.max(1, cardHeight * 0.0215);
@@ -238,7 +240,7 @@ export class GameComponent {
 
 
   // Debugging tools
-  debugLocations: Array<TCardLocation> = ['stack', 'deck1', 'deck2', 'hand1', 'hand2', 'tble1', 'tble2', 'grav1', 'grav2', 'off'];
+  debugLocations: Array<TCardLocation> = ['stack', 'deck1', 'deck2', 'hand1', 'hand2', 'tble1', 'tble2', 'grav1', 'grav2', 'discarded'];
   cardFilter(location: TCardLocation) { return this.state.cards.filter(c => c.location === location); }
   debugCard(card: TGameCard) { console.log(card.name, card); }
 
@@ -274,6 +276,15 @@ export class GameComponent {
       this.globalButtons.push({
         id: 'cancel-summon', text: cancelSummonOp.text || 'Cancel Summon', 
         icon: 'icon-cross', clickFn: () => this.summonOp.cancel() 
+      });
+    }
+
+    // If cancel ability
+    const cancelAbilityOp = yourOptions.find(op => op.action === 'cancel-ability');
+    if (cancelAbilityOp) {
+      this.globalButtons.push({
+        id: 'cancel-ability', text: cancelAbilityOp.text || 'Cancel', 
+        icon: 'icon-cross', clickFn: () => this.game.action('cancel-ability')
       });
     }
 
@@ -596,6 +607,7 @@ export class GameComponent {
     this.updateSummonOperation();
     this.updateCombatOperation();
     this.updateSpellStack();
+    this.updateCustomDialogs();
   }
 
   
@@ -822,6 +834,14 @@ export class GameComponent {
   effectsPanelCard: TGameCard | null = null;
 
 
+  // Check cards that need custom dialogs to be opened
+  customDialogs: { [key:string]: TGameCard } = {};
+  updateCustomDialogs() {
+    this.customDialogs = {};
+    this.state.cards.forEach(card => {
+      if (card.customDialog) { this.customDialogs[card.customDialog] = card; }
+    });
+  }
 
   // -------------------------- Actions --------------------------
 

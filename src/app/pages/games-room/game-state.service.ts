@@ -243,7 +243,7 @@ export class GameStateService {
       case 'skip-phase':                this.endPhase(nextState); break;
       case 'draw':                      this.draw(nextState);  break;
       case 'tap-land':                  this.tapLand(nextState, gId); break;
-      case 'trigger-ability':           this.triggerAbility(nextState, gId, manaForUncolor); break;
+      case 'trigger-ability':           this.triggerAbility(nextState, params); break;
       case 'untap-card':                this.untapCard(nextState, gId); break;
       case 'untap-all':                 this.untapAll(nextState); break;
       case 'select-attacking-creature': this.selectAttackingCreature(nextState, gId); break;
@@ -258,6 +258,7 @@ export class GameStateService {
       case 'summon-creature':           this.summonCreature(nextState, gId, manaForUncolor); break;
       case 'summon-spell':              this.summonSpell(nextState, params); break;
       case 'cancel-summon':             this.cancelSummonOperations(nextState); break;
+      case 'cancel-ability':            this.cancelAbilityOperations(nextState); break;
       case 'release-stack':             this.releaseStack(nextState); break;
     }
 
@@ -333,12 +334,16 @@ export class GameStateService {
     }
   }
 
-  private triggerAbility(nextState: TGameState, gId: string, manaForUncolor: TCast) {
+  // private triggerAbility(nextState: TGameState, gId: string, manaForUncolor: TCast) {
+  private triggerAbility(nextState: TGameState, params: TActionParams) {
     const { playerA, playerB } = this.getPlayers(nextState);
+
+    const gId = params?.gId || '';
+    let manaForUncolor = params.manaForUncolor || [0,0,0,0,0,0];
 
     const card = nextState.cards.find(c => c.gId === gId);
     if (card) {
-      const { getAbilityCost, onTap } = extendCardLogic(card);
+      const { getAbilityCost, onTap, onTargetLookup } = extendCardLogic(card);
       const abilityCost = getAbilityCost(nextState);
       if (abilityCost) {
 
@@ -362,14 +367,27 @@ export class GameStateService {
         }
 
         if (rightMana && (!abilityCost.tap || !card.isTapped)) {
-          if (totalManaCost > 0) { spendMana(abilityCost.mana, playerA.manaPool, manaForUncolor); }
-          onTap(nextState); // It may not always tap the card, but trigger the ability
-          card.status = null;
+          const { neededTargets, possibleTargets } = onTargetLookup(nextState);
+
+          if (neededTargets > possibleTargets.length) {
+            console.log(`You can't use ${card.name} because there are no targets to select`);
+            this.cancelSummonOperations(nextState);
+          }
+          else if ((params.targets?.length || 0) < (neededTargets || 0)) { 
+            card.status = 'ability:selectingTargets';
+          }
+          else {
+            card.targets = params.targets || [];
+            if (totalManaCost > 0) { spendMana(abilityCost.mana, playerA.manaPool, manaForUncolor); }
+            onTap(nextState); // It may not always tap the card, but trigger the ability
+            card.status = null;
+          }
         }
       }
     }
-
   }
+
+
 
   private summonCreature(nextState: TGameState, gId: string, manaForUncolor: TCast) {
     const { playerA, playerB } = this.getPlayers(nextState);
@@ -439,7 +457,7 @@ export class GameStateService {
             this.cancelSummonOperations(nextState);
           }
           else if ((params.targets?.length || 0) < (neededTargets || 0)) { 
-            card.status = 'summon:selectingTargets'; 
+            card.status = 'summon:selectingTargets';
           }
           else {
             console.log(`SUMMONING ${card.name} (${params.gId}), manaForUncolor=${params.manaForUncolor}, targets=${params.targets}`);
@@ -457,7 +475,19 @@ export class GameStateService {
   // Cancel any other ongoing summon:XXX operation for your
   private cancelSummonOperations(nextState: TGameState, exceptgId?: string) {
     const { handA } = this.getCards(nextState);
-    handA.filter(c => c.gId !== exceptgId && c.status?.slice(0, 7) === 'summon:').forEach(c => c.status = null);
+    handA.filter(c => c.gId !== exceptgId && c.status?.split(':')[0] === 'summon:').forEach(card => {
+      card.status = null;
+      if (card.customDialog) { card.customDialog = undefined; }
+    });
+  }
+
+  // Cancel any other ongoing ability:XXX operation for your
+  private cancelAbilityOperations(nextState: TGameState, exceptgId?: string) {
+    const { tableAStack } = this.getCards(nextState);
+    tableAStack.filter(c => c.gId !== exceptgId && c.status?.split(':')[0] === 'ability').forEach(card => {
+      card.status = null;
+      if (card.customDialog) { card.customDialog = undefined; }
+    });
   }
 
 

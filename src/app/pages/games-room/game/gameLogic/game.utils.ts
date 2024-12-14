@@ -88,10 +88,10 @@ export const compareLocations = (locationA: TCardLocation, locationB: TCardAnyLo
 
 
 // Destroy a card: Move it to its graveyard, and trigger all needed events
-export const moveCardToGraveyard = (nextState: TGameState, gId: string) => {
+export const moveCardToGraveyard = (nextState: TGameState, gId: string, discard = false) => {
   const card = nextState.cards.find(c => c.gId === gId);
   if (!card) { return; }
-  moveCard(nextState, gId, 'grav');
+  moveCard(nextState, gId, discard ? 'discarded' : 'grav');
   // runEvent(nextState, gId, 'onDestroy');
   if (card.onDestroy) { card.onDestroy(nextState); }
   else { extendCardLogic(card).onDestroy(nextState); }

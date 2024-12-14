@@ -57,10 +57,10 @@ export type TCard = {
   // units: Array<{ ref: string, owner: string }>;
 };
 
-export type TCardLocation = 'off' | 'stack'
+export type TCardLocation = 'discarded' | 'stack'
   | 'deck1' | 'hand1' | 'tble1' | 'grav1'
   | 'deck2' | 'hand2' | 'tble2' | 'grav2';
-export type TCardSemiLocation = 'off' | 'deck' | 'hand' | 'tble' | 'grav';
+export type TCardSemiLocation = 'discarded' | 'deck' | 'hand' | 'tble' | 'grav';
 export type TCardAnyLocation = TCardLocation | TCardSemiLocation;
 
 export type TTargetType = {
@@ -102,10 +102,12 @@ export type TDBGameCard = TCard & {
   order: number;
   location: TCardLocation;
   isTapped: boolean;
-  status: null | 'summon:waitingMana' | 'summon:selectingMana' | 'summon:selectingTargets' 
-               | 'summoning' | 'sickness'
-               | 'ability:waitingMana' | 'ability:selectingMana';
+  status: null | 'summoning' | 'sickness'
+               | 'summon:waitingMana'  | 'summon:selectingMana'  | 'summon:selectingTargets' 
+               | 'ability:waitingMana' | 'ability:selectingMana' | 'ability:selectingTargets';
   combatStatus: null | 'combat:attacking' | 'combat:defending' | 'combat:selectingTarget';
+
+  customDialog?: string;  // If the card requires a custom dialog to open when it's :selectingTargets
 
   targets: Array<string>;         // Aarray of gIds, playerA, playerB
   blockingTarget: string | null;  // For combat: When defending, the gId of the attacking creature this one is blocking
@@ -131,7 +133,7 @@ export type TGameCard = TDBGameCard & { // Not in DB (calculated when options)
   canAttack: (state: TGameState) => boolean;  // Whether the creature can be selected to attack
   canDefend: (state: TGameState) => boolean;  // Whether the creature can be selected to defend
   targetBlockers: (state: TGameState) => Array<string>; // List of attackers the creature can block
-  getAbilityCost: (state: TGameState) => { mana: TCast, tap: boolean, text: string } | null; // Cost to trigger the card manual ability
+  getAbilityCost: (state: TGameState) => { mana: TCast, tap: boolean, text: string, targets: boolean } | null; // Cost to trigger the card manual ability
 }
 export type TGameCards = Array<TGameCard>;
 export type TExtGameCard = TGameCard & {
@@ -167,6 +169,7 @@ export type TAction = 'start-game'
 | 'summon-creature'
 | 'summon-spell'
 | 'cancel-summon'
+| 'cancel-ability'
 | 'select-card-to-discard' 
 | 'tap-land'
 | 'trigger-ability'

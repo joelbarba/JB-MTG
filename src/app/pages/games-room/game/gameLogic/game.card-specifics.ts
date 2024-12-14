@@ -294,7 +294,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   }
 
   function c000011_SolRing() {
-    card.getAbilityCost = () => ({ mana: [0,0,0,0,0,0], tap: true, text: 'Tap to add 2 colorless mana' });
+    card.getAbilityCost = () => ({ mana: [0,0,0,0,0,0], tap: true, targets: false,text: 'Tap to add 2 colorless mana' });
     card.onTap = (nextState: TGameState) => {
       const { card, cardPlayer } = getShorts(nextState);
       cardPlayer.manaPool[0] += 2;
@@ -305,7 +305,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
 
   // Moxes
   function moxCommon(colorNum: number, color: TColor) {
-    card.getAbilityCost = () => ({ mana: [0,0,0,0,0,0], tap: true, text: `Tap to add 1 ${color} mana` });
+    card.getAbilityCost = () => ({ mana: [0,0,0,0,0,0], tap: true, targets: false,text: `Tap to add 1 ${color} mana` });
     card.onTap = (nextState: TGameState) => {
       const { card, cardPlayer } = getShorts(nextState);
       cardPlayer.manaPool[colorNum] += 1;
@@ -320,7 +320,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
 
   function c000046_GraniteGargoyle() {
     commonCreature();
-    card.getAbilityCost = () => ({ mana: [0,0,0,0,1,0], tap: false, text: `Pay 1 red mana to add +0/+1` });
+    card.getAbilityCost = () => ({ mana: [0,0,0,0,1,0], tap: false, targets: false, text: `Pay 1 red mana to add +0/+1` });
     card.onTap = (nextState: TGameState) => {
       nextState.effects.push({ scope: 'turn', gId, targets: [], id: randomId('e') });
     };
@@ -332,7 +332,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
 
   function c000033_ShivanDragon() {
     commonCreature();
-    card.getAbilityCost = () => ({ mana: [0,0,0,0,1,0], tap: false, text: `Pay 1 red mana to add +1/+0` });
+    card.getAbilityCost = () => ({ mana: [0,0,0,0,1,0], tap: false, targets: false, text: `Pay 1 red mana to add +1/+0` });
     card.onTap = (nextState: TGameState) => {
       nextState.effects.push({ scope: 'turn', gId, targets: [], id: randomId('e') });
     };
@@ -388,12 +388,24 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
 
   function c000012_BlackLotus() {
     card.onTargetLookup = (nextState: TGameState) => {
-      return { neededTargets: 1, possibleTargets: ['playerA', 'playerB'] }; // Target must be a player
+      card.customDialog = 'black-lotus';
+      const possibleTargets = [1, 2, 3, 4, 5].map(v => 'custom-' + v);
+      return { neededTargets: 3, possibleTargets }; // Targets will be the colors (1,2,3,4,5)
     };
-    card.onSummon = (nextState: TGameState) => {
+    card.getAbilityCost = () => {
+      return { 
+        mana: [0,0,0,0,0,0], tap: true, targets: true,
+        text: `Tap to add 3 mana of any single color` 
+      };
+    };
+    card.onTap = (nextState: TGameState) => { // Adds 3 color mana (targets = selected colors)
       const { cardPlayer } = getShorts(nextState);
-      // Should open a modal to select 3 colors
-      moveCardToGraveyard(nextState, gId);
+      card.targets.forEach(target => {
+        const mana = Number.parseInt(target.split('custom-')[1]);
+        cardPlayer.manaPool[mana] += 1;
+      });
+      card.customDialog = undefined;
+      moveCardToGraveyard(nextState, gId, true);
     };
   }
 
