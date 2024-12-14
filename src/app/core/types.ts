@@ -107,7 +107,7 @@ export type TDBGameCard = TCard & {
                | 'ability:waitingMana' | 'ability:selectingMana' | 'ability:selectingTargets';
   combatStatus: null | 'combat:attacking' | 'combat:defending' | 'combat:selectingTarget';
 
-  customDialog?: string;  // If the card requires a custom dialog to open when it's :selectingTargets
+  customDialog: null | string;  // If the card requires a custom dialog to open when it's :selectingTargets
 
   targets: Array<string>;         // Aarray of gIds, playerA, playerB
   blockingTarget: string | null;  // For combat: When defending, the gId of the attacking creature this one is blocking

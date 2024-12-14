@@ -404,7 +404,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
         const mana = Number.parseInt(target.split('custom-')[1]);
         cardPlayer.manaPool[mana] += 1;
       });
-      card.customDialog = undefined;
+      card.customDialog = null;
       moveCardToGraveyard(nextState, gId, true);
     };
   }

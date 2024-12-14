@@ -477,7 +477,7 @@ export class GameStateService {
     const { handA } = this.getCards(nextState);
     handA.filter(c => c.gId !== exceptgId && c.status?.split(':')[0] === 'summon:').forEach(card => {
       card.status = null;
-      if (card.customDialog) { card.customDialog = undefined; }
+      if (card.customDialog) { card.customDialog = null; }
     });
   }
 
@@ -486,7 +486,7 @@ export class GameStateService {
     const { tableAStack } = this.getCards(nextState);
     tableAStack.filter(c => c.gId !== exceptgId && c.status?.split(':')[0] === 'ability').forEach(card => {
       card.status = null;
-      if (card.customDialog) { card.customDialog = undefined; }
+      if (card.customDialog) { card.customDialog = null; }
     });
   }
 

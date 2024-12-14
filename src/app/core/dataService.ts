@@ -251,6 +251,7 @@ export class DataService {
         controller: playerNum, 
         isTapped: false,
         status: null,
+        customDialog: null,
         combatStatus: null,
         targets: [],
         blockingTarget: null,
@@ -288,6 +289,7 @@ export class DataService {
       'c000010',  // Mox Sapphire
       'c000010',  // Mox Sapphire
       'c000018',  // Taiga
+      'c000015',  // Plateau
       'c000012',  // Black Lotus
       'c000007',  // Mox Jet
       'c000034',  // Time Walk
@@ -310,6 +312,16 @@ export class DataService {
     const cardsDeck2 = [
       'c000005',  // Forest
       'c000004',  // Mountain
+      'c000013',  // Bayou
+      'c000014',  // Badlands
+      'c000015',  // Plateau
+      'c000016',  // Savannah
+      'c000017',  // Scrubland
+      'c000018',  // Taiga
+      'c000019',  // Tropical Island
+      'c000020',  // Tundra
+      'c000021',  // Underground Sea
+      'c000022',  // Volcanic Island
       'c000006',  // Mox Emerald
       'c000006',  // Mox Emerald
       'c000009',  // Mox Ruby
