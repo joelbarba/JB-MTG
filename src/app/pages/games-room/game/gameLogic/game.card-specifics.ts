@@ -38,7 +38,6 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
 
 
   const commonLand = (manaNum: 0|1|2|3|4|5) => {
-    card.getSummonCost = () => ({ mana: card.cast, neededTargets: 0, possibleTargets: [] });
     card.getAbilityCost = () => ({ 
       mana: [0,0,0,0,0,0], tap: true,
       neededTargets: 0, possibleTargets: [], 
@@ -61,7 +60,6 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   }
 
   const commonCreature = () => {
-    card.getSummonCost = () => ({ mana: card.cast, neededTargets: 0, possibleTargets: [] });
     card.onSummon = (nextState: TGameState) => {
       const { card } = getShorts(nextState);
       moveCard(nextState, card.gId, 'tble');
