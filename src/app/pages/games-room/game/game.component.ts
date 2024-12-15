@@ -22,6 +22,7 @@ import { GamePanelComponent } from "./game-panel/game-panel.component";
 import { GameCardComponent } from "./game-card/game-card.component";
 import { BfTooltipService } from '../../../core/common/internal-lib/bf-tooltip/bf-tooltip.service';
 import { BlackLotusDialogComponent } from "./specific-dialogs/black-lotus/black-lotus-dialog.component";
+import { DualLandDialogComponent } from "./specific-dialogs/dual-land/dual-land-dialog.component";
 
 export interface ICard {
   img: string;
@@ -65,7 +66,8 @@ export interface ISummonOp {
     ManaArrayComponent,
     GamePanelComponent,
     GameCardComponent,
-    BlackLotusDialogComponent
+    BlackLotusDialogComponent,
+    DualLandDialogComponent,
 ],
   templateUrl: './game.component.html',
   styleUrls: ['./game.component.scss'],
@@ -838,9 +840,11 @@ export class GameComponent {
   customDialogs: { [key:string]: TGameCard } = {};
   updateCustomDialogs() {
     this.customDialogs = {};
-    this.state.cards.forEach(card => {
-      if (card.customDialog) { this.customDialogs[card.customDialog] = card; }
-    });
+    if (this.state.control === this.game.playerANum) {
+      this.state.cards.forEach(card => {
+        if (card.customDialog) { this.customDialogs[card.customDialog] = card; }
+      });
+    }
   }
 
   // -------------------------- Actions --------------------------

@@ -410,7 +410,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
       const possibleTargets = [1, 2, 3, 4, 5].map(v => 'custom-color-' + v);
       return {
         mana: [0,0,0,0,0,0], tap: true,
-        neededTargets: 3, possibleTargets, customDialog: 'black-lotus', // Targets will be the colors (1,2,3,4,5)
+        neededTargets: 3, possibleTargets, customDialog: 'BlackLotus', // Targets will be the colors (1,2,3,4,5)
         text: `Tap to add 3 mana of any single color`
       }
     };
@@ -425,12 +425,13 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     };
   }
 
-  function c000018_Taiga() {
+
+  function dualLand(color1: number, color2: number) {
     card.getAbilityCost = () => {
-      const possibleTargets = ['custom-color-4', 'custom-color-5'];
+      const possibleTargets = ['custom-color-' + color1, 'custom-color-' + color2];
       return {
         mana: [0,0,0,0,0,0], tap: true,
-        neededTargets: 1, possibleTargets, customDialog: 'taiga', // Target will be the color
+        neededTargets: 1, possibleTargets, customDialog: card.name, // Target will be the color
         text: `Tap ${card.name} to get 1 mana`
       }
     };
@@ -444,11 +445,25 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     card.onTap = (nextState: TGameState) => {
       const { card, cardPlayer } = getShorts(nextState);
       if (!card.isTapped && card.location.slice(0,4) === 'tble') {
-        cardPlayer.manaPool[4] += 1;
+        const mana = Number.parseInt(card.targets[0].split('custom-color-')[1]);
+        cardPlayer.manaPool[mana] += 1;
         card.isTapped = true;
+        card.customDialog = null;
       } 
     };
   }
+
+  // 0=uncolored, 1=blue, 2=white, 3=black, 4=red, 5=green
+  function c000013_Bayou()          { dualLand(3, 5); }
+  function c000014_Badlands()       { dualLand(3, 4); }
+  function c000015_Plateau()        { dualLand(2, 4); }
+  function c000016_Savannah()       { dualLand(2, 5); }
+  function c000017_Scrubland()      { dualLand(2, 3); }
+  function c000018_Taiga()          { dualLand(4, 5); }
+  function c000019_TropicalIsland() { dualLand(1, 5); }
+  function c000020_Tundra()         { dualLand(1, 2); }
+  function c000021_UndergroundSea() { dualLand(1, 3); }
+  function c000022_VolcanicIsland() { dualLand(1, 4); }
 
   // Common Creatures
   function c000052_MonssGoblinRaiders()    { commonCreature(); }
@@ -473,15 +488,6 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
 
 
   // // Pending to be coded......
-  function c000013_Bayou() {}
-  function c000014_Badlands() {}
-  function c000015_Plateau() {}
-  function c000016_Savannah() {}
-  function c000017_Scrubland() {}
-  function c000019_TropicalIsland() {}
-  function c000020_Tundra() {}
-  function c000021_UndergroundSea() {}
-  function c000022_VolcanicIsland() {}
   function c000024_Armageddon() {}
   function c000029_Fork() {}
   function c000030_HowlingMine() {}

@@ -10,9 +10,10 @@
   // background: lightyellow;
 
   @include panel-basics();
-  @include fixed-panel(17%, 25%, 15%);
+  @include fixed-panel(25%, 25%, 15%);
 
-
+  min-width: 300px;
+  min-height: 375px;
 
   .mana-options {
     display: flex;

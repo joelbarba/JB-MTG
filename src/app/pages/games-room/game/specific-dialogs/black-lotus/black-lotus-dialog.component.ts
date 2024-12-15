@@ -2,10 +2,9 @@ import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { BfConfirmService, BfDnDModule, BfDnDService, BfUiLibModule } from 'bf-ui-lib';
-import { ManaArrayComponent } from '../../mana-array/mana-array.component';
+import { BfDnDModule, BfUiLibModule } from 'bf-ui-lib';
 import { GameCardComponent } from '../../game-card/game-card.component';
-import { TCast, TGameCard } from '../../../../../core/types';
+import { TGameCard } from '../../../../../core/types';
 import { ManaIconComponent } from "../../mana-icon/mana-icon.component";
 import { GameStateService } from '../../../game-state.service';
 
@@ -20,7 +19,6 @@ import { GameStateService } from '../../../game-state.service';
     FormsModule,
     BfUiLibModule,
     GameCardComponent,
-    ManaArrayComponent,
     ManaIconComponent,
   ],
   templateUrl: './black-lotus-dialog.component.html',

@@ -92,6 +92,7 @@ $table-center-left: calc(var(--left-panel-width) + var(--phases-col-width) + $ta
 @mixin panel-basics() {
   position: fixed;
   max-height: 95vh;
+  max-width: 95vw;
   z-index: 1000;
   border: 1px solid #737373;
   padding: 15px;

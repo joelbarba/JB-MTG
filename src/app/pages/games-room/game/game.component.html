@@ -263,7 +263,18 @@
     (end)="effectsPanelCard = null">
   </panel-effects>
 
-  <black-lotus-dialog *ngIf="customDialogs['black-lotus']" [card]="customDialogs['black-lotus']"></black-lotus-dialog>
+  <!-- Custom Card Dialogs -->
+  <black-lotus-dialog *ngIf="customDialogs['BlackLotus']" [card]="customDialogs['BlackLotus']"></black-lotus-dialog>
+  <dual-land-dialog   *ngIf="customDialogs['Bayou']"           [card]="customDialogs['Bayou']"></dual-land-dialog>
+  <dual-land-dialog   *ngIf="customDialogs['Badlands']"        [card]="customDialogs['Badlands']"></dual-land-dialog>
+  <dual-land-dialog   *ngIf="customDialogs['Plateau']"         [card]="customDialogs['Plateau']"></dual-land-dialog>
+  <dual-land-dialog   *ngIf="customDialogs['Savannah']"        [card]="customDialogs['Savannah']"></dual-land-dialog>
+  <dual-land-dialog   *ngIf="customDialogs['Scrubland']"       [card]="customDialogs['Scrubland']"></dual-land-dialog>
+  <dual-land-dialog   *ngIf="customDialogs['Taiga']"           [card]="customDialogs['Taiga']"></dual-land-dialog>
+  <dual-land-dialog   *ngIf="customDialogs['TropicalIsland']"  [card]="customDialogs['TropicalIsland']"></dual-land-dialog>
+  <dual-land-dialog   *ngIf="customDialogs['Tundra']"          [card]="customDialogs['Tundra']"></dual-land-dialog>
+  <dual-land-dialog   *ngIf="customDialogs['UndergroundSea']"  [card]="customDialogs['UndergroundSea']"></dual-land-dialog>
+  <dual-land-dialog   *ngIf="customDialogs['VolcanicIsland']"  [card]="customDialogs['VolcanicIsland']"></dual-land-dialog>
 </div>
 
 
