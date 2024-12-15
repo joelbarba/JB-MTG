@@ -9,8 +9,8 @@
         <div class="row whiteBg">
           <h3 class="col-12">Details: {{selCard.id}}</h3>
 
+          <bf-input class="col-6" bfLabel="Image" [(ngModel)]="selCard.image" (ngModelChange)="prepareName()"></bf-input>
           <bf-input class="col-6" bfLabel="Name"  [(ngModel)]="selCard.name"></bf-input>
-          <bf-input class="col-6" bfLabel="Image" [(ngModel)]="selCard.image"></bf-input>
 
           <div class="col-12" style="display: flex;">
             <bf-label style="flex: 1" bfText="Cast" class="block"></bf-label>

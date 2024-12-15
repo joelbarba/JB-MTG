@@ -45,9 +45,9 @@ export class BlackLotusDialogComponent {
     const params = {
       gId: this.card.gId,
       targets: [
-        'custom-' + this.mana1,
-        'custom-' + this.mana2,
-        'custom-' + this.mana3,
+        'custom-color-' + this.mana1,
+        'custom-color-' + this.mana2,
+        'custom-color-' + this.mana3,
       ]
     };
     this.game.action('trigger-ability', params);

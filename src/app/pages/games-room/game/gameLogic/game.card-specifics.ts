@@ -18,11 +18,11 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   card.onDestroy      = (nextState: TGameState) => {};
   card.onDiscard      = (nextState: TGameState) => moveCard(nextState, gId, 'grav');
   card.onEffect       = (nextState: TGameState, effectId: string) => {};
-  card.onTargetLookup = (nextState: TGameState) => ({ neededTargets: 0, possibleTargets: [] });
   card.canAttack      = (nextState: TGameState) => true;
   card.canDefend      = (nextState: TGameState) => true;
   card.targetBlockers = (nextState: TGameState) => [];  // Returns a list of gId of the attacking creatues that can block
-  card.getAbilityCost = (nextState: TGameState) => null; // If ability (not null) paying cost = { mana: [0,0,0,0,0,0], tap: true }
+  card.getSummonCost  = (nextState: TGameState) => ({ mana: card.cast });
+  card.getAbilityCost = (nextState: TGameState) => null;
 
 
   const getCard = (nextState: TGameState) => nextState.cards.find(c => c.gId === gId) || card;
@@ -38,6 +38,12 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
 
 
   const commonLand = (manaNum: 0|1|2|3|4|5) => {
+    card.getSummonCost = () => ({ mana: card.cast, neededTargets: 0, possibleTargets: [] });
+    card.getAbilityCost = () => ({ 
+      mana: [0,0,0,0,0,0], tap: true,
+      neededTargets: 0, possibleTargets: [], 
+      text: `Tap ${card.name} to get 1 mana`,
+    });
     card.onSummon = (nextState: TGameState) => {
       const { card, cardPlayer } = getShorts(nextState);
       if (card.location.slice(0,4) === 'hand' && cardPlayer.summonedLands < 1) {
@@ -49,13 +55,13 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
       const { card, cardPlayer } = getShorts(nextState);
       if (!card.isTapped && card.location.slice(0,4) === 'tble') {
         cardPlayer.manaPool[manaNum] += 1;
-        // if (manaNum === 1) { cardPlayer.manaPool[manaNum] += 1; } // extra blue
         card.isTapped = true;
       } 
     };
   }
 
   const commonCreature = () => {
+    card.getSummonCost = () => ({ mana: card.cast, neededTargets: 0, possibleTargets: [] });
     card.onSummon = (nextState: TGameState) => {
       const { card } = getShorts(nextState);
       moveCard(nextState, card.gId, 'tble');
@@ -169,12 +175,10 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
 
 
   function c000032_LightningBolt() {
-    card.onTargetLookup = (nextState: TGameState) => {
+    card.getSummonCost = (nextState: TGameState) => {
       const { targetCreatures } = getShorts(nextState);
-      const possibleTargets = targetCreatures().map(c => c.gId);
-      possibleTargets.push('playerA');
-      possibleTargets.push('playerB');
-      return { neededTargets: 1, possibleTargets }; // Target must be any playing creature + any player
+      const possibleTargets = [ ...targetCreatures().map(c => c.gId), 'playerA', 'playerB'];
+      return { mana: card.cast, neededTargets: 1, possibleTargets };
     };
     card.onSummon = (nextState: TGameState) => {
       const { targetCreatures, targetId } = getShorts(nextState);
@@ -187,11 +191,11 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   }
 
   function c000043_GiantGrowth() {
-    card.onTargetLookup = (nextState: TGameState) => {
+    card.getSummonCost = (nextState: TGameState) => {
       const { targetCreatures } = getShorts(nextState);
-      const possibleTargets = targetCreatures().map(c => c.gId);
-      return { neededTargets: 1, possibleTargets }; // Target must be any playing creature
-    };
+      const possibleTargets = targetCreatures().map(c => c.gId); // Target must be any playing creature
+      return { mana: card.cast, neededTargets: 1, possibleTargets };
+    };    
     card.onSummon = (nextState: TGameState) => {
       const { tableStack, targetId } = getShorts(nextState);
       nextState.effects.push({ scope: 'turn', gId, targets: [targetId], id: randomId('e') });
@@ -210,11 +214,11 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   }
 
   function c000038_Counterspell() {
-    card.onTargetLookup = (nextState: TGameState) => {
+    card.getSummonCost = (nextState: TGameState) => {
       const { stack, noProtection } = getShorts(nextState);
-      const possibleTargets = stack.filter(noProtection).map(c => c.gId);
-      return { neededTargets: 1, possibleTargets }; // Target must be a spell in the stack
-    };
+      const possibleTargets = stack.filter(noProtection).map(c => c.gId); // Target must be a spell in the stack
+      return { mana: card.cast, neededTargets: 1, possibleTargets };
+    };    
     card.onSummon = (nextState: TGameState) => {
       const { targetId } = getShorts(nextState);
       const targetCard = nextState.cards.find(c => c.gId === targetId && c.location === 'stack');
@@ -242,11 +246,11 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   }
 
   function c000055_UnholyStrength() {
-    card.onTargetLookup = (nextState: TGameState) => {
+    card.getSummonCost = (nextState: TGameState) => {
       const { targetCreatures } = getShorts(nextState);
-      const possibleTargets = targetCreatures().map(c => c.gId);
-      return { neededTargets: 1, possibleTargets }; // Target must be any playing creature
-    };
+      const possibleTargets = targetCreatures().map(c => c.gId); // Target must be any playing creature
+      return { mana: card.cast, neededTargets: 1, possibleTargets };
+    };        
     card.onSummon = (nextState: TGameState) => {
       const { targetId } = getShorts(nextState);
       nextState.effects.push({ scope: 'permanent', gId, targets: [targetId], id: randomId('e') });
@@ -265,11 +269,11 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   }  
 
   function c000057_Disenchantment() {
-    card.onTargetLookup = (nextState: TGameState) => {
+    card.getSummonCost = (nextState: TGameState) => {
       const { tableStack, noProtection } = getShorts(nextState);
       const possibleTargets = tableStack.filter(c => (c.type === 'enchantment' || c.type === 'artifact') && noProtection(c)).map(c => c.gId);
-      return { neededTargets: 1, possibleTargets }; // Target must be any playing enchantment or artifact
-    };
+      return { mana: card.cast, neededTargets: 1, possibleTargets }; // Target must be any playing enchantment or artifact
+    };       
     card.onSummon = (nextState: TGameState) => {
       const { tableStack, targetId, noProtection } = getShorts(nextState);
       const targetCard = tableStack.filter(c => (c.type === 'enchantment' || c.type === 'artifact') && noProtection(c)).find(c => c.gId === targetId);
@@ -280,7 +284,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     };
   }
 
-  function c000044_GiantSpider()           { 
+  function c000044_GiantSpider() {
     commonCreature(); 
     card.targetBlockers = (nextState: TGameState) => {
       const { card, table } = getShorts(nextState);
@@ -294,7 +298,11 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   }
 
   function c000011_SolRing() {
-    card.getAbilityCost = () => ({ mana: [0,0,0,0,0,0], tap: true, targets: false,text: 'Tap to add 2 colorless mana' });
+    card.getAbilityCost = () => ({ 
+      mana: [0,0,0,0,0,0], tap: true,
+      neededTargets: 0, possibleTargets: [], 
+      text: `Tap ${card.name} to add 2 colorless mana`,
+    });
     card.onTap = (nextState: TGameState) => {
       const { card, cardPlayer } = getShorts(nextState);
       cardPlayer.manaPool[0] += 2;
@@ -305,7 +313,11 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
 
   // Moxes
   function moxCommon(colorNum: number, color: TColor) {
-    card.getAbilityCost = () => ({ mana: [0,0,0,0,0,0], tap: true, targets: false,text: `Tap to add 1 ${color} mana` });
+    card.getAbilityCost = () => ({ 
+      mana: [0,0,0,0,0,0], tap: true,
+      neededTargets: 0, possibleTargets: [], 
+      text: `Tap ${card.name}`, // to add 1 ${color} mana 
+    });
     card.onTap = (nextState: TGameState) => {
       const { card, cardPlayer } = getShorts(nextState);
       cardPlayer.manaPool[colorNum] += 1;
@@ -320,7 +332,11 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
 
   function c000046_GraniteGargoyle() {
     commonCreature();
-    card.getAbilityCost = () => ({ mana: [0,0,0,0,1,0], tap: false, targets: false, text: `Pay 1 red mana to add +0/+1` });
+    card.getAbilityCost = () => ({
+      mana: [0,0,0,0,1,0], tap: false,
+      neededTargets: 0, possibleTargets: [], 
+      text: `Pay 1 red mana to add +0/+1`,
+    });
     card.onTap = (nextState: TGameState) => {
       nextState.effects.push({ scope: 'turn', gId, targets: [], id: randomId('e') });
     };
@@ -332,7 +348,11 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
 
   function c000033_ShivanDragon() {
     commonCreature();
-    card.getAbilityCost = () => ({ mana: [0,0,0,0,1,0], tap: false, targets: false, text: `Pay 1 red mana to add +1/+0` });
+    card.getAbilityCost = () => ({
+      mana: [0,0,0,0,1,0], tap: false,
+      neededTargets: 0, possibleTargets: [], 
+      text: `Pay 1 red mana to add +1/+0`,
+    });
     card.onTap = (nextState: TGameState) => {
       nextState.effects.push({ scope: 'turn', gId, targets: [], id: randomId('e') });
     };
@@ -350,8 +370,9 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   }
 
   function c000023_AncestralRecall() {
-    card.onTargetLookup = (nextState: TGameState) => {
-      return { neededTargets: 1, possibleTargets: ['playerA', 'playerB'] }; // Target must be a player
+    card.getSummonCost = (nextState: TGameState) => {
+      const possibleTargets = ['playerA', 'playerB']; // Target must be a player
+      return { mana: card.cast, neededTargets: 1, possibleTargets };
     };
     card.onSummon = (nextState: TGameState) => {
       const { targetId, deck } = getShorts(nextState);
@@ -387,31 +408,33 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   }
 
   function c000012_BlackLotus() {
-    card.onTargetLookup = (nextState: TGameState) => {
-      card.customDialog = 'black-lotus';
-      const possibleTargets = [1, 2, 3, 4, 5].map(v => 'custom-' + v);
-      return { neededTargets: 3, possibleTargets }; // Targets will be the colors (1,2,3,4,5)
-    };
     card.getAbilityCost = () => {
-      return { 
-        mana: [0,0,0,0,0,0], tap: true, targets: true,
-        text: `Tap to add 3 mana of any single color` 
-      };
+      const possibleTargets = [1, 2, 3, 4, 5].map(v => 'custom-color-' + v);
+      return {
+        mana: [0,0,0,0,0,0], tap: true,
+        neededTargets: 3, possibleTargets, customDialog: 'black-lotus', // Targets will be the colors (1,2,3,4,5)
+        text: `Tap to add 3 mana of any single color`
+      }
     };
     card.onTap = (nextState: TGameState) => { // Adds 3 color mana (targets = selected colors)
       const { cardPlayer } = getShorts(nextState);
       card.targets.forEach(target => {
-        const mana = Number.parseInt(target.split('custom-')[1]);
+        const mana = Number.parseInt(target.split('custom-color-')[1]);
         cardPlayer.manaPool[mana] += 1;
       });
       card.customDialog = null;
-      moveCardToGraveyard(nextState, gId, true);
+      moveCardToGraveyard(nextState, gId);
     };
   }
 
   function c000018_Taiga() {
-    card.onTargetLookup = (nextState: TGameState) => {
-      return { neededTargets: 1, possibleTargets: ['playerA', 'playerB'] }; // Target must be a player
+    card.getAbilityCost = () => {
+      const possibleTargets = ['custom-color-4', 'custom-color-5'];
+      return {
+        mana: [0,0,0,0,0,0], tap: true,
+        neededTargets: 1, possibleTargets, customDialog: 'taiga', // Target will be the color
+        text: `Tap ${card.name} to get 1 mana`
+      }
     };
     card.onSummon = (nextState: TGameState) => {
       const { card, cardPlayer } = getShorts(nextState);
@@ -423,7 +446,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     card.onTap = (nextState: TGameState) => {
       const { card, cardPlayer } = getShorts(nextState);
       if (!card.isTapped && card.location.slice(0,4) === 'tble') {
-        cardPlayer.manaPool[5] += 1;
+        cardPlayer.manaPool[4] += 1;
         card.isTapped = true;
       } 
     };

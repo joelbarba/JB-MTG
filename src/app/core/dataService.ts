@@ -287,6 +287,8 @@ export class DataService {
       'c000001',  // Island
       'c000003',  // Swamp
       'c000010',  // Mox Sapphire
+      'c000009',  // Mox Ruby
+      'c000032',  // Lighting Bolt
       'c000010',  // Mox Sapphire
       'c000018',  // Taiga
       'c000015',  // Plateau
@@ -312,6 +314,7 @@ export class DataService {
     const cardsDeck2 = [
       'c000005',  // Forest
       'c000004',  // Mountain
+      'c000052',  // Mons's Goblin Raiders
       'c000013',  // Bayou
       'c000014',  // Badlands
       'c000015',  // Plateau
@@ -330,7 +333,6 @@ export class DataService {
       'c000033',  // Shivan Dragon
       'c000046',  // Granite Gargoley
       'c000053',  // Ornithopter
-      'c000052',  // Mons's Goblin Raiders
       'c000044',  // Giant Spider
       'c000041',  // Elvis Archers
       'c000041',  // Elvis Archers

@@ -74,6 +74,13 @@ export class SettingsComponent {
     }
   }
 
+  prepareName() {
+    if (this.selCard && this.selCard.image && this.selCard.name === 'New Card') {
+      this.selCard.name = this.selCard.image.split('.jpg')[0].replace(/_/g, ' ');
+      this.selCard.name = this.selCard.name.split(' ').map(v => v.charAt(0).toUpperCase() + v.slice(1)).join(' ');
+    }
+  }
+
 
   // @HostListener('window:keyup', ['$event'])
   // keyEvent(ev: KeyboardEvent) {
@@ -135,6 +142,7 @@ export class SettingsComponent {
     const rawCard = card.keyFilter((v,k) => k !== 'id' && k !== 'units') as Omit<TCard, 'id'>; // Remove the fields .id and .units
     console.log('Saving Card', rawCard);
     await updateDoc(doc(this.firestore, 'cards', card.id), rawCard);
+    // await setDoc(doc(this.firestore, 'cards', card.id), rawCard);
     this.growl.success(`Card ${card.name} updated`);
 
     const list = this.cardsList.loadedList;
@@ -146,7 +154,7 @@ export class SettingsComponent {
     const lastId = this.cardsList.loadedList.at(-1)?.id;
     if (!lastId) { return; }
     const id = 'c' + ((Number.parseInt(lastId.slice(1)) + 1) + '').padStart(6, '0');
-    const card: TFullCard = {
+    const card: TCard = {
       id,
       name            : 'New Card',
       image           : 'image',
@@ -165,12 +173,14 @@ export class SettingsComponent {
       colorProtection : null,
       maxInDeck       : 4,
       readyToPlay     : false,
-      units           : [],
     };
     // console.log('New Card:', card);
     await setDoc(doc(this.firestore, 'cards', id), card);
-    this.cardsList.load(this.cardsList.loadedList.push(card));
-    this.selectCard(card);
+    // const fullCard = { ...card, units: [] };
+    // this.cardsList.load([ ...this.dataService.cards, fullCard]);
+    // this.selectCard(fullCard);
+    this.cardsList.load(this.dataService.cards);
+    this.selectCard(this.dataService.cards[this.dataService.cards.length - 1]);
   }
 
   numArr(num: number): Array<number> { return Array.from(Array(num).keys()) }

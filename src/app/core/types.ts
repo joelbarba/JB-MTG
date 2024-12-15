@@ -129,11 +129,11 @@ export type TGameCard = TDBGameCard & { // Not in DB (calculated when options)
   onDestroy: (state: TGameState) => void;   // What the card does when it's destroyed
   onDiscard: (state: TGameState) => void;   // What the card does when it's discarded
   onEffect: (state: TGameState, effectId: string) => void;  // What the effect of the card does when it's applied
-  onTargetLookup: (state: TGameState) => { neededTargets: number, possibleTargets: Array<string> }; // Returns the required targets to select when casting
   canAttack: (state: TGameState) => boolean;  // Whether the creature can be selected to attack
   canDefend: (state: TGameState) => boolean;  // Whether the creature can be selected to defend
   targetBlockers: (state: TGameState) => Array<string>; // List of attackers the creature can block
-  getAbilityCost: (state: TGameState) => { mana: TCast, tap: boolean, text: string, targets: boolean } | null; // Cost to trigger the card manual ability
+  getSummonCost:  (state: TGameState) => { mana: TCast, neededTargets?: number, possibleTargets?: string[], customDialog?: string } | null; // Cost to summon the card
+  getAbilityCost: (state: TGameState) => { mana: TCast, neededTargets?: number, possibleTargets?: string[], customDialog?: string, tap: boolean, text: string } | null; // Cost to trigger a card ability
 }
 export type TGameCards = Array<TGameCard>;
 export type TExtGameCard = TGameCard & {
@@ -171,7 +171,7 @@ export type TAction = 'start-game'
 | 'cancel-summon'
 | 'cancel-ability'
 | 'select-card-to-discard' 
-| 'tap-land'
+// | 'tap-land'
 | 'trigger-ability'
 | 'burn-mana'
 | 'select-attacking-creature'
