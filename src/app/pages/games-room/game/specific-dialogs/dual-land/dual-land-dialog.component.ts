@@ -36,7 +36,7 @@ export class DualLandDialogComponent {
   ) {}
 
   ngOnChanges() {
-    switch (this.card.name) {
+    switch (this.card.name.replaceAll(' ', '')) {
       case 'Bayou':           this.mana1 = 3; this.mana2 = 5; break;
       case 'Badlands':        this.mana1 = 3; this.mana2 = 4; break;
       case 'Plateau':         this.mana1 = 2; this.mana2 = 4; break;

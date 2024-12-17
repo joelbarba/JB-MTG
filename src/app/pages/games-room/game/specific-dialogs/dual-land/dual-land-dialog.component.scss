@@ -12,12 +12,15 @@
   @include panel-basics();
   @include fixed-panel(25%, 25%, 15%);
 
-  min-width: 300px;
-  min-height: 375px;
+  min-width: 450px; min-height: 600px;
+  @media screen and (max-height: 1050px) { min-width: 450px; min-height: 500px; }
+  @media screen and (max-height: 900px)  { min-width: 300px; min-height: 450px; }
+
+  .select-box { width: 100%; }
 
   .mana-options {
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     margin: 5px 0 15px;
     mana-icon {
       padding: 8px 15px;

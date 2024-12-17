@@ -46,6 +46,7 @@ export type TCard = {
   price   : number;
   attack  : number;
   defense : number;
+  border? : 'white' | 'black';  // The color of the border (undefined = white)
   isWall        : boolean;  // They cannot attack, only defend
   isFlying      : boolean;  // Cannot be blocked by a non flying creatures
   isTrample     : boolean;  // Deals the excess damage (over defenders toughness) to the player

@@ -8,7 +8,7 @@
 
     <div *ngIf="hoveringCard">
       <div class="full-card">
-        <mtg-card [cardImg]="hoveringCard.image" class="xl"></mtg-card>
+        <mtg-card [cardImg]="hoveringCard.image" class="xl" [border]="hoveringCard.border"></mtg-card>
       </div>
       <h4 class="units-title">
         <span *ngIf="!hoverFromDeck">You own {{ hoveringCard.units.length }} units:</span>
@@ -41,7 +41,7 @@
     </div>
 
     <div class="full-card" *ngIf="hoveringUnit">
-      <mtg-card [cardImg]="hoveringUnit.card.image" class="xl"></mtg-card>
+      <mtg-card [cardImg]="hoveringUnit.card.image" class="xl" [border]="hoveringUnit.card.border"></mtg-card>
       <h4 style="margin-top: 30px;">Ref: {{hoveringUnit.ref}}</h4>
     </div>
 
@@ -95,6 +95,7 @@
            (mouseenter)="hoverUnit(unit)" (mouseleave)="hoverUnit()" (click)="selectUnit(unit)">
         <div class="card-name">{{unit.card.name}}</div>
         <mtg-card [cardImg]="unit.card.image" class="sm"
+                  [border]="unit.card.border"
                   [class.selected]="selUnit?.ref === unit.ref"
                   [class.is-in-deck]="isUnitInDeck(unit)">
         </mtg-card>
@@ -113,6 +114,7 @@
           <span>({{card.units.length - unitsInDeck(card.id)}})</span>
         </div>
         <mtg-card [cardImg]="card.image" class="sm"
+                  [border]="card.border"
                   [class.selected]="selCard?.id === card.id"
                   [class.is-in-deck]="isCardInDeck(card)">
         </mtg-card>
@@ -181,7 +183,7 @@
              [hoverTip]="'Click to remove it'"
              (mouseenter)="hoverUnit(unit, true)" (mouseleave)="hoverUnit()" (click)="removeUnitFromDeck(unit)">
           <div class="card-name">{{unit.card.name}}</div>
-          <mtg-card [cardImg]="unit.card.image" class="sm"></mtg-card>
+          <mtg-card [cardImg]="unit.card.image" class="sm" [border]="unit.card.border"></mtg-card>
         </div>
       </div>
 
@@ -197,7 +199,7 @@
             <span class="count">{{card.units.length}}</span>
             <span class="name-text">x {{card.name}}</span>
           </div>
-          <mtg-card [cardImg]="card.image" class="sm"></mtg-card>
+          <mtg-card [cardImg]="card.image" class="sm" [border]="card.border"></mtg-card>
         </div>        
       </div>
 

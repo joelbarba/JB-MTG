@@ -2,7 +2,7 @@
 
 <div class="page" *ngIf="card">
   <div class="details">    
-    <mtg-card [cardImg]="card.image" class="xl"></mtg-card>
+    <mtg-card [cardImg]="card.image" class="xl" [border]="card.border"></mtg-card>
     <div class="card-details">
       <!-- <div class="name">{{card.name}}</div> -->
       <div class="quantity">There are <b>{{card.units.length}}</b> units of this card</div>
@@ -31,7 +31,7 @@
     <div class="all-units" *ngIf="units">
       <div class="unit-wrapper" *ngFor="let unit of units">
   
-        <mtg-card [cardImg]="card.image" class="xs"></mtg-card>
+        <mtg-card [cardImg]="card.image" class="xs" [border]="card.border"></mtg-card>
         <div class="unit-data">
           <div class="unit-text-data">
             <!-- <div class="ref"><b>Id:</b> {{unit.ref}}</div> -->

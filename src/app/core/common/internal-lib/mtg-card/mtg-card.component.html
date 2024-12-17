@@ -2,7 +2,7 @@
   <img src="/assets/images/cards/card_back.jpg">
 </div>
 
-<div class="mtg-card" *ngIf="cardImg" [class.back-card]="back">
+<div class="mtg-card" *ngIf="cardImg" [class.back-card]="back" [class.black-border]="border === 'black'">
   <img [src]="'/assets/images/cards/' + (back ? 'card_back.jpg' : cardImg)">
 </div>
 

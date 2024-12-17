@@ -34,6 +34,8 @@ export class SettingsComponent {
   colors = colors;
   cardTypes = cardTypes;
 
+  hasBlackBorder = false;
+
   constructor(
     private shell: ShellService,
     private auth: AuthService,
@@ -98,6 +100,7 @@ export class SettingsComponent {
 
   selectCard(card: TFullCard) {
     this.selCard = card;
+    this.hasBlackBorder = card.border === 'black';
     console.log(this.selCard);
   }
 
@@ -138,6 +141,7 @@ export class SettingsComponent {
     card.isFirstStrike = !!card.isFirstStrike;
     card.isHaste       = !!card.isHaste;
     card.isWall        = !!card.isWall;
+    card.border = this.hasBlackBorder ? 'black' : 'white';
 
     const rawCard = card.keyFilter((v,k) => k !== 'id' && k !== 'units') as Omit<TCard, 'id'>; // Remove the fields .id and .units
     console.log('Saving Card', rawCard);
@@ -165,6 +169,7 @@ export class SettingsComponent {
       price           : 0,
       attack          : 0,
       defense         : 0,
+      border          : 'white',
       isWall          : false,
       isFlying        : false,
       isTrample       : false,

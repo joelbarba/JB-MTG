@@ -21,6 +21,7 @@
   background: white;
   border-radius: 5px;
   transition-duration: 150ms;
+  &.black-border { background: black; }
   
   // Default size (md)
   width : 150px; height: 210px;

@@ -3,7 +3,7 @@
 <div class="page">
   <div class="details">
     <!-- <mtg-card [cardImg]="hoveringCard?.image" class="xxl"></mtg-card> -->
-    <mtg-card [cardImg]="hoveringCard?.image" class="xl"></mtg-card>
+    <mtg-card [cardImg]="hoveringCard?.image" class="xl" [border]="hoveringCard?.border"></mtg-card>
     <!-- <mtg-card [cardImg]="hoveringCard?.image" class="lg"></mtg-card> -->
     <!-- <mtg-card [cardImg]="hoveringCard?.image" class="md"></mtg-card> -->
     <!-- <mtg-card [cardImg]="hoveringCard?.image" class="sm"></mtg-card> -->
@@ -57,7 +57,7 @@
            <!-- (mouseleave)="hoverCard()" -->
            <!-- (click)="selectCard(card)" (dblclick)="goToCard(card)" -->
   
-        <mtg-card [cardImg]="card.image" class="sm" [class.selected]="selectedCard?.id === card.id"></mtg-card>
+        <mtg-card [cardImg]="card.image" class="sm" [border]="card.border" [class.selected]="selectedCard?.id === card.id"></mtg-card>
         <span class="card-name">{{card.name}}</span>
         <!-- <br><span>6000 sats</span> -->
   

@@ -7,7 +7,7 @@
   padding: calc(var(--card-border) - 1px);
   border: 1px solid black;
   background: white;
-  border-radius: 5px;
+  border-radius: calc(var(--card-border) + 2px); // 5px;
   transition-duration: 150ms;
   img {
     position: absolute;
@@ -188,6 +188,21 @@
           100%  { opacity: 1; }
         }
       }
+    }
+  }
+
+  
+  &.customDialog {  // Larger size for the modal
+    width: calc(var(--card-width) * 1.5);    // 
+    height: calc(var(--card-height) * 1.5);  // 
+    border-radius: calc((var(--card-border) + 2px) * 1.5);
+    img {
+      top    : calc(var(--card-border) * 1.5);
+      left   : calc(var(--card-border) * 1.5);
+      right  : calc(var(--card-border) * 1.5);
+      bottom : calc(var(--card-border) * 1.5);
+      height : calc(100% - calc(var(--card-border) * 1.5 * 2));
+      width  : calc(100% - calc(var(--card-border) * 1.5 * 2));
     }
   }
 

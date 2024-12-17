@@ -431,7 +431,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
       const possibleTargets = ['custom-color-' + color1, 'custom-color-' + color2];
       return {
         mana: [0,0,0,0,0,0], tap: true,
-        neededTargets: 1, possibleTargets, customDialog: card.name, // Target will be the color
+        neededTargets: 1, possibleTargets, customDialog: card.name.replaceAll(' ', ''), // Target will be the color
         text: `Tap ${card.name} to get 1 mana`
       }
     };

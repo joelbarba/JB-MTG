@@ -60,6 +60,7 @@
 
           <bf-input class="col-3" bfLabel="Max In Deck" [(ngModel)]="selCard.maxInDeck" (bfOnEnter)="saveCard(selCard)"></bf-input>
 
+          <bf-checkbox class="col-4" bfLabel="Black Border" [(ngModel)]="hasBlackBorder" style="margin-top: 30px;"></bf-checkbox>
           <bf-checkbox class="col-4" bfLabel="Ready to play" [(ngModel)]="selCard.readyToPlay" style="margin-top: 30px;"></bf-checkbox>
 
           <div class="col-12" style="margin-top: 50px;">
@@ -70,7 +71,7 @@
         </div>
 
         <div class="full-card">          
-          <mtg-card [cardImg]="selCard.image" class="xl"></mtg-card>        
+          <mtg-card [cardImg]="selCard.image" class="xl" [border]="selCard.border"></mtg-card>
         </div>
 
       </div>
@@ -128,7 +129,7 @@
       <div *ngFor="let card of cardsList.renderList$ | async" 
            class="card-wrapper" (click)="selectCard(card)">
         {{card.id}}
-        <mtg-card [cardImg]="card.image" class="sm" [class.selected]="selCard?.id === card.id"></mtg-card>
+        <mtg-card [cardImg]="card.image" class="sm" [border]="card.border" [class.selected]="selCard?.id === card.id"></mtg-card>
       </div>
     </div>
   </div>

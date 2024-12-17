@@ -286,6 +286,11 @@ export class DataService {
     const cardsDeck1 = [
       'c000001',  // Island
       'c000003',  // Swamp
+      'c000013',  // Bayou
+      'c000014',  // Badlands
+      'c000015',  // Plateau
+      'c000016',  // Savannah
+      'c000017',  // Scrubland
       'c000038',  // Counterspell
       'c000023',  // Ancestral Recall
       'c000010',  // Mox Sapphire
@@ -319,11 +324,7 @@ export class DataService {
       'c000004',  // Mountain
       'c000006',  // Mox Emerald
       'c000009',  // Mox Ruby
-      'c000013',  // Bayou
-      'c000014',  // Badlands
-      'c000015',  // Plateau
-      'c000016',  // Savannah
-      'c000017',  // Scrubland
+      'c000028',  // Drudge Skeletons
       'c000018',  // Taiga
       'c000019',  // Tropical Island
       'c000020',  // Tundra

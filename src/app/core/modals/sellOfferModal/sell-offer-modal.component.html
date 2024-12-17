@@ -3,7 +3,7 @@
 
 <!-- <h3>{{unit.ref}}</h3> -->
 
-<mtg-card [cardImg]="unit.card.image" class="lg"></mtg-card>
+<mtg-card [cardImg]="unit.card.image" class="lg" [border]="unit.card.border"></mtg-card>
 
 <p><b>Ref:</b> {{unit.ref}}</p>
 <p>Average price: <b>{{unit.card.price | number: '1.0-0' }}</b> sats</p>
