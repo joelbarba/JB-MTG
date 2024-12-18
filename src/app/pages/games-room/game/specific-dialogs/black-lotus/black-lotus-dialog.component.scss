@@ -12,6 +12,9 @@
   @include panel-basics();
   @include fixed-panel(17%, 25%, 15%);
 
+  min-width: 650px; min-height: 700px;
+  @media screen and (max-height: 1050px) { min-width: 600px; min-height: 600px; }
+  @media screen and (max-height: 900px)  { min-width: 560px; min-height: 540px; }
 
 
   .mana-options {

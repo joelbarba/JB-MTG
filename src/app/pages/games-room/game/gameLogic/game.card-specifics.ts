@@ -14,7 +14,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
 
   // Functions to exted: common values
   card.onSummon       = (nextState: TGameState) => { moveCard(nextState, gId, 'tble'); getCard(nextState).status = null; }
-  card.onTap          = (nextState: TGameState) => { getCard(nextState).isTapped = true; }
+  card.onAbility      = (nextState: TGameState) => { getCard(nextState).isTapped = true; }
   card.onDestroy      = (nextState: TGameState) => {};
   card.onDiscard      = (nextState: TGameState) => moveCard(nextState, gId, 'grav');
   card.onEffect       = (nextState: TGameState, effectId: string) => {};
@@ -50,7 +50,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
         cardPlayer.summonedLands += 1;
       }
     };
-    card.onTap = (nextState: TGameState) => {
+    card.onAbility = (nextState: TGameState) => {
       const { card, cardPlayer } = getShorts(nextState);
       if (!card.isTapped && card.location.slice(0,4) === 'tble') {
         cardPlayer.manaPool[manaNum] += 1;
@@ -301,7 +301,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
       neededTargets: 0, possibleTargets: [], 
       text: `Tap ${card.name} to add 2 colorless mana`,
     });
-    card.onTap = (nextState: TGameState) => {
+    card.onAbility = (nextState: TGameState) => {
       const { card, cardPlayer } = getShorts(nextState);
       cardPlayer.manaPool[0] += 2;
       card.isTapped = true;
@@ -316,7 +316,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
       neededTargets: 0, possibleTargets: [], 
       text: `Tap ${card.name}`, // to add 1 ${color} mana 
     });
-    card.onTap = (nextState: TGameState) => {
+    card.onAbility = (nextState: TGameState) => {
       const { card, cardPlayer } = getShorts(nextState);
       cardPlayer.manaPool[colorNum] += 1;
       card.isTapped = true;
@@ -335,7 +335,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
       neededTargets: 0, possibleTargets: [], 
       text: `Pay 1 red mana to add +0/+1`,
     });
-    card.onTap = (nextState: TGameState) => {
+    card.onAbility = (nextState: TGameState) => {
       nextState.effects.push({ scope: 'turn', gId, targets: [], id: randomId('e') });
     };
     card.onEffect = (nextState: TGameState, effectId: string) => { // Add +0/+1 to target creature
@@ -351,7 +351,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
       neededTargets: 0, possibleTargets: [], 
       text: `Pay 1 red mana to add +1/+0`,
     });
-    card.onTap = (nextState: TGameState) => {
+    card.onAbility = (nextState: TGameState) => {
       nextState.effects.push({ scope: 'turn', gId, targets: [], id: randomId('e') });
     };
     card.onEffect = (nextState: TGameState, effectId: string) => { // Add +1/+0 to target creature
@@ -414,7 +414,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
         text: `Tap to add 3 mana of any single color`
       }
     };
-    card.onTap = (nextState: TGameState) => { // Adds 3 color mana (targets = selected colors)
+    card.onAbility = (nextState: TGameState) => { // Adds 3 color mana (targets = selected colors)
       const { cardPlayer } = getShorts(nextState);
       card.targets.forEach(target => {
         const mana = Number.parseInt(target.split('custom-color-')[1]);
@@ -442,7 +442,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
         cardPlayer.summonedLands += 1;
       }
     };
-    card.onTap = (nextState: TGameState) => {
+    card.onAbility = (nextState: TGameState) => {
       const { card, cardPlayer } = getShorts(nextState);
       if (!card.isTapped && card.location.slice(0,4) === 'tble') {
         const mana = Number.parseInt(card.targets[0].split('custom-color-')[1]);
@@ -452,7 +452,6 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
       } 
     };
   }
-
   // 0=uncolored, 1=blue, 2=white, 3=black, 4=red, 5=green
   function c000013_Bayou()          { dualLand(3, 5); }
   function c000014_Badlands()       { dualLand(3, 4); }
@@ -465,6 +464,30 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   function c000021_UndergroundSea() { dualLand(1, 3); }
   function c000022_VolcanicIsland() { dualLand(1, 4); }
 
+
+  function c000028_DrudgeSkeletons() {
+    commonCreature();
+    card.getAbilityCost = () => { // Regenerates
+      return {
+        mana: [0,0,0,1,0,0], tap: false, text: `Pay 1 black mana to regenerate ${card.name}`
+      }
+    };
+    card.onAbility = (nextState: TGameState) => {
+      if (card.isDying) {
+        card.turnDamage = 0;
+        card.isDying = false;
+        nextState.control = nextState.turn; // Return control to the turn player
+      }
+    };
+  }
+
+
+
+
+
+
+
+
   // Common Creatures
   function c000052_MonssGoblinRaiders()    { commonCreature(); }
   function c000053_Ornithopter()           { commonCreature(); }
@@ -474,7 +497,6 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   function c000041_ElvishArchers()         { commonCreature(); }
   function c000042_FireElemental()         { commonCreature(); }
   function c000026_BlackKnight()           { commonCreature(); }
-  function c000028_DrudgeSkeletons()       { commonCreature(); }
   function c000036_GrayOrge()              { commonCreature(); }
   function c000037_BrassMan()              { commonCreature(); }
   function c000045_GoblinBalloonBrigade()  { commonCreature(); }

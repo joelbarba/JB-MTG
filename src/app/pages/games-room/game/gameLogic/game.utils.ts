@@ -92,7 +92,6 @@ export const moveCardToGraveyard = (nextState: TGameState, gId: string, discard 
   const card = nextState.cards.find(c => c.gId === gId);
   if (!card) { return; }
   moveCard(nextState, gId, discard ? 'discarded' : 'grav');
-  // runEvent(nextState, gId, 'onDestroy');
   if (card.onDestroy) { card.onDestroy(nextState); }
   else { extendCardLogic(card).onDestroy(nextState); }
   card.status = null;
@@ -111,8 +110,13 @@ export const moveCardToGraveyard = (nextState: TGameState, gId: string, discard 
 export const killDamagedCreatures = (nextState: TGameState, gId?: string) => {
   const killDamagedCreture = (card: TGameCard) => {
     if ((card.turnDefense || 0) <= (card.turnDamage || 0)) {
-      console.log(`Creature ${card.gId} ${card.name} (${card.turnAttack}/${card.turnDefense}) has received "${card.turnDamage}" points of damage ---> IT DIES (go to graveyard)`);
-      moveCardToGraveyard(nextState, card.gId);
+      if (card.canRegenerate) {
+        console.log(`Creature ${card.gId} ${card.name} (${card.turnAttack}/${card.turnDefense}) has received "${card.turnDamage}" points of damage ---> But it can be regenerated`);
+        card.isDying = true;
+      } else {
+        console.log(`Creature ${card.gId} ${card.name} (${card.turnAttack}/${card.turnDefense}) has received "${card.turnDamage}" points of damage ---> IT DIES (go to graveyard)`);
+        moveCardToGraveyard(nextState, card.gId);
+      }
     }
   }
   if (gId) { // Check the given creature

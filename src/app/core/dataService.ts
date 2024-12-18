@@ -253,6 +253,8 @@ export class DataService {
         status: null,
         customDialog: null,
         combatStatus: null,
+        isDying: false,
+        // regenerate: false,
         targets: [],
         blockingTarget: null,
         turnDamage: 0,
@@ -286,20 +288,21 @@ export class DataService {
     const cardsDeck1 = [
       'c000001',  // Island
       'c000003',  // Swamp
-      'c000013',  // Bayou
-      'c000014',  // Badlands
-      'c000015',  // Plateau
-      'c000016',  // Savannah
-      'c000017',  // Scrubland
-      'c000038',  // Counterspell
-      'c000023',  // Ancestral Recall
-      'c000010',  // Mox Sapphire
-      'c000055',  // Unholy Strength
-      'c000008',  // Mox Pearl
       'c000009',  // Mox Ruby
-      'c000032',  // Lighting Bolt
+      'c000008',  // Mox Pearl
+      'c000023',  // Ancestral Recall
       'c000012',  // Black Lotus
+      'c000028',  // Drudge Skeletons
+      'c000053',  // Ornithopter
+      'c000026',  // Black Knight
+      'c000055',  // Unholy Strength
+      'c000028',  // Drudge Skeletons
+      'c000028',  // Drudge Skeletons
+      'c000017',  // Scrubland
+      'c000010',  // Mox Sapphire
+      'c000038',  // Counterspell
       'c000057',  // Disenchantment
+      'c000021',  // Underground Sea
       'c000010',  // Mox Sapphire
       'c000018',  // Taiga
       'c000015',  // Plateau
@@ -310,8 +313,11 @@ export class DataService {
       'c000025',  // Bad Moon
       'c000026',  // Black Knight
       'c000026',  // Black Knight
-      'c000053',  // Ornithopter
       'c000055',  // Unholy Strength
+      'c000013',  // Bayou
+      'c000014',  // Badlands
+      'c000015',  // Plateau
+      'c000016',  // Savannah
       'c000026',  // Black Knight
       'c000055',  // Unholy Strength
       'c000055',  // Unholy Strength
@@ -322,15 +328,17 @@ export class DataService {
     const cardsDeck2 = [
       'c000005',  // Forest
       'c000004',  // Mountain
+      'c000022',  // Volcanic Island
       'c000006',  // Mox Emerald
       'c000009',  // Mox Ruby
-      'c000028',  // Drudge Skeletons
+      'c000032',  // Lighting Bolt
+      'c000032',  // Lighting Bolt      
+      'c000032',  // Lighting Bolt
+      'c000032',  // Lighting Bolt
+      'c000052',  // Mons's Goblin Raiders
       'c000018',  // Taiga
       'c000019',  // Tropical Island
       'c000020',  // Tundra
-      'c000021',  // Underground Sea
-      'c000022',  // Volcanic Island
-      'c000052',  // Mons's Goblin Raiders
       'c000043',  // Giant Growth
       'c000006',  // Mox Emerald
       'c000009',  // Mox Ruby

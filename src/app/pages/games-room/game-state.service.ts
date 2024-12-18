@@ -171,7 +171,7 @@ export class GameStateService {
       'targetOf',
       'uniqueTargetOf',
       'onSummon',
-      'onTap',
+      'onAbility',
       'onDestroy',
       'onDiscard',
       'onEffect',
@@ -260,9 +260,16 @@ export class GameStateService {
       case 'cancel-summon':             this.cancelSummonOperations(nextState); break;
       case 'cancel-ability':            this.cancelAbilityOperations(nextState); break;
       case 'release-stack':             this.releaseStack(nextState); break;
+      case 'regenerate-creature':       this.triggerAbility(nextState, params); break;
+      case 'cancel-regenerate':         this.cancelRegenerate(nextState, gId); break;
     }
 
     this.applyEffects(nextState); // Recalculate state based on current effects
+
+    // In case a creature is killed and can be regenerate, give control to the creature's player
+    const regenerateCreature = nextState.cards.find(c => c.canRegenerate && c.isDying);
+    if (regenerateCreature) { nextState.control = regenerateCreature.owner; }
+
 
     nextState.id += 1;
     nextState.lastAction = { action, params, player: this.playerANum, time: getTime() };
@@ -311,15 +318,6 @@ export class GameStateService {
     } 
   }
 
-  // private summonLand(nextState: TGameState, gId: string) {
-  //   const card = nextState.cards.find(c => c.gId === gId);
-  //   if (card) { extendCardLogic(card).onSummon(nextState); }
-  // }
-
-  // private tapLand(nextState: TGameState, gId: string) {
-  //   const card = nextState.cards.find(c => c.gId === gId);
-  //   if (card) { extendCardLogic(card).onTap(nextState); }
-  // }
 
   private discardCard(nextState: TGameState, gId: string) {
     const card = nextState.cards.find(c => c.gId === gId);
@@ -336,44 +334,6 @@ export class GameStateService {
 
 
 
-
-
-  // private summonCreature(nextState: TGameState, params: TActionParams) {
-  //   const { playerA, playerB } = this.getPlayers(nextState);
-
-  //   const gId = params?.gId || '';
-  //   let manaForUncolor = params.manaForUncolor || [0,0,0,0,0,0];
-
-
-  //   const card = this.checkCard(nextState, gId, { location: 'hand', type: 'creature' });
-  //   if (card) {
-  //     const summonCost = extendCardLogic(card).getSummonCost(nextState);
-  //     if (summonCost && (!card.status || card.status?.slice(0, 7) === 'summon:')) { // summon:waitingMana, summon:selectingMana, summon:selectingTargets
-
-  //       this.cancelSummonOperations(nextState, card.gId); // Cancel other possible castings operations
-
-  //       let rightMana = false; // Whether you have the right mana in your mana pool
-  //       const manaStatus = checkMana(card.cast, playerA.manaPool);
-  //       if (manaStatus === 'not enough') {
-  //         card.status = 'summon:waitingMana';
-          
-  //       } else if (manaStatus === 'exact' || manaStatus === 'auto') {
-  //         manaForUncolor = calcManaForUncolored(card.cast, playerA.manaPool);
-  //         rightMana = true;
-          
-  //       } else if (manaStatus === 'manual') {
-  //         rightMana = card.cast[0] <= manaForUncolor.reduce((v,a) => v + a, 0);
-  //         if (!rightMana) { card.status = 'summon:selectingMana'; } // If there is not enough uncolor selected
-  //       }
-
-  //       if (rightMana) {
-  //         spendMana(card.cast, playerA.manaPool, manaForUncolor);          
-  //         card.status = 'summoning';
-  //         this.addToSpellStack(nextState, card);
-  //       }
-  //     }
-  //   }
-  // }
 
   private summonSpell(nextState: TGameState, params: TActionParams, tableDirectly = false) {
     const { playerA, playerB } = this.getPlayers(nextState);
@@ -445,7 +405,7 @@ export class GameStateService {
 
     const card = nextState.cards.find(c => c.gId === gId);
     if (card) {
-      const { getAbilityCost, onTap } = extendCardLogic(card);
+      const { getAbilityCost, onAbility } = extendCardLogic(card);
       const abilityCost = getAbilityCost(nextState);
       if (abilityCost) {
 
@@ -481,7 +441,7 @@ export class GameStateService {
           else {
             card.targets = params.targets || [];
             if (totalManaCost > 0) { spendMana(abilityCost.mana, playerA.manaPool, manaForUncolor); }
-            onTap(nextState); // It may not always tap the card, but trigger the ability
+            onAbility(nextState); // It may not always tap the card, but trigger the ability
             card.status = null;
           }
         }
@@ -508,6 +468,16 @@ export class GameStateService {
     });
   }
 
+  // Cancel the regeneration of a creature and let it die
+  private cancelRegenerate(nextState: TGameState, gId: string) {
+    const creature = nextState.cards.find(c => c.gId === gId);
+    if (creature) {
+      creature.isDying = false;
+      moveCardToGraveyard(nextState, gId);
+    }
+    nextState.control = nextState.turn; // Return control to the turn player
+  }
+
 
   // ---------------------------------------------------- SPELL STACK ----------------------------------------------------
 
@@ -523,10 +493,6 @@ export class GameStateService {
       console.log('You are both done, RUN THE STACK of SPELLS');
       this.runSpellStack(nextState);
       if (nextState.phase === 'combat') { this.continueCombat(nextState); }
-      // else {
-      //   this.applyEffects(nextState);
-      //   killDamagedCreatures(nextState);
-      // }
     }
   }
 
@@ -541,12 +507,11 @@ export class GameStateService {
     const stack = nextState.cards.filter(c => c.location === 'stack').sort((a,b) => a.order > b.order ? -1 : 1); // inverse order ([max,...,min])
     stack.forEach(card => {
       if (card.location === 'stack') { 
-        // runEvent(nextState, card.gId, 'onSummon');
         extendCardLogic(card).onSummon(nextState);
       }
     });
-    this.applyEffects(nextState); // Recalculate the effects
-    killDamagedCreatures(nextState); // Kill creatures if needed
+    this.applyEffects(nextState);       // Recalculate the effects
+    killDamagedCreatures(nextState);    // Kill creatures if needed
     nextState.control = nextState.turn; // Return control to the turn player
   }
 

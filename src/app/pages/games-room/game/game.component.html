@@ -256,6 +256,14 @@
   <!-- spellStackPanelSize={{spellStackPanelSize}} -->
   <!-- panel={{panel}} -->
 
+  <dialog-regenerate 
+    *ngIf="regenerateCreature"
+    [card]="regenerateCreature"
+    [mainInfo]="mainInfo"
+    [summonOp]="summonOp"
+    >
+  </dialog-regenerate>
+
   <!-- Effects Floating Panel -->
   <panel-effects *ngIf="effectsPanelCard"
     [card]="effectsPanelCard"

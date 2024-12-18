@@ -175,6 +175,7 @@ export class SettingsComponent {
       isTrample       : false,
       isFirstStrike   : false,
       isHaste         : false,
+      canRegenerate   : false,
       colorProtection : null,
       maxInDeck       : 4,
       readyToPlay     : false,

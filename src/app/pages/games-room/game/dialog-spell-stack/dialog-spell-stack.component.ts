@@ -176,6 +176,11 @@ export class DialogSpellStackComponent {
           }
         }
 
+        // If the creature is going to die, but it can be regenerated, add a fake action on the card
+        // Clicking won't regenerate it automatically, but it will release the stack so the regeneration will start next
+        if (item.card.type === 'creature' && item.card.canRegenerate && item.shadow.defense <= item.shadow.damage) {
+          item.card.selectableAction = { action: 'release-stack', params: {}, text: `Regenerate ${item.card.name}` };
+        }
       }
     });
     this.rootTargets.filter(i => !!i.player).forEach(item => {

@@ -52,6 +52,7 @@ export type TCard = {
   isTrample     : boolean;  // Deals the excess damage (over defenders toughness) to the player
   isFirstStrike : boolean;  // When dealing combat damage, if that kills the other attacking/defender, they don't receive any damage
   isHaste       : boolean;  // No summoning sickness
+  canRegenerate : boolean;  // Whether it has the regenerate ability
   colorProtection: TColor | null; // Cannot be blocked, targeted, enchanted or damage by sources of this color
   maxInDeck?: number;    // Max number of the same card you can have in a deck (1, 4, undefined=as many as you want)
   readyToPlay: boolean;
@@ -107,6 +108,8 @@ export type TDBGameCard = TCard & {
                | 'summon:waitingMana'  | 'summon:selectingMana'  | 'summon:selectingTargets' 
                | 'ability:waitingMana' | 'ability:selectingMana' | 'ability:selectingTargets';
   combatStatus: null | 'combat:attacking' | 'combat:defending' | 'combat:selectingTarget';
+  isDying: boolean,     // If card.canRegenerate, you get a special step to trigger the regeneration ability
+  // regenerate: boolean,  // If true, next time the creature dies it will regenerate
 
   customDialog: null | string;  // If the card requires a custom dialog to open when it's :selectingTargets
 
@@ -125,11 +128,11 @@ export type TGameCard = TDBGameCard & { // Not in DB (calculated when options)
   targetOf?: Array<TGameCard>;
   uniqueTargetOf?: Array<TGameCard>;
 
-  onSummon: (state: TGameState) => void;    // What the card does when it's summoned
-  onTap: (state: TGameState) => void;       // What the card does when it's tapped
+  onSummon:  (state: TGameState) => void;   // What the card does when it's summoned
+  onAbility: (state: TGameState) => void;   // What the card does when it's used for its ability (tap...)
   onDestroy: (state: TGameState) => void;   // What the card does when it's destroyed
   onDiscard: (state: TGameState) => void;   // What the card does when it's discarded
-  onEffect: (state: TGameState, effectId: string) => void;  // What the effect of the card does when it's applied
+  onEffect:  (state: TGameState, effectId: string) => void;  // What the effect of the card does when it's applied
   canAttack: (state: TGameState) => boolean;  // Whether the creature can be selected to attack
   canDefend: (state: TGameState) => boolean;  // Whether the creature can be selected to defend
   targetBlockers: (state: TGameState) => Array<string>; // List of attackers the creature can block
@@ -171,8 +174,7 @@ export type TAction = 'start-game'
 | 'summon-spell'
 | 'cancel-summon'
 | 'cancel-ability'
-| 'select-card-to-discard' 
-// | 'tap-land'
+| 'select-card-to-discard'
 | 'trigger-ability'
 | 'burn-mana'
 | 'select-attacking-creature'
@@ -182,6 +184,8 @@ export type TAction = 'start-game'
 | 'cancel-defense'
 | 'submit-defense'
 | 'release-stack'
+| 'regenerate-creature'
+| 'cancel-regenerate'
 ;
 
 export type TActionParams = { 

@@ -23,6 +23,7 @@ import { GameCardComponent } from "./game-card/game-card.component";
 import { BfTooltipService } from '../../../core/common/internal-lib/bf-tooltip/bf-tooltip.service';
 import { BlackLotusDialogComponent } from "./specific-dialogs/black-lotus/black-lotus-dialog.component";
 import { DualLandDialogComponent } from "./specific-dialogs/dual-land/dual-land-dialog.component";
+import { DialogRegenerateComponent } from './dialog-regenerate/dialog-regenerate.component';
 
 export interface ICard {
   img: string;
@@ -68,6 +69,7 @@ export interface ISummonOp {
     GameCardComponent,
     BlackLotusDialogComponent,
     DualLandDialogComponent,
+    DialogRegenerateComponent,
 ],
   templateUrl: './game.component.html',
   styleUrls: ['./game.component.scss'],
@@ -610,7 +612,12 @@ export class GameComponent {
     this.updateCombatOperation();
     this.updateSpellStack();
     this.updateCustomDialogs();
+
+    // If a creature that can be regenerated is dying, open the regenerate dialog
+    this.regenerateCreature = this.state.cards.find(c => c.canRegenerate && c.isDying);
   }
+
+  regenerateCreature?:TGameCard;
 
   
 

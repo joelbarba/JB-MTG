@@ -43,9 +43,35 @@ export class GameOptionsService {
     if (state.status !== 'playing') { return state; } // in case someone's won
 
 
+    const youMayTriggerAbilities = () => { // This also includes tapping lands for mana
+      tableA.filter(c => c.controller === playerANum).forEach(card => {        
+        const abilityCost = extendCardLogic(card).getAbilityCost(state);
+        if (abilityCost && (!abilityCost.tap || !card.isTapped) && !card.canRegenerate) {
+          const option: TGameOption = { action: 'trigger-ability', params: { gId: card.gId }, text: abilityCost.text };
+          if (card.status?.split(':')[0] !== 'ability') { card.selectableAction = option; }
+          state.options.push(option);
+        }
+      });
+    };
+
+    const youMayRegenerateCreatures = () => { // Regenerate a dying creature
+      const creature = state.cards.find(c => c.owner === playerANum && c.canRegenerate && c.isDying);
+      if (creature) {
+        const params = { gId: creature.gId };
+        const option: TGameOption = { action: 'regenerate-creature', params, text: `Regenerate ${creature.name}` };
+        if (creature.status?.split(':')[0] !== 'ability') { creature.selectableAction = option; }
+        state.options.push(option);
+        state.options.push({ action: 'cancel-regenerate', params: {}, text: `Cancel Regenerate and let ${creature.name} die` });
+      }
+    }
+
+
 
 
     // Actions that you can do during both your turn or opponents turn
+
+    youMayRegenerateCreatures(); // Regenerate a dying creature
+
     
     // If you have a summoning operation, let it cancel
     const summonCard = handA.find(c => c.status?.split(':')[0] === 'summon');
@@ -53,8 +79,10 @@ export class GameOptionsService {
 
     // If you have an ability operation, let it cancel
     const abilityCard = tableStack.find(c => c.status?.split(':')[0] === 'ability');
-    if (abilityCard) { state.options.push({ action: 'cancel-ability', params: {}, text: 'Cancel Using ' + abilityCard.name }); }
-    
+    if (abilityCard) { state.options.push({ action: 'cancel-ability', params: {}, text: 'Cancel ' + abilityCard.name }); }
+    if (abilityCard) { youMayTriggerAbilities(); } // If you are using an ability, you may also use others (like tap mana)
+
+
     // TARGET SELECTION: If you have a card that is selecting targets:
     const playingCard = state.cards.find(c => c.status?.split(':')[1] === 'selectingTargets');
     if (playingCard) {  // Selecting target
@@ -100,13 +128,6 @@ export class GameOptionsService {
       // You may finish the spell stack
       state.options.push({ action: 'release-stack', params: {}, text: `Continue` }); 
 
-      // // You may tap lands to produce mana
-      // tableA.filter(c => c.type === 'land' && !c.isTapped).forEach(card => {
-      //   const option: TGameOption = { action: 'tap-land', params: { gId: card.gId }, text: `Tap ${card.name}` };
-      //   state.options.push(option);
-      //   card.selectableAction = option;
-      // });
-
       // You may summon instant spells (add them to the stack)
       handA.filter(c => c.type === 'instant').forEach(card => {
         const option: TGameOption = { action: 'summon-spell', params: { gId: card.gId }, text: `Cast ${card.name}` };
@@ -123,15 +144,7 @@ export class GameOptionsService {
         });
       }
 
-      // You may trigger manual abilities on cards (this includes tapping lands for mana)
-      tableStack.filter(c => c.controller === playerANum).forEach(card => {
-        const abilityCost = extendCardLogic(card).getAbilityCost(state);
-        if (abilityCost && (!abilityCost.tap || !card.isTapped)) {
-          const option: TGameOption = { action: 'trigger-ability', params: { gId: card.gId }, text: abilityCost.text };
-          state.options.push(option);
-          card.selectableAction = option;
-        }
-      });
+      youMayTriggerAbilities();
 
       return state; // <---- Skip generic options (it's not your turn)
     }
@@ -168,11 +181,8 @@ export class GameOptionsService {
           });
         }
       }
-
       return state; // <---- Skip generic options (it's not your turn)
     }
-
-
 
 
 
@@ -241,28 +251,11 @@ export class GameOptionsService {
     // Tapping habilities:
 
     // You may tap lands to produce mana
-    const spellsAvailable = handA.filter(c => c.type === 'instant').length > 0;
-    // if (isPhase('pre', 'post') || spellsAvailable) {
-    //   tableA.filter(c => c.type === 'land' && !c.isTapped).forEach(card => {
-    //     const option: TGameOption = { action: 'tap-land', params: { gId: card.gId }, text: `Tap ${card.name}` };
-    //     state.options.push(option);
-    //     card.selectableAction = option;
-    //   });
-    // }
-
     // You may trigger abilities on cards (tap to do something, or pay mana to do something)
-    // This includes tapping lands to generate mana
-    if (state.subPhase !== 'selectAttack' && state.subPhase !== 'selectDefense'
-        && (isPhase('pre', 'post', 'combat') || spellsAvailable)) {
+    const spellsAvailable = handA.filter(c => c.type === 'instant').length > 0;
 
-      tableA.forEach(card => {
-        const abilityCost = extendCardLogic(card).getAbilityCost(state);
-        if (abilityCost && (!abilityCost.tap || !card.isTapped)) {
-          const option: TGameOption = { action: 'trigger-ability', params: { gId: card.gId }, text: abilityCost.text };
-          state.options.push(option);
-          card.selectableAction = option;
-        }
-      });
+    if (state.subPhase !== 'selectAttack' && state.subPhase !== 'selectDefense' && (isPhase('pre', 'post', 'combat') || spellsAvailable)) {
+      youMayTriggerAbilities();
     }
 
 
