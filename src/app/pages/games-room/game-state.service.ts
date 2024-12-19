@@ -265,7 +265,7 @@ export class GameStateService {
     }
 
     this.applyEffects(nextState); // Recalculate state based on current effects
-    this.checkCreaturesThatRegenerate(nextState);
+    // this.checkCreaturesThatRegenerate(nextState);
 
 
 
@@ -678,10 +678,10 @@ export class GameStateService {
       card.blockingTarget = null;
     });
     const regenerateStep = killDamagedCreatures(nextState);  // Check those creatures that received more damage than defense, and kill them    
-    if (!regenerateStep) {
+    // if (!regenerateStep) {
       this.switchPlayerControl(nextState, attackingPlayer);
       this.endPhase(nextState);
-    }
+    // }
   }
 
   // In case a creature is killed and can be regenerate, give control to the creature's player
