@@ -261,14 +261,17 @@ export class GameStateService {
       case 'cancel-ability':            this.cancelAbilityOperations(nextState); break;
       case 'release-stack':             this.releaseStack(nextState); break;
       case 'regenerate-creature':       this.triggerAbility(nextState, params); break;
-      case 'cancel-regenerate':         this.cancelRegenerate(nextState, gId); break;
+      case 'cancel-regenerate':         this.cancelRegenerate(nextState); break;
     }
 
     this.applyEffects(nextState); // Recalculate state based on current effects
 
     // In case a creature is killed and can be regenerate, give control to the creature's player
-    const regenerateCreature = nextState.cards.find(c => c.canRegenerate && c.isDying);
-    if (regenerateCreature) { nextState.control = regenerateCreature.owner; }
+    // In case there are creatures to regenerate from both players, start with those of player1
+    const regenerateCreature2 = nextState.cards.filter(c => c.controller === '2').find(c => c.canRegenerate && c.isDying);
+    const regenerateCreature1 = nextState.cards.filter(c => c.controller === '1').find(c => c.canRegenerate && c.isDying);
+    if (regenerateCreature2) { nextState.control = regenerateCreature2.controller; }
+    if (regenerateCreature1) { nextState.control = regenerateCreature1.controller; }
 
 
     nextState.id += 1;
@@ -469,12 +472,12 @@ export class GameStateService {
   }
 
   // Cancel the regeneration of a creature and let it die
-  private cancelRegenerate(nextState: TGameState, gId: string) {
-    const creature = nextState.cards.find(c => c.gId === gId);
-    if (creature) {
+  private cancelRegenerate(nextState: TGameState) {
+    const creatures = nextState.cards.filter(c => c.controller === this.playerANum && c.isDying);
+    creatures.forEach(creature => {
       creature.isDying = false;
-      moveCardToGraveyard(nextState, gId);
-    }
+      moveCardToGraveyard(nextState, creature.gId);
+    });
     nextState.control = nextState.turn; // Return control to the turn player
   }
 
@@ -703,6 +706,12 @@ export class GameStateService {
       case EPhase.discard:      nextState.phase = EPhase.end; break;
       case EPhase.end:          this.endTurn(nextState); break;
     }
+
+    // That shouldn't happen, but in case there are creatures not regenerater or dead, destroy them
+    nextState.cards.filter(c => c.canRegenerate && c.isDying).forEach(creature => {
+      creature.isDying = false;
+      moveCardToGraveyard(nextState, creature.gId);
+    });
 
     // If starting combat phase, init sub-phase
     nextState.subPhase = null;

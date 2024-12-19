@@ -3,19 +3,30 @@
   <h2>Regenerate</h2>
 
   <div class="center">
-    <game-card [card]="card" from="customDialog" (click)="selectCard()"></game-card>
+    <!-- <game-card *ngIf="card" [card]="card" from="customDialog" (click)="selectCard(card)"></game-card>
+    <div *ngIf="!card"> -->
+      <game-card *ngFor="let card of creatures" 
+        [card]="card"
+        from="regenerateDialog"
+        (click)="selectCard(card)">
+      </game-card>
+    <!-- </div> -->
   </div>
 
-  <p *ngIf="!youControl">{{opponentName}} is about to regenerate {{card.name}}. Wait for it.</p>
+  <p *ngIf="!youControl && card">{{opponentName}} is about to regenerate {{card.name}}. Wait for it.</p>
+  <p *ngIf="!youControl && !card">{{opponentName}} is about to regenerate these creatures. Wait for it.</p>
 
-  <p *ngIf="youControl">{{card.name}} is dying... But you can regenerate it</p>
+  <p *ngIf="youControl && card">{{card.name}} is dying... But you can regenerate it</p>
+  <p *ngIf="youControl && !card">These creatures are dying... But you can regenerate them</p>
+
   <div *ngIf="youControl && summonOp && summonOp?.status === 'waitingMana'">
     <span>You need to pay: </span>
     <mana-array style="margin-left: 5px;" class="md" [mana]="summonOp.cast"></mana-array>
   </div>
 
   <div class="btns-box" *ngIf="youControl">
-    <bf-btn *ngIf="!card.status" [bfText]="'Regenerate ' + card.name" bfIcon="icon-checkmark" (bfClick)="selectCard()"></bf-btn>
-    <bf-btn bfText="Let it Die" bfIcon="icon-cross" class="warning" (bfClick)="letItDie()"></bf-btn>
+    <!-- <bf-btn *ngIf="card && !card.status" [bfText]="'Regenerate ' + card.name" bfIcon="icon-checkmark" (bfClick)="selectCard(card)"></bf-btn> -->
+    <bf-btn *ngIf="card"  bfText="Let it Die"   bfIcon="icon-cross" class="warning" (bfClick)="letThemDie()"></bf-btn>
+    <bf-btn *ngIf="!card" bfText="Let them Die" bfIcon="icon-cross" class="warning" (bfClick)="letThemDie()"></bf-btn>
   </div>
 </div>

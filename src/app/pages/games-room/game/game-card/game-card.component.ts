@@ -28,7 +28,7 @@ export class GameCardComponent {
   @Input() card!: TGameCard | null;
   @Input({ required: true }) from: 
     'deckA' | 'deckB' | 'handA' | 'handB' | 'tbleA' | 'tbleB' | 'gravA' | 'gravB' | 'stack' |
-    'panelSelMana' | 'panelEffects' | 'panelGrav' | 'customDialog' |
+    'panelSelMana' | 'panelEffects' | 'panelGrav' | 'customDialog' | 'regenerateDialog' |
     'combatAttackerUp' | 'combatAttackerDown' | 'combatDefenderUp' | 'combatDefenderDown' |
     '' = '';
   @Input() back = false;

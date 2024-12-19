@@ -4,10 +4,11 @@ import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { BfDnDModule, BfUiLibModule } from 'bf-ui-lib';
 import { GameStateService } from '../../game-state.service';
-import { TGameCard } from '../../../../core/types';
+import { TGameCard, TGameState } from '../../../../core/types';
 import { GameCardComponent } from '../game-card/game-card.component';
 import { ISummonOp } from '../game.component';
 import { ManaArrayComponent } from "../mana-array/mana-array.component";
+import { Subscription } from 'rxjs';
 
 
 @Component({
@@ -26,9 +27,12 @@ import { ManaArrayComponent } from "../mana-array/mana-array.component";
 ]
 })
 export class DialogRegenerateComponent {
-  @Input({ required: true }) card!: TGameCard;
-  @Input() mainInfo = '';
+  // @Input({ required: true }) card!: TGameCard;
+  // @Input() mainInfo = '';
   @Input() summonOp?: ISummonOp;
+
+  creatures!: TGameCard[];
+  card?: TGameCard;
 
   title = 'Regenerate';
   minimized = false;
@@ -36,29 +40,46 @@ export class DialogRegenerateComponent {
   youControl = false;
   opponentName = '';
 
+  stateSub!: Subscription;
+
   constructor(
     private game: GameStateService,
   ) {}
 
   ngOnInit() {
     this.opponentName = this.game.playerB().name;
-    this.youControl = this.card?.owner === this.game.playerANum;
 
-    // Immediately trigger the 'regenerate-creature' action
-    setTimeout(() => {
-      if (this.youControl && this.card && this.card.selectableAction) {
-        this.game.action(this.card.selectableAction.action, this.card.selectableAction.params);
-      }    
-    });
+
+
+    this.stateSub = this.game.state$.subscribe(state => this.onStateChange(state));
+    this.onStateChange(this.game.state);
   }
 
-  letItDie() {
-    this.game.action('cancel-regenerate', { gId: this.card.gId });
+  onStateChange(state: TGameState) {
+    this.youControl = state.control === this.game.playerANum;
+    this.creatures = state.cards.filter(c => c.controller === state.control && c.canRegenerate && c.isDying);
+    this.card = this.creatures.length === 1 ? this.creatures[0] : undefined;
+    
+    if (this.card) { // Immediately trigger the 'regenerate-creature' action
+      setTimeout(() => {
+        if (this.youControl && this.card && this.card.selectableAction) {
+          this.game.action(this.card.selectableAction.action, this.card.selectableAction.params);
+        }    
+      });
+    }
+  }
+
+  ngOnDestroy() {
+    this.stateSub?.unsubscribe();
+  }
+
+  letThemDie() {
+    this.game.action('cancel-regenerate', {});    
   }  
 
-  selectCard() {
-    if (this.card.selectableAction) {
-      this.game.action(this.card.selectableAction.action, this.card.selectableAction.params);
+  selectCard(card: TGameCard) {
+    if (card.selectableAction) {
+      this.game.action(card.selectableAction.action, card.selectableAction.params);
     }
   }
   

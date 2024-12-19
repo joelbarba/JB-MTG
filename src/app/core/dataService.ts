@@ -286,15 +286,17 @@ export class DataService {
 
   private testDecks() {
     const cardsDeck1 = [
-      'c000001',  // Island
+      'c000021',  // Underground Sea
+      'c000021',  // Underground Sea
       'c000003',  // Swamp
-      'c000009',  // Mox Ruby
+      'c000008',  // Mox Pearl
       'c000008',  // Mox Pearl
       'c000023',  // Ancestral Recall
       'c000012',  // Black Lotus
       'c000028',  // Drudge Skeletons
-      'c000053',  // Ornithopter
+      'c000069',  // Wrath of God
       'c000026',  // Black Knight
+      'c000053',  // Ornithopter
       'c000055',  // Unholy Strength
       'c000028',  // Drudge Skeletons
       'c000028',  // Drudge Skeletons
@@ -302,8 +304,8 @@ export class DataService {
       'c000010',  // Mox Sapphire
       'c000038',  // Counterspell
       'c000057',  // Disenchantment
-      'c000021',  // Underground Sea
       'c000010',  // Mox Sapphire
+      'c000009',  // Mox Ruby
       'c000018',  // Taiga
       'c000015',  // Plateau
       'c000007',  // Mox Jet
@@ -314,8 +316,6 @@ export class DataService {
       'c000026',  // Black Knight
       'c000026',  // Black Knight
       'c000055',  // Unholy Strength
-      'c000013',  // Bayou
-      'c000014',  // Badlands
       'c000015',  // Plateau
       'c000016',  // Savannah
       'c000026',  // Black Knight
@@ -326,30 +326,31 @@ export class DataService {
       // 'c000000',  // 
     ];
     const cardsDeck2 = [
-      'c000005',  // Forest
-      'c000004',  // Mountain
-      'c000022',  // Volcanic Island
+      'c000013',  // Bayou
+      'c000014',  // Badlands
+      'c000018',  // Taiga
       'c000006',  // Mox Emerald
       'c000009',  // Mox Ruby
+      'c000028',  // Drudge Skeletons
+      'c000041',  // Elvis Archers
       'c000032',  // Lighting Bolt
+      'c000041',  // Elvis Archers
+      'c000043',  // Giant Growth
+      'c000046',  // Granite Gargoley
+      'c000053',  // Ornithopter
+      'c000019',  // Tropical Island
+      'c000033',  // Shivan Dragon
       'c000032',  // Lighting Bolt      
       'c000032',  // Lighting Bolt
       'c000032',  // Lighting Bolt
       'c000052',  // Mons's Goblin Raiders
-      'c000018',  // Taiga
-      'c000019',  // Tropical Island
+      'c000022',  // Volcanic Island
       'c000020',  // Tundra
       'c000043',  // Giant Growth
       'c000006',  // Mox Emerald
       'c000009',  // Mox Ruby
       'c000011',  // Sol Ring
-      'c000033',  // Shivan Dragon
-      'c000046',  // Granite Gargoley
-      'c000053',  // Ornithopter
       'c000044',  // Giant Spider
-      'c000041',  // Elvis Archers
-      'c000041',  // Elvis Archers
-      'c000043',  // Giant Growth
       'c000032',  // Ligthning Bolt
       'c000032',  // Ligthning Bolt
       'c000032',  // Ligthning Bolt

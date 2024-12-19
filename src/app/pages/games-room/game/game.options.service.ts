@@ -54,25 +54,9 @@ export class GameOptionsService {
       });
     };
 
-    const youMayRegenerateCreatures = () => { // Regenerate a dying creature
-      const creature = state.cards.find(c => c.owner === playerANum && c.canRegenerate && c.isDying);
-      if (creature) {
-        const params = { gId: creature.gId };
-        const option: TGameOption = { action: 'regenerate-creature', params, text: `Regenerate ${creature.name}` };
-        if (creature.status?.split(':')[0] !== 'ability') { creature.selectableAction = option; }
-        state.options.push(option);
-        state.options.push({ action: 'cancel-regenerate', params: {}, text: `Cancel Regenerate and let ${creature.name} die` });
-      }
-    }
-
-
-
 
     // Actions that you can do during both your turn or opponents turn
 
-    youMayRegenerateCreatures(); // Regenerate a dying creature
-
-    
     // If you have a summoning operation, let it cancel
     const summonCard = handA.find(c => c.status?.split(':')[0] === 'summon');
     if (summonCard) { state.options.push({ action: 'cancel-summon', params: {}, text: 'Cancel ' + summonCard.name }); }
@@ -181,13 +165,28 @@ export class GameOptionsService {
           });
         }
       }
-      return state; // <---- Skip generic options (it's not your turn)
+    }
+
+    // You may regenerate a dying creatures
+    const yourRegCreatures = state.cards.filter(c => c.controller === playerANum && c.canRegenerate && c.isDying);
+    const otherRegCreatures = state.cards.filter(c => c.controller !== playerANum && c.canRegenerate && c.isDying);
+
+    // Player 1 starts regenerating creatures. If you are player 2, you can regenerate yours once the opponent is done
+    if (yourRegCreatures.length && (playerANum === '1' || !otherRegCreatures.length)) {
+      yourRegCreatures.forEach(creature => {
+        const params = { gId: creature.gId };
+        const option: TGameOption = { action: 'regenerate-creature', params, text: `Regenerate ${creature.name}` };
+        if (creature.status?.split(':')[0] !== 'ability') { creature.selectableAction = option; }
+        state.options.push(option);
+      });
+      state.options.push({ action: 'cancel-regenerate', params: {}, text: `Cancel Regenerate and let creatures die` });
+      return state; // You can't do common actions during regeneration
     }
 
 
-
-
-
+    if (state.turn !== playerANum) { return state; } // If not your turn, break
+    
+    // From here on, these actions can be only done if it's your turn
 
 
     // Casting / Summoning:

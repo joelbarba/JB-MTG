@@ -108,26 +108,35 @@ export const moveCardToGraveyard = (nextState: TGameState, gId: string, discard 
 // Check the amount of damage for every creature, and destroy them if needed
 // If a creature gId is provided, it only checks this one
 export const killDamagedCreatures = (nextState: TGameState, gId?: string) => {
-  const killDamagedCreture = (card: TGameCard) => {
-    if ((card.turnDefense || 0) <= (card.turnDamage || 0)) {
-      if (card.canRegenerate) {
-        console.log(`Creature ${card.gId} ${card.name} (${card.turnAttack}/${card.turnDefense}) has received "${card.turnDamage}" points of damage ---> But it can be regenerated`);
-        card.isDying = true;
-      } else {
-        console.log(`Creature ${card.gId} ${card.name} (${card.turnAttack}/${card.turnDefense}) has received "${card.turnDamage}" points of damage ---> IT DIES (go to graveyard)`);
-        moveCardToGraveyard(nextState, card.gId);
-      }
-    }
-  }
   if (gId) { // Check the given creature
     const card = nextState.cards.find(c => c.gId === gId);
-    if (card) { killDamagedCreture(card); }
+    if (card && ((card.turnDefense || 0) <= (card.turnDamage || 0))) {
+      console.log(`Creature ${card.gId} ${card.name} (${card.turnAttack}/${card.turnDefense}) has received "${card.turnDamage}" points of damage ---> IT DIES (go to graveyard)`);
+      killCreature(nextState, card.gId);
+    }
 
   } else { // Check all creatures in the game (table + stack)
     const table = nextState.cards.filter(c => c.type === 'creature' && c.location.slice(0, 4) === 'tble');
-    table.forEach(card => killDamagedCreture(card));
+    table.forEach(card => {
+      if ((card.turnDefense || 0) <= (card.turnDamage || 0)) {
+        console.log(`Creature ${card.gId} ${card.name} (${card.turnAttack}/${card.turnDefense}) has received "${card.turnDamage}" points of damage ---> IT DIES (go to graveyard)`);
+        killCreature(nextState, card.gId);
+      }
+    });
   }
 }
+
+export const killCreature = (nextState: TGameState, gId: string) => {
+  const card = nextState.cards.find(c => c.gId === gId);
+  if (card) {
+    if (card.canRegenerate) {
+      console.log(`Creature ${card.gId} ${card.name} is killed ---> But it can be regenerated`);
+      card.isDying = true;
+    } else {
+      moveCardToGraveyard(nextState, card.gId);
+    }
+  }
+};
 
 
 // Ends the game and sets the winner (player1win / player2win)

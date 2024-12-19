@@ -18,6 +18,9 @@
     @media screen and (max-height: 900px)  { min-width: 560px; min-height: 540px; }
   }
 
+  game-card + game-card {
+    margin-left: 30px;
+  }
 
   .btns-box {
     .your-selection {

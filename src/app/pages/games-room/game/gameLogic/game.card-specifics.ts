@@ -1,6 +1,6 @@
 import { randomId } from "../../../../core/common/commons";
 import { TCast, TColor, TEffect, TGameCard, TGameState } from "../../../../core/types";
-import { endGame, getCards, killDamagedCreatures, moveCard, moveCardToGraveyard } from "./game.utils";
+import { endGame, getCards, killCreature, killDamagedCreatures, moveCard, moveCardToGraveyard } from "./game.utils";
 
 
 // ------------------------ SPECIFIC EVENTS for every CARD ------------------------
@@ -482,7 +482,25 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   }
 
 
+  function c000024_Armageddon() {
+    card.onSummon = (nextState: TGameState) => {
+      const { tableStack } = getShorts(nextState);
+      tableStack.filter(c => c.type === 'land').forEach(land => {
+        console.log(`Land ${land.gId} ${land.name} is destroyed`);
+        moveCardToGraveyard(nextState, land.gId);
+      });
+    };    
+  }
 
+  function c000069_WrathOfGod() {
+    card.onSummon = (nextState: TGameState) => {
+      const { tableStack } = getShorts(nextState);
+      tableStack.filter(c => c.type === 'creature').forEach(creature => {
+        console.log(`Creature ${creature.gId} ${creature.name} is destroyed`);
+        killCreature(nextState, creature.gId);
+      });
+    };
+  }
 
 
 
@@ -510,7 +528,6 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
 
 
   // // Pending to be coded......
-  function c000024_Armageddon() {}
   function c000029_Fork() {}
   function c000030_HowlingMine() {}
   function c000031_HypnoticSpecter() {}  
@@ -526,7 +543,6 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   function c000066_WarpArtifact() {}
   function c000067_Weakness() {}
   function c000068_WheelOfFortune() {}
-  function c000069_WrathOfGod() {}
   function c000070_HowlFromBeyond() {}
 
   return card;
