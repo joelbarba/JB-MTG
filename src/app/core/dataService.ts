@@ -208,7 +208,7 @@ export class DataService {
 
 
 
-  async createNewGame(gameId: string, player2DeckId: string, shuffle = false): Promise<string | void> {
+  async createNewGame(gameId: string, player2DeckId: string, shuffle = true): Promise<string | void> {
     let docSnap = await getDoc(doc(this.firestore, 'games', gameId));
     if (!docSnap.exists()) { return 'Game Id not found: ' + gameId;  }
     const newGame = docSnap.data() as TGameDBState;
