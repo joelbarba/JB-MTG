@@ -263,7 +263,7 @@ export class DataService {
       } as TDBGameCard;
     }
 
-    [cardsDeck1, cardsDeck2] = this.testDecks();
+    // [cardsDeck1, cardsDeck2] = this.testDecks();
 
     const deck1 = cardsDeck1.map((cardId, ind) => gameCard(cardId, '1', ind)).filter(c => !!c) as Array<TDBGameCard>;
     const deck2 = cardsDeck2.map((cardId, ind) => gameCard(cardId, '2', ind)).filter(c => !!c) as Array<TDBGameCard>;
