@@ -230,12 +230,12 @@ export class GameStateService {
     if (action !== 'refresh' && !this.verifyAction(action, params)) { console.error('Wrong action', action); return; }
     this.prevState  = JSON.parse(JSON.stringify(this.state)) as TGameState;
     const nextState = JSON.parse(JSON.stringify(this.state)) as TGameState;
-
-    console.log('ACTION: ', action, params);
-
+    
+    console.log('ACTION: ', action, ' ---> ', nextState.cards.find(c => c.gId === params?.gId)?.name, params);
+    
     // Extend specific logic functions on cards
     // nextState.cards.forEach(card => extendCardLogic(card));
-
+    
     const gId = params?.gId || '';
     const manaForUncolor = params.manaForUncolor || [0,0,0,0,0,0];
     switch (action) {
@@ -265,13 +265,8 @@ export class GameStateService {
     }
 
     this.applyEffects(nextState); // Recalculate state based on current effects
+    this.checkCreaturesThatRegenerate(nextState);
 
-    // In case a creature is killed and can be regenerate, give control to the creature's player
-    // In case there are creatures to regenerate from both players, start with those of player1
-    const regenerateCreature2 = nextState.cards.filter(c => c.controller === '2').find(c => c.canRegenerate && c.isDying);
-    const regenerateCreature1 = nextState.cards.filter(c => c.controller === '1').find(c => c.canRegenerate && c.isDying);
-    if (regenerateCreature2) { nextState.control = regenerateCreature2.controller; }
-    if (regenerateCreature1) { nextState.control = regenerateCreature1.controller; }
 
 
     nextState.id += 1;
@@ -678,13 +673,28 @@ export class GameStateService {
 
   private endCombat(nextState: TGameState) {
     const { playerA, playerB, attackingPlayer, defendingPlayer } = this.getPlayers(nextState);
-    killDamagedCreatures(nextState);  // Check those creatures that received more damage than defense, and kill them    
     nextState.cards.filter(c => c.combatStatus || c.blockingTarget).forEach(card => {
       card.combatStatus = null;
       card.blockingTarget = null;
     });
-    this.switchPlayerControl(nextState, attackingPlayer);
-    this.endPhase(nextState);
+    const regenerateStep = killDamagedCreatures(nextState);  // Check those creatures that received more damage than defense, and kill them    
+    if (!regenerateStep) {
+      this.switchPlayerControl(nextState, attackingPlayer);
+      this.endPhase(nextState);
+    }
+  }
+
+  // In case a creature is killed and can be regenerate, give control to the creature's player
+  // In case there are creatures to regenerate from both players, start with those of player1
+  private checkCreaturesThatRegenerate(nextState: TGameState) {    
+    const regenerateCreature2 = nextState.cards.filter(c => c.controller === '2').find(c => c.canRegenerate && c.isDying);
+    const regenerateCreature1 = nextState.cards.filter(c => c.controller === '1').find(c => c.canRegenerate && c.isDying);
+    if (regenerateCreature2) { nextState.control = regenerateCreature2.controller; }
+    if (regenerateCreature1) { nextState.control = regenerateCreature1.controller; }
+    if (nextState.phase === 'combat' && nextState.subPhase === 'afterCombat' && !regenerateCreature1 && !regenerateCreature2) {
+      this.switchPlayerControl(nextState, this.getPlayers(nextState).attackingPlayer);
+      this.endPhase(nextState);
+    }
   }
 
 

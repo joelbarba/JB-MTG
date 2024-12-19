@@ -107,7 +107,8 @@ export const moveCardToGraveyard = (nextState: TGameState, gId: string, discard 
 
 // Check the amount of damage for every creature, and destroy them if needed
 // If a creature gId is provided, it only checks this one
-export const killDamagedCreatures = (nextState: TGameState, gId?: string) => {
+// It returns true if there are creatures that can be regenerated
+export const killDamagedCreatures = (nextState: TGameState, gId?: string): boolean => {
   if (gId) { // Check the given creature
     const card = nextState.cards.find(c => c.gId === gId);
     if (card && ((card.turnDefense || 0) <= (card.turnDamage || 0))) {
@@ -124,6 +125,7 @@ export const killDamagedCreatures = (nextState: TGameState, gId?: string) => {
       }
     });
   }
+  return !!nextState.cards.find(c => c.canRegenerate && c.isDying);
 }
 
 export const killCreature = (nextState: TGameState, gId: string) => {
