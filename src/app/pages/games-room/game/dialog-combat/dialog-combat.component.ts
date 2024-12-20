@@ -56,6 +56,10 @@ export class DialogCombatComponent {
   mainInfo = '';
   itemInfo = '';
 
+  interval!: ReturnType<typeof setInterval>;
+  progressBar = 0;
+  showTimer = false;
+
   submitDefenseBtnText = 'Defend with current selection';
   anyDefenders = false; // Whether there is any defender assigned
 
@@ -129,36 +133,36 @@ export class DialogCombatComponent {
       if (state.subPhase === 'selectAttack') { this.mainInfo = `Select what creatures you want to attack with`; }
       if (state.subPhase === 'attacking') {
         if (!this.youControl) { this.mainInfo = `Waiting for the opponent to defend or cast any spells`; }
-        else { this.mainInfo = `You may also cast spells before the defense is set`; }
+        else { this.mainInfo = `You may play spells or abilities before the defense is set`; }
       }
       if (state.subPhase === 'selectDefense') { this.mainInfo = `Waiting for the opponent to select the defense`; }
       if (state.subPhase === 'defending') {
-        if (!this.youControl) { this.mainInfo = `Waiting for the opponent cast spells before the combat is executed`; }
+        if (!this.youControl) { this.mainInfo = `Waiting for the opponent before the combat is executed`; }
         else {
           if (!this.anyDefenders) { this.mainInfo = `The opponent is not defending your attack.<br/>`;  }
           else { this.mainInfo = `The opponent has assigned their defense.<br/>`;  }
-          this.mainInfo += `You may cast spells before the combat is executed`; 
+          this.mainInfo += `You may play spells or abilities before the combat is executed`; 
         }
       }
       if (state.subPhase === 'afterCombat') {
-        if (!this.youControl) { this.mainInfo = `Waiting for the opponent cast spells before dying creatures are destroyed`; }
-        else { this.mainInfo = `You may cast spells before dying creatures are destroyed`; }
+        if (!this.youControl) { this.mainInfo = `Waiting for the opponent before dying creatures are destroyed`; }
+        else { this.mainInfo = `You may play spells or abilities before dying creatures are destroyed`; }
       }
 
     } else { // You are the defender
       if (state.subPhase === 'selectAttack') { this.mainInfo = `Your opponent is selecting creatures to attack you (wait for it)`; }
       if (state.subPhase === 'attacking') {
-        if (this.youControl) { this.mainInfo = `You may cast spells before you select your defense`; }
-        else { this.mainInfo = `Wait for the opponent to cast any other spells`; }
+        if (this.youControl) { this.mainInfo = `You may play spells or abilities before you select your defense`; }
+        else { this.mainInfo = `Wait for the opponent to play spells or abilities`; }
       }
       if (state.subPhase === 'selectDefense') { this.mainInfo = `Select what creatures you want to defend with, or do not defend`; }
       if (state.subPhase === 'defending') {
         if (!this.youControl) { this.mainInfo = `Waiting for the opponent cast spells before the combat is executed`; }
-        else { this.mainInfo = `You may cast spells before the combat is executed`; }
+        else { this.mainInfo = `You may play spells or abilities before the combat is executed`; }
       }
       if (state.subPhase === 'afterCombat') {
         if (!this.youControl) { this.mainInfo = `Waiting for the opponent cast spells before dying creatures are destroyed`; }
-        else { this.mainInfo = `You may cast spells before dying creatures are destroyed`; }
+        else { this.mainInfo = `You may play spells or abilities before dying creatures are destroyed`; }
       }
     }
 
@@ -172,7 +176,11 @@ export class DialogCombatComponent {
         });
       }
     }
+
+    // Timer for the step auto continue
+    this.initTimer();
   }
+
 
 
   ngOnChanges() {
@@ -180,7 +188,7 @@ export class DialogCombatComponent {
 
   ngOnDestroy() {
     if (this.stateSub) { this.stateSub.unsubscribe(); }
-    // if (this.interval) { clearInterval(this.interval); }
+    if (this.interval) { clearInterval(this.interval); }
   }
 
 
@@ -206,6 +214,43 @@ export class DialogCombatComponent {
       const option = col.attackingCard.selectableAction;
       this.game.action(option.action, option.params);
     }
+  }
+
+  waitAttacking = false;
+  waitDefending = false;
+  waitAfterCombat = false;
+
+  // Init the timer to automatically release the stack after a few seconds
+  initTimer() {
+    if (!this.youControl) { return; }
+    if (this.subPhase !== 'attacking' && this.subPhase !== 'defending' && this.subPhase !== 'afterCombat') { return; }
+    if (this.subPhase === 'attacking' && this.waitAttacking) { return; }
+    if (this.subPhase === 'defending' && this.waitDefending) { return; }
+    if (this.subPhase === 'afterCombat' && this.waitAfterCombat) { return; }
+    
+    
+
+    this.showTimer = true;
+    const waitingMs = 5000;
+    const ctrlTime = (new Date()).getTime();
+    if (this.interval) { clearInterval(this.interval); }
+    this.interval = setInterval(() => {
+      this.progressBar = Math.min(100, ((new Date()).getTime() - ctrlTime) * 200 / waitingMs);
+      if (this.progressBar >= 100) { // Max reach
+        clearInterval(this.interval); 
+        console.log('AUTO Continue');
+        this.showTimer = false;
+        this.releaseStack();
+      }
+    }, 25);
+  }
+
+  pause() { // Stop the auto stack release
+    clearInterval(this.interval);
+    this.showTimer = false;
+    if (this.subPhase === 'attacking')   { this.waitAttacking = true; }
+    if (this.subPhase === 'defending')   { this.waitDefending = true; }
+    if (this.subPhase === 'afterCombat') { this.waitAfterCombat = true; }
   }
 
   submitAttack()  { this.game.action('submit-attack'); }

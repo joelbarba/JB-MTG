@@ -33,6 +33,7 @@ export enum ESubPhase {
   selectDefense  = 'selectDefense', 
   defending      = 'defending', 
   afterCombat    = 'afterCombat',
+  regenerate     = 'regenerate',
 }
 
 export type TCard = {

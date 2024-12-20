@@ -1,11 +1,18 @@
 <div class="combat h-cards-len-{{hCardsLen}}" [class.minimized]="minimized">
   <div class="min-btn" (click)="minimized = !minimized">{{minimized ? title : '-'}}</div>
-  <h2>{{title}}</h2>
-
-  <div *ngIf="game.debugMode">CONTROL = {{youControl ? 'Me' : 'Opponent'}} - subPhase = "{{subPhase}}"</div>
-
+  <div>
+    <h2>{{title}}</h2>
+    <div class="combat-phases">
+      <span class="subphase" [class.active]="subPhase === 'selectAttack'">Select Attackers</span>
+      <span class="subphase" [class.active]="subPhase === 'attacking'">Attacking</span>
+      <span class="subphase" [class.active]="subPhase === 'selectDefense'">Select Defenders</span>
+      <span class="subphase" [class.active]="subPhase === 'defending'">Defending</span>
+      <span class="subphase" [class.active]="subPhase === 'afterCombat'">After Combat</span>
+      <span class="subphase" [class.active]="subPhase === 'regenerate'">Regeneration</span>
+    </div>
+  </div>
   
-
+  <div *ngIf="game.debugMode">CONTROL = {{youControl ? 'Me' : 'Opponent'}} - subPhase = "{{subPhase}}"</div>
 
   <!-- View for attacker -->
   <div class="arena" *ngIf="attacker === 'A'">
@@ -113,6 +120,12 @@
   <div class="btns-box">
     <span class="main-info" *ngIf="itemInfo" [innerHtml]="itemInfo"></span>
     <span class="main-info" *ngIf="mainInfo && !itemInfo" [innerHtml]="mainInfo"></span>
+
+    <div *ngIf="showTimer" class="wating-progress-bar">
+      <div class="time" [style.width.px]="progressBar"></div>
+    </div>
+    <bf-btn *ngIf="showTimer" (bfClick)="pause()" bfText="Wait" bfIcon="icon-pause2"></bf-btn>
+    
 
     <bf-btn *ngIf="attacker === 'A' && subPhase === 'selectAttack'"  bfText="Cancel"  [bfDisabled]="!youControl" (bfClick)="cancelAttack()"  bfIcon="icon-cross"></bf-btn>
     <bf-btn *ngIf="attacker === 'A' && subPhase === 'selectAttack'"  bfText="Submit Attack"  [bfDisabled]="!youControl" (bfClick)="submitAttack()"  bfIcon="icon-arrow-right3"></bf-btn>

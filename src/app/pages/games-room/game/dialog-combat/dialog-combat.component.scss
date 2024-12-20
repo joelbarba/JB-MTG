@@ -6,7 +6,7 @@
   @include resizable-panel(25px, 25px, 0px);
 
   top: calc(var(--size-ref) * 0.35);
-  height: calc(var(--size-ref) * 6.50);
+  height: calc(var(--size-ref) * 7);
 
   .arena {
     padding: 0 15px;
@@ -79,4 +79,43 @@
   
   }
 
+  .combat-phases {
+    margin: 2px 0;
+    width: 100%;
+    // text-align: left;
+    .subphase {
+      display: inline-block;
+      padding: 0px 5px;
+      background: gray;
+      color: white;
+      position: relative;
+      opacity: 30%;
+      &.active { opacity: 100%; }
+    }
+    .subphase + .subphase { margin-left: 2px; }
+  }
+
+
+  .btns-box {
+    bf-btn { align-self: end; }
+  }
+
+  .wating-progress-bar {
+    align-self: flex-end;
+    margin-left: 15px;
+    width: 100px;
+    height: 35px;
+    border: 1px solid black;
+    box-shadow: inset 2px 2px 5px 0px #757575;
+    background: #bed1be;
+    .time {
+      height: 100%;
+      background-color: #525254;;
+    }
+  }
+
+  .pause-btn {
+    margin: 10px 0 30px;
+    bf-btn { transform: scale(2); }
+  }
 }

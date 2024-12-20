@@ -208,10 +208,13 @@ export class DataService {
 
 
 
-  async createNewGame(gameId: string, player2DeckId: string, shuffle = true): Promise<string | void> {
+  async createNewGame(gameId: string, player2DeckId: string): Promise<string | void> {
     let docSnap = await getDoc(doc(this.firestore, 'games', gameId));
     if (!docSnap.exists()) { return 'Game Id not found: ' + gameId;  }
     const newGame = docSnap.data() as TGameDBState;
+
+    const testingMode = localStorage.getItem('testingMode');
+    if (testingMode) { console.log('TESTING MODE'); }
 
     // Player 1's deck
     docSnap = await getDoc(doc(this.firestore, 'users', newGame.player1.userId, 'decks', newGame.deckId1));
@@ -230,7 +233,7 @@ export class DataService {
     if (cardsDeck2.length <= 8) { return `Deck ${fullDeck2.deckName} has only ${cardsDeck2.length} cards. You need at least 8 cards to play`; }
 
     // Randomly set who starts the game
-    if (shuffle && Math.random() * 2 >= 0.5) {
+    if (!testingMode && Math.random() * 2 >= 0.5) {
       newGame.turn = '2';
       newGame.control = '2';
     }
@@ -240,7 +243,7 @@ export class DataService {
     const gameCard = (cardId: string, playerNum: '1' | '2', order: number): TDBGameCard | null => {
       const card = this.dbCards.find(c => c.id === cardId);
       if (!card) { return null; }
-      if (shuffle) { order = Math.round(Math.random() * 9999); }
+      if (!testingMode) { order = Math.round(Math.random() * 9999); } // Shuffle
       // if (card['units']) { delete card.units };
       return {
         ...card,
@@ -263,7 +266,7 @@ export class DataService {
       } as TDBGameCard;
     }
 
-    // [cardsDeck1, cardsDeck2] = this.testDecks();
+    if (testingMode) { [cardsDeck1, cardsDeck2] = this.testDecks(); } // Force custom decks for testing
 
     const deck1 = cardsDeck1.map((cardId, ind) => gameCard(cardId, '1', ind)).filter(c => !!c) as Array<TDBGameCard>;
     const deck2 = cardsDeck2.map((cardId, ind) => gameCard(cardId, '2', ind)).filter(c => !!c) as Array<TDBGameCard>;

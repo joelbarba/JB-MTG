@@ -383,6 +383,20 @@ export class GameComponent {
       // Don't stop at the select defense if there are no creatures to select for the defense
       if (this.state.subPhase === 'selectDefense' && !selectableDefendingCreatures && !defendingCreatures) { return advancePhase(() => this.game.action('submit-defense')); }
 
+      if (this.state.subPhase === 'attacking' || this.state.subPhase === 'defending') {
+        if (!options.find(o => {
+          if (o.action === 'summon-spell') { return true; }
+          if (o.action === 'trigger-ability') {
+            const card = this.state.cards.find(c => c.gId === o.params.gId);
+            if (card?.type === 'creature') { return true; }
+          }
+          return false;
+        })) {
+          console.log('You have no instants/interruptions or abilities to play, so autoadvance');
+          // return advancePhase(() => this.game.action('release-stack'));
+        }
+      }
+
     } 
 
     // Don't stop at the discard phase, if you don't have to discard

@@ -265,7 +265,7 @@ export class GameStateService {
     }
 
     this.applyEffects(nextState); // Recalculate state based on current effects
-    // this.checkCreaturesThatRegenerate(nextState);
+    this.checkCreaturesThatRegenerate(nextState);
 
 
 
@@ -610,7 +610,12 @@ export class GameStateService {
       this.switchPlayerControl(nextState, attackingPlayer);
 
     } else if (nextState.subPhase === 'afterCombat') {
-      this.endCombat(nextState);      
+      const regenerateStep = killDamagedCreatures(nextState);
+      if (regenerateStep) { nextState.subPhase = ESubPhase.regenerate; }
+      else { this.endCombat(nextState); }
+
+    } else if (nextState.subPhase === 'regenerate') {
+      this.endCombat(nextState);
     }
   }
 
@@ -672,16 +677,13 @@ export class GameStateService {
   }
 
   private endCombat(nextState: TGameState) {
-    const { playerA, playerB, attackingPlayer, defendingPlayer } = this.getPlayers(nextState);
+    const { attackingPlayer } = this.getPlayers(nextState);
     nextState.cards.filter(c => c.combatStatus || c.blockingTarget).forEach(card => {
       card.combatStatus = null;
       card.blockingTarget = null;
     });
-    const regenerateStep = killDamagedCreatures(nextState);  // Check those creatures that received more damage than defense, and kill them    
-    // if (!regenerateStep) {
-      this.switchPlayerControl(nextState, attackingPlayer);
-      this.endPhase(nextState);
-    // }
+    this.switchPlayerControl(nextState, attackingPlayer);
+    this.endPhase(nextState);
   }
 
   // In case a creature is killed and can be regenerate, give control to the creature's player
@@ -691,9 +693,8 @@ export class GameStateService {
     const regenerateCreature1 = nextState.cards.filter(c => c.controller === '1').find(c => c.canRegenerate && c.isDying);
     if (regenerateCreature2) { nextState.control = regenerateCreature2.controller; }
     if (regenerateCreature1) { nextState.control = regenerateCreature1.controller; }
-    if (nextState.phase === 'combat' && nextState.subPhase === 'afterCombat' && !regenerateCreature1 && !regenerateCreature2) {
-      this.switchPlayerControl(nextState, this.getPlayers(nextState).attackingPlayer);
-      this.endPhase(nextState);
+    if (nextState.phase === 'combat' && nextState.subPhase === 'regenerate' && !regenerateCreature1 && !regenerateCreature2) {
+      this.endCombat(nextState);
     }
   }
 
