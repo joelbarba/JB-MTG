@@ -752,7 +752,7 @@ export class GameStateService {
     nextState.control = nextState.turn; // give control to the other player
     nextState.phase = EPhase.untap;
     tableA.filter(c => c.status === 'sickness').forEach(c => c.status = null); // Summon sickness ends
-    table.filter(c => c.type === 'creature').forEach(c => c.turnDamage = 0); // Damage on creatures is reset
+    table.filter(c => extendCardLogic(c).isType('creature')).forEach(c => c.turnDamage = 0); // Damage on creatures is reset
 
     const newTurnPlayer = this.getPlayers(nextState).turnPlayer;
 
@@ -793,7 +793,7 @@ export class GameStateService {
     console.log('Applying EFFECTS');
 
     // Reset all turnAttack / turnDefense
-    nextState.cards.filter(c => c.type === 'creature').forEach(creature => {
+    nextState.cards.filter(c => extendCardLogic(c).isType('creature')).forEach(creature => {
       creature.turnAttack  = creature.attack || 0;
       creature.turnDefense = creature.defense || 0;
     });

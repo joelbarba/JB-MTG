@@ -390,7 +390,7 @@ export class GameComponent {
           if (o.action === 'summon-spell') { return true; }
           if (o.action === 'trigger-ability') {
             const card = this.state.cards.find(c => c.gId === o.params.gId);
-            if (card?.type === 'creature') { return true; }
+            if (card && extendCardLogic(card).isType('creature')) { return true; }
           }
           return false;
         })) {
@@ -487,9 +487,12 @@ export class GameComponent {
     const positionTable = (tableCards: Array<TExtGameCard>) => {
       const tableGrid: Array<Array<TExtGameCard>> = [];
   
-      const lands     = tableCards.filter(c => c.type === 'land').sort((a,b) => a.order > b.order ? 1: -1);
-      const creatures = tableCards.filter(c => c.type === 'creature').sort((a,b) => a.order > b.order ? 1: -1);
-      const others    = tableCards.filter(c => c.type !== 'land' && c.type !== 'creature').sort((a,b) => a.order > b.order ? 1: -1);
+      const lands     = tableCards.filter(c => extendCardLogic(c).isType('land')).sort((a,b) => a.order > b.order ? 1: -1);
+      const creatures = tableCards.filter(c => extendCardLogic(c).isType('creature')).sort((a,b) => a.order > b.order ? 1: -1);
+      const others    = tableCards.filter(c => {
+        const { isType } = extendCardLogic(c);
+        return !isType('land') && !isType('creature')
+      }).sort((a,b) => a.order > b.order ? 1: -1);
   
       const groupLand = tableCards.length > 8;
       const groupCretures = tableCards.length > 16;

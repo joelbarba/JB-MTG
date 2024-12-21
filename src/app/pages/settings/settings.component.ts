@@ -35,6 +35,7 @@ export class SettingsComponent {
   cardTypes = cardTypes;
 
   hasBlackBorder = false;
+  highlightNoneReady = true;
 
   constructor(
     private shell: ShellService,

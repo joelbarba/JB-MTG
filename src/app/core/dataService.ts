@@ -338,6 +338,7 @@ export class DataService {
       'c000013',  // Bayou
       'c000014',  // Badlands
       'c000018',  // Taiga
+      'c000051',  // Llanowar Elves
       'c000006',  // Mox Emerald
       'c000009',  // Mox Ruby
       'c000058',  // Shatter

@@ -58,7 +58,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
       if (!card.isTapped && card.location.slice(0,4) === 'tble') {
         cardPlayer.manaPool[manaNum] += 1;
         card.isTapped = true;
-      } 
+      }
     };    
   }
 
@@ -688,9 +688,16 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     };
   }
 
+  function c000051_LlanowarElves() {
+    commonCreature();
+    card.getAbilityCost = () => ({ mana: [0,0,0,0,0,0], tap: true, text: `Tap to add 1 green mana`, });
+    card.onAbility = (nextState: TGameState) => { 
+      const { card, cardPlayer } = getShorts(nextState);
+      cardPlayer.manaPool[5] += 1; // add 1 green mana
+      card.isTapped = true;
+    };
+  }
 
-  // Shatter
-  // Shatterstorm
   // Llanowar Elves
   // Terror
   // Weakness
@@ -729,7 +736,6 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   function c000048_HillGiant()                { commonCreature(); }
   function c000049_HurloonMinotaur()          { commonCreature(); }
   function c000050_IronrootTreefolk()         { commonCreature(); }
-  function c000051_LlanowarElves()            { commonCreature(); }
   function c000056_WallofIce()                { commonCreature(); }
   function c000071_AirElemental()             { commonCreature(); }
   function c000072_MahamotiDjinn()            { commonCreature(); }

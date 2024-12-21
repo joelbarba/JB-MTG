@@ -122,13 +122,14 @@
   <div class="list">
     <div class="row whiteBg" style="margin-top: 0;">
       <bf-input class="col-4 flat" bfIcon="icon-search" [(ngModel)]="cardsList.filterText" (ngModelChange)="cardsList.filter($event)"></bf-input>
-      <bf-checkbox class="col-4 pad-input" bfLabel="Only Ready To Play" [(ngModel)]="cardsList.filters.readyToPlay" (ngModelChange)="filterReadyToPlay($event)" ></bf-checkbox>
+      <!-- <bf-checkbox class="col-2 pad-input" bfLabel="Only Ready To Play" [(ngModel)]="cardsList.filters.readyToPlay" (ngModelChange)="filterReadyToPlay($event)" ></bf-checkbox> -->
+      <bf-checkbox class="col-4 pad-input" bfLabel="Highlight Not Ready" [(ngModel)]="highlightNoneReady"></bf-checkbox>
       <bf-btn class="col-4 text-right" bfIcon="icon-plus" bfText="New Card" (bfClick)="newCard()"></bf-btn>
     </div>
 
     <div class="all-cards">
-      <div *ngFor="let card of cardsList.renderList$ | async" 
-           class="card-wrapper" (click)="selectCard(card)">
+      <div *ngFor="let card of cardsList.renderList$ | async" (click)="selectCard(card)"
+           class="card-wrapper" [class.not-ready]="highlightNoneReady && !card.readyToPlay">
         {{card.id}}
         <mtg-card [cardImg]="card.image" class="sm" [border]="card.border" [class.selected]="selCard?.id === card.id"></mtg-card>
       </div>
