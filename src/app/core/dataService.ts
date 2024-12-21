@@ -340,6 +340,8 @@ export class DataService {
       'c000018',  // Taiga
       'c000006',  // Mox Emerald
       'c000009',  // Mox Ruby
+      'c000058',  // Shatter
+      'c000059',  // Shatterstorm
       'c000035',  // KirdApe
       'c000135',  // KillerBees
       'c000091',  // BirdsOfParadise

@@ -658,7 +658,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     card.getSummonCost = (nextState: TGameState) => {
       const { tableStack } = getShorts(nextState);
       const possibleTargets = tableStack.filter(c => extendCardLogic(c).isType('land')).map(c => c.gId);
-      return { mana: card.cast, neededTargets: 1, possibleTargets }; // targets = all lands in play
+      return { mana: card.cast, neededTargets: 1, possibleTargets }; // targets = any lands in play
     };
     card.onSummon = (nextState: TGameState) => {
       const { targetId } = getShorts(nextState);
@@ -666,12 +666,32 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     };
   }
 
+  function c000058_Shatter() {
+    card.getSummonCost = (nextState: TGameState) => {
+      const { tableStack } = getShorts(nextState);
+      const possibleTargets = tableStack.filter(c => extendCardLogic(c).isType('artifact')).map(c => c.gId);
+      return { mana: card.cast, neededTargets: 1, possibleTargets }; // targets = any artifact
+    };
+    card.onSummon = (nextState: TGameState) => {
+      const { targetId } = getShorts(nextState);
+      moveCardToGraveyard(nextState, targetId); // Destroy artifact
+    };
+  }
+
+  function c000059_Shatterstorm() {
+    card.onSummon = (nextState: TGameState) => {
+      const { tableStack } = getShorts(nextState);
+      tableStack.filter(c => extendCardLogic(c).isType('artifact')).forEach(artifact => {
+        console.log(`Artifact ${artifact.gId} ${artifact.name} is destroyed`);
+        moveCardToGraveyard(nextState, artifact.gId); // Destroy artifact
+      });
+    };
+  }
 
 
-  // Kird Ape
-  // Llanowar Elves
   // Shatter
   // Shatterstorm
+  // Llanowar Elves
   // Terror
   // Weakness
   // Wheel of Fortune
@@ -728,8 +748,6 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   function c000029_Fork() {}
   function c000030_HowlingMine() {}
   function c000031_HypnoticSpecter() {}  
-  function c000058_Shatter() {}
-  function c000059_Shatterstorm() {}
   function c000060_Disintegrate() {}
   function c000061_DemonicTutor() {}
   function c000062_EyeForAnEye() {}
