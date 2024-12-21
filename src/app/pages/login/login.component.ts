@@ -6,7 +6,7 @@ import { BfUiLibModule } from 'bf-ui-lib';
 import { TranslateModule } from '@ngx-translate/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../core/common/auth.service';
-import { userAuth } from '../../../../secrets';
+// import { userAuth } from '../../../../secrets';
 
 @Component({
   selector: 'app-login',
@@ -26,8 +26,10 @@ export class LoginComponent {
   language$ = this.appTranslate.language$;
   lang = '';
 
-  user = userAuth.user;
-  pass = userAuth.pass;
+  // user = userAuth.user;
+  // pass = userAuth.pass;
+  user = '';
+  pass = '';
 
   constructor(
     private appTranslate: AppTranslateService,

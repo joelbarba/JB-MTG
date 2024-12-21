@@ -289,13 +289,20 @@ export class DataService {
 
   private testDecks() {
     const cardsDeck1 = [
+      'c000005',  // Forest
+      'c000013',  // Bayou
       'c000021',  // Underground Sea
-      'c000021',  // Underground Sea
+      'c000010',  // Mox Sapphire
       'c000003',  // Swamp
+      'c000111',  // Sinkhole
       'c000008',  // Mox Pearl
       'c000008',  // Mox Pearl
       'c000023',  // Ancestral Recall
       'c000012',  // Black Lotus
+      'c000081',  // WillOTheWisp
+      'c000131',  // GhostShip
+      'c000120',  // CarrionAnts
+      'c000076',  // SerraAngel
       'c000028',  // Drudge Skeletons
       'c000069',  // Wrath of God
       'c000026',  // Black Knight
@@ -304,7 +311,6 @@ export class DataService {
       'c000028',  // Drudge Skeletons
       'c000028',  // Drudge Skeletons
       'c000017',  // Scrubland
-      'c000010',  // Mox Sapphire
       'c000038',  // Counterspell
       'c000057',  // Disenchantment
       'c000010',  // Mox Sapphire
@@ -334,7 +340,9 @@ export class DataService {
       'c000018',  // Taiga
       'c000006',  // Mox Emerald
       'c000009',  // Mox Ruby
-      'c000028',  // Drudge Skeletons
+      'c000035',  // KirdApe
+      'c000135',  // KillerBees
+      'c000091',  // BirdsOfParadise
       'c000041',  // Elvis Archers
       'c000032',  // Lighting Bolt
       'c000041',  // Elvis Archers

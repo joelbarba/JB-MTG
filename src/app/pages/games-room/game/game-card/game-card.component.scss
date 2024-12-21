@@ -7,6 +7,10 @@
   padding: calc(var(--card-border) - 1px);
   border: 1px solid black;
   background: white;
+  &.back-border { 
+    border: 1px solid transparent;
+    background: black; 
+  }
   border-radius: calc(var(--card-border) + 2px); // 5px;
   transition-duration: 150ms;
   img {

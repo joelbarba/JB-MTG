@@ -174,6 +174,9 @@ export class GameStateService {
       'onAbility',
       'onDestroy',
       'onDiscard',
+      'afterCombat',
+      'isType',
+      'isColor',
       'onEffect',
       'canAttack',
       'canDefend',
@@ -681,6 +684,7 @@ export class GameStateService {
     nextState.cards.filter(c => c.combatStatus || c.blockingTarget).forEach(card => {
       card.combatStatus = null;
       card.blockingTarget = null;
+      extendCardLogic(card).afterCombat(nextState);
     });
     this.switchPlayerControl(nextState, attackingPlayer);
     this.endPhase(nextState);

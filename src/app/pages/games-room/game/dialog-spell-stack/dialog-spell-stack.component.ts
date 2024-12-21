@@ -40,6 +40,8 @@ export class DialogSpellStackComponent {
   @Output() end           = new EventEmitter<any>();
   minimized = false;
 
+  TIMER_TIME = 500;
+
   title = 'Spell Stack';
   youControl: boolean = false;
 
@@ -263,11 +265,10 @@ export class DialogSpellStackComponent {
 
   // Init the timer to automatically release the stack after a few seconds
   initTimer() {
-    const waitingMs = 5000;
     const ctrlTime = (new Date()).getTime();
     if (this.interval) { clearInterval(this.interval); }
     this.interval = setInterval(() => {
-      this.progressBar = Math.min(100, ((new Date()).getTime() - ctrlTime) * 200 / waitingMs);
+      this.progressBar = Math.min(100, ((new Date()).getTime() - ctrlTime) * 200 / this.TIMER_TIME);
       if (this.progressBar >= 100) { // Max reach
         clearInterval(this.interval); 
         this.showTimer = false;

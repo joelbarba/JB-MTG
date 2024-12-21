@@ -40,6 +40,7 @@
     <div class="full-card" (window:resize)="calcFullCardSize()">
       <div class="card-border">
         <img #fullCardEl [src]="'assets/images/cards/' + fullCard.img"
+             [class.black-border]="fullCard.border === 'black'"
              [style.border-width.px]="fullCard.borderWidth"
              [style.border-radius.px]="fullCard.borderRadius"/>
       </div>
@@ -230,11 +231,6 @@
     </div>
   </div>
 
-  <!-- Dialog: Selecting Mana (cherry pick on summoning) -->
-  <dialog-selecting-mana 
-    *ngIf="summonOp.status === 'selectingMana'" 
-    [summonOp]="summonOp">
-  </dialog-selecting-mana>
 
   <dialog-combat 
     *ngIf="combatPanel"
@@ -244,6 +240,11 @@
   </dialog-combat>
 
 
+  <!-- Dialog: Selecting Mana (cherry pick on summoning) -->
+  <dialog-selecting-mana 
+    *ngIf="summonOp.status === 'selectingMana'" 
+    [summonOp]="summonOp">
+  </dialog-selecting-mana>
 
 
   <dialog-spell-stack 

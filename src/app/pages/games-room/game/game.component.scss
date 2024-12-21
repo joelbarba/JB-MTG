@@ -36,6 +36,7 @@
           max-height: calc(100% - 20px);
           max-width: calc(100% - 20px);
           border: var(--full-card-border) solid white;
+          &.black-border { border-color: black; }
           border-width: 6px;
           border-radius: 12px;
         }

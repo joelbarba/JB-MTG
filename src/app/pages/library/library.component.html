@@ -27,7 +27,8 @@
     <div class="row whiteBg search-box">
       <bf-input class="col-4 flat" bfIcon="icon-search" [(ngModel)]="cardsList.filterText" (ngModelChange)="cardsList.filter($event)"></bf-input>
       <div class="col-2">
-        <bf-checkbox class="pad-input" bfLabel="For Sale" [(ngModel)]="cardsList.filters.readyToPlay" (ngModelChange)="filterReadyToPlay($event)"></bf-checkbox>
+        <!-- <bf-checkbox class="pad-input" bfLabel="For Sale" [(ngModel)]="cardsList.filters.readyToPlay" (ngModelChange)="filterReadyToPlay($event)"></bf-checkbox> -->
+        <bf-checkbox class="pad-input" bfLabel="Ready" [(ngModel)]="cardsList.filters.readyToPlay" (ngModelChange)="filterReadyToPlay($event)"></bf-checkbox>
       </div>
 
       <!-- Card Type -->

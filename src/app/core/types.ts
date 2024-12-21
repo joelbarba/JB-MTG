@@ -1,6 +1,7 @@
 export type TColor = 'uncolored' | 'blue' | 'white' | 'black' | 'red' | 'green';
 export type TCast = [number, number, number, number, number, number];
 export type TCardType = 'land' | 'creature' | 'instant' | 'interruption' | 'artifact' | 'sorcery' | 'enchantment';
+export type TCardExtraType = TCardType | 'island' | 'plains' | 'swamp' | 'mountain' | 'forest';
 
 export type TUser = {
   name: string;
@@ -134,6 +135,9 @@ export type TGameCard = TDBGameCard & { // Not in DB (calculated when options)
   onDestroy: (state: TGameState) => void;   // What the card does when it's destroyed
   onDiscard: (state: TGameState) => void;   // What the card does when it's discarded
   onEffect:  (state: TGameState, effectId: string) => void;  // What the effect of the card does when it's applied
+  afterCombat: (state: TGameState) => void;  // What the card does after combat
+  isType:  (type: TCardExtraType) => boolean; // Checks if the card is of a certain type
+  isColor: (color: TColor) => boolean; // Checks if the card is of a certain color
   canAttack: (state: TGameState) => boolean;  // Whether the creature can be selected to attack
   canDefend: (state: TGameState) => boolean;  // Whether the creature can be selected to defend
   targetBlockers: (state: TGameState) => Array<string>; // List of attackers the creature can block

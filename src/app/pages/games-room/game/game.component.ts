@@ -78,6 +78,7 @@ export interface ISummonOp {
 export class GameComponent {
   fullCard = {
     img: 'taiga.jpg',
+    border: 'white',
     borderWidth  : 12,
     borderRadius : 12,
     prevHeight   : 0,
@@ -145,6 +146,7 @@ export class GameComponent {
     this.subs.push(this.game.hoverCard$.subscribe(hoveringCard => {
       if (hoveringCard) {
         this.fullCard.img = hoveringCard.image;
+        this.fullCard.border = hoveringCard.border || 'white';
         // this.itemInfo = hoveringCard.selectableAction?.text || '';
       } else {
         // this.itemInfo = '';
@@ -658,6 +660,12 @@ export class GameComponent {
     if (selectingManaCard && (this.summonOp.status === 'off' || this.summonOp.gId !== selectingManaCard.gId)) {
       this.startSummonOp(selectingManaCard, 'selectingMana'); // start new summon op
     }
+    
+    // If you tried to summon but a cherry picking is needed for the uncolored mana, do it
+    const selectingManaCard2 = this.tableA.find(c => c.status === 'ability:selectingMana');
+    if (selectingManaCard2 && (this.summonOp.status === 'off' || this.summonOp.gId !== selectingManaCard2.gId)) {
+      this.startManaOp(selectingManaCard2, 'selectingMana'); // start new summon op
+    }
 
     // If a summoning is waiting for target selection, start the summonOp with it
     const selectingTargetCard = this.handA.find(c => c.status === 'summon:selectingTargets');
@@ -669,7 +677,8 @@ export class GameComponent {
     if (this.summonOp.status === 'waitingMana') { this.summonOp.tryToSummon(); }
 
     if (this.summonOp.status !== 'off') {
-      if (!waitingManaCard && !selectingManaCard && !selectingTargetCard && !waitingManaCard2) { this.summonOp.turnOff(); } // Cancel operation no longer needed
+      if (!waitingManaCard && !selectingManaCard && !selectingTargetCard 
+      && !waitingManaCard2 && !selectingManaCard2) { this.summonOp.turnOff(); } // Cancel operation no longer needed
       this.mainInfo = this.summonOp.text;
       // this.itemInfo = this.summonOp.text;
     }
