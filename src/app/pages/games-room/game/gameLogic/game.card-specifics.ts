@@ -1,6 +1,6 @@
 import { randomId } from "../../../../core/common/commons";
 import { TCast, TColor, TEffect, TGameCard, TGameState } from "../../../../core/types";
-import { endGame, getCards, killCreature, killDamagedCreatures, moveCard, moveCardToGraveyard } from "./game.utils";
+import { drawCard, endGame, getCards, killCreature, killDamagedCreatures, moveCard, moveCardToGraveyard, shuffleDeck } from "./game.utils";
 
 
 // ------------------------ SPECIFIC EVENTS for every CARD ------------------------
@@ -254,6 +254,34 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   function c000005_Forest()   { commonLand(5); isAlsoType('forest');   } // 1 Green Mana
 
 
+  // Common Creatures
+  function c000052_MonssGoblinRaiders()       { commonCreature(); }
+  function c000053_Ornithopter()              { commonCreature(); }
+  function c000054_SavannahLions()            { commonCreature(); }
+  function c000039_CrawWurm()                 { commonCreature(); }
+  function c000040_EarthElemental()           { commonCreature(); }
+  function c000041_ElvishArchers()            { commonCreature(); }
+  function c000042_FireElemental()            { commonCreature(); }
+  function c000026_BlackKnight()              { commonCreature(); }
+  function c000036_GrayOrge()                 { commonCreature(); }
+  function c000037_BrassMan()                 { commonCreature(); }
+  function c000045_GoblinBalloonBrigade()     { commonCreature(); }
+  function c000047_GrizzlyBears()             { commonCreature(); }
+  function c000048_HillGiant()                { commonCreature(); }
+  function c000049_HurloonMinotaur()          { commonCreature(); }
+  function c000050_IronrootTreefolk()         { commonCreature(); }
+  function c000056_WallofIce()                { commonCreature(); }
+  function c000071_AirElemental()             { commonCreature(); }
+  function c000072_MahamotiDjinn()            { commonCreature(); }
+  function c000073_MerfolkOfThePearlTrident() { commonCreature(); }
+  function c000075_PhantomMonster()           { commonCreature(); }
+  function c000078_WallOfAir()                { commonCreature(); }
+  function c000083_WallOfSwords()             { commonCreature(); }
+  function c000087_RocOfKherRidges()          { commonCreature(); }
+  function c000082_WhiteKnight()              { commonCreature(); }
+
+
+
   function c000032_LightningBolt() {
     card.getSummonCost = (nextState: TGameState) => {
       const { targetCreatures } = getShorts(nextState);
@@ -460,15 +488,19 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
       const playerNum = targetId === 'player1' ? '1' : '2';
       const playerDeck = deck.filter(c => c.owner === playerNum);
 
-      if (playerDeck.length <= 3) {
-        const winner = targetId === 'player1' ? '2' : '1';
-        endGame(nextState, winner);
+      drawCard(nextState, playerNum);
+      drawCard(nextState, playerNum);
+      drawCard(nextState, playerNum);
 
-      } else {
-        moveCard(nextState, playerDeck[0].gId, 'hand');
-        moveCard(nextState, playerDeck[1].gId, 'hand');
-        moveCard(nextState, playerDeck[2].gId, 'hand');
-      }
+      // if (playerDeck.length <= 3) {
+      //   const winner = targetId === 'player1' ? '2' : '1';
+      //   endGame(nextState, winner);
+
+      // } else {
+      //   moveCard(nextState, playerDeck[0].gId, 'hand');
+      //   moveCard(nextState, playerDeck[1].gId, 'hand');
+      //   moveCard(nextState, playerDeck[2].gId, 'hand');
+      // }
       moveCardToGraveyard(nextState, gId);
     };
   }
@@ -695,10 +727,42 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
       const { card, cardPlayer } = getShorts(nextState);
       cardPlayer.manaPool[5] += 1; // add 1 green mana
       card.isTapped = true;
+    };    
+  }
+
+  function c000068_WheelOfFortune() {
+    // All players must discard their hands and draw seven new cards
+    card.onSummon = (nextState: TGameState) => {
+      const { hand } = getShorts(nextState);
+      hand.forEach(c => moveCardToGraveyard(nextState, c.gId)); // Discard all hands
+      for (let t = 0; t < 7; t++) { // Draw 7 new cards
+        drawCard(nextState, '1'); // Player1
+        drawCard(nextState, '2'); // Player2
+      }
+      moveCardToGraveyard(nextState, card.gId)
     };
   }
 
-  // Llanowar Elves
+  function c000112_Timetwister() {
+    // Set Timetiwister aside in a new graveyard pile.
+    // Shuffle your hand, library and graveyard together into a new library and draw
+    // a new hand of seven cards, leaving all cards in play where they are.
+    // Opponent must do the same.
+    card.onSummon = (nextState: TGameState) => {
+      const { hand, graveyard } = getShorts(nextState);
+      hand.forEach(c => moveCard(nextState, c.gId, 'deck'));      // Move hand --> deck
+      graveyard.forEach(c => moveCard(nextState, c.gId, 'deck')); // Move graveyard --> deck
+      shuffleDeck(nextState, '1');
+      shuffleDeck(nextState, '2');
+      for (let t = 0; t < 7; t++) { // Draw 7 new cards
+        drawCard(nextState, '1'); // Player1
+        drawCard(nextState, '2'); // Player2
+      }
+      moveCardToGraveyard(nextState, card.gId)
+    };
+  }
+
+  // 
   // Terror
   // Weakness
   // Wheel of Fortune
@@ -720,31 +784,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
 
 
 
-  // Common Creatures
-  function c000052_MonssGoblinRaiders()       { commonCreature(); }
-  function c000053_Ornithopter()              { commonCreature(); }
-  function c000054_SavannahLions()            { commonCreature(); }
-  function c000039_CrawWurm()                 { commonCreature(); }
-  function c000040_EarthElemental()           { commonCreature(); }
-  function c000041_ElvishArchers()            { commonCreature(); }
-  function c000042_FireElemental()            { commonCreature(); }
-  function c000026_BlackKnight()              { commonCreature(); }
-  function c000036_GrayOrge()                 { commonCreature(); }
-  function c000037_BrassMan()                 { commonCreature(); }
-  function c000045_GoblinBalloonBrigade()     { commonCreature(); }
-  function c000047_GrizzlyBears()             { commonCreature(); }
-  function c000048_HillGiant()                { commonCreature(); }
-  function c000049_HurloonMinotaur()          { commonCreature(); }
-  function c000050_IronrootTreefolk()         { commonCreature(); }
-  function c000056_WallofIce()                { commonCreature(); }
-  function c000071_AirElemental()             { commonCreature(); }
-  function c000072_MahamotiDjinn()            { commonCreature(); }
-  function c000073_MerfolkOfThePearlTrident() { commonCreature(); }
-  function c000075_PhantomMonster()           { commonCreature(); }
-  function c000078_WallOfAir()                { commonCreature(); }
-  function c000083_WallOfSwords()             { commonCreature(); }
-  function c000087_RocOfKherRidges()          { commonCreature(); }
-  function c000082_WhiteKnight()              { commonCreature(); }
+
 
 
 
@@ -762,7 +802,6 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   function c000065_Terror() {}
   function c000066_WarpArtifact() {}
   function c000067_Weakness() {}
-  function c000068_WheelOfFortune() {}
   function c000070_HowlFromBeyond() {}
 
 
@@ -795,7 +834,6 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   function c000108_Earthquake() { }
   function c000109_GauntletOfMight() { }
   function c000110_IcyManipulator() { }
-  function c000112_Timetwister() { }
   function c000113_TheAbyss() { }
   function c000114_LibraryOfAlexandria() { }
   function c000115_Jokulhaups() { }

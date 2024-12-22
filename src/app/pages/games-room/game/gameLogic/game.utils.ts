@@ -140,6 +140,20 @@ export const killCreature = (nextState: TGameState, gId: string) => {
   }
 };
 
+export const drawCard = (nextState: TGameState, playerNum: '1' | '2') => {
+  const deck = nextState.cards.filter(c => c.location === 'deck' + playerNum).sort((a, b) => a.order > b.order ? 1 : -1);
+  if (deck.length > 1) {
+    moveCard(nextState, deck[0].gId, 'hand');
+  } else {
+    endGame(nextState, playerNum); // No cards in the deck = you lose
+  }
+}
+
+export const shuffleDeck = (nextState: TGameState, playerNum: '1' | '2') => {
+  const deck = nextState.cards.filter(c => c.location === 'deck' + playerNum).sort((a, b) => a.order > b.order ? 1 : -1);
+  deck.forEach(card => card.order = Math.round(Math.random() * 9999));
+  deck.sort((a, b) => a.order > b.order ? 1 : -1).forEach((c, ind) => c.order = ind);
+}
 
 // Ends the game and sets the winner (player1win / player2win)
 export const endGame = (nextState: TGameState, winner: '1' | '2') => {

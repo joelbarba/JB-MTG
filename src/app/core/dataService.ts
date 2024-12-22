@@ -292,12 +292,15 @@ export class DataService {
       'c000005',  // Forest
       'c000013',  // Bayou
       'c000021',  // Underground Sea
+      'c000014',  // Badlands
+      'c000023',  // Ancestral Recall
       'c000010',  // Mox Sapphire
+      'c000068',  // WheelOfFortune
+      'c000112',  // Timetwister
       'c000003',  // Swamp
       'c000111',  // Sinkhole
       'c000008',  // Mox Pearl
       'c000008',  // Mox Pearl
-      'c000023',  // Ancestral Recall
       'c000012',  // Black Lotus
       'c000081',  // WillOTheWisp
       'c000131',  // GhostShip
