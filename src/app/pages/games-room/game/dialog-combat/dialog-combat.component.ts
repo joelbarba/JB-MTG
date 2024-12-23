@@ -8,7 +8,6 @@ import { GameStateService } from '../../game-state.service';
 import { ESubPhase, TActionParams, TGameCard, TGameState } from '../../../../core/types';
 import { Subscription } from 'rxjs';
 import { HoverTipDirective } from '../../../../core/common/internal-lib/bf-tooltip/bf-tooltip.directive';
-import { extendCardLogic } from '../gameLogic/game.card-specifics';
 import { GameCardComponent } from "../game-card/game-card.component";
 
 type TCol = {
@@ -168,7 +167,7 @@ export class DialogCombatComponent {
       this.defenderLookingForTarget = this.game.state.cards.find(c => c.combatStatus === 'combat:selectingTarget');
       if (this.defenderLookingForTarget) {
         this.mainInfo = `Select what creature you want ${this.defenderLookingForTarget.name} to defend against`;
-        const possibleBlockers = extendCardLogic(this.defenderLookingForTarget).targetBlockers(state);
+        const possibleBlockers = this.defenderLookingForTarget.targetBlockers(state);
         this.combatCards.forEach(col => {
           col.isPossibleTarget = possibleBlockers.includes(col.attackingCard.gId);
         });

@@ -124,7 +124,10 @@
       <bf-input class="col-4 flat" bfIcon="icon-search" [(ngModel)]="cardsList.filterText" (ngModelChange)="cardsList.filter($event)"></bf-input>
       <!-- <bf-checkbox class="col-2 pad-input" bfLabel="Only Ready To Play" [(ngModel)]="cardsList.filters.readyToPlay" (ngModelChange)="filterReadyToPlay($event)" ></bf-checkbox> -->
       <bf-checkbox class="col-4 pad-input" bfLabel="Highlight Not Ready" [(ngModel)]="highlightNoneReady"></bf-checkbox>
-      <bf-btn class="col-4 text-right" bfIcon="icon-plus" bfText="New Card" (bfClick)="newCard()"></bf-btn>
+      <div class="col-4 text-right">
+        <bf-btn bfIcon="icon-plus" bfText="New Card" (bfClick)="newCard()"></bf-btn>
+        <bf-btn bfIcon="icon-plus" bfText="Show Code" (bfClick)="showCode()" style="margin-left: 15px;"></bf-btn>
+      </div>
     </div>
 
     <div class="all-cards">
@@ -134,6 +137,12 @@
         <mtg-card [cardImg]="card.image" class="sm" [border]="card.border" [class.selected]="selCard?.id === card.id"></mtg-card>
       </div>
     </div>
+  </div>
+
+
+  <div *ngIf="showingCode" class="cards-db-code">
+    <bf-btn bfIcon="icon-cross" bfText="Close" (bfClick)="showingCode = false"></bf-btn>
+    <pre id="db-code">{{cardsDBCode}}</pre>
   </div>
   
 </div>

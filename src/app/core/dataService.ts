@@ -244,9 +244,9 @@ export class DataService {
       const card = this.dbCards.find(c => c.id === cardId);
       if (!card) { return null; }
       if (!testingMode) { order = Math.round(Math.random() * 9999); } // Shuffle
-      // if (card['units']) { delete card.units };
       return {
-        ...card,
+        id: card.id,
+        name: card.name,
         gId: '',
         order,
         location: 'deck' + playerNum as TCardLocation, 
@@ -257,7 +257,6 @@ export class DataService {
         customDialog: null,
         combatStatus: null,
         isDying: false,
-        // regenerate: false,
         targets: [],
         blockingTarget: null,
         turnDamage: 0,

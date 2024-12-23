@@ -17,7 +17,6 @@ import { checkMana } from './gameLogic/game.utils';
 import { HoverTipDirective } from '../../../core/common/internal-lib/bf-tooltip/bf-tooltip.directive';
 import { PanelEffectsComponent } from './panel-effects/panel-effects.component';
 import { ManaArrayComponent } from './mana-array/mana-array.component';
-import { extendCardLogic } from './gameLogic/game.card-specifics';
 import { GamePanelComponent } from "./game-panel/game-panel.component";
 import { GameCardComponent } from "./game-card/game-card.component";
 import { BfTooltipService } from '../../../core/common/internal-lib/bf-tooltip/bf-tooltip.service';
@@ -390,7 +389,7 @@ export class GameComponent {
           if (o.action === 'summon-spell') { return true; }
           if (o.action === 'trigger-ability') {
             const card = this.state.cards.find(c => c.gId === o.params.gId);
-            if (card && extendCardLogic(card).isType('creature')) { return true; }
+            if (card && card.isType('creature')) { return true; }
           }
           return false;
         })) {
@@ -487,12 +486,9 @@ export class GameComponent {
     const positionTable = (tableCards: Array<TExtGameCard>) => {
       const tableGrid: Array<Array<TExtGameCard>> = [];
   
-      const lands     = tableCards.filter(c => extendCardLogic(c).isType('land')).sort((a,b) => a.order > b.order ? 1: -1);
-      const creatures = tableCards.filter(c => extendCardLogic(c).isType('creature')).sort((a,b) => a.order > b.order ? 1: -1);
-      const others    = tableCards.filter(c => {
-        const { isType } = extendCardLogic(c);
-        return !isType('land') && !isType('creature')
-      }).sort((a,b) => a.order > b.order ? 1: -1);
+      const lands     = tableCards.filter(c => c.isType('land')).sort((a,b) => a.order > b.order ? 1: -1);
+      const creatures = tableCards.filter(c => c.isType('creature')).sort((a,b) => a.order > b.order ? 1: -1);
+      const others    = tableCards.filter(c => !c.isType('land') && !c.isType('creature')).sort((a,b) => a.order > b.order ? 1: -1);
   
       const groupLand = tableCards.length > 8;
       const groupCretures = tableCards.length > 16;
@@ -784,7 +780,7 @@ export class GameComponent {
 
   startManaOp(card: TGameCard, status: 'off' | 'waitingMana' | 'selectingMana' | 'selectingTargets' | 'summoning') {
     if (this.summonOp.gId !== card.gId) { // Initialize summon operation for the given card
-      const neededMana = extendCardLogic(card).getAbilityCost(this.state)?.mana || [0,0,0,0,0,0];
+      const neededMana = card.getAbilityCost(this.state)?.mana || [0,0,0,0,0,0];
       this.summonOp.gId           = card.gId;
       this.summonOp.card          = card;
       this.summonOp.params        = { gId: card.gId }; // manaForUncolor = [0,0,0,0,0,0], targets = [];

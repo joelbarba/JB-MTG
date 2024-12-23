@@ -1,5 +1,4 @@
 import { TCardAnyLocation, TCardLocation, TCast, TGameCard, TGameState, TPlayer } from "../../../../core/types";
-import { extendCardLogic } from "./game.card-specifics";
 
 
 // Shortcut for state objects (cards split on locations)
@@ -92,8 +91,7 @@ export const moveCardToGraveyard = (nextState: TGameState, gId: string, discard 
   const card = nextState.cards.find(c => c.gId === gId);
   if (!card) { return; }
   moveCard(nextState, gId, discard ? 'discarded' : 'grav');
-  if (card.onDestroy) { card.onDestroy(nextState); }
-  else { extendCardLogic(card).onDestroy(nextState); }
+  card.onDestroy(nextState);
   card.status = null;
   card.targets = [];
 

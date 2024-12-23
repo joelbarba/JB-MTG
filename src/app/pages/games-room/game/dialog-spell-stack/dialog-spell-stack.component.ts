@@ -8,7 +8,6 @@ import { GameStateService } from '../../game-state.service';
 import { TActionParams, TGameCard, TGameState, TPlayer } from '../../../../core/types';
 import { Subscription } from 'rxjs';
 import { StackCardWithTargetsComponent } from './stack-card-with-targets/stack-card-with-targets.component';
-import { extendCardLogic } from '../gameLogic/game.card-specifics';
 
 export type TStackTree = {
   card: TGameCard | null,
@@ -159,9 +158,10 @@ export class DialogSpellStackComponent {
 
 
     // Fakely run the stack to figure out the shadow damage (the damage creatures and players will receive after the stack is executed)
-    const fakeState = JSON.parse(JSON.stringify(state)) as TGameState;
+    const fakeState = this.game.convertfromDBState(JSON.parse(JSON.stringify(state)));
+
     const fakeStack = fakeState.cards.filter(c => c.location === 'stack').sort((a, b) => a.order > b.order ? -1 : 1); // reverse order
-    fakeStack.forEach(card => card.location === 'stack' && extendCardLogic(card).onSummon(fakeState));
+    fakeStack.forEach(card => card.location === 'stack' && card.onSummon(fakeState));
     this.game.applyEffects(fakeState);
     this.rootTargets.filter(i => !!i.card).forEach(item => {
       const fakeMatch = fakeState.cards.find(c => c.gId === item.card?.gId);

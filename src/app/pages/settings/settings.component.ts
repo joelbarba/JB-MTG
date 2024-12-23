@@ -11,6 +11,7 @@ import { MtgCardComponent } from "../../core/common/internal-lib/mtg-card/mtg-ca
 import { TCard, TCast, TUser } from '../../core/types';
 import { cardTypes, colors, randomUnitId } from '../../core/common/commons';
 import { DataService, TFullCard, TFullUnit } from '../../core/dataService';
+import { dbCards } from '../../core/dbCards';
 
 @Component({
   selector: 'app-settings',
@@ -67,6 +68,7 @@ export class SettingsComponent {
     this.users.sort((a,b) => a.name > b.name ? 1 : -1);
 
     this.selectCard(this.cardsList.loadedList[0]);
+    // this.showCode();
   }
 
   filterReadyToPlay(value: boolean) {
@@ -201,4 +203,77 @@ export class SettingsComponent {
   //   //   });
   //   // });
   // }
+
+  showingCode = false;
+  cardsDBCode = '';
+  showCode() {
+    console.log('show code');
+    this.showingCode = !this.showingCode;
+    if (this.showingCode) {
+      this.cardsDBCode = `import { TCard } from "./types";\n\n`;
+      this.cardsDBCode += `export const dbCards: TCard[] = [`;
+
+      this.dataService.cards.forEach(card => {
+
+        const colorProtection = card.colorProtection ? `'${card.colorProtection}'` : 'null'
+        
+        this.cardsDBCode += `\n  {`;
+        this.cardsDBCode += `\n    id:              '${card.id}', `;
+        this.cardsDBCode += `\n    name:            \`${card.name}\`, `;
+        this.cardsDBCode += `\n    image:           '${card.image}', `;
+        this.cardsDBCode += `\n    cast:            [${card.cast}], `;
+        this.cardsDBCode += `\n    color:           '${card.color}', `;
+        this.cardsDBCode += `\n    text:            '${card.text}', `;
+        this.cardsDBCode += `\n    type:            '${card.type}', `;
+        this.cardsDBCode += `\n    price:           ${card.price}, `;
+        this.cardsDBCode += `\n    attack:          ${card.attack || '0'}, `;
+        this.cardsDBCode += `\n    defense:         ${card.defense || '0'}, `;
+        this.cardsDBCode += `\n    isWall:          ${!!card.isWall}, `;
+        this.cardsDBCode += `\n    isFlying:        ${!!card.isFlying}, `;
+        this.cardsDBCode += `\n    isTrample:       ${!!card.isTrample}, `;
+        this.cardsDBCode += `\n    isFirstStrike:   ${!!card.isFirstStrike}, `;
+        this.cardsDBCode += `\n    isHaste:         ${!!card.isHaste}, `;
+        this.cardsDBCode += `\n    canRegenerate:   ${!!card.canRegenerate}, `;
+        this.cardsDBCode += `\n    colorProtection: ${colorProtection}, `;
+        this.cardsDBCode += `\n    readyToPlay:     ${!!card.readyToPlay}, `;
+        if (card.border) { this.cardsDBCode += `\n    border:          '${card.border || 'white'}', `; }
+        if (card.maxInDeck) { this.cardsDBCode += `\n    maxInDeck:       ${card.maxInDeck || 'null'}, `; }
+        this.cardsDBCode += `\n  },`;
+      });     
+       
+      this.cardsDBCode += `\n];`;
+    }
+
+    navigator.clipboard.writeText(this.cardsDBCode);
+
+    this.dataService.cards.forEach(card => {
+      const match = dbCards.find(c => c.id === card.id) as TCard;
+      if (!match) {
+        console.log('New Card: ' + card.id + ' - ' + card.name, card);
+      } else {
+        // let diff = false;
+        // for (const prop in match) {
+        //   if (match[prop] !== card[prop]) { diff = true; }
+        // }
+        // console.log(`Card with differences: ${property}: ${object[property]}`);
+      }
+    });
+
+    // setTimeout(() => {
+    //   let text = document.querySelector('#db-code')?.childNodes[0];
+    //   let range = new Range();
+    //   let selection = document.getSelection();
+    //   if (text && selection) {
+    //     range.setStart(text, 0);
+    //     range.setEnd(text, 100);
+    //     selection.removeAllRanges();
+    //     selection.addRange(range);        
+    //   }
+    // }, 500);
+
+
+  }
 }
+
+
+

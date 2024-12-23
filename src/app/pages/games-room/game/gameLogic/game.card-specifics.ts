@@ -7,7 +7,7 @@ import { drawCard, endGame, getCards, killCreature, killDamagedCreatures, moveCa
 
 export const extendCardLogic = (card: TGameCard): TGameCard => {
   const gId = card.gId;
-  if (card.hasOwnProperty('onSummon')) { return card; }
+  // if (card.hasOwnProperty('onSummon')) { return card; }
   // The card object when extended is a reference of the nextState at the begining of the reducer
   // so it always points to the cards of the same state is passed on the functions.
   // But to be 100% pure, we should filter the object from the given nextState in every function --> const card = getCard(nextState);
@@ -672,7 +672,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
       const lands = nextState.cards.filter(c => c.controller === otherPlayer.num && c.location.slice(0,4) === 'tble' && c.type === 'land');
       let hasForest = false;
       lands.forEach(land => {
-        if (extendCardLogic(land).isType('forest')) {
+        if (land.isType('forest')) {
           hasForest = true;
         }
       });
@@ -689,34 +689,37 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   function c000111_Sinkhole() {
     card.getSummonCost = (nextState: TGameState) => {
       const { tableStack } = getShorts(nextState);
-      const possibleTargets = tableStack.filter(c => extendCardLogic(c).isType('land')).map(c => c.gId);
+      const possibleTargets = tableStack.filter(c => c.isType('land')).map(c => c.gId);
       return { mana: card.cast, neededTargets: 1, possibleTargets }; // targets = any lands in play
     };
     card.onSummon = (nextState: TGameState) => {
       const { targetId } = getShorts(nextState);
       moveCardToGraveyard(nextState, targetId); // Destroy land
+      moveCardToGraveyard(nextState, card.gId); // Destroy itself
     };
   }
 
   function c000058_Shatter() {
     card.getSummonCost = (nextState: TGameState) => {
       const { tableStack } = getShorts(nextState);
-      const possibleTargets = tableStack.filter(c => extendCardLogic(c).isType('artifact')).map(c => c.gId);
+      const possibleTargets = tableStack.filter(c => c.isType('artifact')).map(c => c.gId);
       return { mana: card.cast, neededTargets: 1, possibleTargets }; // targets = any artifact
     };
     card.onSummon = (nextState: TGameState) => {
       const { targetId } = getShorts(nextState);
       moveCardToGraveyard(nextState, targetId); // Destroy artifact
+      moveCardToGraveyard(nextState, card.gId); // Destroy itself
     };
   }
 
   function c000059_Shatterstorm() {
     card.onSummon = (nextState: TGameState) => {
       const { tableStack } = getShorts(nextState);
-      tableStack.filter(c => extendCardLogic(c).isType('artifact')).forEach(artifact => {
+      tableStack.filter(c => c.isType('artifact')).forEach(artifact => {
         console.log(`Artifact ${artifact.gId} ${artifact.name} is destroyed`);
         moveCardToGraveyard(nextState, artifact.gId); // Destroy artifact
       });
+      moveCardToGraveyard(nextState, card.gId); // Destroy itself
     };
   }
 
@@ -739,7 +742,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
         drawCard(nextState, '1'); // Player1
         drawCard(nextState, '2'); // Player2
       }
-      moveCardToGraveyard(nextState, card.gId)
+      moveCardToGraveyard(nextState, card.gId); // Destroy itself
     };
   }
 
@@ -758,7 +761,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
         drawCard(nextState, '1'); // Player1
         drawCard(nextState, '2'); // Player2
       }
-      moveCardToGraveyard(nextState, card.gId)
+      moveCardToGraveyard(nextState, card.gId); // Destroy itself
     };
   }
 
@@ -799,7 +802,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     card.onSummon = (nextState: TGameState) => {
       const { targetId } = getShorts(nextState);
       nextState.effects.push({ scope: 'turn', gId, targets: [targetId], id: randomId('e') });
-      moveCardToGraveyard(nextState, gId);
+      moveCardToGraveyard(nextState, card.gId); // Destroy itself
     }
     card.onEffect = (nextState: TGameState, effectId: string) => { // Add +7/+7 to target creature
       const { targetCreatures } = getShorts(nextState);
@@ -814,8 +817,8 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   }
 
   // 
-  // Weakness
-  // Wheel of Fortune
+  // Weakness + Righteousness
+  // 
   // Swords To Plowshares
   // Unsummon
   // Terror

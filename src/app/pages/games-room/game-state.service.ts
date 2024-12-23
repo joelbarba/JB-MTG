@@ -9,6 +9,7 @@ import { GameOptionsService } from './game/game.options.service';
 import { extendCardLogic } from './game/gameLogic/game.card-specifics';
 import { BfDefer } from 'bf-ui-lib';
 import { getTime } from '../../core/common/commons';
+import { dbCards } from '../../core/dbCards';
 
 
 
@@ -132,8 +133,8 @@ export class GameStateService {
     // Extend the raw DB state:  dbState$ ---> state$
     if (this.gameStateSub) { this.gameStateSub.unsubscribe(); }
     this.gameStateSub = this.dbState$.subscribe((dbState: TGameDBState) => {
-      console.log('New State. Last action =', `${dbState.lastAction?.action}`, 'STATE:', this.state);
-      this.state = this.options.calculate(dbState, this.playerANum);
+      console.log('New State. Last action =', `${dbState.lastAction?.action}`, 'dbState:', dbState);
+      this.state = this.options.calculate(this.convertfromDBState(dbState), this.playerANum);
       this.options.calculateEffectsFrom(this.state);
       this.options.calculateTargetsFrom(this.state);
       this.state$.next(this.state);
@@ -161,28 +162,31 @@ export class GameStateService {
     }
   }
 
+  // Add fixed properties and extended functions for cards
+  convertfromDBState(dbState: TGameDBState): TGameState {
+    const state: TGameState = { ...dbState, options: [] };
+    state.cards = state.cards.map(card => {
+      const dbCard = dbCards.find(c => c.id === card.id);
+      if (!dbCard) { console.error('CARD NOT FOUND in dbCards:', card); return card; }
+      return extendCardLogic({ ...card, ...dbCard });
+    });
+    return state;
+  }
+
   // Stripe out extended properties that do not need to be on DB
   convertToDBState(nextState: TGameState): TGameDBState {
     const dbState = nextState.keyFilter((v,k) => k !== 'options') as TGameDBState;
     const extFields = [
-      'selectableAction',
-      'selectableTarget',
-      'effectsFrom',
-      'targetOf',
-      'uniqueTargetOf',
-      'onSummon',
-      'onAbility',
-      'onDestroy',
-      'onDiscard',
-      'afterCombat',
-      'isType',
-      'isColor',
-      'onEffect',
-      'canAttack',
-      'canDefend',
-      'targetBlockers',
-      'getSummonCost',
-      'getAbilityCost',
+      // TCard
+      'cast', 'color', 'image', 'text', 'type', 'price', 'attack', 'defense', 'border', 'maxInDeck', 'readyToPlay',
+      'isWall', 'isFlying', 'isTrample', 'isFirstStrike', 'isHaste', 'canRegenerate', 'colorProtection',
+
+      // Extended properties (extendCardLogic)
+      'selectableAction', 'selectableTarget', 'effectsFrom', 'targetOf', 'uniqueTargetOf',
+
+      // Extended functions (extendCardLogic)
+      'onSummon', 'onAbility', 'onDestroy', 'onDiscard', 'afterCombat', 'onEffect',
+      'isType', 'isColor', 'canAttack', 'canDefend', 'targetBlockers', 'getSummonCost', 'getAbilityCost',
     ]
     dbState.cards = dbState.cards.map(card => card.keyFilter((v,k) => !extFields.includes(k))) as Array<TGameCard>;
     return dbState;
@@ -232,15 +236,11 @@ export class GameStateService {
   action(action: TAction, params: TActionParams = {}) {
     if (action !== 'refresh' && !this.verifyAction(action, params)) { console.error('Wrong action', action); return; }
     this.prevState  = JSON.parse(JSON.stringify(this.state)) as TGameState;
-    const nextState = JSON.parse(JSON.stringify(this.state)) as TGameState;
+    // const nextState = JSON.parse(JSON.stringify(this.state)) as TGameState;
+    const nextState = this.convertfromDBState(this.convertToDBState(this.prevState)); // Extend specific logic functions on cards
     
     console.log('ACTION: ', action, ' ---> ', nextState.cards.find(c => c.gId === params?.gId)?.name, params);
-    
-    // Extend specific logic functions on cards
-    // nextState.cards.forEach(card => extendCardLogic(card));
-    
     const gId = params?.gId || '';
-    const manaForUncolor = params.manaForUncolor || [0,0,0,0,0,0];
     switch (action) {
       case 'start-game':                nextState.status = 'playing'; break;
       case 'skip-phase':                this.endPhase(nextState); break;
@@ -275,9 +275,8 @@ export class GameStateService {
     nextState.lastAction = { action, params, player: this.playerANum, time: getTime() };
 
     // Update the state
-    this.dbState$.next(nextState); // Local update of the state (before it's saved to DB)
-
     const dbState = this.convertToDBState(nextState);
+    this.dbState$.next(dbState); // Local update of the state (before it's saved to DB)
     setDoc(doc(this.firestore, 'games', this.gameId), dbState).then(_ => {});
 
     // Save history
@@ -314,7 +313,7 @@ export class GameStateService {
 
   private discardCard(nextState: TGameState, gId: string) {
     const card = nextState.cards.find(c => c.gId === gId);
-    if (card) { extendCardLogic(card).onDiscard(nextState); }
+    if (card) { card.onDiscard(nextState); }
   }
 
   private burnMana(nextState: TGameState) {
@@ -337,8 +336,7 @@ export class GameStateService {
 
     const card = this.checkCard(nextState, gId, { location: 'hand' });
     if (card) {
-      const { getSummonCost, onSummon } = extendCardLogic(card)
-      const summonCost = getSummonCost(nextState);
+      const summonCost = card.getSummonCost(nextState);
       if (summonCost && (!card.status || card.status?.slice(0, 7) === 'summon:')) { // summon:waitingMana, summon:selectingMana, summon:selectingTargets
 
         this.cancelSummonOperations(nextState, card.gId); // Cancel other possible castings operations
@@ -378,7 +376,7 @@ export class GameStateService {
             card.status = 'summoning';
             card.targets = params.targets || [];
             if (tableDirectly) {
-              onSummon(nextState); // Lands do not go to the stack but the table directly
+              card.onSummon(nextState); // Lands do not go to the stack but the table directly
             } else {
               this.addToSpellStack(nextState, card);
             }
@@ -398,8 +396,7 @@ export class GameStateService {
 
     const card = nextState.cards.find(c => c.gId === gId);
     if (card) {
-      const { getAbilityCost, onAbility } = extendCardLogic(card);
-      const abilityCost = getAbilityCost(nextState);
+      const abilityCost = card.getAbilityCost(nextState);
       if (abilityCost) {
 
         let rightMana = true;
@@ -434,7 +431,7 @@ export class GameStateService {
           else {
             card.targets = params.targets || [];
             if (totalManaCost > 0) { spendMana(abilityCost.mana, playerA.manaPool, manaForUncolor); }
-            onAbility(nextState); // It may not always tap the card, but trigger the ability
+            card.onAbility(nextState); // It may not always tap the card, but trigger the ability
             card.status = null;
           }
         }
@@ -500,7 +497,7 @@ export class GameStateService {
     const stack = nextState.cards.filter(c => c.location === 'stack').sort((a,b) => a.order > b.order ? -1 : 1); // inverse order ([max,...,min])
     stack.forEach(card => {
       if (card.location === 'stack') { 
-        extendCardLogic(card).onSummon(nextState);
+        card.onSummon(nextState);
       }
     });
     this.applyEffects(nextState);       // Recalculate the effects
@@ -543,7 +540,7 @@ export class GameStateService {
     const gId = params.gId || '';
     const creature = tableA.find(c => c.gId === gId);
     if (creature) {
-      const possibleBlockers = extendCardLogic(creature).targetBlockers(nextState);
+      const possibleBlockers = creature.targetBlockers(nextState);
       if (params.targets && params.targets.length) {
         const targetId = params.targets[0]; // For now only 1 blocker allowed
         if (possibleBlockers.includes(targetId)) {
@@ -676,7 +673,7 @@ export class GameStateService {
     nextState.cards.filter(c => c.combatStatus || c.blockingTarget).forEach(card => {
       card.combatStatus = null;
       card.blockingTarget = null;
-      extendCardLogic(card).afterCombat(nextState);
+      card.afterCombat(nextState);
     });
     this.switchPlayerControl(nextState, attackingPlayer);
     this.endPhase(nextState);
@@ -744,14 +741,14 @@ export class GameStateService {
     nextState.control = nextState.turn; // give control to the other player
     nextState.phase = EPhase.untap;
     tableA.filter(c => c.status === 'sickness').forEach(c => c.status = null); // Summon sickness ends
-    table.filter(c => extendCardLogic(c).isType('creature')).forEach(c => c.turnDamage = 0); // Damage on creatures is reset
+    table.filter(c => c.isType('creature')).forEach(c => c.turnDamage = 0); // Damage on creatures is reset
 
     const newTurnPlayer = this.getPlayers(nextState).turnPlayer;
 
     // Apply end turn effects, and then remove them
     nextState.effects.filter(e => e.scope === 'endTurn').forEach(effect => {
       const card = nextState.cards.find(c => c.gId === effect.gId); 
-      if (card) { extendCardLogic(card).onEffect(nextState, effect.id); }
+      if (card) { card.onEffect(nextState, effect.id); }
     });
     nextState.effects = nextState.effects.filter(e => e.scope !== 'endTurn');
   }
@@ -785,7 +782,7 @@ export class GameStateService {
     console.log('Applying EFFECTS');
 
     // Reset all turnAttack / turnDefense
-    nextState.cards.filter(c => extendCardLogic(c).isType('creature')).forEach(creature => {
+    nextState.cards.filter(c => c.isType('creature')).forEach(creature => {
       creature.turnAttack  = creature.attack || 0;
       creature.turnDefense = creature.defense || 0;
     });
@@ -802,7 +799,7 @@ export class GameStateService {
       // runEvent(nextState, effect.gId, 'onEffect', { effectId: effect.id });
       // Find the logic on the card that generated the effect
       const card = nextState.cards.find(c => c.gId === effect.gId); 
-      if (card) { extendCardLogic(card).onEffect(nextState, effect.id); }
+      if (card) { card.onEffect(nextState, effect.id); }
     });
 
     // We can't do this here, because of afterCombat subphase (creatures should stay until the end of combat)

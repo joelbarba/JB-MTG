@@ -1,4 +1,4 @@
-export type TColor = 'uncolored' | 'blue' | 'white' | 'black' | 'red' | 'green';
+export type TColor = 'uncolored' | 'blue' | 'white' | 'black' | 'red' | 'green' | 'special';
 export type TCast = [number, number, number, number, number, number];
 export type TCardType = 'land' | 'creature' | 'instant' | 'interruption' | 'artifact' | 'sorcery' | 'enchantment';
 export type TCardExtraType = TCardType | 'island' | 'plains' | 'swamp' | 'mountain' | 'forest';
@@ -99,19 +99,20 @@ export type TGameDBState = {
 export type TGameState = TGameDBState & { options: Array<TGameOption> };
 export type TGameHistory = TGameState & { history: Array<TGameOption & { time: string, player: '1' | '2' }>; }
 
-export type TDBGameCard = TCard & {
-  gId: string;
-  owner: '1' | '2';       // player 1 | player 2
-  controller: '1' | '2';  // player 1 | player 2
-  order: number;
-  location: TCardLocation;
-  isTapped: boolean;
+export type TDBGameCard = {
+  name        : string;
+  id          : string; // C000000
+  gId         : string;
+  owner       : '1' | '2';       // player 1 | player 2
+  controller  : '1' | '2';  // player 1 | player 2
+  order       : number;
+  location    : TCardLocation;
+  isTapped    : boolean;
   status: null | 'summoning' | 'sickness'
                | 'summon:waitingMana'  | 'summon:selectingMana'  | 'summon:selectingTargets' 
                | 'ability:waitingMana' | 'ability:selectingMana' | 'ability:selectingTargets';
   combatStatus: null | 'combat:attacking' | 'combat:defending' | 'combat:selectingTarget';
   isDying: boolean,     // If card.canRegenerate, you get a special step to trigger the regeneration ability
-  // regenerate: boolean,  // If true, next time the creature dies it will regenerate
 
   customDialog: null | string;  // If the card requires a custom dialog to open when it's :selectingTargets
 
@@ -123,7 +124,7 @@ export type TDBGameCard = TCard & {
   turnDefense: number; // <-- defense + effects
 }
 
-export type TGameCard = TDBGameCard & { // Not in DB (calculated when options)
+export type TGameCard = TDBGameCard & TCard & { // Not in DB (fixed properties from TCard + extended props & functions)
   selectableAction?: null | TGameOption;
   selectableTarget?: null | { text: string, value: string };
   effectsFrom?: Array<TEffect>;

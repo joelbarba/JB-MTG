@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 import { EPhase, TAction, TCard, TCardLocation, TGameState, TGameDBState, TGameCard, TGameCards, TActionParams, TPlayer, TCardType, TCardSemiLocation, TCardAnyLocation, TCast, TGameOption, ESubPhase, TEffect } from '../../../core/types';
 import { compareLocations, getCards } from './gameLogic/game.utils';
-import { extendCardLogic } from './gameLogic/game.card-specifics';
 
 
 @Injectable({ providedIn: 'root' })
@@ -22,7 +21,6 @@ export class GameOptionsService {
     state.player1.selectableAction = null; state.player1.selectableTarget = null;
     state.player2.selectableAction = null; state.player2.selectableTarget = null;
 
-    // state.cards.forEach(card => extendCardLogic(card)); // Extend card specific functions
 
     const playerBNum = playerANum === '1' ? '2' : '1';
     const playerA = playerANum === '1' ? state.player1 : state.player2;
@@ -45,7 +43,7 @@ export class GameOptionsService {
 
     const youMayTriggerAbilities = () => { // This also includes tapping lands for mana
       tableA.filter(c => c.controller === playerANum).forEach(card => {        
-        const abilityCost = extendCardLogic(card).getAbilityCost(state);
+        const abilityCost = card.getAbilityCost(state);
         if (abilityCost && (!abilityCost.tap || !card.isTapped) && !card.canRegenerate) {
           const option: TGameOption = { action: 'trigger-ability', params: { gId: card.gId }, text: abilityCost.text };
           if (card.status?.split(':')[0] !== 'ability') { card.selectableAction = option; }
@@ -70,11 +68,9 @@ export class GameOptionsService {
     // TARGET SELECTION: If you have a card that is selecting targets:
     const playingCard = state.cards.find(c => c.status?.split(':')[1] === 'selectingTargets');
     if (playingCard) {  // Selecting target
-      const { getAbilityCost, getSummonCost} = extendCardLogic(playingCard);
-      
       const statusPrefix = playingCard.status?.split(':')[0]; // summon:... or ability:...
       const action = statusPrefix === 'summon' ? 'summon-spell' : 'trigger-ability';
-      const cost   = statusPrefix === 'summon' ? getSummonCost(state) : getAbilityCost(state);
+      const cost   = statusPrefix === 'summon' ? playingCard.getSummonCost(state) : playingCard.getAbilityCost(state);
 
       const possibleTargets = cost?.possibleTargets || [];
       possibleTargets.forEach(target => {
@@ -144,7 +140,7 @@ export class GameOptionsService {
 
         // You may select a creature to defend your opponents attack
         tableA.filter(c => c.type === 'creature' && c.combatStatus !== 'combat:defending').forEach(card => {
-          if (extendCardLogic(card).canDefend(state)) {
+          if (card.canDefend(state)) {
             const option: TGameOption = { action: 'select-defending-creature', params: { gId: card.gId }, text: `Defend with ${card.name}` };
             state.options.push(option);
             card.selectableAction = option;
@@ -154,7 +150,7 @@ export class GameOptionsService {
         // You may select the opponent's attacking creature as a target of your defending creature
         const defenderToAssign = state.cards.find(c => c.combatStatus === 'combat:selectingTarget');
         if (defenderToAssign) {
-          extendCardLogic(defenderToAssign).targetBlockers(state).forEach(attackingId => {
+          defenderToAssign.targetBlockers(state).forEach(attackingId => {
             const attackingCard = state.cards.find(c => c.gId === attackingId);
             if (attackingCard) {
               const params = { gId: defenderToAssign.gId, targets: [attackingId] };
@@ -264,7 +260,7 @@ export class GameOptionsService {
 
       if (state.subPhase === 'selectAttack') {
         tableA.filter(c => c.type === 'creature' && c.combatStatus !== 'combat:attacking').forEach(card => {
-          if (extendCardLogic(card).canAttack(state)) {
+          if (card.canAttack(state)) {
             const option: TGameOption = { action: 'select-attacking-creature', params: { gId: card.gId }, text: `Attack with ${card.name}` };
             state.options.push(option);
             card.selectableAction = option;
