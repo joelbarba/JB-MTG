@@ -118,6 +118,11 @@
 
 
   <div class="btns-box">
+    <bf-btn *ngIf="attacker === 'B' && subPhase === 'selectDefense' && !anyDefenders" 
+            bfText="Do not defend" [bfDisabled]="!youControl" bfIcon="icon-cross" class="warning" 
+            (bfClick)="submitDefense()">
+    </bf-btn>
+
     <span class="main-info" *ngIf="itemInfo" [innerHtml]="itemInfo"></span>
     <span class="main-info" *ngIf="mainInfo && !itemInfo" [innerHtml]="mainInfo"></span>
 
@@ -131,7 +136,7 @@
     <bf-btn *ngIf="attacker === 'A' && subPhase === 'selectAttack'"  bfText="Submit Attack"  [bfDisabled]="!youControl" (bfClick)="submitAttack()"  bfIcon="icon-arrow-right3"></bf-btn>
     
     <bf-btn *ngIf="attacker === 'B' && subPhase === 'selectDefense' && anyDefenders" bfText="Cancel"  [bfDisabled]="!youControl" (bfClick)="cancelDefense()" bfIcon="icon-cross"></bf-btn>
-    <bf-btn *ngIf="attacker === 'B' && subPhase === 'selectDefense'" [bfText]="submitDefenseBtnText" [bfDisabled]="!youControl" (bfClick)="submitDefense()" bfIcon="icon-arrow-right3"></bf-btn>
+    <bf-btn *ngIf="attacker === 'B' && subPhase === 'selectDefense' && anyDefenders" bfText="Defend with current selection" [bfDisabled]="!youControl" (bfClick)="submitDefense()" bfIcon="icon-arrow-right3"></bf-btn>
 
     <bf-btn *ngIf="subPhase === 'attacking'"   bfText="Continue" [bfDisabled]="!youControl" (bfClick)="releaseStack()" bfIcon="icon-arrow-right3"></bf-btn>
     <bf-btn *ngIf="subPhase === 'defending'"   bfText="Continue" [bfDisabled]="!youControl" (bfClick)="releaseStack()" bfIcon="icon-arrow-right3"></bf-btn>

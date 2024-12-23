@@ -60,7 +60,6 @@ export class DialogCombatComponent {
   progressBar = 0;
   showTimer = false;
 
-  submitDefenseBtnText = 'Defend with current selection';
   anyDefenders = false; // Whether there is any defender assigned
 
   hCardsLen = 1;  // Max number of cards on a horizontal line  
@@ -124,7 +123,6 @@ export class DialogCombatComponent {
     this.canSubmitAttack = !!state.options.find(op => op.action === 'submit-attack');
     this.canSubmitDefense = !!state.options.find(op => op.action === 'submit-defense');
     this.anyDefenders = !!this.defendingCreatures.length;
-    this.submitDefenseBtnText = this.anyDefenders ? 'Defend with current selection' : `Do not defend`;
 
     this.hCardsLen = this.attackingCreatures.length;
 

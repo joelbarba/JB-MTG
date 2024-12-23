@@ -291,16 +291,15 @@ export class DataService {
     const cardsDeck1 = [
       'c000005',  // Forest
       'c000013',  // Bayou
+      'c000026',  // Black Knight
       'c000021',  // Underground Sea
       'c000014',  // Badlands
       'c000023',  // Ancestral Recall
       'c000010',  // Mox Sapphire
-      'c000068',  // WheelOfFortune
+      'c000067',  // Weakness
       'c000112',  // Timetwister
       'c000003',  // Swamp
       'c000111',  // Sinkhole
-      'c000008',  // Mox Pearl
-      'c000008',  // Mox Pearl
       'c000012',  // Black Lotus
       'c000081',  // WillOTheWisp
       'c000131',  // GhostShip
@@ -344,14 +343,18 @@ export class DataService {
       'c000051',  // Llanowar Elves
       'c000006',  // Mox Emerald
       'c000009',  // Mox Ruby
-      'c000058',  // Shatter
-      'c000059',  // Shatterstorm
+      'c000084',  // Righteousness
       'c000035',  // KirdApe
+      'c000008',  // Mox Pearl
+      'c000008',  // Mox Pearl
       'c000135',  // KillerBees
       'c000091',  // BirdsOfParadise
       'c000041',  // Elvis Archers
+      'c000058',  // Shatter
       'c000032',  // Lighting Bolt
+      'c000068',  // WheelOfFortune
       'c000041',  // Elvis Archers
+      'c000059',  // Shatterstorm
       'c000043',  // Giant Growth
       'c000046',  // Granite Gargoley
       'c000053',  // Ornithopter

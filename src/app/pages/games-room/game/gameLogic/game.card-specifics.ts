@@ -762,12 +762,63 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     };
   }
 
+
+
+  function c000067_Weakness() {
+    card.getSummonCost = (nextState: TGameState) => {
+      const { targetCreatures } = getShorts(nextState);
+      const possibleTargets = targetCreatures().map(c => c.gId); // Target must be any playing creature
+      return { mana: card.cast, neededTargets: 1, possibleTargets };
+    };        
+    card.onSummon = (nextState: TGameState) => {
+      const { targetId } = getShorts(nextState);
+      nextState.effects.push({ scope: 'permanent', gId, targets: [targetId], id: randomId('e') });
+      moveCard(nextState, gId, 'tble');
+    }
+    card.onEffect = (nextState: TGameState, effectId: string) => { // Add -2/-1 to target creature
+      const { targetCreatures } = getShorts(nextState);
+      const effect = nextState.effects.find(e => e.id === effectId);
+      const effectTargetId = effect?.targets[0]; // The card that the card's effect is targetting
+      const targetCreature = targetCreatures().find(c => c.gId === effectTargetId);
+      if (targetCreature) {
+        targetCreature.turnAttack -= 2;
+        targetCreature.turnDefense -= 1;
+      }
+    };
+  }
+
+
+
+  function c000084_Righteousness() {
+    card.getSummonCost = (nextState: TGameState) => {
+      const { targetCreatures } = getShorts(nextState);
+      const possibleTargets = targetCreatures().filter(c => c.combatStatus === 'combat:defending').map(c => c.gId); 
+      // return { mana: card.cast, neededTargets: 1, possibleTargets }; // Target must be a defending creature
+      return { mana: [1,0,0,0,0,0], neededTargets: 1, possibleTargets }; // Target must be a defending creature
+    };    
+    card.onSummon = (nextState: TGameState) => {
+      const { targetId } = getShorts(nextState);
+      nextState.effects.push({ scope: 'turn', gId, targets: [targetId], id: randomId('e') });
+      moveCardToGraveyard(nextState, gId);
+    }
+    card.onEffect = (nextState: TGameState, effectId: string) => { // Add +7/+7 to target creature
+      const { targetCreatures } = getShorts(nextState);
+      const effect = nextState.effects.find(e => e.id === effectId);
+      const effectTargetId = effect?.targets[0]; // The card that the card's effect is targetting
+      const targetCreature = targetCreatures().find(c => c.gId === effectTargetId);
+      if (targetCreature) { // target must be a defending creature on the table
+        targetCreature.turnAttack  += 7;
+        targetCreature.turnDefense += 7;
+      }
+    }
+  }
+
   // 
-  // Terror
   // Weakness
   // Wheel of Fortune
   // Swords To Plowshares
   // Unsummon
+  // Terror
   // Erg Raiders
   // Roay Assassin
 
@@ -801,7 +852,6 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   function c000064_ManaFlare() {}
   function c000065_Terror() {}
   function c000066_WarpArtifact() {}
-  function c000067_Weakness() {}
   function c000070_HowlFromBeyond() {}
 
 
@@ -809,7 +859,6 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   function c000077_SwordsToPlowshares() { }
   function c000079_Unsummon() { }
   function c000080_ErgRaiders() { }
-  function c000084_Righteousness() { }
   function c000085_NorthernPaladin() { }
   function c000086_SerendibEfreet() { }
   function c000088_RoyalAssassin() { }

@@ -4,7 +4,7 @@ import { AuthService } from '../../core/common/auth.service';
 import { ShellService } from '../../shell/shell.service';
 import { DocumentReference, Firestore, QuerySnapshot, collection, doc, getDoc, getDocs, onSnapshot, query, setDoc, DocumentData, Unsubscribe } from '@angular/fire/firestore';
 import { EPhase, TAction, TCard, TCardLocation, TGameState, TGameDBState, TGameCard, TGameCards, TActionParams, TPlayer, TCardType, TCardSemiLocation, TCardAnyLocation, TCast, TGameOption, ESubPhase, TEffect } from '../../core/types';
-import { calcManaForUncolored, checkMana, endGame, getCards, getPlayers, killDamagedCreatures, moveCard, moveCardToGraveyard, spendMana } from './game/gameLogic/game.utils';
+import { calcManaForUncolored, checkMana, drawCard, endGame, getCards, getPlayers, killDamagedCreatures, moveCard, moveCardToGraveyard, spendMana } from './game/gameLogic/game.utils';
 import { GameOptionsService } from './game/game.options.service';
 import { extendCardLogic } from './game/gameLogic/game.card-specifics';
 import { BfDefer } from 'bf-ui-lib';
@@ -245,7 +245,6 @@ export class GameStateService {
       case 'start-game':                nextState.status = 'playing'; break;
       case 'skip-phase':                this.endPhase(nextState); break;
       case 'draw':                      this.draw(nextState);  break;
-      // case 'tap-land':                  this.tapLand(nextState, gId); break;
       case 'trigger-ability':           this.triggerAbility(nextState, params); break;
       case 'untap-card':                this.untapCard(nextState, gId); break;
       case 'untap-all':                 this.untapAll(nextState); break;
@@ -308,15 +307,8 @@ export class GameStateService {
   }
 
   private draw(nextState: TGameState) {
-    const card = this.getCards(nextState).deckA[0];
-    if (card) {
-      card.location = this.yourHand();
-      this.getPlayers(nextState).playerA.drawnCards += 1;
-
-    } else { // if no more cards to draw, you lose
-      const winner = this.playerANum === '1' ? '2' : '1'; // Opponent wins
-      endGame(nextState, winner);   
-    } 
+    drawCard(nextState, this.playerANum);
+    this.getPlayers(nextState).playerA.drawnCards += 1;
   }
 
 
