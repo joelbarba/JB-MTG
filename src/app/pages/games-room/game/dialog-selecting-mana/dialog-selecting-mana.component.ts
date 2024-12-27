@@ -3,12 +3,14 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { BfConfirmService, BfDnDModule, BfDnDService, BfUiLibModule } from 'bf-ui-lib';
-import { ISummonOp } from '../game.component';
 import { GameCardComponent } from "../game-card/game-card.component";
 import { ManaArrayComponent } from "../mana-array/mana-array.component";
+import { CardOpService } from '../cardOp.service';
 
 @Component({
-  selector: 'dialog-selecting-mana',
+  selector    : 'dialog-selecting-mana',
+  templateUrl : './dialog-selecting-mana.component.html',
+  styleUrl    : './dialog-selecting-mana.component.scss',
   standalone: true,
   imports: [
     CommonModule,
@@ -18,13 +20,11 @@ import { ManaArrayComponent } from "../mana-array/mana-array.component";
     BfUiLibModule,
     GameCardComponent,
     ManaArrayComponent,
-],
-  templateUrl: './dialog-selecting-mana.component.html',
-  styleUrl: './dialog-selecting-mana.component.scss'
+  ],
 })
 export class DialogSelectingManaComponent {
 
-  @Input() summonOp!: ISummonOp;
+  constructor(public cardOp: CardOpService) {}
 
   numArr(num: number): Array<number> { return Array.from(Array(num).keys()) }
 }

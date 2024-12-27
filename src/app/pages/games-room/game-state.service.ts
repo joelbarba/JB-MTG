@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
-import { Subject, Subscription, map } from 'rxjs';
+import { Subject, Subscription } from 'rxjs';
 import { AuthService } from '../../core/common/auth.service';
 import { ShellService } from '../../shell/shell.service';
-import { DocumentReference, Firestore, QuerySnapshot, collection, doc, getDoc, getDocs, onSnapshot, query, setDoc, DocumentData, Unsubscribe } from '@angular/fire/firestore';
-import { EPhase, TAction, TCard, TCardLocation, TGameState, TGameDBState, TGameCard, TGameCards, TActionParams, TPlayer, TCardType, TCardSemiLocation, TCardAnyLocation, TCast, TGameOption, ESubPhase, TEffect } from '../../core/types';
+import { Firestore, QuerySnapshot, collection, doc, getDoc, getDocs, onSnapshot, setDoc, DocumentData, Unsubscribe } from '@angular/fire/firestore';
+import { EPhase, TAction, TCard, TCardLocation, TGameState, TGameDBState, TGameCard, TActionParams, TCardType, TCardAnyLocation, ESubPhase, TCardOpStatus } from '../../core/types';
 import { calcManaForUncolored, checkMana, drawCard, endGame, getCards, getPlayers, killDamagedCreatures, moveCard, moveCardToGraveyard, spendMana } from './game/gameLogic/game.utils';
 import { GameOptionsService } from './game/game.options.service';
 import { extendCardLogic } from './game/gameLogic/game.card-specifics';
@@ -245,7 +245,6 @@ export class GameStateService {
       case 'start-game':                nextState.status = 'playing'; break;
       case 'skip-phase':                this.endPhase(nextState); break;
       case 'draw':                      this.draw(nextState);  break;
-      case 'trigger-ability':           this.triggerAbility(nextState, params); break;
       case 'untap-card':                this.untapCard(nextState, gId); break;
       case 'untap-all':                 this.untapAll(nextState); break;
       case 'select-attacking-creature': this.selectAttackingCreature(nextState, gId); break;
@@ -259,8 +258,8 @@ export class GameStateService {
       case 'summon-land':               this.summonSpell(nextState, params, true); break;
       case 'summon-creature':           this.summonSpell(nextState, params); break;
       case 'summon-spell':              this.summonSpell(nextState, params); break;
-      case 'cancel-summon':             this.cancelSummonOperations(nextState); break;
-      case 'cancel-ability':            this.cancelAbilityOperations(nextState); break;
+      case 'trigger-ability':           this.triggerAbility(nextState, params); break;
+      case 'cancel-op':                 this.cancelCardOperation(nextState); break;
       case 'release-stack':             this.releaseStack(nextState); break;
       case 'regenerate-creature':       this.triggerAbility(nextState, params); break;
       case 'cancel-regenerate':         this.cancelRegenerate(nextState); break;
@@ -333,30 +332,39 @@ export class GameStateService {
     const gId = params?.gId || '';
     let manaForUncolor = params.manaForUncolor || [0,0,0,0,0,0];
 
+    const addOpStack = (status: TCardOpStatus) => {
+      removeOpStack(); // If there is an existing operation with the same card, remove it
+      nextState.opStack.push({
+        gId, opAction: 'summon', status, targets: [],
+        manaForUncolor: [0,0,0,0,0,0], manaExtra: [0,0,0,0,0,0]
+      });
+    };
+    const removeOpStack = () => {
+      const op = nextState.opStack.find(c => c.gId === gId);
+      if (op) { nextState.opStack.splice(nextState.opStack.indexOf(op), 1); }
+    }
+
 
     const card = this.checkCard(nextState, gId, { location: 'hand' });
     if (card) {
       const summonCost = card.getSummonCost(nextState);
-      if (summonCost && (!card.status || card.status?.slice(0, 7) === 'summon:')) { // summon:waitingMana, summon:selectingMana, summon:selectingTargets
+      if (summonCost) {
 
-        this.cancelSummonOperations(nextState, card.gId); // Cancel other possible castings operations
-
-        let rightMana = true;  // Whether you have the right mana in your mana pool
+        let rightMana = true; // Whether you have the right mana in your mana pool
         const totalManaCost = summonCost.mana.reduce((v,a) => v + a, 0);
 
-        if (totalManaCost) {
-          rightMana = false;
+        if (totalManaCost) {          
           const manaStatus = checkMana(summonCost.mana, playerA.manaPool);
-          if (manaStatus === 'not enough') {
-            card.status = 'summon:waitingMana';
-            
-          } else if (manaStatus === 'exact' || manaStatus === 'auto') {
+          if (manaStatus === 'exact' || manaStatus === 'auto') {
             manaForUncolor = calcManaForUncolored(summonCost.mana, playerA.manaPool);
-            rightMana = true;
+
+          } else if (manaStatus === 'not enough') {
+            addOpStack('waitingMana');
+            rightMana = false;            
 
           } else if (manaStatus === 'manual') {
             rightMana = summonCost.mana[0] === manaForUncolor.reduce((v,a) => v + a, 0);
-            if (!rightMana) { card.status = 'summon:selectingMana'; } // If there is not enough uncolor selected
+            if (!rightMana) { addOpStack('selectingMana'); } // If there is not enough uncolor selected
           }
         }
 
@@ -364,19 +372,20 @@ export class GameStateService {
 
           if ((summonCost.neededTargets || 0) > (summonCost.possibleTargets || []).length) {             
             console.log(`You can't summon ${card.name} because there are no targets to select`);
-            this.cancelSummonOperations(nextState);
+            removeOpStack(); // Cancel current operation
           }
           else if ((params.targets?.length || 0) < (summonCost.neededTargets || 0)) { 
             if (summonCost.customDialog) { card.customDialog = summonCost.customDialog; }
-            card.status = 'summon:selectingTargets';
+            addOpStack('selectingTargets');
           }
           else {
             console.log(`SUMMONING ${card.name} (${params.gId}), manaForUncolor=${params.manaForUncolor}, targets=${params.targets}`);
-            spendMana(summonCost.mana, playerA.manaPool, manaForUncolor);
+            if (totalManaCost > 0) { spendMana(summonCost.mana, playerA.manaPool, manaForUncolor); }            
+            removeOpStack(); // complete current operation
             card.status = 'summoning';
             card.targets = params.targets || [];
             if (tableDirectly) {
-              card.onSummon(nextState); // Lands do not go to the stack but the table directly
+              card.onSummon(nextState); // Lands do not go to the stack but to the table directly
             } else {
               this.addToSpellStack(nextState, card);
             }
@@ -394,6 +403,19 @@ export class GameStateService {
     const gId = params?.gId || '';
     let manaForUncolor = params.manaForUncolor || [0,0,0,0,0,0];
 
+    const addOpStack = (status: TCardOpStatus) => {
+      removeOpStack(); // If there is an existing operation with the same card, remove it
+      nextState.opStack.push({
+        gId, opAction: 'ability', status, targets: [],
+        manaForUncolor: [0,0,0,0,0,0], manaExtra: [0,0,0,0,0,0]
+      });
+    };
+    const removeOpStack = () => {
+      const op = nextState.opStack.find(c => c.gId === gId);
+      if (op) { nextState.opStack.splice(nextState.opStack.indexOf(op), 1); }
+    }
+
+
     const card = nextState.cards.find(c => c.gId === gId);
     if (card) {
       const abilityCost = card.getAbilityCost(nextState);
@@ -403,18 +425,19 @@ export class GameStateService {
         const totalManaCost = abilityCost.mana.reduce((v,a) => v + a, 0);
 
         if (totalManaCost) {
-          rightMana = false;
           const manaStatus = checkMana(abilityCost.mana, this.playerA().manaPool);
-          if (manaStatus === 'not enough') {
-            card.status = 'ability:waitingMana';
-          }
-          else if (manaStatus === 'exact' || manaStatus === 'auto') {
+          
+          if (manaStatus === 'exact' || manaStatus === 'auto') {
             manaForUncolor = calcManaForUncolored(abilityCost.mana, playerA.manaPool);
-            rightMana = true;
+            rightMana = true;          
+          }
+          else if (manaStatus === 'not enough') {
+            addOpStack('waitingMana');
+            rightMana = false;
           }
           else if (manaStatus === 'manual') {
             rightMana = abilityCost.mana[0] <= manaForUncolor.reduce((v,a) => v + a, 0);
-            if (!rightMana) { card.status = 'ability:selectingMana'; } // If there is not enough uncolor selected
+            if (!rightMana) { addOpStack('selectingMana'); } // If there is not enough uncolor selected
           }
         }
 
@@ -422,15 +445,16 @@ export class GameStateService {
 
           if ((abilityCost.neededTargets || 0) > (abilityCost.possibleTargets || []).length) {             
             console.log(`You can't use ${card.name} because there are no targets to select`);
-            this.cancelSummonOperations(nextState);
+            removeOpStack(); // Cancel current operation
           }
           else if ((params.targets?.length || 0) < (abilityCost.neededTargets || 0)) { 
             if (abilityCost.customDialog) { card.customDialog = abilityCost.customDialog; }
-            card.status = 'ability:selectingTargets';
+            addOpStack('selectingTargets');
           }
           else {
             card.targets = params.targets || [];
             if (totalManaCost > 0) { spendMana(abilityCost.mana, playerA.manaPool, manaForUncolor); }
+            removeOpStack(); // complete current operation
             card.onAbility(nextState); // It may not always tap the card, but trigger the ability
             card.status = null;
           }
@@ -440,23 +464,33 @@ export class GameStateService {
     }
   }
 
-  // Cancel any other ongoing summon:XXX operation for your
-  private cancelSummonOperations(nextState: TGameState, exceptgId?: string) {
-    const { handA } = this.getCards(nextState);
-    handA.filter(c => c.gId !== exceptgId && c.status?.split(':')[0] === 'summon').forEach(card => {
-      card.status = null;
-      if (card.customDialog) { card.customDialog = null; }
-    });
+  // Cancel the latest ongoing card operation
+  private cancelCardOperation(nextState: TGameState) {
+    const op = nextState.opStack.at(-1);
+    if (op) { 
+      const card = nextState.cards.find(c => c.gId === op.gId);
+      if (card) { card.customDialog = null; }
+    }
+    nextState.opStack.pop();
   }
 
-  // Cancel any other ongoing ability:XXX operation for your
-  private cancelAbilityOperations(nextState: TGameState, exceptgId?: string) {
-    const { tableAStack } = this.getCards(nextState);
-    tableAStack.filter(c => c.gId !== exceptgId && c.status?.split(':')[0] === 'ability').forEach(card => {
-      card.status = null;
-      if (card.customDialog) { card.customDialog = null; }
-    });
-  }
+  // // Cancel any other ongoing summon:XXX operation for your
+  // private cancelSummonOperations(nextState: TGameState, exceptgId?: string) {
+  //   const { handA } = this.getCards(nextState);
+  //   handA.filter(c => c.gId !== exceptgId && c.status?.split(':')[0] === 'summon').forEach(card => {
+  //     card.status = null;
+  //     if (card.customDialog) { card.customDialog = null; }
+  //   });
+  // }
+
+  // // Cancel any other ongoing ability:XXX operation for your
+  // private cancelAbilityOperations(nextState: TGameState, exceptgId?: string) {
+  //   const { tableAStack } = this.getCards(nextState);
+  //   tableAStack.filter(c => c.gId !== exceptgId && c.status?.split(':')[0] === 'ability').forEach(card => {
+  //     card.status = null;
+  //     if (card.customDialog) { card.customDialog = null; }
+  //   });
+  // }
 
   // Cancel the regeneration of a creature and let it die
   private cancelRegenerate(nextState: TGameState) {
@@ -699,7 +733,8 @@ export class GameStateService {
 
   // Advances the phase for the given state, or ends the turn
   private endPhase(nextState: TGameState) {
-    this.cancelSummonOperations(nextState);
+    nextState.opStack = []; // Cancel all ongoing card operations
+
     switch (nextState.phase) {
       case EPhase.untap:        nextState.phase = EPhase.maintenance; break;
       case EPhase.maintenance:  nextState.phase = EPhase.draw; break;

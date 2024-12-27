@@ -9,6 +9,7 @@ import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { TGameCard } from '../../../../core/types';
 import { HoverTipDirective } from '../../../../core/common/internal-lib/bf-tooltip/bf-tooltip.directive';
+import { CardOpService } from '../cardOp.service';
 
 
 @Component({
@@ -41,6 +42,7 @@ export class GameCardComponent {
     public router: Router,
     public firestore: Firestore,
     public growl: BfGrowlService,
+    public cardOp: CardOpService,
   ) {
 
   }

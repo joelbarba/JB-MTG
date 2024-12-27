@@ -46,7 +46,7 @@ export class GameOptionsService {
         const abilityCost = card.getAbilityCost(state);
         if (abilityCost && (!abilityCost.tap || !card.isTapped) && !card.canRegenerate) {
           const option: TGameOption = { action: 'trigger-ability', params: { gId: card.gId }, text: abilityCost.text };
-          if (card.status?.split(':')[0] !== 'ability') { card.selectableAction = option; }
+          if (card.gId !== state.opStack.at(-1)?.gId) { card.selectableAction = option; }
           state.options.push(option);
         }
       });
@@ -55,46 +55,51 @@ export class GameOptionsService {
 
     // Actions that you can do during both your turn or opponents turn
 
-    // If you have a summoning operation, let it cancel
-    const summonCard = handA.find(c => c.status?.split(':')[0] === 'summon');
-    if (summonCard) { state.options.push({ action: 'cancel-summon', params: {}, text: 'Cancel ' + summonCard.name }); }
+    if (state.opStack.length) { // When an ongoing operation
 
-    // If you have an ability operation, let it cancel
-    const abilityCard = tableStack.find(c => c.status?.split(':')[0] === 'ability');
-    if (abilityCard) { state.options.push({ action: 'cancel-ability', params: {}, text: 'Cancel ' + abilityCard.name }); }
-    if (abilityCard) { youMayTriggerAbilities(); } // If you are using an ability, you may also use others (like tap mana)
-
-
-    // TARGET SELECTION: If you have a card that is selecting targets:
-    const playingCard = state.cards.find(c => c.status?.split(':')[1] === 'selectingTargets');
-    if (playingCard) {  // Selecting target
-      const statusPrefix = playingCard.status?.split(':')[0]; // summon:... or ability:...
-      const action = statusPrefix === 'summon' ? 'summon-spell' : 'trigger-ability';
-      const cost   = statusPrefix === 'summon' ? playingCard.getSummonCost(state) : playingCard.getAbilityCost(state);
-
-      const possibleTargets = cost?.possibleTargets || [];
-      possibleTargets.forEach(target => {
-        if (target === 'playerA') {
-          state.options.push({ action, params: { gId: playingCard.gId, targets: ['player' + playerANum] }});
-          playerA.selectableTarget = { text: `Select target player ${playerA.name}`, value: 'player' + playerANum };
-
-        } else if (target === 'playerB') {
-          state.options.push({ action, params: { gId: playingCard.gId, targets: ['player' + playerBNum] }});
-          playerB.selectableTarget = { text: `Select target player ${playerB.name}`, value: 'player' + playerBNum };
-
-        } else if (target.slice(0,6) === 'custom') { // Custom card selection
-          state.options.push({ action, params: { gId: playingCard.gId, targets: [target.slice(7)] } });
-
-        } else { // Card target
-          const targetCard = state.cards.find(c => c.gId === target);
-          if (targetCard) {
-            targetCard.selectableTarget = { text: `Select target ${targetCard.name}`, value: targetCard.gId };
-            state.options.push({ action, params: { gId: playingCard.gId, targets: [targetCard.gId] } });
+      // If you have a summoning operation, let it cancel
+      const playingCard = state.cards.find(c => c.gId === state.opStack.at(-1)?.gId);
+      if (playingCard && state.opStack.at(-1)?.opAction === 'summon') {
+        state.options.push({ action: 'cancel-op', params: {}, text: 'Cancel summon ' + playingCard.name });
+      }
+  
+      // If you have an ability operation, let it cancel
+      if (playingCard && state.opStack.at(-1)?.opAction === 'ability') {
+        state.options.push({ action: 'cancel-op', params: {}, text: 'Cancel ' + playingCard.name });
+        youMayTriggerAbilities(); // If you are using an ability, you may also use others (like tap mana)
+      }
+  
+  
+      // TARGET SELECTION: If you have a card that is selecting targets:
+      if (playingCard && state.opStack.at(-1)?.status === 'selectingTargets') {  // Selecting target
+        const action = state.opStack.at(-1)?.opAction === 'summon' ? 'summon-spell' : 'trigger-ability';
+        const cost   = state.opStack.at(-1)?.opAction === 'summon' ? playingCard.getSummonCost(state) : playingCard.getAbilityCost(state);
+  
+        const possibleTargets = cost?.possibleTargets || [];
+        possibleTargets.forEach(target => {
+          if (target === 'playerA') {
+            state.options.push({ action, params: { gId: playingCard.gId, targets: ['player' + playerANum] }});
+            playerA.selectableTarget = { text: `Select target player ${playerA.name}`, value: 'player' + playerANum };
+  
+          } else if (target === 'playerB') {
+            state.options.push({ action, params: { gId: playingCard.gId, targets: ['player' + playerBNum] }});
+            playerB.selectableTarget = { text: `Select target player ${playerB.name}`, value: 'player' + playerBNum };
+  
+          } else if (target.slice(0,6) === 'custom') { // Custom card selection
+            state.options.push({ action, params: { gId: playingCard.gId, targets: [target.slice(7)] } });
+  
+          } else { // Card target
+            const targetCard = state.cards.find(c => c.gId === target);
+            if (targetCard) {
+              targetCard.selectableTarget = { text: `Select target ${targetCard.name}`, value: targetCard.gId };
+              state.options.push({ action, params: { gId: playingCard.gId, targets: [targetCard.gId] } });
+            }
           }
-        }
-      });
-      return state; // <---- Avoid any other action when selecting a target
+        });
+        return state; // <---- Avoid any other action when selecting a target
+      }
     }
+
 
 
 
@@ -112,7 +117,7 @@ export class GameOptionsService {
       handA.filter(c => c.type === 'instant').forEach(card => {
         const option: TGameOption = { action: 'summon-spell', params: { gId: card.gId }, text: `Cast ${card.name}` };
         state.options.push(option);
-        if (!card.status) { card.selectableAction = option; }
+        if (card.gId !== state.opStack.at(-1)?.gId) { card.selectableAction = option; }
       });
 
       // You may summon interruptions (add them to the stack)
@@ -120,7 +125,7 @@ export class GameOptionsService {
         handA.filter(c => c.type === 'interruption').forEach(card => {
           const option: TGameOption = { action: 'summon-spell', params: { gId: card.gId }, text: `Interrupt spell with ${card.name}` };
           state.options.push(option);
-          if (!card.status) { card.selectableAction = option; }
+          if (card.gId !== state.opStack.at(-1)?.gId) { card.selectableAction = option; }
         });
       }
 
@@ -172,7 +177,7 @@ export class GameOptionsService {
       yourRegCreatures.forEach(creature => {
         const params = { gId: creature.gId };
         const option: TGameOption = { action: 'regenerate-creature', params, text: `Regenerate ${creature.name}` };
-        if (creature.status?.split(':')[0] !== 'ability') { creature.selectableAction = option; }
+        if (creature.gId !== state.opStack.at(-1)?.gId) { creature.selectableAction = option; }
         state.options.push(option);
       });
       state.options.push({ action: 'cancel-regenerate', params: {}, text: `Cancel Regenerate and let creatures die` });
@@ -201,7 +206,7 @@ export class GameOptionsService {
       handA.filter(c => c.type === 'creature').forEach(card => {
         const option: TGameOption = { action: 'summon-creature', params: { gId: card.gId }, text: `Summon ${card.name}` };
         state.options.push(option);
-        if (!card.status) { card.selectableAction = option; }
+        if (card.gId !== state.opStack.at(-1)?.gId) { card.selectableAction = option; }
       });
     }
 
@@ -210,7 +215,7 @@ export class GameOptionsService {
       handA.filter(c => c.type === 'enchantment').forEach(card => {
         const option: TGameOption = { action: 'summon-spell', params: { gId: card.gId }, text: `Cast ${card.name}` };
         state.options.push(option);
-        if (!card.status) { card.selectableAction = option; }
+        if (card.gId !== state.opStack.at(-1)?.gId) { card.selectableAction = option; }
       });
     }
 
@@ -219,7 +224,7 @@ export class GameOptionsService {
       handA.filter(c => c.type === 'artifact').forEach(card => {
         const option: TGameOption = { action: 'summon-spell', params: { gId: card.gId }, text: `Summon ${card.name}` };
         state.options.push(option);
-        if (!card.status) { card.selectableAction = option; }
+        if (card.gId !== state.opStack.at(-1)?.gId) { card.selectableAction = option; }
       });
     }
 
@@ -228,7 +233,7 @@ export class GameOptionsService {
       handA.filter(c => c.type === 'sorcery').forEach(card => {
         const option: TGameOption = { action: 'summon-spell', params: { gId: card.gId }, text: `Cast ${card.name}` };
         state.options.push(option);
-        if (!card.status) { card.selectableAction = option; }
+        if (card.gId !== state.opStack.at(-1)?.gId) { card.selectableAction = option; }
       });
     }
 
@@ -237,7 +242,7 @@ export class GameOptionsService {
       handA.filter(c => c.type === 'instant').forEach(card => {
         const option: TGameOption = { action: 'summon-spell', params: { gId: card.gId }, text: `Cast ${card.name}` };
         state.options.push(option);
-        if (!card.status) { card.selectableAction = option; }
+        if (card.gId !== state.opStack.at(-1)?.gId) { card.selectableAction = option; }
       });
     }
 

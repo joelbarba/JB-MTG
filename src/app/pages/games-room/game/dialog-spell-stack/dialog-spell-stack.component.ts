@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { BfConfirmService, BfDnDModule, BfDnDService, BfUiLibModule } from 'bf-ui-lib';
-import { ISummonOp, ITargetOp } from '../game.component';
 import { GameStateService } from '../../game-state.service';
 import { TActionParams, TGameCard, TGameState, TPlayer } from '../../../../core/types';
 import { Subscription } from 'rxjs';
@@ -133,7 +132,7 @@ export class DialogSpellStackComponent {
      
       // Select cards that are targetting the target
       const cardsTargetting = state.cards.filter(card => {
-        if (card.type === 'creature' && card.status?.slice(0,6) === 'combat') { return false; } // Omit defending creatures in combat (target = attacker)
+        if (card.type === 'creature' && card.combatStatus) { return false; } // Omit defending creatures in combat (target = attacker)
         return card.targets.indexOf(target) >= 0; 
       }).sort((a, b) => { // Cards that are not in the stack go first (left)
         if (a.location === 'stack' && b.location !== 'stack') { return 1; }

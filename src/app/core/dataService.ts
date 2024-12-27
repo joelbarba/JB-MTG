@@ -192,6 +192,7 @@ export class DataService {
       id: 0,
       deckId1: player1.deckId,
       deckId2: '', // Waiting for player 2 to accept the request and add a deck
+      opStack: [],
     };
 
     console.log('New Game', newGame);

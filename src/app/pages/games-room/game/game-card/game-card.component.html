@@ -5,16 +5,17 @@
   <img *ngIf="!back" src="/assets/images/cards/empty.png">
   <div *ngIf="count !== null" class="deck-count">{{count}}</div>
 </div>
+
 <div class="game-card" *ngIf="card"
      [class]="from + ' type-' + card.type"
      [class.back-card]="back"
      [class.back-border]="card.border === 'black'"
      [class.selectable-card]="selectable && (!!card.selectableAction || !!card.selectableTarget)"
      [class.is-tapped]="card.isTapped"
-     [class.is-summoning]="card.status === 'summon:waitingMana' || card.status === 'summon:selectingMana' || card.status === 'summon:selectingTargets' || card.status === 'summoning'"
      [class.is-sick]="card.status === 'sickness'"
      [class.is-selected-attack]="card.combatStatus === 'combat:attacking'"
      [class.is-selected-defense]="card.combatStatus === 'combat:defending'"
+     [class.is-summoning]="(cardOp.opAction === 'summon' && cardOp.gId == card.gId) || card.status === 'summoning'"
      [class.is-dying]="card.type === 'creature' && (card.turnDefense <= card.turnDamage || (shadow && shadow.defense <= shadow.damage))"
      [class.has-targets]="!!card.targets.length"
      [hoverTip]="card.selectableAction?.text || ''" tipId="card"     

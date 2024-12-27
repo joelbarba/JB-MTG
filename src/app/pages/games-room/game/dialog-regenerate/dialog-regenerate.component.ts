@@ -6,9 +6,9 @@ import { BfDnDModule, BfUiLibModule } from 'bf-ui-lib';
 import { GameStateService } from '../../game-state.service';
 import { TGameCard, TGameState } from '../../../../core/types';
 import { GameCardComponent } from '../game-card/game-card.component';
-import { ISummonOp } from '../game.component';
 import { ManaArrayComponent } from "../mana-array/mana-array.component";
 import { Subscription } from 'rxjs';
+import { CardOpService } from '../cardOp.service';
 
 
 @Component({
@@ -27,10 +27,6 @@ import { Subscription } from 'rxjs';
 ]
 })
 export class DialogRegenerateComponent {
-  // @Input({ required: true }) card!: TGameCard;
-  // @Input() mainInfo = '';
-  @Input() summonOp?: ISummonOp;
-
   creatures!: TGameCard[];
   card?: TGameCard;
 
@@ -44,6 +40,7 @@ export class DialogRegenerateComponent {
 
   constructor(
     private game: GameStateService,
+    public cardOp: CardOpService,
   ) {}
 
   ngOnInit() {

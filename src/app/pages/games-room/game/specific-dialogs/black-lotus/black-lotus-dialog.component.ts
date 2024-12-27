@@ -36,7 +36,7 @@ export class BlackLotusDialogComponent {
   ) {}
 
   cancel() {
-    this.game.action('cancel-ability');
+    this.game.action('cancel-op');
   }  
   
   select() {

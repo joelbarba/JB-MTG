@@ -52,7 +52,7 @@ export class DualLandDialogComponent {
   }
 
   cancel() {
-    this.game.action('cancel-ability');
+    this.game.action('cancel-op');
   }  
   
   select(mana: 0 | 1 | 2 | 3 | 4 | 5) {

@@ -71,7 +71,7 @@
 
       </div>
 
-      <div class="mana-pool" [class.selectable]="summonOp.status === 'selectingMana'">
+      <div class="mana-pool" [class.selectable]="cardOp.status === 'selectingMana'">
         <div class="mana" (click)="selectManaPool('A', 0)"> <img src="assets/images/Xmana.png">    <span>{{displayManaPool('A', 0)}}</span> </div>
         <div class="mana" (click)="selectManaPool('A', 1)"> <img src="assets/images/blueMana.png"> <span>{{displayManaPool('A', 1)}}</span> </div>
         <div class="mana" (click)="selectManaPool('A', 2)"> <img src="assets/images/whiteMana.png"><span>{{displayManaPool('A', 2)}}</span> </div>
@@ -141,8 +141,8 @@
           </bf-btn>
           <span [hidden]="!mainInfo || itemInfo" class="main-info">
             <span>{{mainInfo}}</span>
-            <span *ngIf="summonOp.status === 'waitingMana'">
-              <mana-array style="margin-left: 5px;" class="md" [mana]="summonOp.cast"></mana-array>
+            <span *ngIf="cardOp.status === 'waitingMana'">
+              <mana-array style="margin-left: 5px;" class="md" [mana]="cardOp.cast"></mana-array>
             </span>
           </span>
           <span [hidden]="!itemInfo" class="main-info">{{itemInfo}}</span>
@@ -241,10 +241,7 @@
 
 
   <!-- Dialog: Selecting Mana (cherry pick on summoning) -->
-  <dialog-selecting-mana 
-    *ngIf="summonOp.status === 'selectingMana'" 
-    [summonOp]="summonOp">
-  </dialog-selecting-mana>
+  <dialog-selecting-mana *ngIf="cardOp.status === 'selectingMana'"></dialog-selecting-mana>
 
 
   <dialog-spell-stack 
@@ -257,10 +254,7 @@
   <!-- spellStackPanelSize={{spellStackPanelSize}} -->
   <!-- panel={{panel}} -->
 
-  <dialog-regenerate 
-    *ngIf="regenerateCreature"
-    [summonOp]="summonOp">
-  </dialog-regenerate>
+  <dialog-regenerate *ngIf="regenerateCreature"></dialog-regenerate>
 
   <!-- Effects Floating Panel -->
   <panel-effects *ngIf="effectsPanelCard"
@@ -296,16 +290,16 @@
     <br/>subPhase={{game.state.subPhase}}
     <!-- <br/>options = {{state.options | json}} -->
     <br/>
-    <div *ngIf="summonOp.status !== 'off'">
-      summonOp - status = {{summonOp.status}}
-      <br/>action={{summonOp.action | json}}
-      <br/>params={{summonOp.params | json}}
-      <br/>text = {{summonOp.text}}
-      <br/>manaReserved={{summonOp.manaReserved | json}}
-      <br/>manaLeft={{summonOp.manaLeft | json}}
-      <br/><bf-btn (bfClick)="summonOp.cancel()" bfText="Cancel"></bf-btn>
-      <bf-btn style="margin-left: 15px;" (bfClick)="summonOp.tryToSummon()" bfText="tryToSummon"
-              [bfDisabled]="!summonOp.showSummonBtn"></bf-btn>
+    <div *ngIf="cardOp.status !== 'off'">
+      cardOp - status = {{cardOp.status}}
+      <br/>action={{cardOp.action | json}}
+      <br/>params={{cardOp.params | json}}
+      <br/>text = {{cardOp.text}}
+      <br/>manaReserved={{cardOp.manaReserved | json}}
+      <br/>manaLeft={{cardOp.manaLeft | json}}
+      <br/><bf-btn (bfClick)="cardOp.cancel()" bfText="Cancel"></bf-btn>
+      <bf-btn style="margin-left: 15px;" (bfClick)="cardOp.tryToAction()" bfText="tryToSummon"
+              [bfDisabled]="!cardOp.showSummonBtn"></bf-btn>
     </div>
   </div>
   

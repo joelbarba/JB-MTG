@@ -13,7 +13,6 @@ import { DialogSelectingManaComponent } from './dialog-selecting-mana/dialog-sel
 import { PanelGraveyardComponent } from './panel-graveyard/panel-graveyard.component';
 import { DialogCombatComponent } from './dialog-combat/dialog-combat.component';
 import { DialogSpellStackComponent } from './dialog-spell-stack/dialog-spell-stack.component';
-import { checkMana } from './gameLogic/game.utils';
 import { HoverTipDirective } from '../../../core/common/internal-lib/bf-tooltip/bf-tooltip.directive';
 import { PanelEffectsComponent } from './panel-effects/panel-effects.component';
 import { ManaArrayComponent } from './mana-array/mana-array.component';
@@ -23,6 +22,7 @@ import { BfTooltipService } from '../../../core/common/internal-lib/bf-tooltip/b
 import { BlackLotusDialogComponent } from "./specific-dialogs/black-lotus/black-lotus-dialog.component";
 import { DualLandDialogComponent } from "./specific-dialogs/dual-land/dual-land-dialog.component";
 import { DialogRegenerateComponent } from './dialog-regenerate/dialog-regenerate.component';
+import { CardOpService } from './cardOp.service';
 
 export interface ICard {
   img: string;
@@ -36,17 +36,17 @@ interface IDialog { type: 'xs' | 'sm' | 'md' | 'lg', title: string, text: string
   buttons: Array<{ text: string, class: string; action: any }> }
 
 
-export interface ITargetOp { status: string, targets: Array<string> };
-export interface ISummonOp {
-  status: 'off' | 'waitingMana' | 'selectingMana' | 'selectingTargets' | 'summoning', 
-  gId: string, target?: string, title: string, text: string, card?: TGameCard, showSummonBtn: boolean, minimized: boolean,
-  action: TAction, params: TActionParams, cast: TCast, manaLeft: TCast, manaReserved: TCast, // manaForUncolor: TCast,
-  reserveMana: (poolNum: number) => void, 
-  tryToSummon: () => void, 
-  addTarget: (value: string) => void,
-  turnOff: () => void, 
-  cancel: () => void
-}
+// export interface ITargetOp { status: string, targets: Array<string> };
+// export interface ISummonOp {
+//   status: 'off' | 'waitingMana' | 'selectingMana' | 'selectingTargets' | 'summoning', 
+//   gId: string, target?: string, title: string, text: string, card?: TGameCard, showSummonBtn: boolean, minimized: boolean,
+//   action: TAction, params: TActionParams, cast: TCast, manaLeft: TCast, manaReserved: TCast, // manaForUncolor: TCast,
+//   reserveMana: (poolNum: number) => void, 
+//   tryToSummon: () => void, 
+//   addTarget: (value: string) => void,
+//   turnOff: () => void, 
+//   cancel: () => void
+// }
 
 @Component({
   selector: 'app-game',
@@ -133,6 +133,7 @@ export class GameComponent {
     public growl: BfGrowlService,
     private hostElement: ElementRef,
     private tooltipService: BfTooltipService,
+    public cardOp: CardOpService,
   ) {
     this.shell.gameMode('on');
   }
@@ -202,8 +203,15 @@ export class GameComponent {
       this.setVarsFromStateChange();
       this.showToastMesssages();
       this.triggerDialogs();
-      this.autoAdvance();
+      
+      this.cardOp.update();
+      if (this.cardOp.status !== 'off') {
+        if (this.game.doYouHaveControl() && this.cardOp.card?.controller === this.game.playerANum) {
+          this.mainInfo = this.cardOp.text;
+        }
+      }
 
+      this.autoAdvance();
       this.autoPositionGameCards();
     }));
   }
@@ -242,6 +250,25 @@ export class GameComponent {
   }
 
 
+  goBack(reason: string) {
+    const modalConf = {
+      title: 'Game Over', 
+      htmlContent: `Congratulations! You won this game.`, 
+      showCancel: false, 
+      showNo: false, 
+      yesButtonText: 'view.common.ok' 
+    };
+    if (reason === 'player1win' && this.game.playerANum === '2') { modalConf.htmlContent = `Sorry, you lost this game.`; }
+    if (reason === 'player2win' && this.game.playerANum === '1') { modalConf.htmlContent = `Sorry, you lost this game.`; }
+    modalConf.htmlContent += `<br/><br/>Go back to play more games`;
+    this.bfConfirm.open(modalConf).then(_ => {
+      this.game.deactivateGame();
+      this.router.navigate(['game']);
+    });
+  }
+
+
+
 
 
   // Debugging tools
@@ -250,8 +277,6 @@ export class GameComponent {
   debugCard(card: TGameCard) { console.log(card.name, card); }
 
   setVarsFromStateChange() {
-    const you = this.game.playerANum;
-    const other = this.game.playerBNum;
     const yourOptions = this.game.doYouHaveControl() ? this.state.options : [];
 
     this.skipPhase.enabled = !!yourOptions.find(op => op.action === 'skip-phase');
@@ -275,21 +300,12 @@ export class GameComponent {
       this.globalButtons.push({ id: 'untap-all', text: 'Untap All', icon: 'icon-undo2', clickFn });
     }
 
-    // If cancel summon
-    const cancelSummonOp = yourOptions.find(op => op.action === 'cancel-summon');
+    // If cancel operation
+    const cancelSummonOp = yourOptions.find(op => op.action === 'cancel-op');
     if (cancelSummonOp) {
       this.globalButtons.push({
-        id: 'cancel-summon', text: cancelSummonOp.text || 'Cancel Summon', 
-        icon: 'icon-cross', clickFn: () => this.summonOp.cancel() 
-      });
-    }
-
-    // If cancel ability
-    const cancelAbilityOp = yourOptions.find(op => op.action === 'cancel-ability');
-    if (cancelAbilityOp) {
-      this.globalButtons.push({
-        id: 'cancel-ability', text: cancelAbilityOp.text || 'Cancel', 
-        icon: 'icon-cross', clickFn: () => this.game.action('cancel-ability')
+        id: 'cancel-op', text: cancelSummonOp.text || 'Cancel',
+        icon: 'icon-cross', clickFn: () => this.cardOp.cancel() 
       });
     }
 
@@ -411,34 +427,17 @@ export class GameComponent {
 
 
 
-  goBack(reason: string) {
-    const modalConf = {
-      title: 'Game Over', 
-      htmlContent: `Congratulations! You won this game.`, 
-      showCancel: false, 
-      showNo: false, 
-      yesButtonText: 'view.common.ok' 
-    };
-    if (reason === 'player1win' && this.game.playerANum === '2') { modalConf.htmlContent = `Sorry, you lost this game.`; }
-    if (reason === 'player2win' && this.game.playerANum === '1') { modalConf.htmlContent = `Sorry, you lost this game.`; }
-    modalConf.htmlContent += `<br/><br/>Go back to play more games`;
-    this.bfConfirm.open(modalConf).then(_ => {
-      this.game.deactivateGame();
-      this.router.navigate(['game']);
-    });
-  }
-
 
 
   // hoverHandCard(card: TGameCard) { this.hoverCard(card); }
   // hoverTableCard(card: TGameCard) { this.hoverCard(card); }
-  hoverCard(card: TGameCard) {
-  //   this.fullCardImg = card.image;
-  //   this.itemInfo = card.selectableAction?.text || '';
-  }
-  clearHover() {
-  //   this.itemInfo = '';
-  }
+  // hoverCard(card: TGameCard) {
+  // //   this.fullCardImg = card.image;
+  // //   this.itemInfo = card.selectableAction?.text || '';
+  // }
+  // clearHover() {
+  // //   this.itemInfo = '';
+  // }
 
 
   isHandCardSelectable(card: TGameCard): boolean {
@@ -449,7 +448,7 @@ export class GameComponent {
 
   displayManaPool(poolPlayer: string, poolNum: number): number {
     let mana = poolPlayer === 'A' ? this.playerA.manaPool[poolNum] : this.playerB.manaPool[poolNum];
-    if (this.summonOp.status !== 'off') { mana -= this.summonOp.manaReserved[poolNum]; } // If reserved for summoning, substract it
+    if (this.cardOp.status !== 'off') { mana -= this.cardOp.manaReserved[poolNum]; } // If reserved for summoning, substract it
     return mana;
   }
 
@@ -623,7 +622,7 @@ export class GameComponent {
       };
     }
 
-    this.updateSummonOperation();
+    // this.updateSummonOperation();
     this.updateCombatOperation();
     this.updateSpellStack();
     this.updateCustomDialogs();
@@ -637,179 +636,181 @@ export class GameComponent {
   
 
 
+
+
   // -------------------------- Summon Operation --------------------------
 
   // On state change, detect and update the status of a summon operation
-  updateSummonOperation() {
+  // updateSummonOperation() {
 
-    // If you tried to summon but there is not enough mana, start a summonOp waiting for the necessary mana
-    const waitingManaCard = this.handA.find(c => c.status === 'summon:waitingMana');
-    if (waitingManaCard && (this.summonOp.status === 'off' || this.summonOp.gId !== waitingManaCard.gId)) {
-      this.startSummonOp(waitingManaCard, 'waitingMana'); // start new summon op
-    }
+  //   // If you tried to summon but there is not enough mana, start a summonOp waiting for the necessary mana
+  //   const waitingManaCard = this.handA.find(c => c.status === 'summon:waitingMana');
+  //   if (waitingManaCard && (this.summonOp.status === 'off' || this.summonOp.gId !== waitingManaCard.gId)) {
+  //     this.startSummonOp(waitingManaCard, 'waitingMana'); // start new summon op
+  //   }
 
-    // If you tried to trigger an ability that costs mana but there is not enough, start a summonOp waiting for the necessary mana
-    const waitingManaCard2 = this.tableA.find(c => c.status === 'ability:waitingMana');
-    if (waitingManaCard2 && (this.summonOp.status === 'off' || this.summonOp.gId !== waitingManaCard2.gId)) {
-      this.startManaOp(waitingManaCard2, 'waitingMana'); // start new mana operation
-    }
+  //   // If you tried to trigger an ability that costs mana but there is not enough, start a summonOp waiting for the necessary mana
+  //   const waitingManaCard2 = this.tableA.find(c => c.status === 'ability:waitingMana');
+  //   if (waitingManaCard2 && (this.summonOp.status === 'off' || this.summonOp.gId !== waitingManaCard2.gId)) {
+  //     this.startManaOp(waitingManaCard2, 'waitingMana'); // start new mana operation
+  //   }
     
-    // If you tried to summon but a cherry picking is needed for the uncolored mana, do it
-    const selectingManaCard = this.handA.find(c => c.status === 'summon:selectingMana');
-    if (selectingManaCard && (this.summonOp.status === 'off' || this.summonOp.gId !== selectingManaCard.gId)) {
-      this.startSummonOp(selectingManaCard, 'selectingMana'); // start new summon op
-    }
+  //   // If you tried to summon but a cherry picking is needed for the uncolored mana, do it
+  //   const selectingManaCard = this.handA.find(c => c.status === 'summon:selectingMana');
+  //   if (selectingManaCard && (this.summonOp.status === 'off' || this.summonOp.gId !== selectingManaCard.gId)) {
+  //     this.startSummonOp(selectingManaCard, 'selectingMana'); // start new summon op
+  //   }
     
-    // If you tried to summon but a cherry picking is needed for the uncolored mana, do it
-    const selectingManaCard2 = this.tableA.find(c => c.status === 'ability:selectingMana');
-    if (selectingManaCard2 && (this.summonOp.status === 'off' || this.summonOp.gId !== selectingManaCard2.gId)) {
-      this.startManaOp(selectingManaCard2, 'selectingMana'); // start new summon op
-    }
+  //   // If you tried to summon but a cherry picking is needed for the uncolored mana, do it
+  //   const selectingManaCard2 = this.tableA.find(c => c.status === 'ability:selectingMana');
+  //   if (selectingManaCard2 && (this.summonOp.status === 'off' || this.summonOp.gId !== selectingManaCard2.gId)) {
+  //     this.startManaOp(selectingManaCard2, 'selectingMana'); // start new summon op
+  //   }
 
-    // If a summoning is waiting for target selection, start the summonOp with it
-    const selectingTargetCard = this.handA.find(c => c.status === 'summon:selectingTargets');
-    if (selectingTargetCard && (this.summonOp.status === 'off' || this.summonOp.gId !== selectingTargetCard.gId)) {
-      this.startSummonOp(selectingTargetCard, 'selectingTargets'); // start new summon op
-    }
+  //   // If a summoning is waiting for target selection, start the summonOp with it
+  //   const selectingTargetCard = this.handA.find(c => c.status === 'summon:selectingTargets');
+  //   if (selectingTargetCard && (this.summonOp.status === 'off' || this.summonOp.gId !== selectingTargetCard.gId)) {
+  //     this.startSummonOp(selectingTargetCard, 'selectingTargets'); // start new summon op
+  //   }
 
-    // If an ongoing waiting mana operation, try to use the current mana pool
-    if (this.summonOp.status === 'waitingMana') { this.summonOp.tryToSummon(); }
+  //   // If an ongoing waiting mana operation, try to use the current mana pool
+  //   if (this.summonOp.status === 'waitingMana') { this.summonOp.tryToSummon(); }
 
-    if (this.summonOp.status !== 'off') {
-      if (!waitingManaCard && !selectingManaCard && !selectingTargetCard 
-      && !waitingManaCard2 && !selectingManaCard2) { this.summonOp.turnOff(); } // Cancel operation no longer needed
-      this.mainInfo = this.summonOp.text;
-      // this.itemInfo = this.summonOp.text;
-    }
-  }
+  //   if (this.summonOp.status !== 'off') {
+  //     if (!waitingManaCard && !selectingManaCard && !selectingTargetCard 
+  //     && !waitingManaCard2 && !selectingManaCard2) { this.summonOp.turnOff(); } // Cancel operation no longer needed
+  //     this.mainInfo = this.summonOp.text;
+  //     // this.itemInfo = this.summonOp.text;
+  //   }
+  // }
 
 
 
-  summonOp: ISummonOp = { 
-    status: 'off', gId: '', title: '', text: '', showSummonBtn: false, minimized: false,
-    action: 'summon-creature', params: {},
-    cast        : [0, 0, 0, 0, 0, 0] as TCast,
-    manaLeft    : [0, 0, 0, 0, 0, 0] as TCast,
-    manaReserved: [0, 0, 0, 0, 0, 0] as TCast,
-    reserveMana: (poolNum: number) => {
-      if (poolNum > 0 && this.summonOp.manaLeft[poolNum] > 0) { // Use it as colored mana
-        this.summonOp.manaLeft[poolNum] -= 1;
-        this.summonOp.manaReserved[poolNum] += 1;
-      }
-      else if (this.summonOp.manaLeft[0] > 0)  { // Use it as uncolored mana
-        this.summonOp.manaLeft[0] -= 1;
-        this.summonOp.manaReserved[poolNum] += 1;
-        if (!this.summonOp.params?.manaForUncolor) { this.summonOp.params.manaForUncolor = [0,0,0,0,0,0]; }
-        this.summonOp.params.manaForUncolor[poolNum] += 1;
-      }
-      // else { return; } // Unusable (can't reserve more mana than needed)
-      this.summonOp.showSummonBtn = this.summonOp.manaLeft.reduce((v,a) => v + a, 0) <= 0;
-    },
-    tryToSummon: () => {
-      if (!this.summonOp.card) { return; }
-      const manaStatus = checkMana(this.summonOp.cast, this.playerA.manaPool);
-      if (manaStatus === 'exact' || manaStatus === 'auto') {
-        this.summonOp.turnOff();
-        setTimeout(() => this.game.action(this.summonOp.action, this.summonOp.params));
-      }
-      else if (manaStatus === 'not enough') { console.log('Still not enough mana'); }
-      else if (manaStatus === 'manual') { // Too many mana of different colors. You need to select
-        console.log('Ops, too much mana of different colors. You need to select');        
+  // summonOp: ISummonOp = { 
+  //   status: 'off', gId: '', title: '', text: '', showSummonBtn: false, minimized: false,
+  //   action: 'summon-creature', params: {},
+  //   cast        : [0, 0, 0, 0, 0, 0] as TCast,
+  //   manaLeft    : [0, 0, 0, 0, 0, 0] as TCast,
+  //   manaReserved: [0, 0, 0, 0, 0, 0] as TCast,
+  //   reserveMana: (poolNum: number) => {
+  //     if (poolNum > 0 && this.summonOp.manaLeft[poolNum] > 0) { // Use it as colored mana
+  //       this.summonOp.manaLeft[poolNum] -= 1;
+  //       this.summonOp.manaReserved[poolNum] += 1;
+  //     }
+  //     else if (this.summonOp.manaLeft[0] > 0)  { // Use it as uncolored mana
+  //       this.summonOp.manaLeft[0] -= 1;
+  //       this.summonOp.manaReserved[poolNum] += 1;
+  //       if (!this.summonOp.params?.manaForUncolor) { this.summonOp.params.manaForUncolor = [0,0,0,0,0,0]; }
+  //       this.summonOp.params.manaForUncolor[poolNum] += 1;
+  //     }
+  //     // else { return; } // Unusable (can't reserve more mana than needed)
+  //     this.summonOp.showSummonBtn = this.summonOp.manaLeft.reduce((v,a) => v + a, 0) <= 0;
+  //   },
+  //   tryToSummon: () => {
+  //     if (!this.summonOp.card) { return; }
+  //     const manaStatus = checkMana(this.summonOp.cast, this.playerA.manaPool);
+  //     if (manaStatus === 'exact' || manaStatus === 'auto') {
+  //       this.summonOp.turnOff();
+  //       setTimeout(() => this.game.action(this.summonOp.action, this.summonOp.params));
+  //     }
+  //     else if (manaStatus === 'not enough') { console.log('Still not enough mana'); }
+  //     else if (manaStatus === 'manual') { // Too many mana of different colors. You need to select
+  //       console.log('Ops, too much mana of different colors. You need to select');        
 
-        const reserveStatus = checkMana(this.summonOp.cast, this.summonOp.manaReserved);
-        if (reserveStatus === 'exact' || reserveStatus === 'auto') {
-          this.summonOp.turnOff();
-          setTimeout(() => this.game.action(this.summonOp.action, this.summonOp.params));
-        } 
-        else if (this.summonOp.status !== 'selectingMana') {
-          this.startSummonOp(this.summonOp.card, 'selectingMana');
-        }
-      }
-    },
-    addTarget: (target: string) => {
-      if (!this.summonOp.params.targets) { this.summonOp.params.targets = []; }
-      this.summonOp.params.targets?.push(target);
-      this.summonOp.tryToSummon();
-    },
-    cancel: () => {
-      this.summonOp.turnOff();
-      this.summonOp.gId = ''; // Force values reset
-      this.game.action('cancel-summon');
-    },
-    turnOff: () => { // Hides, but keeps the values
-      this.globalButtons.removeById('cancel-summon');
-      this.summonOp.status = 'off';
-    }
-  };
+  //       const reserveStatus = checkMana(this.summonOp.cast, this.summonOp.manaReserved);
+  //       if (reserveStatus === 'exact' || reserveStatus === 'auto') {
+  //         this.summonOp.turnOff();
+  //         setTimeout(() => this.game.action(this.summonOp.action, this.summonOp.params));
+  //       } 
+  //       else if (this.summonOp.status !== 'selectingMana') {
+  //         this.startSummonOp(this.summonOp.card, 'selectingMana');
+  //       }
+  //     }
+  //   },
+  //   addTarget: (target: string) => {
+  //     if (!this.summonOp.params.targets) { this.summonOp.params.targets = []; }
+  //     this.summonOp.params.targets?.push(target);
+  //     this.summonOp.tryToSummon();
+  //   },
+  //   cancel: () => {
+  //     this.summonOp.turnOff();
+  //     this.summonOp.gId = ''; // Force values reset
+  //     this.game.action('cancel-summon');
+  //   },
+  //   turnOff: () => { // Hides, but keeps the values
+  //     this.globalButtons.removeById('cancel-summon');
+  //     this.summonOp.status = 'off';
+  //   }
+  // };
 
-  startSummonOp(card: TGameCard, status: 'off' | 'waitingMana' | 'selectingMana' | 'selectingTargets' | 'summoning') {
-    if (this.summonOp.gId !== card.gId) { // Initialize summon operation for the given card
-      this.summonOp.gId           = card.gId;
-      this.summonOp.card          = card;
-      this.summonOp.params        = { gId: card.gId }; // manaForUncolor = [0,0,0,0,0,0], targets = [];
-      this.summonOp.title         = `Summoning ${card.name}`;
-      this.summonOp.minimized     = false;
-      this.summonOp.showSummonBtn = false;
-      this.summonOp.cast          = [...card.cast];
-      this.summonOp.manaLeft      = [...card.cast];   // Remaining mana left to summon
-      this.summonOp.manaReserved  = [0,0,0,0,0,0];    // Mana temporarily reserved to summon
-      this.summonOp.action = 'summon-spell';
-      if (card.type === 'creature')     { this.summonOp.action = 'summon-creature'; }
-      if (card.type === 'instant')      { this.summonOp.action = 'summon-spell'; }
-      if (card.type === 'interruption') { this.summonOp.action = 'summon-spell'; }
-    }
+  // startSummonOp(card: TGameCard, status: 'off' | 'waitingMana' | 'selectingMana' | 'selectingTargets' | 'summoning') {
+  //   if (this.summonOp.gId !== card.gId) { // Initialize summon operation for the given card
+  //     this.summonOp.gId           = card.gId;
+  //     this.summonOp.card          = card;
+  //     this.summonOp.params        = { gId: card.gId }; // manaForUncolor = [0,0,0,0,0,0], targets = [];
+  //     this.summonOp.title         = `Summoning ${card.name}`;
+  //     this.summonOp.minimized     = false;
+  //     this.summonOp.showSummonBtn = false;
+  //     this.summonOp.cast          = [...card.cast];
+  //     this.summonOp.manaLeft      = [...card.cast];   // Remaining mana left to summon
+  //     this.summonOp.manaReserved  = [0,0,0,0,0,0];    // Mana temporarily reserved to summon
+  //     this.summonOp.action = 'summon-spell';
+  //     if (card.type === 'creature')     { this.summonOp.action = 'summon-creature'; }
+  //     if (card.type === 'instant')      { this.summonOp.action = 'summon-spell'; }
+  //     if (card.type === 'interruption') { this.summonOp.action = 'summon-spell'; }
+  //   }
 
-    this.summonOp.status = status;
+  //   this.summonOp.status = status;
 
-    if (status === 'waitingMana') {
-      this.summonOp.text = `You need to generate mana to summon ${card.name}:`;
+  //   if (status === 'waitingMana') {
+  //     this.summonOp.text = `You need to generate mana to summon ${card.name}:`;
 
-    } else if (status === 'selectingMana') {
-      this.summonOp.text = `Please select the mana from your mana pool you want to use to summon ${card.name}`;
-      // Automatically reserve colored mana
-      for (let t = 0; t < Math.min(this.playerA.manaPool[1], card.cast[1]); t++) { this.summonOp.reserveMana(1); }
-      for (let t = 0; t < Math.min(this.playerA.manaPool[2], card.cast[2]); t++) { this.summonOp.reserveMana(2); }
-      for (let t = 0; t < Math.min(this.playerA.manaPool[3], card.cast[3]); t++) { this.summonOp.reserveMana(3); }
-      for (let t = 0; t < Math.min(this.playerA.manaPool[4], card.cast[4]); t++) { this.summonOp.reserveMana(4); }
-      for (let t = 0; t < Math.min(this.playerA.manaPool[5], card.cast[5]); t++) { this.summonOp.reserveMana(5); }
+  //   } else if (status === 'selectingMana') {
+  //     this.summonOp.text = `Please select the mana from your mana pool you want to use to summon ${card.name}`;
+  //     // Automatically reserve colored mana
+  //     for (let t = 0; t < Math.min(this.playerA.manaPool[1], card.cast[1]); t++) { this.summonOp.reserveMana(1); }
+  //     for (let t = 0; t < Math.min(this.playerA.manaPool[2], card.cast[2]); t++) { this.summonOp.reserveMana(2); }
+  //     for (let t = 0; t < Math.min(this.playerA.manaPool[3], card.cast[3]); t++) { this.summonOp.reserveMana(3); }
+  //     for (let t = 0; t < Math.min(this.playerA.manaPool[4], card.cast[4]); t++) { this.summonOp.reserveMana(4); }
+  //     for (let t = 0; t < Math.min(this.playerA.manaPool[5], card.cast[5]); t++) { this.summonOp.reserveMana(5); }
 
-    } else if (status === 'selectingTargets') {
-      this.summonOp.text = `Select target`;
-    }
-  }
+  //   } else if (status === 'selectingTargets') {
+  //     this.summonOp.text = `Select target`;
+  //   }
+  // }
 
-  startManaOp(card: TGameCard, status: 'off' | 'waitingMana' | 'selectingMana' | 'selectingTargets' | 'summoning') {
-    if (this.summonOp.gId !== card.gId) { // Initialize summon operation for the given card
-      const neededMana = card.getAbilityCost(this.state)?.mana || [0,0,0,0,0,0];
-      this.summonOp.gId           = card.gId;
-      this.summonOp.card          = card;
-      this.summonOp.params        = { gId: card.gId }; // manaForUncolor = [0,0,0,0,0,0], targets = [];
-      // this.summonOp.title         = `Summoning ${card.name}`;
-      this.summonOp.minimized     = false;
-      this.summonOp.showSummonBtn = false;
-      this.summonOp.cast          = [...neededMana];
-      this.summonOp.manaLeft      = [...neededMana];  // Remaining mana left to summon
-      this.summonOp.manaReserved  = [0,0,0,0,0,0];    // Mana temporarily reserved to summon
-      this.summonOp.action = 'trigger-ability';
-    }
-    this.summonOp.status = status;
+  // startManaOp(card: TGameCard, status: 'off' | 'waitingMana' | 'selectingMana' | 'selectingTargets' | 'summoning') {
+  //   if (this.summonOp.gId !== card.gId) { // Initialize summon operation for the given card
+  //     const neededMana = card.getAbilityCost(this.state)?.mana || [0,0,0,0,0,0];
+  //     this.summonOp.gId           = card.gId;
+  //     this.summonOp.card          = card;
+  //     this.summonOp.params        = { gId: card.gId }; // manaForUncolor = [0,0,0,0,0,0], targets = [];
+  //     // this.summonOp.title         = `Summoning ${card.name}`;
+  //     this.summonOp.minimized     = false;
+  //     this.summonOp.showSummonBtn = false;
+  //     this.summonOp.cast          = [...neededMana];
+  //     this.summonOp.manaLeft      = [...neededMana];  // Remaining mana left to summon
+  //     this.summonOp.manaReserved  = [0,0,0,0,0,0];    // Mana temporarily reserved to summon
+  //     this.summonOp.action = 'trigger-ability';
+  //   }
+  //   this.summonOp.status = status;
 
-    if (status === 'waitingMana') {
-      this.summonOp.text = `To use ${card.name} you need to generate:`;
+  //   if (status === 'waitingMana') {
+  //     this.summonOp.text = `To use ${card.name} you need to generate:`;
 
-    } else if (status === 'selectingMana') {
-      this.summonOp.text = `Please select the mana from your mana pool you want to use for ${card.name}`;
-      // Automatically reserve colored mana
-      for (let t = 0; t < Math.min(this.playerA.manaPool[1], card.cast[1]); t++) { this.summonOp.reserveMana(1); }
-      for (let t = 0; t < Math.min(this.playerA.manaPool[2], card.cast[2]); t++) { this.summonOp.reserveMana(2); }
-      for (let t = 0; t < Math.min(this.playerA.manaPool[3], card.cast[3]); t++) { this.summonOp.reserveMana(3); }
-      for (let t = 0; t < Math.min(this.playerA.manaPool[4], card.cast[4]); t++) { this.summonOp.reserveMana(4); }
-      for (let t = 0; t < Math.min(this.playerA.manaPool[5], card.cast[5]); t++) { this.summonOp.reserveMana(5); }
+  //   } else if (status === 'selectingMana') {
+  //     this.summonOp.text = `Please select the mana from your mana pool you want to use for ${card.name}`;
+  //     // Automatically reserve colored mana
+  //     for (let t = 0; t < Math.min(this.playerA.manaPool[1], card.cast[1]); t++) { this.summonOp.reserveMana(1); }
+  //     for (let t = 0; t < Math.min(this.playerA.manaPool[2], card.cast[2]); t++) { this.summonOp.reserveMana(2); }
+  //     for (let t = 0; t < Math.min(this.playerA.manaPool[3], card.cast[3]); t++) { this.summonOp.reserveMana(3); }
+  //     for (let t = 0; t < Math.min(this.playerA.manaPool[4], card.cast[4]); t++) { this.summonOp.reserveMana(4); }
+  //     for (let t = 0; t < Math.min(this.playerA.manaPool[5], card.cast[5]); t++) { this.summonOp.reserveMana(5); }
 
-    } else if (status === 'selectingTargets') {
-      this.summonOp.text = `Select target`;
-    }
-  }
+  //   } else if (status === 'selectingTargets') {
+  //     this.summonOp.text = `Select target`;
+  //   }
+  // }
 
 
   combatPanel = false;
@@ -853,11 +854,11 @@ export class GameComponent {
 
     if (this.spellStackPanel) {
       // If summoning a card and waiting for mana, minimize it (so the lands on the table get visible)
-      if (this.state.cards.find(c => c.status === 'summon:waitingMana')) { this.spellStackPanelSize = 'min'; }
-      if (this.state.cards.find(c => c.status === 'summon:selectingMana')) { this.spellStackPanelSize = 'min'; }
+      if (this.cardOp?.status === 'waitingMana')   { this.spellStackPanelSize = 'min'; }
+      if (this.cardOp?.status === 'selectingMana') { this.spellStackPanelSize = 'min'; }
   
       // If summoning a card and selecting a target, maximize it because its' most likely one on the stack
-      if (this.state.cards.find(c => c.status === 'summon:selectingTargets')) { this.spellStackPanelSize = 'max'; }
+      if (this.cardOp?.status === 'selectingTargets') { this.spellStackPanelSize = 'max'; }
     }
   }
 
@@ -885,7 +886,7 @@ export class GameComponent {
   }
 
   selectManaPool(fromPlayer: 'A' | 'B', poolNum: number) {
-    if (this.summonOp.status === 'selectingMana' && this.playerA.manaPool[poolNum] > 0) { this.summonOp.reserveMana(poolNum); }
+    if (this.cardOp.status === 'selectingMana' && this.playerA.manaPool[poolNum] > 0) { this.cardOp.reserveMana(poolNum); }
   }
 
   selectCardFromYourHand(card: TGameCard) {
@@ -903,8 +904,8 @@ export class GameComponent {
 
   selectCard(card: TGameCard) {
     if (card.selectableTarget) {
-      if (this.summonOp.status === 'selectingTargets') {
-        this.summonOp.addTarget(card.selectableTarget.value);        
+      if (this.cardOp.status === 'selectingTargets') {
+        this.cardOp.addTarget(card.selectableTarget.value);        
       }
     }
     if (card.selectableAction) {
@@ -914,8 +915,8 @@ export class GameComponent {
 
   selectPlayer(player: TPlayer) {
     if (player.selectableTarget) {
-      if (this.summonOp.status === 'selectingTargets') {
-        this.summonOp.addTarget(player.selectableTarget.value);
+      if (this.cardOp.status === 'selectingTargets') {
+        this.cardOp.addTarget(player.selectableTarget.value);
       }
     }
   }

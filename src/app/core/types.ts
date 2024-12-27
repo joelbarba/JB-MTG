@@ -95,22 +95,21 @@ export type TGameDBState = {
   id: number; // sequential order
   deckId1: string;
   deckId2: string; // If empty = waiting for player2 to accept request
+  opStack: Array<TCardOp>;  // opStack[0] = oldest card operation
 }
 export type TGameState = TGameDBState & { options: Array<TGameOption> };
 export type TGameHistory = TGameState & { history: Array<TGameOption & { time: string, player: '1' | '2' }>; }
 
 export type TDBGameCard = {
   name        : string;
-  id          : string; // C000000
-  gId         : string;
-  owner       : '1' | '2';       // player 1 | player 2
+  id          : string; // c000000
+  gId         : string; // g000
+  owner       : '1' | '2';  // player 1 | player 2
   controller  : '1' | '2';  // player 1 | player 2
   order       : number;
   location    : TCardLocation;
   isTapped    : boolean;
-  status: null | 'summoning' | 'sickness'
-               | 'summon:waitingMana'  | 'summon:selectingMana'  | 'summon:selectingTargets' 
-               | 'ability:waitingMana' | 'ability:selectingMana' | 'ability:selectingTargets';
+  status: null | 'summoning' | 'sickness',
   combatStatus: null | 'combat:attacking' | 'combat:defending' | 'combat:selectingTarget';
   isDying: boolean,     // If card.canRegenerate, you get a special step to trigger the regeneration ability
 
@@ -153,6 +152,17 @@ export type TExtGameCard = TGameCard & {
   grid: 'A' | 'B';
 }
 
+export type TCardOpStatus = 'waitingMana' | 'selectingMana' | 'waitingExtraMana' | 'selectingExtraMana' | 'selectingTargets';
+export type TCardOp = {
+  gId: string,
+  opAction: 'summon' | 'ability',
+  status: TCardOpStatus,
+  manaForUncolor: TCast,
+  manaExtra: TCast,
+  targets: Array<string>; // string = gId
+}
+
+
 
 export type TPlayer = {
   userId: string;
@@ -178,10 +188,9 @@ export type TAction = 'start-game'
 | 'summon-land' 
 | 'summon-creature'
 | 'summon-spell'
-| 'cancel-summon'
-| 'cancel-ability'
-| 'select-card-to-discard'
 | 'trigger-ability'
+| 'cancel-op'
+| 'select-card-to-discard'
 | 'burn-mana'
 | 'select-attacking-creature'
 | 'cancel-attack'
