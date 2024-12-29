@@ -71,7 +71,7 @@
 
       </div>
 
-      <div class="mana-pool" [class.selectable]="cardOp.status === 'selectingMana'">
+      <div class="mana-pool" [class.selectable]="cardOp.status === 'selectingMana' || cardOp.status === 'waitingExtraMana'">
         <div class="mana" (click)="selectManaPool('A', 0)"> <img src="assets/images/Xmana.png">    <span>{{displayManaPool('A', 0)}}</span> </div>
         <div class="mana" (click)="selectManaPool('A', 1)"> <img src="assets/images/blueMana.png"> <span>{{displayManaPool('A', 1)}}</span> </div>
         <div class="mana" (click)="selectManaPool('A', 2)"> <img src="assets/images/whiteMana.png"><span>{{displayManaPool('A', 2)}}</span> </div>
@@ -112,17 +112,14 @@
         <game-card *ngFor="let card of handB" [card]="card" from="handB" [back]="true"></game-card>
       </div>
 
-      <div class="play-box"
-           bfDropContainer
-          (bfDrop)="moveCardPosition($event)" 
-          (dblclick)="autoPositionGameCards()">
+      <!-- bfDropContainer (bfDrop)="moveCardPosition($event)"  -->
+      <div class="play-box" (dblclick)="autoPositionGameCards()">
 
+        <!-- [bfDraggable]="card" (dragstart)="dragStart($event, card)" -->
         <game-card *ngFor="let card of displayTableB" [card]="card" from="tbleB"
           [style.left.px]="card.posX"
           [style.top.px]="card.posY"
           [style.z-index]="card.zInd"
-          [bfDraggable]="card"
-          (dragstart)="dragStart($event, card)"
           (click)="selectCardFromTable(card)"
           (mouseenter)="game.hoverCard$.next(card)"
           (mouseleave)="game.hoverCard$.next(null)">
@@ -142,7 +139,7 @@
           <span [hidden]="!mainInfo || itemInfo" class="main-info">
             <span>{{mainInfo}}</span>
             <span *ngIf="cardOp.status === 'waitingMana'">
-              <mana-array style="margin-left: 5px;" class="md" [mana]="cardOp.cast"></mana-array>
+              <mana-array style="margin-left: 5px;" class="md" [mana]="cardOp.manaNeeded"></mana-array>
             </span>
           </span>
           <span [hidden]="!itemInfo" class="main-info">{{itemInfo}}</span>
@@ -189,17 +186,14 @@
         </game-card>
       </div>
 
-      <div class="play-box"
-           bfDropContainer
-           (bfDrop)="moveCardPosition($event)" 
-           (dblclick)="autoPositionGameCards()">
+      <!-- bfDropContainer (bfDrop)="moveCardPosition($event)" -->
+      <div class="play-box" (dblclick)="autoPositionGameCards()">
 
+        <!-- [bfDraggable]="card" (dragstart)="dragStart($event, card)" -->
         <game-card *ngFor="let card of displayTableA" [card]="card" from="tbleA"
           [style.left.px]="card.posX"
           [style.top.px]="card.posY"
           [style.z-index]="card.zInd"
-          [bfDraggable]="card"
-          (dragstart)="dragStart($event, card)"
           (click)="selectCardFromTable(card)"
           (mouseenter)="game.hoverCard$.next(card)"
           (mouseleave)="game.hoverCard$.next(null)">
@@ -241,7 +235,7 @@
 
 
   <!-- Dialog: Selecting Mana (cherry pick on summoning) -->
-  <dialog-selecting-mana *ngIf="cardOp.status === 'selectingMana'"></dialog-selecting-mana>
+  <dialog-selecting-mana *ngIf="youControl && cardOp.status === 'selectingMana'"></dialog-selecting-mana>
 
 
   <dialog-spell-stack 
@@ -255,6 +249,9 @@
   <!-- panel={{panel}} -->
 
   <dialog-regenerate *ngIf="regenerateCreature"></dialog-regenerate>
+
+  <!-- Dialog: Selecting Mana (cherry pick on summoning) -->
+  <dialog-selecting-extra-mana *ngIf="cardOp.displayExtraManaDialog"></dialog-selecting-extra-mana>
 
   <!-- Effects Floating Panel -->
   <panel-effects *ngIf="effectsPanelCard"
@@ -295,7 +292,6 @@
       <br/>action={{cardOp.action | json}}
       <br/>params={{cardOp.params | json}}
       <br/>text = {{cardOp.text}}
-      <br/>manaReserved={{cardOp.manaReserved | json}}
       <br/>manaLeft={{cardOp.manaLeft | json}}
       <br/><bf-btn (bfClick)="cardOp.cancel()" bfText="Cancel"></bf-btn>
       <bf-btn style="margin-left: 15px;" (bfClick)="cardOp.tryToAction()" bfText="tryToSummon"

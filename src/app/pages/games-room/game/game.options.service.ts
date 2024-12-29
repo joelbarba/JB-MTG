@@ -55,17 +55,19 @@ export class GameOptionsService {
 
     // Actions that you can do during both your turn or opponents turn
 
-    if (state.opStack.length) { // When an ongoing operation
+    if (state.opStack.length) { // When an ongoing operation      
 
       // If you have a summoning operation, let it cancel
       const playingCard = state.cards.find(c => c.gId === state.opStack.at(-1)?.gId);
       if (playingCard && state.opStack.at(-1)?.opAction === 'summon') {
-        state.options.push({ action: 'cancel-op', params: {}, text: 'Cancel summon ' + playingCard.name });
+        state.options.push({ action: 'cancel-op', params: {}, text: 'Cancel ' + playingCard.name });
+        state.options.push({ action: 'update-op', params: {}, text: '' });
       }
   
       // If you have an ability operation, let it cancel
       if (playingCard && state.opStack.at(-1)?.opAction === 'ability') {
         state.options.push({ action: 'cancel-op', params: {}, text: 'Cancel ' + playingCard.name });
+        state.options.push({ action: 'update-op', params: {}, text: '' });
         youMayTriggerAbilities(); // If you are using an ability, you may also use others (like tap mana)
       }
   

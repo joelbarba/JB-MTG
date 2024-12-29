@@ -1255,7 +1255,7 @@ export const dbCards: TCard[] = [
   },
   {
     id:              'c000060', 
-    name:            `disintegrate`, 
+    name:            `DDisintegrate`,
     image:           'disintegrate.jpg', 
     cast:            [0,0,0,0,1,0], 
     color:           'red', 

@@ -118,6 +118,8 @@ export type TDBGameCard = {
   targets: Array<string>;         // Aarray of gIds, playerA, playerB
   blockingTarget: string | null;  // For combat: When defending, the gId of the attacking creature this one is blocking
 
+  xValue: number; // Value of the manaExtra used when actioning the card
+
   turnDamage: number;
   turnAttack: number;  // <-- attack + effects
   turnDefense: number; // <-- defense + effects
@@ -141,8 +143,8 @@ export type TGameCard = TDBGameCard & TCard & { // Not in DB (fixed properties f
   canAttack: (state: TGameState) => boolean;  // Whether the creature can be selected to attack
   canDefend: (state: TGameState) => boolean;  // Whether the creature can be selected to defend
   targetBlockers: (state: TGameState) => Array<string>; // List of attackers the creature can block
-  getSummonCost:  (state: TGameState) => { mana: TCast, neededTargets?: number, possibleTargets?: string[], customDialog?: string } | null; // Cost to summon the card
-  getAbilityCost: (state: TGameState) => { mana: TCast, neededTargets?: number, possibleTargets?: string[], customDialog?: string, tap: boolean, text: string } | null; // Cost to trigger a card ability
+  getSummonCost:  (state: TGameState) => { mana: TCast, xMana?: TCast, neededTargets?: number, possibleTargets?: string[], customDialog?: string, tap?: boolean, text?: string } | null; // Cost to summon the card
+  getAbilityCost: (state: TGameState) => { mana: TCast, xMana?: TCast, neededTargets?: number, possibleTargets?: string[], customDialog?: string, tap?: boolean, text?: string } | null; // Cost to trigger a card ability
 }
 export type TGameCards = Array<TGameCard>;
 export type TExtGameCard = TGameCard & {
@@ -157,8 +159,10 @@ export type TCardOp = {
   gId: string,
   opAction: 'summon' | 'ability',
   status: TCardOpStatus,
+  manaToUse: TCast,
   manaForUncolor: TCast,
   manaExtra: TCast,
+  isExtraManaReady?: boolean;
   targets: Array<string>; // string = gId
 }
 
@@ -189,6 +193,7 @@ export type TAction = 'start-game'
 | 'summon-creature'
 | 'summon-spell'
 | 'trigger-ability'
+| 'update-op'
 | 'cancel-op'
 | 'select-card-to-discard'
 | 'burn-mana'
@@ -204,9 +209,11 @@ export type TAction = 'start-game'
 ;
 
 export type TActionParams = { 
-  gId?: string;
-  manaForUncolor?: TCast,
-  targets?: Array<string> 
+  gId               ?: string;
+  manaForUncolor    ?: TCast,
+  manaExtra         ?: TCast,
+  isExtraManaReady  ?: boolean,
+  targets           ?: Array<string> 
 }
 
 

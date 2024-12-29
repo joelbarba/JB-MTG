@@ -38,7 +38,7 @@ export class DialogSpellStackComponent {
   @Output() end           = new EventEmitter<any>();
   minimized = false;
 
-  TIMER_TIME = 5000;
+  TIMER_TIME = 500000000;
 
   title = 'Spell Stack';
   youControl: boolean = false;

@@ -21,7 +21,7 @@
 
   <div *ngIf="youControl && cardOp && cardOp?.status === 'waitingMana'">
     <span>You need to pay: </span>
-    <mana-array style="margin-left: 5px;" class="md" [mana]="cardOp.cast"></mana-array>
+    <mana-array style="margin-left: 5px;" class="md" [mana]="cardOp.manaCost"></mana-array>
   </div>
 
   <div class="btns-box" *ngIf="youControl">

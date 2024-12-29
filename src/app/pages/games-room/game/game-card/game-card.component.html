@@ -15,7 +15,7 @@
      [class.is-sick]="card.status === 'sickness'"
      [class.is-selected-attack]="card.combatStatus === 'combat:attacking'"
      [class.is-selected-defense]="card.combatStatus === 'combat:defending'"
-     [class.is-summoning]="(cardOp.opAction === 'summon' && cardOp.gId == card.gId) || card.status === 'summoning'"
+     [class.is-summoning]="isSummoning"
      [class.is-dying]="card.type === 'creature' && (card.turnDefense <= card.turnDamage || (shadow && shadow.defense <= shadow.damage))"
      [class.has-targets]="!!card.targets.length"
      [hoverTip]="card.selectableAction?.text || ''" tipId="card"     

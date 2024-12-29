@@ -837,7 +837,21 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
 
 
 
-
+  function c000060_Disintegrate() {
+    card.getSummonCost = (nextState: TGameState) => {
+      const { targetCreatures } = getShorts(nextState);
+      const possibleTargets = [ ...targetCreatures().map(c => c.gId), 'playerA', 'playerB'];
+      return { mana: [3,0,0,0,1,0], xMana: [1,1,1,1,1,1], neededTargets: 1, possibleTargets };
+    };    
+    card.onSummon = (nextState: TGameState) => {
+      const { targetCreatures, targetId, card } = getShorts(nextState);
+      const targetCreature = targetCreatures().find(c => c.gId === targetId);
+      if      (targetId === 'player1') { nextState.player1.life -= card.xValue; } // Deals X points of damage to player1
+      else if (targetId === 'player2') { nextState.player2.life -= card.xValue; } // Deals X points of damage to player2
+      else if (targetCreature) { targetCreature.turnDamage += card.xValue; } // Deals X points of damage to target creature    
+      moveCardToGraveyard(nextState, card.gId); // Destroy itself
+    }
+  }
 
 
 
@@ -848,7 +862,6 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   function c000029_Fork() {}
   function c000030_HowlingMine() {}
   function c000031_HypnoticSpecter() {}  
-  function c000060_Disintegrate() {}
   function c000061_DemonicTutor() {}
   function c000062_EyeForAnEye() {}
   function c000063_IvoryTower() {}

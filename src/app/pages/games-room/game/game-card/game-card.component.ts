@@ -50,7 +50,14 @@ export class GameCardComponent {
   ngOnInit() {
   }
 
-  ngOnChanges() { }
+  ngOnChanges() { 
+    this.isSummoning = false;
+    if (this.card?.status === 'summoning') { this.isSummoning = true; return; }
+    if (this.cardOp.opAction === 'summon' && this.cardOp.gId == this.card?.gId) { this.isSummoning = true; return; }
+    if (this.game.state.opStack.find(op => op.opAction === 'summon' && op.gId === this.card?.gId)) {
+      this.isSummoning = true;
+    }
+  }
 
   ngAfterViewInit() {}
 
@@ -59,5 +66,6 @@ export class GameCardComponent {
   }
 
 
+  isSummoning = false;
 
 }

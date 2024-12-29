@@ -3,8 +3,8 @@ import { Subject, Subscription } from 'rxjs';
 import { AuthService } from '../../core/common/auth.service';
 import { ShellService } from '../../shell/shell.service';
 import { Firestore, QuerySnapshot, collection, doc, getDoc, getDocs, onSnapshot, setDoc, DocumentData, Unsubscribe } from '@angular/fire/firestore';
-import { EPhase, TAction, TCard, TCardLocation, TGameState, TGameDBState, TGameCard, TActionParams, TCardType, TCardAnyLocation, ESubPhase, TCardOpStatus } from '../../core/types';
-import { calcManaForUncolored, checkMana, drawCard, endGame, getCards, getPlayers, killDamagedCreatures, moveCard, moveCardToGraveyard, spendMana } from './game/gameLogic/game.utils';
+import { EPhase, TAction, TCard, TCardLocation, TGameState, TGameDBState, TGameCard, TActionParams, TCardType, TCardAnyLocation, ESubPhase, TCardOpStatus, TCast } from '../../core/types';
+import { calcManaCost, calcManaForUncolored, checkMana, drawCard, endGame, getAvailableMana, getCards, getPlayers, killDamagedCreatures, moveCard, moveCardToGraveyard, spendMana } from './game/gameLogic/game.utils';
 import { GameOptionsService } from './game/game.options.service';
 import { extendCardLogic } from './game/gameLogic/game.card-specifics';
 import { BfDefer } from 'bf-ui-lib';
@@ -255,10 +255,11 @@ export class GameStateService {
       case 'submit-defense':            this.submitDefense(nextState); break;
       case 'select-card-to-discard':    this.discardCard(nextState, gId); break;
       case 'burn-mana':                 this.burnMana(nextState); break;
-      case 'summon-land':               this.summonSpell(nextState, params, true); break;
+      case 'summon-land':               this.summonLand(nextState, params); break;
       case 'summon-creature':           this.summonSpell(nextState, params); break;
       case 'summon-spell':              this.summonSpell(nextState, params); break;
       case 'trigger-ability':           this.triggerAbility(nextState, params); break;
+      case 'update-op':                 this.updateCardOperation(nextState, params); break;
       case 'cancel-op':                 this.cancelCardOperation(nextState); break;
       case 'release-stack':             this.releaseStack(nextState); break;
       case 'regenerate-creature':       this.triggerAbility(nextState, params); break;
@@ -325,90 +326,27 @@ export class GameStateService {
 
 
 
-
-  private summonSpell(nextState: TGameState, params: TActionParams, tableDirectly = false) {
+  private evaluateCost(nextState: TGameState, params: TActionParams, opAction: 'summon' | 'ability', callBackFn: (card: TGameCard) => void) {
     const { playerA, playerB } = this.getPlayers(nextState);
 
     const gId = params?.gId || '';
-    let manaForUncolor = params.manaForUncolor || [0,0,0,0,0,0];
+    let forUncolor: TCast = params.manaForUncolor || [0,0,0,0,0,0];
 
-    const addOpStack = (status: TCardOpStatus) => {
-      removeOpStack(); // If there is an existing operation with the same card, remove it
-      nextState.opStack.push({
-        gId, opAction: 'summon', status, targets: [],
-        manaForUncolor: [0,0,0,0,0,0], manaExtra: [0,0,0,0,0,0]
-      });
-    };
-    const removeOpStack = () => {
+    const setOpStack = (status: TCardOpStatus) => {
       const op = nextState.opStack.find(c => c.gId === gId);
-      if (op) { nextState.opStack.splice(nextState.opStack.indexOf(op), 1); }
-    }
-
-
-    const card = this.checkCard(nextState, gId, { location: 'hand' });
-    if (card) {
-      const summonCost = card.getSummonCost(nextState);
-      if (summonCost) {
-
-        let rightMana = true; // Whether you have the right mana in your mana pool
-        const totalManaCost = summonCost.mana.reduce((v,a) => v + a, 0);
-
-        if (totalManaCost) {          
-          const manaStatus = checkMana(summonCost.mana, playerA.manaPool);
-          if (manaStatus === 'exact' || manaStatus === 'auto') {
-            manaForUncolor = calcManaForUncolored(summonCost.mana, playerA.manaPool);
-
-          } else if (manaStatus === 'not enough') {
-            addOpStack('waitingMana');
-            rightMana = false;            
-
-          } else if (manaStatus === 'manual') {
-            rightMana = summonCost.mana[0] === manaForUncolor.reduce((v,a) => v + a, 0);
-            if (!rightMana) { addOpStack('selectingMana'); } // If there is not enough uncolor selected
-          }
-        }
-
-        if (rightMana) { // && (!summonCost.tap || !card.isTapped)) { No tap cost for summoning
-
-          if ((summonCost.neededTargets || 0) > (summonCost.possibleTargets || []).length) {             
-            console.log(`You can't summon ${card.name} because there are no targets to select`);
-            removeOpStack(); // Cancel current operation
-          }
-          else if ((params.targets?.length || 0) < (summonCost.neededTargets || 0)) { 
-            if (summonCost.customDialog) { card.customDialog = summonCost.customDialog; }
-            addOpStack('selectingTargets');
-          }
-          else {
-            console.log(`SUMMONING ${card.name} (${params.gId}), manaForUncolor=${params.manaForUncolor}, targets=${params.targets}`);
-            if (totalManaCost > 0) { spendMana(summonCost.mana, playerA.manaPool, manaForUncolor); }            
-            removeOpStack(); // complete current operation
-            card.status = 'summoning';
-            card.targets = params.targets || [];
-            if (tableDirectly) {
-              card.onSummon(nextState); // Lands do not go to the stack but to the table directly
-            } else {
-              this.addToSpellStack(nextState, card);
-            }
-          }
-        }
-
+      if (op) {
+        op.status = status;
+        if (params.targets)          { op.targets          = [...params.targets]; }
+        if (params.manaExtra)        { op.manaExtra        = [...params.manaExtra]; }
+        if (params.manaForUncolor)   { op.manaForUncolor   = [...params.manaForUncolor]; }
+        if (params.isExtraManaReady) { op.isExtraManaReady = params.isExtraManaReady; }
       }
-    }
-  }
-
-
-  private triggerAbility(nextState: TGameState, params: TActionParams) {
-    const { playerA, playerB } = this.getPlayers(nextState);
-
-    const gId = params?.gId || '';
-    let manaForUncolor = params.manaForUncolor || [0,0,0,0,0,0];
-
-    const addOpStack = (status: TCardOpStatus) => {
-      removeOpStack(); // If there is an existing operation with the same card, remove it
-      nextState.opStack.push({
-        gId, opAction: 'ability', status, targets: [],
-        manaForUncolor: [0,0,0,0,0,0], manaExtra: [0,0,0,0,0,0]
-      });
+      else {
+        nextState.opStack.push({
+          gId, opAction, status, targets: [], manaToUse: [0,0,0,0,0,0],
+          manaForUncolor: [0,0,0,0,0,0], manaExtra: [0,0,0,0,0,0]
+        });
+      }
     };
     const removeOpStack = () => {
       const op = nextState.opStack.find(c => c.gId === gId);
@@ -418,79 +356,249 @@ export class GameStateService {
 
     const card = nextState.cards.find(c => c.gId === gId);
     if (card) {
-      const abilityCost = card.getAbilityCost(nextState);
-      if (abilityCost) {
+      const cost = opAction === 'summon' ? card.getSummonCost(nextState) : card.getAbilityCost(nextState);
+      if (cost && (!cost.tap || !card.isTapped)) { // If you have to tap, card can't be tapped
 
-        let rightMana = true;
-        const totalManaCost = abilityCost.mana.reduce((v,a) => v + a, 0);
+        let rightMana = true; // Whether you have the right mana in your mana pool
+        const totalManaCost = cost.mana.reduce((a,v) => a + v, 0);
 
-        if (totalManaCost) {
-          const manaStatus = checkMana(abilityCost.mana, this.playerA().manaPool);
-          
-          if (manaStatus === 'exact' || manaStatus === 'auto') {
-            manaForUncolor = calcManaForUncolored(abilityCost.mana, playerA.manaPool);
-            rightMana = true;          
+        if (totalManaCost) {          
+
+          // If there are other ongoing operations that are using mana already (cost + extra),
+          // consider that mana as not availabile, even though it's still in your mana pool
+          const availableManaInThePool = getAvailableMana(nextState, playerA.manaPool, gId);
+
+          // const manaStatus = checkMana(cost.mana, availableManaInThePool);
+          const { manaStatus, manaForColored } = calcManaCost(cost.mana, availableManaInThePool, params.manaForUncolor);
+          forUncolor = manaForColored;
+
+          if (manaStatus === 'ok') {
+            // manaForUncolor = calcManaForUncolored(cost.mana, availableManaInThePool);
           }
           else if (manaStatus === 'not enough') {
-            addOpStack('waitingMana');
+            setOpStack('waitingMana'); // Wait for new mana
             rightMana = false;
           }
-          else if (manaStatus === 'manual') {
-            rightMana = abilityCost.mana[0] <= manaForUncolor.reduce((v,a) => v + a, 0);
-            if (!rightMana) { addOpStack('selectingMana'); } // If there is not enough uncolor selected
+          else if (manaStatus === 'needs selection') {
+            setOpStack('selectingMana');
+            rightMana = false;
+            // rightMana = cost.mana[0] === manaForUncolor.reduce((a, v) => a + v, 0);
+            // if (!rightMana) { setOpStack('selectingMana'); } // Multiple uncolor selection
           }
         }
 
-        if (rightMana && (!abilityCost.tap || !card.isTapped)) {
+        
+        if (rightMana) {
 
-          if ((abilityCost.neededTargets || 0) > (abilityCost.possibleTargets || []).length) {             
-            console.log(`You can't use ${card.name} because there are no targets to select`);
-            removeOpStack(); // Cancel current operation
+          if (cost.xMana && !params.isExtraManaReady) {
+            console.log('------------------------------- DETECTING EXTRA MANA NEEDED');
+            setOpStack('waitingExtraMana'); // Wait for extra X mana
+
+          } else { // Check required targets
+            if ((cost.neededTargets || 0) > (cost.possibleTargets || []).length) {             
+              console.log(`${card.name} can't be used because there are no possible targets`);
+              removeOpStack(); // Cancel current operation
+            }
+            else if ((params.targets?.length || 0) < (cost.neededTargets || 0)) { 
+              if (cost.customDialog) { card.customDialog = cost.customDialog; }
+              setOpStack('selectingTargets');
+            }
+            else {
+              if (totalManaCost > 0) { spendMana(cost.mana, playerA.manaPool, forUncolor); }
+
+              if (cost.xMana && params.manaExtra) {
+                spendMana(params.manaExtra, playerA.manaPool);
+                card.xValue = params.manaExtra?.reduce((v,a) => v + a, 0) || 0;
+              }
+
+              removeOpStack(); // complete current operation
+              callBackFn(card);
+            }
           }
-          else if ((params.targets?.length || 0) < (abilityCost.neededTargets || 0)) { 
-            if (abilityCost.customDialog) { card.customDialog = abilityCost.customDialog; }
-            addOpStack('selectingTargets');
-          }
-          else {
-            card.targets = params.targets || [];
-            if (totalManaCost > 0) { spendMana(abilityCost.mana, playerA.manaPool, manaForUncolor); }
-            removeOpStack(); // complete current operation
-            card.onAbility(nextState); // It may not always tap the card, but trigger the ability
-            card.status = null;
-          }
+
         }
 
       }
     }
   }
 
+
+  private summonLand(nextState: TGameState, params: TActionParams) {
+    this.evaluateCost(nextState, params, 'summon', (card) => card.onSummon(nextState)); // Lands do not go to the stack
+  }
+
+  private summonSpell(nextState: TGameState, params: TActionParams) {
+    this.evaluateCost(nextState, params, 'summon', (card) => {
+      console.log(`SUMMONING ${card.name} (${params.gId}), manaForUncolor=${params.manaForUncolor}, targets=${params.targets}`);
+      card.status = 'summoning';
+      card.targets = params.targets || [];
+      this.addToSpellStack(nextState, card);
+    });
+  }
+
+  private triggerAbility(nextState: TGameState, params: TActionParams) {
+    this.evaluateCost(nextState, params, 'ability', (card) => {
+      card.status = null;
+      card.targets = params.targets || [];
+      card.onAbility(nextState);
+    });
+  }
+
+
+  // When reserving mana or targets of the current operation, save these values
+  private updateCardOperation(nextState: TGameState, params: TActionParams) {
+    const op = nextState.opStack.at(-1);
+    if (op) {
+      if (params.manaForUncolor) { op.manaForUncolor = params.manaForUncolor; }
+      if (params.manaExtra)      { op.manaExtra      = params.manaExtra; }
+      if (params.targets)        { op.targets        = params.targets; }
+    }
+  }
+
+  // private summonSpellOld(nextState: TGameState, params: TActionParams, tableDirectly = false) {
+  //   const { playerA, playerB } = this.getPlayers(nextState);
+
+  //   const gId = params?.gId || '';
+  //   let manaForUncolor = params.manaForUncolor || [0,0,0,0,0,0];
+
+  //   const addOpStack = (status: TCardOpStatus) => {
+  //     removeOpStack(); // If there is an existing operation with the same card, remove it
+  //     nextState.opStack.push({
+  //       gId, opAction: 'summon', status, targets: [],
+  //       manaForUncolor: [0,0,0,0,0,0], manaExtra: [0,0,0,0,0,0]
+  //     });
+  //   };
+  //   const removeOpStack = () => {
+  //     const op = nextState.opStack.find(c => c.gId === gId);
+  //     if (op) { nextState.opStack.splice(nextState.opStack.indexOf(op), 1); }
+  //   }
+
+
+  //   const card = this.checkCard(nextState, gId, { location: 'hand' });
+  //   if (card) {
+  //     const summonCost = card.getSummonCost(nextState);
+  //     if (summonCost) {
+
+  //       let rightMana = true; // Whether you have the right mana in your mana pool
+  //       const totalManaCost = summonCost.mana.reduce((v,a) => v + a, 0);
+
+  //       if (totalManaCost) {          
+  //         const manaStatus = checkMana(summonCost.mana, playerA.manaPool);
+  //         if (manaStatus === 'exact' || manaStatus === 'auto') {
+  //           manaForUncolor = calcManaForUncolored(summonCost.mana, playerA.manaPool);
+
+  //         } else if (manaStatus === 'not enough') {
+  //           addOpStack('waitingMana');
+  //           rightMana = false;            
+
+  //         } else if (manaStatus === 'manual') {
+  //           rightMana = summonCost.mana[0] === manaForUncolor.reduce((v,a) => v + a, 0);
+  //           if (!rightMana) { addOpStack('selectingMana'); } // If there is not enough uncolor selected
+  //         }
+  //       }
+
+  //       if (rightMana) { // && (!summonCost.tap || !card.isTapped)) { No tap cost for summoning
+
+  //         if ((summonCost.neededTargets || 0) > (summonCost.possibleTargets || []).length) {             
+  //           console.log(`You can't summon ${card.name} because there are no targets to select`);
+  //           removeOpStack(); // Cancel current operation
+  //         }
+  //         else if ((params.targets?.length || 0) < (summonCost.neededTargets || 0)) { 
+  //           if (summonCost.customDialog) { card.customDialog = summonCost.customDialog; }
+  //           addOpStack('selectingTargets');
+  //         }
+  //         else {
+  //           console.log(`SUMMONING ${card.name} (${params.gId}), manaForUncolor=${params.manaForUncolor}, targets=${params.targets}`);
+  //           if (totalManaCost > 0) { spendMana(summonCost.mana, playerA.manaPool, manaForUncolor); }            
+  //           removeOpStack(); // complete current operation
+  //           card.status = 'summoning';
+  //           card.targets = params.targets || [];
+  //           if (tableDirectly) {
+  //             card.onSummon(nextState); // Lands do not go to the stack but to the table directly
+  //           } else {
+  //             this.addToSpellStack(nextState, card);
+  //           }
+  //         }
+  //       }
+
+  //     }
+  //   }
+  // }
+
+
+  // private triggerAbilityOld(nextState: TGameState, params: TActionParams) {
+  //   const { playerA, playerB } = this.getPlayers(nextState);
+
+  //   const gId = params?.gId || '';
+  //   let manaForUncolor = params.manaForUncolor || [0,0,0,0,0,0];
+
+  //   const addOpStack = (status: TCardOpStatus) => {
+  //     removeOpStack(); // If there is an existing operation with the same card, remove it
+  //     nextState.opStack.push({
+  //       gId, opAction: 'ability', status, targets: [],
+  //       manaForUncolor: [0,0,0,0,0,0], manaExtra: [0,0,0,0,0,0]
+  //     });
+  //   };
+  //   const removeOpStack = () => {
+  //     const op = nextState.opStack.find(c => c.gId === gId);
+  //     if (op) { nextState.opStack.splice(nextState.opStack.indexOf(op), 1); }
+  //   }
+
+
+  //   const card = nextState.cards.find(c => c.gId === gId);
+  //   if (card) {
+  //     const abilityCost = card.getAbilityCost(nextState);
+  //     if (abilityCost) {
+
+  //       let rightMana = true;
+  //       const totalManaCost = abilityCost.mana.reduce((v,a) => v + a, 0);
+
+  //       if (totalManaCost) {
+  //         const manaStatus = checkMana(abilityCost.mana, this.playerA().manaPool);
+          
+  //         if (manaStatus === 'exact' || manaStatus === 'auto') {
+  //           manaForUncolor = calcManaForUncolored(abilityCost.mana, playerA.manaPool);
+  //         }
+  //         else if (manaStatus === 'not enough') {
+  //           addOpStack('waitingMana');
+  //           rightMana = false;
+  //         }
+  //         else if (manaStatus === 'manual') {
+  //           rightMana = abilityCost.mana[0] <= manaForUncolor.reduce((v,a) => v + a, 0);
+  //           if (!rightMana) { addOpStack('selectingMana'); } // If there is not enough uncolor selected
+  //         }
+  //       }
+
+  //       if (rightMana && (!abilityCost.tap || !card.isTapped)) {
+
+  //         if ((abilityCost.neededTargets || 0) > (abilityCost.possibleTargets || []).length) {             
+  //           console.log(`You can't use ${card.name} because there are no targets to select`);
+  //           removeOpStack(); // Cancel current operation
+  //         }
+  //         else if ((params.targets?.length || 0) < (abilityCost.neededTargets || 0)) { 
+  //           if (abilityCost.customDialog) { card.customDialog = abilityCost.customDialog; }
+  //           addOpStack('selectingTargets');
+  //         }
+  //         else {
+  //           card.targets = params.targets || [];
+  //           if (totalManaCost > 0) { spendMana(abilityCost.mana, playerA.manaPool, manaForUncolor); }
+  //           removeOpStack(); // complete current operation
+  //           card.onAbility(nextState); // It may not always tap the card, but trigger the ability
+  //           card.status = null;
+  //         }
+  //       }
+
+  //     }
+  //   }
+  // }
+
   // Cancel the latest ongoing card operation
   private cancelCardOperation(nextState: TGameState) {
-    const op = nextState.opStack.at(-1);
-    if (op) { 
-      const card = nextState.cards.find(c => c.gId === op.gId);
-      if (card) { card.customDialog = null; }
-    }
+    const card = nextState.cards.find(c => c.gId === nextState.opStack.at(-1)?.gId);
+    if (card) { card.customDialog = null; } // Remove possible dialogs on card operation
     nextState.opStack.pop();
   }
 
-  // // Cancel any other ongoing summon:XXX operation for your
-  // private cancelSummonOperations(nextState: TGameState, exceptgId?: string) {
-  //   const { handA } = this.getCards(nextState);
-  //   handA.filter(c => c.gId !== exceptgId && c.status?.split(':')[0] === 'summon').forEach(card => {
-  //     card.status = null;
-  //     if (card.customDialog) { card.customDialog = null; }
-  //   });
-  // }
-
-  // // Cancel any other ongoing ability:XXX operation for your
-  // private cancelAbilityOperations(nextState: TGameState, exceptgId?: string) {
-  //   const { tableAStack } = this.getCards(nextState);
-  //   tableAStack.filter(c => c.gId !== exceptgId && c.status?.split(':')[0] === 'ability').forEach(card => {
-  //     card.status = null;
-  //     if (card.customDialog) { card.customDialog = null; }
-  //   });
-  // }
 
   // Cancel the regeneration of a creature and let it die
   private cancelRegenerate(nextState: TGameState) {
@@ -814,7 +922,7 @@ export class GameStateService {
 
   // This happens every time the state is modified (at the end of the reducer)
   applyEffects(nextState: TGameState) {
-    console.log('Applying EFFECTS');
+    // console.log('Applying EFFECTS');
 
     // Reset all turnAttack / turnDefense
     nextState.cards.filter(c => c.isType('creature')).forEach(creature => {

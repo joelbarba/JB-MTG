@@ -258,6 +258,7 @@ export class DataService {
         customDialog: null,
         combatStatus: null,
         isDying: false,
+        xValue: 0,
         targets: [],
         blockingTarget: null,
         turnDamage: 0,
@@ -292,8 +293,10 @@ export class DataService {
       'c000005',  // Forest
       'c000013',  // Bayou
       'c000026',  // Black Knight
+      'c000027',  // Dark Ritual
       'c000021',  // Underground Sea
       'c000014',  // Badlands
+      'c000038',  // Counterspell
       'c000023',  // Ancestral Recall
       'c000010',  // Mox Sapphire
       'c000067',  // Weakness
@@ -340,10 +343,12 @@ export class DataService {
       'c000013',  // Bayou
       'c000014',  // Badlands
       'c000018',  // Taiga
+      'c000060',  // Disintegrate
+      'c000027',  // Dark Ritual
+      'c000027',  // Dark Ritual
       'c000051',  // Llanowar Elves
       'c000006',  // Mox Emerald
       'c000009',  // Mox Ruby
-      'c000084',  // Righteousness
       'c000035',  // KirdApe
       'c000008',  // Mox Pearl
       'c000008',  // Mox Pearl
@@ -359,6 +364,7 @@ export class DataService {
       'c000046',  // Granite Gargoley
       'c000053',  // Ornithopter
       'c000019',  // Tropical Island
+      'c000084',  // Righteousness
       'c000033',  // Shivan Dragon
       'c000032',  // Lighting Bolt      
       'c000032',  // Lighting Bolt
