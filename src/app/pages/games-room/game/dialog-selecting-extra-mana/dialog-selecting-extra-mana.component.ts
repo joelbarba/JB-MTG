@@ -5,7 +5,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { BfConfirmService, BfDnDModule, BfDnDService, BfUiLibModule } from 'bf-ui-lib';
 import { GameCardComponent } from "../game-card/game-card.component";
 import { ManaArrayComponent } from "../mana-array/mana-array.component";
-import { CardOpService } from '../cardOp.service';
+import { CardOpServiceNew } from '../cardOp.service';
 import { TCast } from '../../../../core/types';
 
 @Component({
@@ -25,12 +25,16 @@ import { TCast } from '../../../../core/types';
 })
 export class DialogSelectingExtraManaComponent {
 
-  constructor(public cardOp: CardOpService) {}
+  constructor(public cardOp: CardOpServiceNew) {}
 
   numArr(num: number): Array<number> { return Array.from(Array(num).keys()) }
 
   totalMana(cast?: TCast) {    
     return cast ? cast.reduce((a, v) => a + v, 0) : 0;
+  }
+
+  isAllSelected() {
+    return this.cardOp.manaToDisplay.reduce((a,v) => a + v, 0) <= 0;
   }
 
 }

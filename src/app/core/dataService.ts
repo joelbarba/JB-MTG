@@ -192,7 +192,7 @@ export class DataService {
       id: 0,
       deckId1: player1.deckId,
       deckId2: '', // Waiting for player 2 to accept the request and add a deck
-      opStack: [],
+      // opStack: [],
     };
 
     console.log('New Game', newGame);
@@ -291,18 +291,19 @@ export class DataService {
   private testDecks() {
     const cardsDeck1 = [
       'c000005',  // Forest
+      'c000003',  // Swamp
       'c000013',  // Bayou
       'c000026',  // Black Knight
       'c000027',  // Dark Ritual
+      'c000010',  // Mox Sapphire
+      'c000023',  // Ancestral Recall
+      'c000060',  // Disintegrate
       'c000021',  // Underground Sea
       'c000014',  // Badlands
-      'c000038',  // Counterspell
-      'c000023',  // Ancestral Recall
-      'c000010',  // Mox Sapphire
       'c000067',  // Weakness
       'c000112',  // Timetwister
-      'c000003',  // Swamp
       'c000111',  // Sinkhole
+      'c000038',  // Counterspell
       'c000012',  // Black Lotus
       'c000081',  // WillOTheWisp
       'c000131',  // GhostShip

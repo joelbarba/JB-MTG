@@ -1,14 +1,17 @@
-<div class="selecting-mana" [class.minimized]="cardOp.minimized">
-  <div class="min-btn" (click)="cardOp.minimized = !cardOp.minimized">{{cardOp.minimized ? cardOp.title : '-'}}</div>
-  <h2>{{cardOp.title}}</h2>
+<div class="selecting-mana" [class.minimized]="cardOp.minimizeSelectManaDialog">
+  <div class="min-btn" (click)="cardOp.minimizeSelectManaDialog = !cardOp.minimizeSelectManaDialog">
+    {{cardOp.minimizeSelectManaDialog ? 'Mana Selection' : '-'}}
+  </div>
+
+  <h2>Mana Selection</h2>
   <div class="center" *ngIf="cardOp.card">
     <game-card [card]="cardOp.card" from="panelSelMana"></game-card>
   </div>
-  <div>{{cardOp.text}}</div>
+  <div>Select the mana from your mana pool you want to use for {{cardOp.card?.name}}</div>
   <div class="mana-count">      
-    <div class="v-align selected-mana-count" *ngIf="cardOp.manaReserved">
+    <div class="v-align selected-mana-count">
       <span style="margin-right: 15px;">Selected Mana:</span>
-      <mana-array [mana]="cardOp.manaReserved"></mana-array>
+      <mana-array *ngIf="cardOp.params.manaToUse" [mana]="cardOp.params.manaToUse"></mana-array>
     </div>
     <div class="v-align total-mana-needed">
       <span style="margin-right: 15px;">Total Mana Needed:</span>
@@ -18,7 +21,7 @@
   <div class="btns-box">
     <bf-btn bfText="Cancel" bfIcon="icon-cross" (bfClick)="cardOp.cancel()"></bf-btn>
     <bf-btn bfText="Go Ahead With Selection" bfIcon="icon-arrow-right3"
-            [bfDisabled]="!cardOp.showSummonBtn" (bfClick)="cardOp.tryToAction()">
+            [bfDisabled]="!cardOp.showManaOkBtn" (bfClick)="cardOp.tryToExecute()">
     </bf-btn>
   </div>
 </div>

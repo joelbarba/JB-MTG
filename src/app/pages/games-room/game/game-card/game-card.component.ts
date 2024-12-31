@@ -9,7 +9,7 @@ import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { TGameCard } from '../../../../core/types';
 import { HoverTipDirective } from '../../../../core/common/internal-lib/bf-tooltip/bf-tooltip.directive';
-import { CardOpService } from '../cardOp.service';
+import { CardOpServiceNew } from '../cardOp.service';
 
 
 @Component({
@@ -42,7 +42,7 @@ export class GameCardComponent {
     public router: Router,
     public firestore: Firestore,
     public growl: BfGrowlService,
-    public cardOp: CardOpService,
+    public cardOp: CardOpServiceNew,
   ) {
 
   }
@@ -50,14 +50,7 @@ export class GameCardComponent {
   ngOnInit() {
   }
 
-  ngOnChanges() { 
-    this.isSummoning = false;
-    if (this.card?.status === 'summoning') { this.isSummoning = true; return; }
-    if (this.cardOp.opAction === 'summon' && this.cardOp.gId == this.card?.gId) { this.isSummoning = true; return; }
-    if (this.game.state.opStack.find(op => op.opAction === 'summon' && op.gId === this.card?.gId)) {
-      this.isSummoning = true;
-    }
-  }
+  ngOnChanges() { }
 
   ngAfterViewInit() {}
 
@@ -65,7 +58,23 @@ export class GameCardComponent {
     // if (this.stateSub) { this.stateSub.unsubscribe(); }
   }
 
+  isSummonOp() {
+    return !!this.cardOp.summonIds.find(gId => gId === this.card?.gId);
+  }
 
-  isSummoning = false;
+  isActionSelectable() {
+    return this.selectable && this.card?.selectableAction && this.cardOp.status !== 'selectingTargets';
+  }
+
+  isTargetSelectable() {
+    return this.selectable && this.cardOp.status === 'selectingTargets'
+      && !!this.cardOp.possibleTargets.find(gId => gId === this.card?.gId);
+  }
+
+  getHoverTip() {
+    if (this.isTargetSelectable()) { return `Select target ${this.card?.name}`; }
+    if (this.selectable && this.card?.selectableAction) { return this.card.selectableAction.text || ''; }
+    return '';
+  }
 
 }

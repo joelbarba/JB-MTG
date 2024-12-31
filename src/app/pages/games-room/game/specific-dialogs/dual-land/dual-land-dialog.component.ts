@@ -8,6 +8,7 @@ import { GameCardComponent } from '../../game-card/game-card.component';
 import { TCast, TGameCard } from '../../../../../core/types';
 import { ManaIconComponent } from "../../mana-icon/mana-icon.component";
 import { GameStateService } from '../../../game-state.service';
+import { CardOpServiceNew } from '../../cardOp.service';
 
 
 @Component({
@@ -33,6 +34,7 @@ export class DualLandDialogComponent {
 
   constructor(
     private game: GameStateService,
+    public cardOp: CardOpServiceNew,
   ) {}
 
   ngOnChanges() {
@@ -51,12 +53,9 @@ export class DualLandDialogComponent {
     }
   }
 
-  cancel() {
-    this.game.action('cancel-op');
-  }  
   
   select(mana: 0 | 1 | 2 | 3 | 4 | 5) {
-    const params = { gId: this.card.gId, targets: ['custom-color-' + mana] };
-    this.game.action('trigger-ability', params);
+    const target = 'custom-color-' + mana;
+    this.cardOp.selectTargets([target]);
   }
 }

@@ -1,4 +1,4 @@
-import { TCardAnyLocation, TCardLocation, TCast, TGameCard, TGameState, TPlayer } from "../../../../core/types";
+import { TActionCost, TActionParams, TCardAnyLocation, TCardLocation, TCardOpStatus, TCast, TGameCard, TGameState, TPlayer } from "../../../../core/types";
 
 
 // Shortcut for state objects (cards split on locations)
@@ -197,21 +197,24 @@ export const calcManaCost = (cost: TCast, pool: TCast, forUncolor: TCast = [0,0,
   const totalManaToUse: TCast = [0,0,0,0,0,0];  // manaForColored[] + manaForUncolor[]
   const manaAvailable: TCast = [...pool];       // pool[] - totalManaToUse[]
   
-  // Count colored mana
+  // Substract colored mana
+  let enoughColor = true;
   for (let t = 1; t <= 5; t++) {
-    manaAvailable[t] -= cost[t];
-    manaForColored[t] += cost[t];
-    totalManaToUse[t] += cost[t];
+    if (cost[t] > manaAvailable[t]) { enoughColor = false; }
+    const manaToTake = Math.min(cost[t], manaAvailable[t]);
+    manaAvailable[t]  -= manaToTake;
+    manaForColored[t] += manaToTake;
+    totalManaToUse[t] += manaToTake;
   }
 
   const totalAvailableForUncolor = manaAvailable.reduce((a,v) => a + v, 0); // Total mana available in the pool to be used for uncolored
   
-  if (manaAvailable.some(m => m < 0)) { // Not enought colored mana
-    return { manaStatus: 'not enough', manaForColored, manaForUncolor, totalManaToUse, manaAvailable: [...pool] }; 
-  }
-  
-  if (cost[0] > totalAvailableForUncolor) { // Not enought uncolored mana
-    return { manaStatus: 'not enough', manaForColored, manaForUncolor, totalManaToUse, manaAvailable: [...pool] }; 
+  if (!enoughColor || cost[0] > totalAvailableForUncolor) { // Not enought mana (either colored or uncolored)
+    for (let t = 0; t <= 5; t++) { // Add all available mana to be used for uncolored
+      manaForUncolor[t] += cost[t];
+      totalManaToUse[t] += manaAvailable[t];
+    }
+    return { manaStatus: 'not enough', manaForColored, manaForUncolor, totalManaToUse, manaAvailable }; 
   }
 
   if (cost[0] === totalAvailableForUncolor) { // Exact colored and colorless mana
@@ -266,23 +269,7 @@ export const calcManaForUncolored = (cast: TCast, playerManaPool: TCast) => {
   return manaForUncolor;
 }
 
-// Returns a player's mana pool minus all the mana cost + extra of the ongoing operations on the opStack[] that are > waitingMana
-export const getAvailableMana = (nextState: TGameState, playerManaPool: TCast, gIdToExclude?: string): TCast => {
-  const availableMana: TCast = [...playerManaPool];
-  nextState.opStack.filter(op => op.gId !== gIdToExclude).forEach(op => {
-    const opCard = nextState.cards.find(c => c.gId === op.gId);
-    if (opCard && op.status !== 'waitingMana') { // Reserve only for those operations that have completed the waiting
 
-      const opCost = op.opAction === 'summon' ? opCard.getSummonCost(nextState) : opCard.getAbilityCost(nextState);
-
-      const manaCost: TCast = [...opCost?.mana || [0,0,0,0,0,0]];
-      const { totalManaToUse } = calcManaCost(manaCost, availableMana, op.manaForUncolor);
-      for (let t = 0; t <= 5; t++) { availableMana[t] -= totalManaToUse[t]; } // Subtract the reserved mana
-      if (op.manaExtra) { for (let t = 0; t <= 5; t++) { availableMana[t] -= op.manaExtra[t]; }} // Substract extra reserved mana
-    }
-  });
-  return availableMana;
-};
 
 
 // Decreases the manaPool[] as much as the cast needs with manaUsed
@@ -291,3 +278,33 @@ export const spendMana = (cast: TCast, manaPool: TCast, manaForUncolor: TCast = 
   for (let t = 0; t <= 5; t++) { manaPool[t] -= manaForUncolor[t]; }  // Subtract uncolored mana
 }
 
+
+  // Evaluates whether the operation is ready to be executed (sent to the state as an action)
+export const validateCost = (card: TGameCard, params: TActionParams, cost: null | TActionCost, manaPool: TCast): 'ready' | 'error' | TCardOpStatus => {
+  if (!cost) { return 'ready'; }
+
+  if (cost.tap && card.isTapped) { return 'error'; }  // If it needs tapping but the card is already tapped
+
+  // Check the mana cost
+  const totalManaCost = cost.mana.reduce((a,v) => a + v, 0);
+  if (totalManaCost) { // If the action requires mana to be paid
+
+    const { manaStatus } = calcManaCost(cost.mana, manaPool, params.manaForUncolor);
+
+    if (manaStatus === 'not enough')      { return 'waitingMana'; }
+    if (manaStatus === 'needs selection') { return 'selectingMana'; }
+    if (manaStatus === 'ok') { }
+  }
+
+  // Check extra mana    
+  if (cost.xMana && !params.isExtraManaReady) { return 'waitingExtraMana'; }
+    
+  // Check required targets: If it can't be used because there are no possible targets
+  if ((cost.neededTargets || 0) > (cost.possibleTargets || []).length) { return 'error'; }
+      
+  if ((params.targets?.length || 0) < (cost.neededTargets || 0)) { 
+    return 'selectingTargets';
+  }
+      
+  return 'ready'; // All params ready
+}

@@ -4,7 +4,6 @@
     <div class="target-of" *ngFor="let tCard of item.targetOf">
       <stack-card-with-targets [item]="tCard"
                                (selectCard)="selectCard.emit($event)"
-                               (selectPlayer)="selectPlayer.emit($event)"
                                (hoverCard)="hoverCard.emit($event)" (clearHover)="clearHover.emit()">
       </stack-card-with-targets>
       <div class="vbar"></div>
@@ -14,7 +13,7 @@
     
   <div class="main-card">
     <span *ngIf="item.targetOf.length" class="icon-arrow-down"></span>
-    
+
     <!-- Target Card -->
     <game-card [card]="item.card" *ngIf="item.card"
       from="stack"
@@ -25,8 +24,8 @@
 
     <!-- Target Player -->
     <div class="panel-user" *ngIf="item.player" 
-         (click)="selectPlayer.emit(item.player)"
-         [class.selectable-card]="!!item.player.selectableAction || !!item.player.selectableTarget">
+         (click)="cardOp.selectTargetPlayer(item.player.num)"
+         [class.selectable-card]="cardOp.isTargetPlayer(item.player.num)">
       <span class="damage-points" *ngIf="item.shadow.damage">
         <span>{{item.shadow.damage}}</span>
         <span class="icon-power"></span>

@@ -32,7 +32,6 @@ export type TStackTree = {
 export class DialogSpellStackComponent {
   @Input() panelSize: 'min' | 'max' = 'max';
   @Output() selectCard    = new EventEmitter<TGameCard>();
-  @Output() selectPlayer  = new EventEmitter<TPlayer>();
   @Output() hoverCard     = new EventEmitter<any>();
   @Output() clearHover    = new EventEmitter<any>();
   @Output() end           = new EventEmitter<any>();

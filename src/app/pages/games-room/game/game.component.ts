@@ -22,8 +22,8 @@ import { BfTooltipService } from '../../../core/common/internal-lib/bf-tooltip/b
 import { BlackLotusDialogComponent } from "./specific-dialogs/black-lotus/black-lotus-dialog.component";
 import { DualLandDialogComponent } from "./specific-dialogs/dual-land/dual-land-dialog.component";
 import { DialogRegenerateComponent } from './dialog-regenerate/dialog-regenerate.component';
-import { CardOpService } from './cardOp.service';
 import { DialogSelectingExtraManaComponent} from "./dialog-selecting-extra-mana/dialog-selecting-extra-mana.component";
+import { CardOpServiceNew } from './cardOp.service';
 
 export interface ICard {
   img: string;
@@ -110,6 +110,7 @@ export class GameComponent {
   dialog: null | IDialog = null;  
 
   mainInfo = '';  // General info for the state
+  opInfo = '';    // Info about the current operation
   itemInfo = '';  // Info about a specific item (card, button, ...)
 
   @ViewChild('fullCardEl', { read: ElementRef, static: false }) fullCardEl!: ElementRef;
@@ -125,7 +126,7 @@ export class GameComponent {
     public growl: BfGrowlService,
     private hostElement: ElementRef,
     private tooltipService: BfTooltipService,
-    public cardOp: CardOpService,
+    public cardOp: CardOpServiceNew,
   ) {
     this.shell.gameMode('on');
   }
@@ -197,17 +198,39 @@ export class GameComponent {
       this.showToastMesssages();
       this.triggerDialogs();
       
-      this.cardOp.update();
-      if (this.cardOp.status !== 'off') {
-        if (this.game.doYouHaveControl() && this.cardOp.card?.controller === this.game.playerANum) {
-          this.mainInfo = this.cardOp.text;
-        }
-      }
+      this.cardOp.onStateUpdate(state);
+      // if (this.cardOp.status) { this.mainInfo = this.cardOp.text; }
 
       this.autoAdvance();
       this.autoPositionGameCards();
     }));
+
+
+    
+    this.cardOp.onUpdate = () => { // When card operation updates
+      this.opInfo = '';
+
+      // If an ongoing operation, show its status info
+      if (this.cardOp.status) {
+        const cardName = this.cardOp.card?.name || '';
+        const isSummon = this.cardOp.action === 'summon-spell';
+        if (this.cardOp.status === 'waitingMana')      { this.opInfo = `To ${isSummon ? 'summon' : 'use'} ${cardName} you still need:`; }
+        if (this.cardOp.status === 'waitingExtraMana') { this.opInfo = `Add extra mana for ${cardName}`; }
+        if (this.cardOp.status === 'selectingMana')    { this.opInfo = `Select the mana from your mana pool you want to use for ${cardName}`; }
+        if (this.cardOp.status === 'selectingTargets') { this.opInfo = `Select target for ${cardName}`; }
+      }
+
+      this.customDialogs = {};
+      if (this.state.control === this.game.playerANum && this.cardOp.customDialog && this.cardOp.card) {
+        this.customDialogs[this.cardOp.customDialog] = this.cardOp.card;
+      }
+    }
+
+
   }
+
+  // Check cards that need custom dialogs to be opened
+  customDialogs: { [key:string]: TGameCard } = {};
 
   ngOnDestroy() {
     this.game.deactivateGame();
@@ -295,13 +318,13 @@ export class GameComponent {
     }
 
     // If cancel operation
-    const cancelSummonOp = yourOptions.find(op => op.action === 'cancel-op');
-    if (cancelSummonOp) {
-      this.globalButtons.push({
-        id: 'cancel-op', text: cancelSummonOp.text || 'Cancel',
-        icon: 'icon-cross', clickFn: () => this.cardOp.cancel() 
-      });
-    }
+    // const cancelSummonOp = yourOptions.find(op => op.action === 'cancel-op');
+    // if (cancelSummonOp) {
+    //   this.globalButtons.push({
+    //     id: 'cancel-op', text: cancelSummonOp.text || 'Cancel',
+    //     icon: 'icon-cross', clickFn: () => this.cardOp.cancel() 
+    //   });
+    // }
 
   }
 
@@ -321,7 +344,7 @@ export class GameComponent {
       if (lastAction.player !== this.game.playerANum) { // Actions from opponent
 
         if (lastAction.action === 'summon-land')     { toast(`<b>${playerB.name}</b> summoned a ${cardName}`,               'icon-arrow-down16'); }
-        if (lastAction.action === 'summon-creature') { toast(`<b>${playerB.name}</b> is summoning a creature: ${cardName}`, 'icon-arrow-down16'); }
+        // if (lastAction.action === 'summon-creature') { toast(`<b>${playerB.name}</b> is summoning a creature: ${cardName}`, 'icon-arrow-down16'); }
         if (lastAction.action === 'summon-spell')    { toast(`<b>${playerB.name}</b> is casting a ${cardName}`,             'icon-arrow-down16'); }
       }
     }
@@ -346,7 +369,9 @@ export class GameComponent {
     // if (this.state.phase === 'combat') { return; } // For now, avoid autoadvance during combat
 
     // If you can only skip phase, do it
-    if (options.length === 1 && options[0].action === 'skip-phase') { return advancePhase(); }
+    if (options.length === 1 && options[0].action === 'skip-phase') {
+      if (this.state.phase !== 'pre' && this.state.phase !== 'post') { return advancePhase(); }
+    }
 
     // Automatically untap
     if (this.state.phase === 'untap' && options.filter(o => o.action === 'untap-all').length === 1) { return advancePhase(() => this.game.action('untap-all')); }
@@ -401,11 +426,6 @@ export class GameComponent {
 
 
 
-  isHandCardSelectable(card: TGameCard): boolean {
-    if (card.selectableAction) { return true; }
-    if (card.selectableTarget) { return true; }
-    return false;
-  }
 
 
   extendTableCard(card: TGameCard, grid: 'A'| 'B'): TExtGameCard {
@@ -560,7 +580,7 @@ export class GameComponent {
     // this.updateSummonOperation();
     this.updateCombatOperation();
     this.updateSpellStack();
-    this.updateCustomDialogs();
+    // this.updateCustomDialogs();
 
     // If a creature that can be regenerated is dying, open the regenerate dialog
     this.regenerateCreature = this.state.cards.find(c => c.canRegenerate && c.isDying);
@@ -622,26 +642,8 @@ export class GameComponent {
   effectsPanelCard: TGameCard | null = null;
 
 
-  // Check cards that need custom dialogs to be opened
-  customDialogs: { [key:string]: TGameCard } = {};
-  updateCustomDialogs() {
-    this.customDialogs = {};
-    if (this.state.control === this.game.playerANum) {
-      this.state.cards.forEach(card => {
-        if (card.customDialog) { this.customDialogs[card.customDialog] = card; }
-      });
-    }
-  }
 
 
-  displayManaPool(poolPlayer: string, poolNum: number): number {
-    let mana = poolPlayer === 'A' ? this.playerA.manaPool[poolNum] : this.playerB.manaPool[poolNum];
-    if (this.cardOp.status !== 'off' && poolPlayer === this.cardOp.playerLetter) {
-      mana = this.cardOp.displayManaPool[poolNum];
-      // if (mana < 0) { mana = 0; }
-    }
-    return mana;
-  }
 
   // -------------------------- Actions --------------------------
 
@@ -652,17 +654,14 @@ export class GameComponent {
   }
 
   selectManaPool(fromPlayer: 'A' | 'B', poolNum: number) {
-    if (this.cardOp.status === 'selectingMana' && this.playerA.manaPool[poolNum] > 0) { this.cardOp.reserveMana(poolNum); }
-    if (this.cardOp.status === 'waitingExtraMana' && this.playerA.manaPool[poolNum] > 0) { this.cardOp.reserveExtraMana(poolNum); }
+    this.cardOp.selectMana(poolNum);
   }
 
   selectCardFromYourHand(card: TGameCard) {
     if (card.selectableAction) {
-      this.game.action(card.selectableAction.action, { gId: card.gId });
+      this.cardOp.startNew(card.gId, card.selectableAction.action);
     }
   }
-
-
 
   selectCardFromTable(card: TExtGameCard) {
     this.focusPlayCard(card);
@@ -670,23 +669,25 @@ export class GameComponent {
   }
 
   selectCard(card: TGameCard) {
-    if (card.selectableTarget) {
-      if (this.cardOp.status === 'selectingTargets') {
-        this.cardOp.addTarget(card.selectableTarget.value);        
+    if (this.cardOp.status === 'selectingTargets') {
+      if (this.cardOp.possibleTargets.find(t => t === card.gId)) {
+        this.cardOp.selectTargets([card.gId]);
       }
     }
-    if (card.selectableAction) {
-      this.game.action(card.selectableAction.action, card.selectableAction.params);
+    else if (card.selectableAction) { // You can't action when selecting targets
+      this.cardOp.startNew(card.gId, card.selectableAction.action);
     }
   }
 
-  selectPlayer(player: TPlayer) {
-    if (player.selectableTarget) {
-      if (this.cardOp.status === 'selectingTargets') {
-        this.cardOp.addTarget(player.selectableTarget.value);
-      }
-    }
+
+  selectPlayer(num: '1' | '2') {
+    return this.cardOp.selectTargetPlayer(num);
   }
+
+  isPlayerSelectable(num: '1' | '2') { 
+    return this.cardOp.isTargetPlayer(num); 
+  }
+
 
 
 }

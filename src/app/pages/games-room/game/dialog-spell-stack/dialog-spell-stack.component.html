@@ -10,7 +10,6 @@
         *ngFor="let rootTarget of rootTargets"
         [item]="rootTarget"
         (selectCard)="selectCard.emit($event)"
-        (selectPlayer)="selectPlayer.emit($event)"
         (hoverCard)="hoverCard.emit($event)" (clearHover)="clearHover.emit()">
       </stack-card-with-targets>
     </div>
@@ -34,7 +33,7 @@
       <div class="time" [style.width.px]="progressBar"></div>
     </div>
     <bf-btn *ngIf="showTimer" (bfClick)="pause()" bfText="Wait" bfIcon="icon-pause2"></bf-btn>
-    <bf-btn [bfDisabled]="!youControl" (bfClick)="releaseStack()" bfText="Ok, go on" bfIcon="icon-arrow-right3"></bf-btn>
+    <bf-btn *ngIf="youControl" (bfClick)="releaseStack()" bfText="Ok, go on" bfIcon="icon-arrow-right3"></bf-btn>
   </div>
   
 </div>

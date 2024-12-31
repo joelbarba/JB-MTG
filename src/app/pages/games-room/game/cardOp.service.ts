@@ -1,293 +1,402 @@
 import { Injectable } from '@angular/core';
-import { TAction, TActionParams, TCardOpStatus, TCast, TGameCard } from '../../../core/types';
+import { EPhase, TAction, TActionCost, TActionParams, TCardOpStatus, TCast, TGameCard, TGameState } from '../../../core/types';
 import { GameStateService } from '../game-state.service';
-import { calcManaCost, calcManaForUncolored, checkMana, getAvailableMana, spendMana } from './gameLogic/game.utils';
+import { calcManaCost, validateCost } from './gameLogic/game.utils';
 
+
+export type TCardOp = {
+  gId: string,
+  status: TCardOpStatus, // 'waitingMana' | 'selectingMana' | 'waitingExtraMana' | 'selectingTargets' 
+  cost: null | TActionCost,
+  action: 'summon-spell' | 'trigger-ability',
+  params: TActionParams,
+}
 
 @Injectable({ providedIn: 'root' })
-export class CardOpService {
+export class CardOpServiceNew {
+  stack: Array<TCardOp> = []; // Stack of operations
 
+  // Previous state memory to calculate deltas
+  prevManaPool?: TCast;               // Mana pool of the previous state
+  prevPhase: EPhase = EPhase.untap;   // Previous state phase
+
+  onUpdate = () => {};  // To react on changes externally
+
+
+  // From here below, all variables are recalculated on afterChanges():
+
+  // Current operation (stack.at(-1))
   gId = '';
-  opAction: 'summon' | 'ability' = 'summon';
-  status: 'off' | TCardOpStatus = 'off';
-
-  action: TAction = 'summon-spell';
+  status: null | TCardOpStatus = null;
+  cost: null | TActionCost = null; // This is not the mana, but full cost object
+  action: 'summon-spell' | 'trigger-ability' = 'summon-spell';
   params: TActionParams = {
-    gId            : '',
-    // manaToUse      : [0,0,0,0,0,0], // Mana to be used for the operation
-    manaForUncolor : [0,0,0,0,0,0], // What mana of the manaPool will be used for uncolored
-    manaExtra      : [0,0,0,0,0,0], // Extra mana selection (apart from the cast) for X
-    targets        : [],
+    manaToUse        : [0,0,0,0,0,0], // Total mana to be used for the operation (except extra)
+    manaForUncolor   : [0,0,0,0,0,0], // What mana of the manaToUse will be used for uncolored
+    manaExtra        : [0,0,0,0,0,0], // Extra mana selection (apart from the cast) for X
+    isExtraManaReady : false,
+    targets          : [],
   };
 
-  title = '';
-  text = '';
   card?: TGameCard;
-  showSummonBtn = false;
-  minimized = false;
-  playerNum   : '1' | '2' = '1';
-  playerLetter: 'A' | 'B' = 'A';
+  summonIds: string[] = []; // All gId of the current summoning operations
+  showManaOkBtn = false;    // When 'selectingMana', show the Submit button only if the selection is correct
+  showCancelBtn = false;    // To show the cancel button for the operation
+  minimizeSelectManaDialog = false;
+  minimizeExtraManaDialog  = false;
+  customDialog: null | string = null;  // If the operation requires a custom dialog to open when it's :selectingTargets
 
-  // This variables are never used to trigger actions, 
-  // only to show the mana pool - reserved mana & other temporary info panels
-  manaCost    : TCast = [0,0,0,0,0,0]; // Total mana cost of the op's action
-  manaReserved: TCast = [0,0,0,0,0,0]; // Mana currently reserved for the operation (colored + manaForUncolor)
-  manaLeft    : TCast = [0,0,0,0,0,0]; // Remaining Mana still needed (total - reserved) <-- Only when 'selectingMana'
-  manaNeeded  : TCast = [0,0,0,0,0,0]; // manaCost - available in the pool (to show next to mainInfo)
+  manaPool      : TCast = [0,0,0,0,0,0]; // PlayerA's mana pool (shortcut to this.game.playerA().manaPool)
+  manaAvailable : TCast = [0,0,0,0,0,0]; // manaPool - reserved (manaToUse + manaExtra) for other (waitingExtraMana / selectingTargets) operations
+  manaToDisplay : TCast = [0,0,0,0,0,0]; // manaAvailable - reserved (manaToUse + manaExtra) for the current operation (this is different from available when selectingMana or waitingExtraMana)
+  manaCost      : TCast = [0,0,0,0,0,0]; // Total mana cost of the op's action (= op.cost.mana)
+  manaNeeded    : TCast = [0,0,0,0,0,0]; // manaCost - available in the pool (to show next to mainInfo)
 
-  prevManaPool?: TCast;    // Mana pool of the previous state (to calculate delta)
-  displayExtraManaDialog = false;
+  possibleTargets: string[] = [];  // cost.possibleTargets[] but with playerA/B --- turned to ---> player1/2
 
-
+  
+  
   constructor(private game: GameStateService) {}
 
-  update() { // To run every state change
-    const state = this.game.state;
-    this.displayExtraManaDialog = false;
-    
-    if (!state.opStack.length || state.control !== this.game.playerANum) {
-      if (this.status !== 'off') { this.turnOff(); } // If all operations have finished, turn it off
+  onStateUpdate(state: TGameState) {
+    this.afterChanges(); // Extend the (state) mana pool changes on local variables
 
-    } else { // If there are ongoing operations
+    if (state.phase !== this.prevPhase) { this.resetAll(); } // Cancel all operations when the phase ends
+
+    if (this.status === 'waitingMana') { 
+      this.tryToExecute(); // Try to execute the current operation (in case new mana was added)
+    }
+    else if (this.status === 'waitingExtraMana') {
+      if (this.prevManaPool) { // If only 1 mana was added, use it for the X extra mana
+        const diffMana = this.prevManaPool.map((prevMana, ind) => this.manaPool[ind] - prevMana);
+        console.log('prevManaPool=', this.prevManaPool, ',  manaPool=', this.manaPool, ',  diffMana=', diffMana);
+        if (diffMana.reduce((a, v) => a + v, 0) === 1) { // If 1 new mana was added to your mana pool
+          const poolNum = diffMana.reduce((a, v, i) => v ? i : a, 0);
+          this.selectMana(poolNum);
+          console.log('New mana added to your pool. Using it for extra mana. manaExtra=', this.params.manaExtra);
+        }
+      }      
+    }
+
+    this.prevPhase = state.phase;
+    this.prevManaPool = [...this.manaPool];
+  }
+
+
+  // Resets all values (remove all operations)
+  resetAll() {
+    this.stack = [];
+    this.afterChanges();
+  }
+
+
+  // There are 2 main data sources: state + stack
+  // Every time any of these 2 change, all the rest of the varialbles are recalculated here:
+  private afterChanges() {
+    this.calculateManaPool();
+
+    const op = this.stack.at(-1);
+    if (!op) { // When empty stack
+      this.gId = '';
+      this.status = null;
+      this.cost = null;
+      this.action = 'summon-spell';
+      this.params = {
+        manaToUse        : [0,0,0,0,0,0], // Mana to be used for the operation
+        manaForUncolor   : [0,0,0,0,0,0], // What mana of the manaPool will be used for uncolored
+        manaExtra        : [0,0,0,0,0,0], // Extra mana selection (apart from the cast) for X
+        isExtraManaReady : false,
+        targets          : [],
+      };
+      this.card = undefined;
+      this.summonIds = [];
+      this.possibleTargets = [];
+      this.showManaOkBtn = false;
+      this.showCancelBtn = false;
+      this.customDialog = null;
+      this.minimizeSelectManaDialog = false;
+      this.minimizeExtraManaDialog = false;
+      this.manaNeeded = [0,0,0,0,0,0];
+      this.manaCost   = [0,0,0,0,0,0];
+
+    } else { // When an ongoing op
+      this.gId    = op.gId;
+      this.status = op.status;
+      this.cost   = op.cost;
+      this.action = op.action;
+      this.params = op.params;
+      this.card = this.game.state.cards.find(c => c.gId === op.gId);
+  
+      this.summonIds = this.stack.filter(op => op.action === 'summon-spell').map(op => op.gId);
+      this.showManaOkBtn = false;
+      this.showCancelBtn = true;
+      this.minimizeExtraManaDialog = !!this.game.state.cards.find(c => c.location === 'stack'); // Minimize when summoning others
+      this.minimizeSelectManaDialog = op.status !== 'selectingMana'; // Always open it if needed
+  
+      this.manaNeeded = op.cost?.mana || [0,0,0,0,0,0];
+      this.manaCost   = op.cost?.mana || [0,0,0,0,0,0];
       
-      const currOp = state.opStack.at(-1); // If a new operation is detected, start it
-      if (this.status === 'off' || this.gId !== currOp?.gId || this.status !== currOp?.status) { this.startNewOp(); }
+      this.customDialog = null; // Show custom dialog for the card's operation
 
-      // Update params from state --- to --> params{}
-      if (currOp?.isExtraManaReady) { this.params.isExtraManaReady = currOp.isExtraManaReady; }
-      if (currOp?.manaForUncolor)   { this.params.manaForUncolor   = [...currOp.manaForUncolor]; }
-      if (currOp?.manaExtra)        { this.params.manaExtra        = [...currOp.manaExtra]; }
-      if (currOp?.targets)          { this.params.targets          = [...currOp.targets]; }
-
-      // If an ongoing waiting mana operation, try to use the current mana pool
-      if (this.status === 'waitingMana') { this.tryToAction(); }
-
-      // If collecting extra mana
-      if (this.status === 'waitingExtraMana') {
-        this.showSummonBtn = true;
-
-        // Calculate the manaReserved[] for the fixed cost
-        const availableManaInThePool = getAvailableMana(this.game.state, this.game.playerA().manaPool, this.gId);
-        const extraMana = this.params.manaExtra || [0,0,0,0,0,0];
-        for (let t = 0; t <= 5; t++) { availableManaInThePool[t] -= extraMana[t]; }
-        const { manaStatus, totalManaToUse } = calcManaCost(this.manaCost, availableManaInThePool, this.params.manaForUncolor);
-        if (manaStatus === 'not enough') { console.error('There is no enough mana. That should not happen'); }
-        if (manaStatus === 'needs selection') { console.error('Needs manaForUncolor selection. That should not happen'); }
-        this.manaReserved = totalManaToUse;
-
-        // If the previous state action added 1 mana to the mana pool, automatically reserve it as extra mana
-        if (this.prevManaPool) {
-          const manaPool = this.game.playerA().manaPool;
-          const diffMana = this.prevManaPool.map((prevMana, ind) => manaPool[ind] - prevMana);
-          // console.log('prevManaPool=', this.prevManaPool, ',  manaPool=', manaPool, ',  diffMana=', diffMana);
-          if (diffMana.reduce((a, v) => a + v, 0) === 1) { // If 1 new mana was added to your mana pool
-            const poolNum = diffMana.reduce((a, v, i) => v ? i : a, 0);
-            setTimeout(() => this.reserveExtraMana(poolNum));
-            console.log('New mana added to your pool. Using it for extra mana. manaExtra=', this.params.manaExtra);
+      if (op.status === 'waitingMana') {
+        
+        // Calculate manaNeeded[] (cost - available)
+        const manaInThePool: TCast = [...this.manaAvailable];
+        if (op.cost) {
+          this.manaNeeded = [...op.cost.mana];
+          for (let t = 1; t <= 5; t++) {
+            const mana = Math.min(op.cost.mana[t], manaInThePool[t]);
+            manaInThePool[t] -= mana;
+            this.manaNeeded[t] -= mana;
+          }
+          let uncoloredCost = op.cost.mana[0];
+          for (let t = 0; t <= 5; t++) {
+            const mana = Math.min(uncoloredCost, manaInThePool[t]);
+            uncoloredCost -= mana;
+            manaInThePool[t] -= mana;
+            this.manaNeeded[0] -= mana;
           }
         }
-
-        this.displayExtraManaDialog = this.card?.controller === this.game.playerANum;
       }
+
+
+      if (op.status === 'selectingMana') {
+        if (this.params.manaToUse) { // Check if the selection is right (enough selected mana)
+          const { manaStatus } = calcManaCost(this.manaCost, this.params.manaToUse, this.params.manaForUncolor);
+          this.showManaOkBtn = manaStatus === 'ok';
+          if (this.showManaOkBtn && op.cost?.xMana) { setTimeout(() => this.tryToExecute()); } // Auto jump to waitingExtraMana
+        }      
+      }
+
+      // Automatically calculate the mana to use for this operation, so it can be reserved
+      if (op.status === 'waitingExtraMana' || op.status === 'selectingTargets') {
+        const { totalManaToUse, manaForUncolor } = calcManaCost(this.manaCost, this.manaAvailable, op.params.manaForUncolor);
+        op.params.manaForUncolor = manaForUncolor;
+        op.params.manaToUse = totalManaToUse;
+        this.calculateManaPool();
+      }
+
+      if (op.status === 'selectingTargets') { // Set dialog if needed
+        if (op.cost?.customDialog) { this.customDialog = this.card?.name.replaceAll(' ', '') || null; }
+        
+        // Turn playerA/B to player1/2 in possibleTargets[]
+        this.possibleTargets = (op.cost?.possibleTargets || []).map(target => {
+          if (target === 'playerA') { return 'player' + this.game.playerANum; }
+          if (target === 'playerB') { return 'player' + this.game.playerBNum; }
+          return target;
+        });
+      }
+
+
+
     }
-
-
-    // Remember the previous value of your mana pool
-    this.prevManaPool = [...this.game.playerA().manaPool];
-    this.updateDisplayManaPool();
-    // console.log('manaReserved', this.manaReserved);
-    // console.log('manaExtra', this.params.manaExtra, state.opStack.at(-1)?.manaExtra);
+    this.onUpdate(); // Broadcast external changes
   }
 
 
-  displayManaPool: TCast = [0,0,0,0,0,0];
-  updateDisplayManaPool() {
-    // Mana Pool - (cost + extra) for all opStack[] operations (except the current one)
-    this.displayManaPool = getAvailableMana(this.game.state, this.game.playerA().manaPool, this.gId);
-    const extraMana = this.params.manaExtra || [0,0,0,0,0,0];
-    for (let t = 0; t <= 5; t++) {
-      this.displayManaPool[t] -= this.manaReserved[t];
-      this.displayManaPool[t] -= extraMana[t];
-    }
-    console.log('Mana Pool =', this.prevManaPool, ', displayManaPool =', this.displayManaPool);
-  }
+  // When you want to play a card (summon or trigger ability), instead of directly calling game.action()
+  // you must call this function to start a new operation that tracks all the parameter gathering
+  startNew(gId: string, action: TAction) {
+    if (action === 'summon-land') { return this.game.action(action, { gId }); } // Immediately executed
+    if (action !== 'summon-spell' && action !== 'trigger-ability') { return console.error('Invalid action', action); }
 
-  reserveExtraMana(poolNum: number) {
-    if (!this.params.manaExtra) { this.params.manaExtra = [0,0,0,0,0,0]; }
-    const manaInPool = this.game.playerA().manaPool[poolNum];
-    const reserved = this.manaReserved[poolNum] + this.params.manaExtra[poolNum];
-    if (manaInPool > reserved) {
-      this.params.manaExtra[poolNum] += 1;
-      this.game.action('update-op', this.params);
-    }
-  }
+    const card = this.game.state.cards.find(c => c.gId === gId);
+    if (!card) { return; } // Invalid gId
 
-  reserveAllPoolForExtra() {
-    if (!this.params.manaExtra) { this.params.manaExtra = [0,0,0,0,0,0]; }
-    const prevTotalExtra = this.params.manaExtra.reduce((a,v) => a + v, 0);
-    const reserved = this.params.manaExtra.map((mana, pool) => mana + this.manaReserved[pool]);
-    this.game.playerA().manaPool.forEach((manaFromPool, pool) => {
-      const availableMana = manaFromPool - reserved[pool];
-      if (availableMana > 0 && this.params.manaExtra) { this.params.manaExtra[pool] += availableMana; } 
-    });
-    if (prevTotalExtra < this.params.manaExtra.reduce((a,v) => a + v, 0)) {
-      this.game.action('update-op', this.params);
-    }
-  }
+    // If this is the current ongoig operation, cancel it
+    if (this.stack.at(-1)?.gId === gId) { return this.cancel(); }
 
-  submitExtraMana() {
-    this.turnOff();
-    this.params.isExtraManaReady = true;
-    this.game.action(this.action, this.params);
+    this.removeOpFromStack(gId); // Remove previous operations with the same card (if any)
+
+    const cost = action === 'summon-spell' ? card?.getSummonCost(this.game.state) : card?.getAbilityCost(this.game.state);
+    const op: TCardOp = { gId, status: 'waitingMana', action, params: { gId }, cost }; // Create a new operation
+
+    console.log('Starting a New Card Operation', op);
+    this.stack.push(op); // Stack the new operation
+    this.tryToExecute();
   }
 
 
-  startNewOp() {
-    const state = this.game.state;
-    const currOp = state.opStack.at(-1);
+  // Try to execute the current operation (send an action to the state)
+  // This function may remove (execute) or change the status of the current operation
+  tryToExecute(): 'ready' | 'error' | TCardOpStatus {
+    const op = this.stack.at(-1);
+    if (!op) { return 'error'; }    
+    
+    const card = this.game.state.cards.find(c => c.gId === op.gId);
+    if (!card) { return 'error'; }
+    
+    console.log('Trying to execute the current operation', op);
 
-    if (currOp) {
-      this.gId            = currOp.gId;
-      this.opAction       = currOp.opAction;
-      this.status         = currOp.status;
+    this.calculateManaPool(); // Get the right this.manaAvailable[]
+    const opStatus = validateCost(card, op.params, op.cost, this.manaAvailable);
 
-      this.card = state.cards.find(c => c.gId === this.gId);
-      if (!this.card) { return console.error('Card not found', this.gId); }
-
-      this.params = { gId: currOp.gId };
-      this.action = this.card.isType('creature') ? 'summon-creature' : 'summon-spell';
-
-      const cost = currOp.opAction === 'summon' ? this.card.getSummonCost(state) : this.card.getAbilityCost(state);
-
-      this.manaCost      = [...cost?.mana || [0,0,0,0,0,0]]; // Total cost
-      this.manaLeft      = [...cost?.mana || [0,0,0,0,0,0]]; // Remaining mana left to summon
-      this.manaNeeded    = [...cost?.mana || [0,0,0,0,0,0]]; // Remaining mana left to summon
-      this.manaReserved  = [0,0,0,0,0,0];  // Mana temporarily reserved to summon
-      this.minimized     = false;
-      this.showSummonBtn = false;
-      this.playerNum = this.card.controller;
-      this.playerLetter = this.card.controller === this.game.playerANum ? 'A' : 'B';
-
-      if (currOp.opAction === 'summon')  { this.title = `Summoning ${this.card.name}`; }      
-      if (currOp.opAction === 'ability') { this.title = `Using ${this.card.name}`; }      
-
-
-      if (currOp.status === 'waitingMana') {
-        this.text = `You still need to generate: `;
-      }
-      else if (currOp.status === 'selectingMana') {
-        this.text = `Please select the mana from your mana pool you want to use to summon ${this.card.name}`;
-        this.autoReserveColoredMana();
-      }
-      else if (currOp.status === 'waitingExtraMana' || currOp.status === 'selectingExtraMana') {
-        this.text = `Add extra mana for ${this.card.name}`;
-      }
-      else if (currOp.status === 'selectingTargets') {
-        this.text = `Select target`;
-      }
+    if (opStatus === 'error') { 
+      this.removeOpFromStack(op.gId);
+      console.error('Operation error', op); 
     }
-  }
+    else if (opStatus === 'ready') {
+      this.removeOpFromStack(op.gId);
+      setTimeout(() => this.game.action(op.action, op.params)); // Run it immediately
 
+    } else { // If not ready to be executed, stack new Op and wait for params to change
 
-  autoReserveColoredMana() { // Automatically reserve colored mana
-    const playerA = this.game.playerA();
-    if (this.card) {
-      for (let t = 0; t < Math.min(playerA.manaPool[1], this.manaCost[1]); t++) { this.reserveMana(1); }
-      for (let t = 0; t < Math.min(playerA.manaPool[2], this.manaCost[2]); t++) { this.reserveMana(2); }
-      for (let t = 0; t < Math.min(playerA.manaPool[3], this.manaCost[3]); t++) { this.reserveMana(3); }
-      for (let t = 0; t < Math.min(playerA.manaPool[4], this.manaCost[4]); t++) { this.reserveMana(4); }
-      for (let t = 0; t < Math.min(playerA.manaPool[5], this.manaCost[5]); t++) { this.reserveMana(5); }
-    }
-  }
-
-
-  // Select one mana (manaReserved) from the mana pool to use the operation action
-  // This only applies when 'selectingMana' for uncolored (manaForUncolor)
-  reserveMana(poolNum: number) {
-    if (poolNum > 0 && this.manaLeft[poolNum] > 0) { // Use it as colored mana
-      this.manaLeft[poolNum] -= 1;
-      this.manaReserved[poolNum] += 1;
-    }
-    else if (this.manaLeft[0] > 0)  { // Use it as uncolored mana
-      this.manaLeft[0] -= 1;
-      this.manaReserved[poolNum] += 1;
-      if (!this.params?.manaForUncolor) { this.params.manaForUncolor = [0,0,0,0,0,0]; }
-      this.params.manaForUncolor[poolNum] += 1;
-    }
-    // else { return; } // Unusable (can't reserve more mana than needed)
-    this.showSummonBtn = this.manaLeft.reduce((a, v) => a + v, 0) <= 0;
-    this.updateDisplayManaPool();
-  }
-  
-
-
-  
-
-  tryToAction() {
-    console.log('tryToAction');
-    if (!this.card) { return; }
-
-    // Mana Pool - (cost + extra) for all opStack[] operations (except the current one)
-    const availableManaInThePool = getAvailableMana(this.game.state, this.game.playerA().manaPool, this.card.gId);
-    if (this.params.manaExtra) {
-      for (let t = 0; t <= 5; t++) { availableManaInThePool[t] -= this.params.manaExtra[t]; }
-    }
-
-    const manaStatus = checkMana(this.manaCost, availableManaInThePool);
-
-    if (manaStatus === 'exact' || manaStatus === 'auto') {
-      this.turnOff();
-      setTimeout(() => this.game.action(this.action, this.params));
-    }
-    else if (manaStatus === 'not enough') {
-      console.log('Still not enough mana');
-      this.manaNeeded = [...this.manaCost];
-      for (let t = 1; t <= 5; t++) {
-        this.manaNeeded[t] = Math.max(0, this.manaCost[t] - availableManaInThePool[t]);
-        availableManaInThePool[t] -= Math.min(this.manaCost[t], availableManaInThePool[t]);
+      // If you turn to "selectingMana", autoselect all the (possible) colored mana
+      if (op.status !== opStatus && opStatus === 'selectingMana') {
+        setTimeout(() => { // Do it afterChanges
+          for (let t = 1; t <= 5; t++) {
+            const colored = Math.min(this.manaAvailable[t], this.manaCost[t]);
+            for (let q = 0; q < colored; q++) { this.selectMana(t); }
+          }
+        });
       }
-      for (let t = 0; t <= 5; t++) {
-        this.manaNeeded[0] = Math.max(0, this.manaNeeded[0] - availableManaInThePool[t]);
-      }
-    }
-    else if (manaStatus === 'manual') { // Too many mana of different colors. You need to select
-      console.log('Ops, too much mana of different colors. You need to select');        
 
-      const reserveStatus = checkMana(this.manaCost, this.manaReserved);
-      if (reserveStatus === 'exact' || reserveStatus === 'auto') {
-        this.turnOff();
-        setTimeout(() => this.game.action(this.action, this.params));
-      } 
-      else if (this.status !== 'selectingMana') {
-        this.startNewOp(); // Start a new operation to select mana
-      }
+      op.status = opStatus;
+      console.log('The current operation cannot be executed yet', op);
     }    
+
+    this.afterChanges();
+    return opStatus;
   }
 
 
-  addTarget(target: string) {
-    if (!this.params.targets) { this.params.targets = []; }
-    this.params.targets?.push(target);
-    this.tryToAction();
-  }
+  // Select 1 mana from the pool to be used
+  // This function changes the params: manaToUse[] + manaForUncolor[] + manaExtra[]
+  selectMana(pool: number) {
+    const op = this.stack.at(-1);
+
+    if (op && op.status === 'selectingMana') { // Select one to be used as the fixed mana cost
+      if (!this.params.manaToUse) { this.params.manaToUse = [0,0,0,0,0,0]; }
+      if (!this.params.manaForUncolor) { this.params.manaForUncolor = [0,0,0,0,0,0]; }
   
+      this.calculateManaPool();
+      const isManaAvailable = this.manaAvailable[pool] > this.params.manaToUse[pool];
+  
+      if (isManaAvailable && op.cost?.mana) {
+        const colorLeft = op.cost.mana[pool] - this.params.manaToUse[pool];
+        if (colorLeft > 0) {
+          this.params.manaToUse[pool] += 1;
+        } else {
+  
+          const uncolorUsed = this.params.manaForUncolor.reduce((a,v) => a + v, 0);
+          const uncolorLeft = op.cost.mana[0] - uncolorUsed;
+          if (uncolorLeft > 0) {
+            this.params.manaToUse[pool] += 1;
+            this.params.manaForUncolor[pool] += 1;
+          } else {
+            // console.error('YOU CANT USE THIS MANA');
+          }
+        }
+      }
+    }
 
-  turnOff() {
-    if (this.status !== 'off') {
-      // this.mainInfo = this.text;
-      // this.globalButtons.removeById('cancel-summon');
-      this.manaCost     = [0,0,0,0,0,0];
-      this.manaReserved = [0,0,0,0,0,0];
-      this.manaLeft     = [0,0,0,0,0,0];
-      this.manaNeeded   = [0,0,0,0,0,0];
-      this.status = 'off';
+    if (op && op.status === 'waitingExtraMana') { // Select one to be used as the extra mana cost
+      if (!op.params.manaToUse) { op.params.manaToUse = [0,0,0,0,0,0]; }
+      if (!op.params.manaExtra) { op.params.manaExtra = [0,0,0,0,0,0]; }
+
+      this.calculateManaPool();
+      const xMana = op.cost?.xMana || [0,0,0,0,0,0];
+      const manaLeft = this.manaAvailable[pool] - op.params.manaToUse[pool] - op.params.manaExtra[pool];
+      if (manaLeft > 0 && xMana[pool] > 0) { op.params.manaExtra[pool] += 1; }
+    }
+
+    this.afterChanges();
+  }
+
+
+  // Select all mana from the pool to be used. This function changes the params: manaToUse[] + manaExtra[]
+  reserveAllPoolForExtra() {
+    const op = this.stack.at(-1);
+    if (op && op.status === 'waitingExtraMana') {
+      if (!op.params.manaToUse) { op.params.manaToUse = [0,0,0,0,0,0]; }
+      if (!op.params.manaExtra) { op.params.manaExtra = [0,0,0,0,0,0]; }
+      this.calculateManaPool();
+      
+      const xMana = op.cost?.xMana || [0,0,0,0,0,0];
+      for (let pool = 0; pool <= 5; pool++) {
+        const manaLeft = this.manaAvailable[pool] - op.params.manaToUse[pool] - op.params.manaExtra[pool];
+        if (manaLeft > 0 && xMana[pool] > 0) { op.params.manaExtra[pool] += manaLeft; }
+      }      
+      this.afterChanges();
     }
   }
 
-  cancel() {
-    this.turnOff();
-    this.gId = ''; // Force values reset
-    this.game.action('cancel-op');
+
+  // To complete the waitingExtraMana status
+  completeExtraMana() {
+    this.params.isExtraManaReady = true;
+    this.tryToExecute();
+  }
+
+
+  // Adding 1 target to the selection
+  selectTargets(targets: string[]) {
+    if (!this.params.targets) { this.params.targets = []; }
+    targets.forEach(target => this.params.targets?.push(target));    
+    this.tryToExecute();
+  }
+
+  selectTargetPlayer(num: '1' | '2') {
+    if (this.isTargetPlayer(num)) { this.selectTargets(['player' + num]); }
+  }
+
+  // TODO: Find and remove: playerA.selectableAction || playerA.selectableTarget
+  isTargetPlayer(num: '1' | '2') {
+    return this.status === 'selectingTargets' 
+      && !!this.possibleTargets.find(t => t === 'player' + num);
+  }
+
+
+  // Cancels the current operation, and sets the previous (if any)
+  cancel() { 
+    const op = this.stack.at(-1);
+    if (op) { this.removeOpFromStack(op.gId); }
+    this.afterChanges();
+  }
+
+
+  // --------------------------------------------------------------------------------
+
+  // This function sets: manaPool[] + manaAvailable[] + manaToDisplay[]
+  private calculateManaPool() {
+    this.manaPool = [...this.game.playerA().manaPool];
+    this.manaAvailable = [...this.manaPool];
+    const currOp = this.stack.at(-1);
+    
+    // For ongoig operations that are in "waitingExtraMana" or "selectingTargets",
+    // reserve the mana that they are going to use (params.manaToUse[]) making it unavailable in the pool
+    // This way these operations can safely continue with the needed mana after other operations (that may also spend mana) are done
+    this.stack
+      .filter(op => op.gId !== currOp?.gId) // Exclude the current operation
+      .filter(op => op.status === 'waitingExtraMana' || op.status === 'selectingTargets')
+      .forEach(op => {
+      const manaToUse = op.params.manaToUse || [0,0,0,0,0,0];
+      const manaExtra = op.params.manaExtra || [0,0,0,0,0,0];
+      for (let t = 0; t <= 5; t++) {
+        this.manaAvailable[t] -= manaToUse[t];
+        this.manaAvailable[t] -= manaExtra[t];
+      }
+    });
+
+    this.manaToDisplay = [...this.manaAvailable];
+
+    // If the current operation is cherry picking or adding extra mana, hide those already selected too
+    if (currOp?.status === 'selectingMana' || currOp?.status === 'waitingExtraMana') {
+      const manaToUse = currOp.params.manaToUse || [0,0,0,0,0,0];
+      const manaExtra = currOp.params.manaExtra || [0,0,0,0,0,0];
+      for (let t = 0; t <= 5; t++) {
+        this.manaToDisplay[t] -= manaToUse[t];
+        this.manaToDisplay[t] -= manaExtra[t];
+      }
+    }
+
+  }
+
+  private removeOpFromStack(gId: string) {
+    const op = this.stack.find(op => op.gId === gId);
+    if (op) { this.stack.splice(this.stack.indexOf(op), 1); }
   }
 
 }
+
+

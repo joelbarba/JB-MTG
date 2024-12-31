@@ -8,7 +8,7 @@ import { TGameCard, TGameState } from '../../../../core/types';
 import { GameCardComponent } from '../game-card/game-card.component';
 import { ManaArrayComponent } from "../mana-array/mana-array.component";
 import { Subscription } from 'rxjs';
-import { CardOpService } from '../cardOp.service';
+import { CardOpServiceNew } from '../cardOp.service';
 
 
 @Component({
@@ -40,7 +40,7 @@ export class DialogRegenerateComponent {
 
   constructor(
     private game: GameStateService,
-    public cardOp: CardOpService,
+    public cardOp: CardOpServiceNew,
   ) {}
 
   ngOnInit() {

@@ -1,8 +1,10 @@
-<div class="selecting-mana" [class.minimized]="cardOp.minimized">
-  <div class="min-btn" (click)="cardOp.minimized = !cardOp.minimized">{{cardOp.minimized ? cardOp.title : '-'}}</div>
+<div class="selecting-mana" [class.minimized]="cardOp.minimizeExtraManaDialog">
+  <div class="min-btn" (click)="cardOp.minimizeExtraManaDialog = !cardOp.minimizeExtraManaDialog">
+    {{cardOp.minimizeExtraManaDialog ? 'Extra Mana' : '-'}}
+  </div>
 
   <h2>Adding Extra Mana</h2>
-  <div>{{cardOp.text}}</div>
+  <div>Add the X mana you want to use for {{cardOp.card?.name}}</div>
   <div class="center" *ngIf="cardOp.card">
     <game-card [card]="cardOp.card" from="panelSelMana"></game-card>
   </div>
@@ -27,10 +29,12 @@
   </div>
 
   <div class="btns-box">
-    <bf-btn bfText="Add All Mana Pool" bfIcon="icon-plus" class="left-btn" (bfClick)="cardOp.reserveAllPoolForExtra()"></bf-btn>
+    <bf-btn bfText="Add All Mana Pool" bfIcon="icon-plus" class="left-btn" 
+            [bfDisabled]="isAllSelected()" (bfClick)="cardOp.reserveAllPoolForExtra()">
+    </bf-btn>
     <bf-btn bfText="Cancel" bfIcon="icon-cross" (bfClick)="cardOp.cancel()"></bf-btn>
     <bf-btn [bfText]="'Go On With X=' + totalMana(cardOp.params.manaExtra)" bfIcon="icon-arrow-right3"
-            [bfDisabled]="!cardOp.showSummonBtn" (bfClick)="cardOp.submitExtraMana()">
+            (bfClick)="cardOp.completeExtraMana()">
     </bf-btn>
   </div>
 </div>

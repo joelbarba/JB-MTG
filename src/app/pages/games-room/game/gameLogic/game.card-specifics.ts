@@ -524,7 +524,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
       const possibleTargets = [1, 2, 3, 4, 5].map(v => 'custom-color-' + v);
       return {
         mana: [0,0,0,0,0,0], tap: true,
-        neededTargets: 3, possibleTargets, customDialog: 'BlackLotus', // Targets will be the colors (1,2,3,4,5)
+        neededTargets: 3, possibleTargets, customDialog: true, // Targets will be the colors (1,2,3,4,5)
         text: `Tap to add 3 mana of any single color`
       }
     };
@@ -534,7 +534,6 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
         const mana = Number.parseInt(target.split('custom-color-')[1]);
         cardPlayer.manaPool[mana] += 1;
       });
-      card.customDialog = null;
       moveCardToGraveyard(nextState, gId);
     };
   }
@@ -549,7 +548,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
       const possibleTargets = ['custom-color-' + color1, 'custom-color-' + color2];
       return {
         mana: [0,0,0,0,0,0], tap: true,
-        neededTargets: 1, possibleTargets, customDialog: card.name.replaceAll(' ', ''), // Target will be the color
+        neededTargets: 1, possibleTargets, customDialog: true, // Target will be the color
         text: `Tap ${card.name} to get 1 mana`
       }
     };
@@ -566,7 +565,6 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
         const mana = Number.parseInt(card.targets[0].split('custom-color-')[1]);
         cardPlayer.manaPool[mana] += 1;
         card.isTapped = true;
-        card.customDialog = null;
       } 
     };
   }
@@ -841,7 +839,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     card.getSummonCost = (nextState: TGameState) => {
       const { targetCreatures } = getShorts(nextState);
       const possibleTargets = [ ...targetCreatures().map(c => c.gId), 'playerA', 'playerB'];
-      return { mana: [3,0,0,0,1,0], xMana: [1,1,1,1,1,1], neededTargets: 1, possibleTargets };
+      return { mana: [2,0,0,0,1,0], xMana: [1,1,1,1,1,1], neededTargets: 1, possibleTargets };
     };    
     card.onSummon = (nextState: TGameState) => {
       const { targetCreatures, targetId, card } = getShorts(nextState);

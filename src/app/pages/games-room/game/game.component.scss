@@ -69,6 +69,7 @@
           font-size: calc(var(--size-ref) * 0.6);  // xl = 60
           display: flex;
           justify-content: center;
+          user-select: none;
           &.is-selectable {
             cursor: pointer;
             transition-duration: 0.4s;
@@ -93,6 +94,7 @@
           padding: 0 2px;
           display: flex;
           align-items: center;
+          user-select: none;
           img { 
             flex: 0 1 auto;
             padding: 0 8px;
@@ -223,6 +225,7 @@
       z-index: 600;
       box-shadow: 3px -4px 5px 1px rgb(97 97 97 / 18%);
       background: $info-box-bg;
+      bf-btn + bf-btn { margin-left: 10px; }
       .main-info {
         margin: 0 15px;
         display: flex;

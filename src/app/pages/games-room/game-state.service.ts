@@ -3,8 +3,8 @@ import { Subject, Subscription } from 'rxjs';
 import { AuthService } from '../../core/common/auth.service';
 import { ShellService } from '../../shell/shell.service';
 import { Firestore, QuerySnapshot, collection, doc, getDoc, getDocs, onSnapshot, setDoc, DocumentData, Unsubscribe } from '@angular/fire/firestore';
-import { EPhase, TAction, TCard, TCardLocation, TGameState, TGameDBState, TGameCard, TActionParams, TCardType, TCardAnyLocation, ESubPhase, TCardOpStatus, TCast } from '../../core/types';
-import { calcManaCost, calcManaForUncolored, checkMana, drawCard, endGame, getAvailableMana, getCards, getPlayers, killDamagedCreatures, moveCard, moveCardToGraveyard, spendMana } from './game/gameLogic/game.utils';
+import { EPhase, TAction, TCard, TCardLocation, TGameState, TGameDBState, TGameCard, TActionParams, TCardType, TCardAnyLocation, ESubPhase, TCast, TActionCost } from '../../core/types';
+import { calcManaCost, calcManaForUncolored, checkMana, drawCard, endGame, getCards, getPlayers, killDamagedCreatures, moveCard, moveCardToGraveyard, spendMana, validateCost } from './game/gameLogic/game.utils';
 import { GameOptionsService } from './game/game.options.service';
 import { extendCardLogic } from './game/gameLogic/game.card-specifics';
 import { BfDefer } from 'bf-ui-lib';
@@ -182,7 +182,7 @@ export class GameStateService {
       'isWall', 'isFlying', 'isTrample', 'isFirstStrike', 'isHaste', 'canRegenerate', 'colorProtection',
 
       // Extended properties (extendCardLogic)
-      'selectableAction', 'selectableTarget', 'effectsFrom', 'targetOf', 'uniqueTargetOf',
+      'selectableAction', 'effectsFrom', 'targetOf', 'uniqueTargetOf',
 
       // Extended functions (extendCardLogic)
       'onSummon', 'onAbility', 'onDestroy', 'onDiscard', 'afterCombat', 'onEffect',
@@ -256,11 +256,11 @@ export class GameStateService {
       case 'select-card-to-discard':    this.discardCard(nextState, gId); break;
       case 'burn-mana':                 this.burnMana(nextState); break;
       case 'summon-land':               this.summonLand(nextState, params); break;
-      case 'summon-creature':           this.summonSpell(nextState, params); break;
+      // case 'summon-creature':           this.summonSpell(nextState, params); break;
       case 'summon-spell':              this.summonSpell(nextState, params); break;
       case 'trigger-ability':           this.triggerAbility(nextState, params); break;
-      case 'update-op':                 this.updateCardOperation(nextState, params); break;
-      case 'cancel-op':                 this.cancelCardOperation(nextState); break;
+      // case 'update-op':                 this.updateCardOperation(nextState, params); break;
+      // case 'cancel-op':                 this.cancelCardOperation(nextState); break;
       case 'release-stack':             this.releaseStack(nextState); break;
       case 'regenerate-creature':       this.triggerAbility(nextState, params); break;
       case 'cancel-regenerate':         this.cancelRegenerate(nextState); break;
@@ -326,134 +326,72 @@ export class GameStateService {
 
 
 
-  private evaluateCost(nextState: TGameState, params: TActionParams, opAction: 'summon' | 'ability', callBackFn: (card: TGameCard) => void) {
-    const { playerA, playerB } = this.getPlayers(nextState);
-
-    const gId = params?.gId || '';
-    let forUncolor: TCast = params.manaForUncolor || [0,0,0,0,0,0];
-
-    const setOpStack = (status: TCardOpStatus) => {
-      const op = nextState.opStack.find(c => c.gId === gId);
-      if (op) {
-        op.status = status;
-        if (params.targets)          { op.targets          = [...params.targets]; }
-        if (params.manaExtra)        { op.manaExtra        = [...params.manaExtra]; }
-        if (params.manaForUncolor)   { op.manaForUncolor   = [...params.manaForUncolor]; }
-        if (params.isExtraManaReady) { op.isExtraManaReady = params.isExtraManaReady; }
-      }
-      else {
-        nextState.opStack.push({
-          gId, opAction, status, targets: [], manaToUse: [0,0,0,0,0,0],
-          manaForUncolor: [0,0,0,0,0,0], manaExtra: [0,0,0,0,0,0]
-        });
-      }
-    };
-    const removeOpStack = () => {
-      const op = nextState.opStack.find(c => c.gId === gId);
-      if (op) { nextState.opStack.splice(nextState.opStack.indexOf(op), 1); }
-    }
-
-
-    const card = nextState.cards.find(c => c.gId === gId);
-    if (card) {
-      const cost = opAction === 'summon' ? card.getSummonCost(nextState) : card.getAbilityCost(nextState);
-      if (cost && (!cost.tap || !card.isTapped)) { // If you have to tap, card can't be tapped
-
-        let rightMana = true; // Whether you have the right mana in your mana pool
-        const totalManaCost = cost.mana.reduce((a,v) => a + v, 0);
-
-        if (totalManaCost) {          
-
-          // If there are other ongoing operations that are using mana already (cost + extra),
-          // consider that mana as not availabile, even though it's still in your mana pool
-          const availableManaInThePool = getAvailableMana(nextState, playerA.manaPool, gId);
-
-          // const manaStatus = checkMana(cost.mana, availableManaInThePool);
-          const { manaStatus, manaForColored } = calcManaCost(cost.mana, availableManaInThePool, params.manaForUncolor);
-          forUncolor = manaForColored;
-
-          if (manaStatus === 'ok') {
-            // manaForUncolor = calcManaForUncolored(cost.mana, availableManaInThePool);
-          }
-          else if (manaStatus === 'not enough') {
-            setOpStack('waitingMana'); // Wait for new mana
-            rightMana = false;
-          }
-          else if (manaStatus === 'needs selection') {
-            setOpStack('selectingMana');
-            rightMana = false;
-            // rightMana = cost.mana[0] === manaForUncolor.reduce((a, v) => a + v, 0);
-            // if (!rightMana) { setOpStack('selectingMana'); } // Multiple uncolor selection
-          }
-        }
-
-        
-        if (rightMana) {
-
-          if (cost.xMana && !params.isExtraManaReady) {
-            console.log('------------------------------- DETECTING EXTRA MANA NEEDED');
-            setOpStack('waitingExtraMana'); // Wait for extra X mana
-
-          } else { // Check required targets
-            if ((cost.neededTargets || 0) > (cost.possibleTargets || []).length) {             
-              console.log(`${card.name} can't be used because there are no possible targets`);
-              removeOpStack(); // Cancel current operation
-            }
-            else if ((params.targets?.length || 0) < (cost.neededTargets || 0)) { 
-              if (cost.customDialog) { card.customDialog = cost.customDialog; }
-              setOpStack('selectingTargets');
-            }
-            else {
-              if (totalManaCost > 0) { spendMana(cost.mana, playerA.manaPool, forUncolor); }
-
-              if (cost.xMana && params.manaExtra) {
-                spendMana(params.manaExtra, playerA.manaPool);
-                card.xValue = params.manaExtra?.reduce((v,a) => v + a, 0) || 0;
-              }
-
-              removeOpStack(); // complete current operation
-              callBackFn(card);
-            }
-          }
-
-        }
-
-      }
-    }
-  }
 
 
   private summonLand(nextState: TGameState, params: TActionParams) {
-    this.evaluateCost(nextState, params, 'summon', (card) => card.onSummon(nextState)); // Lands do not go to the stack
+    const card = nextState.cards.find(c => c.gId === params.gId);
+    if (card) { card.onSummon(nextState); } // Lands do not go to the stack
   }
+
 
   private summonSpell(nextState: TGameState, params: TActionParams) {
-    this.evaluateCost(nextState, params, 'summon', (card) => {
-      console.log(`SUMMONING ${card.name} (${params.gId}), manaForUncolor=${params.manaForUncolor}, targets=${params.targets}`);
-      card.status = 'summoning';
-      card.targets = params.targets || [];
-      this.addToSpellStack(nextState, card);
-    });
+    const { playerA } = this.getPlayers(nextState);
+    const card = nextState.cards.find(c => c.gId === params.gId);
+    const cost = card?.getSummonCost(nextState);
+    if (card && cost) {
+      const opStatus = validateCost(card, params, cost, playerA.manaPool);
+      if (opStatus === 'ready') {
+        console.log(`SUMMONING ${card.name} with params =`, params);
+    
+        // Spend Cost
+        const totalManaCost = cost.mana.reduce((a,v) => a + v, 0);
+        if (totalManaCost > 0) { spendMana(cost.mana, playerA.manaPool, params.manaForUncolor); }
+        if (cost.xMana && params.manaExtra) {
+          spendMana(params.manaExtra, playerA.manaPool);
+          card.xValue = params.manaExtra.reduce((v,a) => v + a, 0) || 0;
+        }
+    
+        card.targets = params.targets || [];
+        this.addToSpellStack(nextState, card);        
+      }  
+    }
   }
 
+
   private triggerAbility(nextState: TGameState, params: TActionParams) {
-    this.evaluateCost(nextState, params, 'ability', (card) => {
-      card.status = null;
-      card.targets = params.targets || [];
-      card.onAbility(nextState);
-    });
+    const { playerA } = this.getPlayers(nextState);
+    const card = nextState.cards.find(c => c.gId === params.gId);
+    const cost = card?.getAbilityCost(nextState);
+    if (card && cost) { 
+      const opStatus = validateCost(card, params, cost, playerA.manaPool);
+      if (opStatus === 'ready') { 
+        console.log(`TRIGGERING ${card.name} ABILITY with params =`, params);
+    
+        // Spend Cost
+        const totalManaCost = cost.mana.reduce((a,v) => a + v, 0);
+        if (totalManaCost > 0) { spendMana(cost.mana, playerA.manaPool, params.manaForUncolor); }
+        if (cost.xMana && params.manaExtra) {
+          spendMana(params.manaExtra, playerA.manaPool);
+          card.xValue = params.manaExtra?.reduce((v,a) => v + a, 0) || 0;
+        }
+   
+        card.status = null;
+        card.targets = params.targets || [];
+        card.onAbility(nextState);
+      }  
+    }
   }
 
 
   // When reserving mana or targets of the current operation, save these values
-  private updateCardOperation(nextState: TGameState, params: TActionParams) {
-    const op = nextState.opStack.at(-1);
-    if (op) {
-      if (params.manaForUncolor) { op.manaForUncolor = params.manaForUncolor; }
-      if (params.manaExtra)      { op.manaExtra      = params.manaExtra; }
-      if (params.targets)        { op.targets        = params.targets; }
-    }
-  }
+  // private updateCardOperation(nextState: TGameState, params: TActionParams) {
+  //   const op = nextState.opStack.at(-1);
+  //   if (op) {
+  //     if (params.manaForUncolor) { op.manaForUncolor = params.manaForUncolor; }
+  //     if (params.manaExtra)      { op.manaExtra      = params.manaExtra; }
+  //     if (params.targets)        { op.targets        = params.targets; }
+  //   }
+  // }
 
   // private summonSpellOld(nextState: TGameState, params: TActionParams, tableDirectly = false) {
   //   const { playerA, playerB } = this.getPlayers(nextState);
@@ -593,11 +531,11 @@ export class GameStateService {
   // }
 
   // Cancel the latest ongoing card operation
-  private cancelCardOperation(nextState: TGameState) {
-    const card = nextState.cards.find(c => c.gId === nextState.opStack.at(-1)?.gId);
-    if (card) { card.customDialog = null; } // Remove possible dialogs on card operation
-    nextState.opStack.pop();
-  }
+  // private cancelCardOperation(nextState: TGameState) {
+  //   const card = nextState.cards.find(c => c.gId === nextState.opStack.at(-1)?.gId);
+  //   if (card) { card.customDialog = null; } // Remove possible dialogs on card operation
+  //   nextState.opStack.pop();
+  // }
 
 
   // Cancel the regeneration of a creature and let it die
@@ -841,7 +779,7 @@ export class GameStateService {
 
   // Advances the phase for the given state, or ends the turn
   private endPhase(nextState: TGameState) {
-    nextState.opStack = []; // Cancel all ongoing card operations
+    // nextState.opStack = []; // Cancel all ongoing card operations
 
     switch (nextState.phase) {
       case EPhase.untap:        nextState.phase = EPhase.maintenance; break;
