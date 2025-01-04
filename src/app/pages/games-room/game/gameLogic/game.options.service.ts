@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { EPhase, TAction, TCard, TCardLocation, TGameState, TGameDBState, TGameCard, TGameCards, TActionParams, TPlayer, TCardType, TCardSemiLocation, TCardAnyLocation, TCast, TGameOption, ESubPhase, TEffect } from '../../../core/types';
-import { compareLocations, getCards } from './gameLogic/game.utils';
+import { EPhase, TAction, TCard, TCardLocation, TGameState, TGameDBState, TGameCard, TGameCards, TActionParams, TPlayer, TCardType, TCardSemiLocation, TCardAnyLocation, TCast, TGameOption, ESubPhase, TEffect } from '../../../../core/types';
+import { compareLocations, getCards } from './game.utils';
 
 
 @Injectable({ providedIn: 'root' })

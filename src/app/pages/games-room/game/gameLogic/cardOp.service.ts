@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
-import { EPhase, TAction, TActionCost, TActionParams, TCardOpStatus, TCast, TGameCard, TGameState } from '../../../core/types';
-import { GameStateService } from '../game-state.service';
-import { calcManaCost, validateCost } from './gameLogic/game.utils';
+import { EPhase, TAction, TActionCost, TActionParams, TCardOpStatus, TCast, TGameCard, TGameState } from '../../../../core/types';
+import { GameStateService } from './game-state.service';
+import { calcManaCost, validateCost } from './game.utils';
 
 
 export type TCardOp = {

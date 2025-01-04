@@ -6,8 +6,8 @@ import { BfDnDModule, BfUiLibModule } from 'bf-ui-lib';
 import { GameCardComponent } from '../../game-card/game-card.component';
 import { TGameCard } from '../../../../../core/types';
 import { ManaIconComponent } from "../../mana-icon/mana-icon.component";
-import { GameStateService } from '../../../game-state.service';
-import { CardOpServiceNew } from '../../cardOp.service';
+import { GameStateService } from '../../gameLogic/game-state.service';
+import { CardOpServiceNew } from '../../gameLogic/cardOp.service';
 
 
 @Component({

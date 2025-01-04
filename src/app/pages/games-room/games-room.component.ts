@@ -6,7 +6,7 @@ import { CommonModule } from '@angular/common';
 import { Observable } from 'rxjs';
 import { EPhase, TCast, TGameCard, TGameDBState, TGameState, TPlayer } from '../../core/types';
 import { Router } from '@angular/router';
-import { GameStateService } from './game-state.service';
+import { GameStateService } from './game/gameLogic/game-state.service';
 import { TranslateModule } from '@ngx-translate/core';
 import { FormsModule } from '@angular/forms';
 import { BfGrowlService, BfListHandler, BfUiLibModule } from 'bf-ui-lib';

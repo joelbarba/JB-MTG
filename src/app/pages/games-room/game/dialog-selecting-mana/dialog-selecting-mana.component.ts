@@ -5,7 +5,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { BfConfirmService, BfDnDModule, BfDnDService, BfUiLibModule } from 'bf-ui-lib';
 import { GameCardComponent } from "../game-card/game-card.component";
 import { ManaArrayComponent } from "../mana-array/mana-array.component";
-import { CardOpServiceNew } from '../cardOp.service';
+import { CardOpServiceNew } from '../gameLogic/cardOp.service';
 
 @Component({
   selector    : 'dialog-selecting-mana',

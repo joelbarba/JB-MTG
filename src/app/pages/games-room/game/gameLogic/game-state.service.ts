@@ -1,15 +1,15 @@
 import { Injectable } from '@angular/core';
 import { Subject, Subscription } from 'rxjs';
-import { AuthService } from '../../core/common/auth.service';
-import { ShellService } from '../../shell/shell.service';
+import { AuthService } from '../../../../core/common/auth.service';
+import { ShellService } from '../../../../shell/shell.service';
 import { Firestore, QuerySnapshot, collection, doc, getDoc, getDocs, onSnapshot, setDoc, DocumentData, Unsubscribe } from '@angular/fire/firestore';
-import { EPhase, TAction, TCard, TCardLocation, TGameState, TGameDBState, TGameCard, TActionParams, TCardType, TCardAnyLocation, ESubPhase, TCast, TActionCost } from '../../core/types';
-import { calcManaCost, calcManaForUncolored, checkMana, drawCard, endGame, getCards, getPlayers, killDamagedCreatures, moveCard, moveCardToGraveyard, spendMana, validateCost } from './game/gameLogic/game.utils';
-import { GameOptionsService } from './game/game.options.service';
-import { extendCardLogic } from './game/gameLogic/game.card-specifics';
+import { EPhase, TAction, TCard, TCardLocation, TGameState, TGameDBState, TGameCard, TActionParams, TCardType, TCardAnyLocation, ESubPhase, TCast, TActionCost } from '../../../../core/types';
+import { calcManaCost, calcManaForUncolored, checkMana, drawCard, endGame, getCards, getPlayers, killDamagedCreatures, moveCard, moveCardToGraveyard, spendMana, validateCost } from './game.utils';
+import { GameOptionsService } from './game.options.service';
+import { extendCardLogic } from './game.card-specifics';
 import { BfDefer } from 'bf-ui-lib';
-import { getTime } from '../../core/common/commons';
-import { dbCards } from '../../core/dbCards';
+import { getTime } from '../../../../core/common/commons';
+import { dbCards } from '../../../../core/dbCards';
 
 
 

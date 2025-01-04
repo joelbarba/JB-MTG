@@ -3,7 +3,7 @@ import { AuthService } from '../../../core/common/auth.service';
 import { ShellService } from '../../../shell/shell.service';
 import { CommonModule } from '@angular/common';
 import { BfConfirmService, BfDnDModule, BfDnDService, BfGrowlService, BfUiLibModule } from 'bf-ui-lib';
-import { GameStateService } from '../game-state.service';
+import { GameStateService } from './gameLogic/game-state.service';
 import { filter, map, Subscription, timeout } from 'rxjs';
 import { EPhase, TGameState, TGameCard, TExtGameCard, TPlayer, TAction, TCast, TActionParams, ESubPhase, TCardLocation } from '../../../core/types';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -23,7 +23,7 @@ import { BlackLotusDialogComponent } from "./specific-dialogs/black-lotus/black-
 import { DualLandDialogComponent } from "./specific-dialogs/dual-land/dual-land-dialog.component";
 import { DialogRegenerateComponent } from './dialog-regenerate/dialog-regenerate.component';
 import { DialogSelectingExtraManaComponent} from "./dialog-selecting-extra-mana/dialog-selecting-extra-mana.component";
-import { CardOpServiceNew } from './cardOp.service';
+import { CardOpServiceNew } from './gameLogic/cardOp.service';
 
 export interface ICard {
   img: string;
