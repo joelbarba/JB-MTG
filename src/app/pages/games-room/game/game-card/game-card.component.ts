@@ -73,7 +73,13 @@ export class GameCardComponent {
 
   getHoverTip() {
     if (this.isTargetSelectable()) { return `Select target ${this.card?.name}`; }
-    if (this.selectable && this.card?.selectableAction) { return this.card.selectableAction.text || ''; }
+    if (this.isActionSelectable()) { 
+      if (this.cardOp.gId !== this.card?.gId) {
+        return this.card?.selectableAction?.text || '';
+      } else {
+        return `Cancel ${this.card?.name}`;
+      }
+    }
     return '';
   }
 

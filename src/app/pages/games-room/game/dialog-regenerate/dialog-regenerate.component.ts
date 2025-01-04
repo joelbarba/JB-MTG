@@ -57,13 +57,14 @@ export class DialogRegenerateComponent {
     this.creatures = state.cards.filter(c => c.controller === state.control && c.canRegenerate && c.isDying);
     this.card = this.creatures.length === 1 ? this.creatures[0] : undefined;
     
-    if (this.card) { // Immediately trigger the 'regenerate-creature' action
-      setTimeout(() => {
-        if (this.youControl && this.card && this.card.selectableAction) {
-          this.game.action(this.card.selectableAction.action, this.card.selectableAction.params);
-        }    
-      });
-    }
+    // if (this.card) { // Immediately trigger the 'regenerate-creature' action
+    //   setTimeout(() => {
+    //     if (this.youControl && this.card && this.card.selectableAction) {
+    //       // this.card.selectableAction.action = 'regenerate-creature';
+    //       this.game.action('regenerate-creature', this.card.selectableAction.params);
+    //     }    
+    //   });
+    // }
   }
 
   ngOnDestroy() {
@@ -76,11 +77,10 @@ export class DialogRegenerateComponent {
 
   selectCard(card: TGameCard) {
     if (card.selectableAction) {
-      this.game.action(card.selectableAction.action, card.selectableAction.params);
+      // card.selectableAction.action = 'regenerate-creature';
+      // this.game.action('regenerate-creature', card.selectableAction.params);
+      this.cardOp.startNew(card.gId, 'trigger-ability', { gId: card.gId });
     }
   }
   
-  select() {
-    // this.game.action('trigger-ability', params);
-  }
 }

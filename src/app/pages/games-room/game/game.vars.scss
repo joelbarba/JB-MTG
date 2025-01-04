@@ -118,7 +118,7 @@ $table-center-left: calc(var(--left-panel-width) + var(--phases-col-width) + $ta
     }
   }
 
-  .close-btn, .min-btn {
+  .close-btn, .min-btn, .max-btn {
     position: absolute;
     top: 0;
     right: 0;
@@ -137,8 +137,9 @@ $table-center-left: calc(var(--left-panel-width) + var(--phases-col-width) + $ta
     overflow: hidden;
     top: unset;
     left: unset;
-    .min-btn { left: 0; line-height: 38px; }
+    div:not(.max-btn) { display: none; }
   }
+  .max-btn { left: 0; line-height: 38px; }
 }
 
 @mixin fixed-panel($padding-left, $padding-top, $vertical-offset) {

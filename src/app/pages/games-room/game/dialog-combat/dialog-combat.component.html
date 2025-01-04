@@ -1,5 +1,7 @@
 <div class="combat h-cards-len-{{hCardsLen}}" [class.minimized]="minimized">
-  <div class="min-btn" (click)="minimized = !minimized">{{minimized ? title : '-'}}</div>
+  <div [hidden]="minimized"  class="min-btn" (click)="minimized = true">-</div>
+  <div [hidden]="!minimized" class="max-btn" (click)="minimized = false">Combat</div>
+
   <div>
     <h2>{{title}}</h2>
     <div class="combat-phases">

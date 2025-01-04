@@ -94,6 +94,7 @@ export const moveCardToGraveyard = (nextState: TGameState, gId: string, discard 
   card.onDestroy(nextState);
   card.status = null;
   card.targets = [];
+  card.turnDamage = 0;
 
   // Find all enchantments targetting the card, and move them all to the graveyard too
   const tableStackCards = nextState.cards.filter(c => c.location === 'stack' || c.location.slice(0,4) === 'tble');

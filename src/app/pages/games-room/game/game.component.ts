@@ -224,6 +224,9 @@ export class GameComponent {
       if (this.state.control === this.game.playerANum && this.cardOp.customDialog && this.cardOp.card) {
         this.customDialogs[this.cardOp.customDialog] = this.cardOp.card;
       }
+
+      this.updateCombatOperation();
+      this.updateSpellStack();
     }
 
 
@@ -658,9 +661,7 @@ export class GameComponent {
   }
 
   selectCardFromYourHand(card: TGameCard) {
-    if (card.selectableAction) {
-      this.cardOp.startNew(card.gId, card.selectableAction.action);
-    }
+    this.selectCard(card);
   }
 
   selectCardFromTable(card: TExtGameCard) {
@@ -675,7 +676,7 @@ export class GameComponent {
       }
     }
     else if (card.selectableAction) { // You can't action when selecting targets
-      this.cardOp.startNew(card.gId, card.selectableAction.action);
+      this.cardOp.startNew(card.gId, card.selectableAction.action, card.selectableAction.params);
     }
   }
 
@@ -687,7 +688,5 @@ export class GameComponent {
   isPlayerSelectable(num: '1' | '2') { 
     return this.cardOp.isTargetPlayer(num); 
   }
-
-
 
 }

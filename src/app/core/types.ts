@@ -78,6 +78,7 @@ export type TEffect = {
   gId: string; // gId of the card that generated the effect
   scope: 'permanent' | 'turn' | 'endTurn';
   targets: Array<string>; // Array of gIds or player1 or player2
+  xValue?: number; // In case of effects that add X attack/defense
 }
 
 export type TGameDBState = {
@@ -110,9 +111,7 @@ export type TDBGameCard = {
   isTapped    : boolean;
   status: null | 'sickness',
   combatStatus: null | 'combat:attacking' | 'combat:defending' | 'combat:selectingTarget';
-  isDying: boolean,     // If card.canRegenerate, you get a special step to trigger the regeneration ability
-
-  // customDialog: null | string;  // If the card requires a custom dialog to open when it's :selectingTargets
+  isDying: boolean,  // If card.canRegenerate, you get a special step to trigger the regeneration ability
 
   targets: Array<string>;         // Aarray of gIds, playerA, playerB
   blockingTarget: string | null;  // For combat: When defending, the gId of the attacking creature this one is blocking

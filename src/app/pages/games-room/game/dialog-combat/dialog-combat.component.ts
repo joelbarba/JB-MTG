@@ -233,9 +233,7 @@ export class DialogCombatComponent {
     this.interval = setInterval(() => {
       this.progressBar = Math.min(100, ((new Date()).getTime() - ctrlTime) * 200 / waitingMs);
       if (this.progressBar >= 100) { // Max reach
-        clearInterval(this.interval); 
         console.log('AUTO Continue');
-        this.showTimer = false;
         this.releaseStack();
       }
     }, 25);
@@ -249,12 +247,15 @@ export class DialogCombatComponent {
     if (this.subPhase === 'afterCombat') { this.waitAfterCombat = true; }
   }
 
+
   submitAttack()  { this.game.action('submit-attack'); }
   submitDefense() { this.game.action('submit-defense'); }
   cancelAttack()  { this.game.action('cancel-attack'); }
   cancelDefense() { this.game.action('cancel-defense'); }
 
   releaseStack() {
+    clearInterval(this.interval);
+    this.showTimer = false;
     this.game.action('release-stack');
   }
 
@@ -266,7 +267,7 @@ export class DialogCombatComponent {
 
   close() {
     if (this.stateSub) { this.stateSub.unsubscribe(); }
-    // if (this.interval) { clearInterval(this.interval); }
+    if (this.interval) { clearInterval(this.interval); }
     this.end.emit();
   }
 

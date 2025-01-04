@@ -70,9 +70,8 @@ export class CardOpServiceNew {
       if (this.prevManaPool) { // If only 1 mana was added, use it for the X extra mana
         const diffMana = this.prevManaPool.map((prevMana, ind) => this.manaPool[ind] - prevMana);
         console.log('prevManaPool=', this.prevManaPool, ',  manaPool=', this.manaPool, ',  diffMana=', diffMana);
-        if (diffMana.reduce((a, v) => a + v, 0) === 1) { // If 1 new mana was added to your mana pool
-          const poolNum = diffMana.reduce((a, v, i) => v ? i : a, 0);
-          this.selectMana(poolNum);
+        if (diffMana.reduce((a, v) => a + v, 0) > 0) { // If new mana was added to your mana pool, spend it all
+          this.reserveAllPoolForExtra()
           console.log('New mana added to your pool. Using it for extra mana. manaExtra=', this.params.manaExtra);
         }
       }      
@@ -196,9 +195,10 @@ export class CardOpServiceNew {
 
   // When you want to play a card (summon or trigger ability), instead of directly calling game.action()
   // you must call this function to start a new operation that tracks all the parameter gathering
-  startNew(gId: string, action: TAction) {
-    if (action === 'summon-land') { return this.game.action(action, { gId }); } // Immediately executed
-    if (action !== 'summon-spell' && action !== 'trigger-ability') { return console.error('Invalid action', action); }
+  startNew(gId: string, action: TAction, params: TActionParams) {
+    if (action !== 'summon-spell' && action !== 'trigger-ability') {
+      return this.game.action(action, params); // Other actions create no operation
+    }
 
     const card = this.game.state.cards.find(c => c.gId === gId);
     if (!card) { return; } // Invalid gId
