@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { BfConfirmService, BfDnDModule, BfDnDService, BfUiLibModule } from 'bf-ui-lib';
-import { ISummonOp, ITargetOp } from '../game.component';
-import { GameStateService } from '../../game-state.service';
+import { GameStateService } from '../gameLogic/game-state.service';
 import { TActionParams, TGameCard, TGameState, TPlayer } from '../../../../core/types';
 import { Subscription } from 'rxjs';
 import { GameCardComponent } from "../game-card/game-card.component";
+import { WindowsService } from '../gameLogic/windows.service';
+import { GameCardEventsService } from '../gameLogic/game-card-events.service';
 
 @Component({
   selector: 'panel-graveyard',
@@ -24,31 +25,35 @@ import { GameCardComponent } from "../game-card/game-card.component";
   styleUrl: './panel-graveyard.component.scss'
 })
 export class PanelGraveyardComponent {
-  @Input({ required: true }) playerLetter!: 'A' | 'B';
-  @Output() selectCard  = new EventEmitter<TGameCard>();
-  @Output() end         = new EventEmitter<any>();
-  minimized = false;
   stateSub!: Subscription;
-
+  winSub!: Subscription;
   title = 'Graveyard';
   youControl = false;
   player!: TPlayer;
 
   grav!: Array<TGameCard>;
 
-  constructor(public game: GameStateService) {}
+  constructor(
+    public game: GameStateService,
+    public win: WindowsService,
+    public cardEv: GameCardEventsService,
+  ) {}
 
   ngOnInit() {
+    this.winSub = this.win.change$.subscribe(() => this.updateParams());
     this.stateSub = this.game.state$.subscribe(state => this.onStateChanges(state));
-    this.onStateChanges(this.game.state);
+    this.updateParams();
   }
 
-  ngOnChanges() {
-    this.player = this.playerLetter === 'A' ? this.game.playerA() : this.game.playerB();
-    this.title = `${this.player.name}'s Graveyard`;
-  }
   ngOnDestroy() {
-    if (this.stateSub) { this.stateSub.unsubscribe(); }
+    this.stateSub?.unsubscribe();
+    this.winSub?.unsubscribe();
+  }
+
+  updateParams() {
+    this.player = this.win.graveyardPanel.player === 'A' ? this.game.playerA() : this.game.playerB();
+    this.title = `${this.player.name}'s Graveyard`;
+    this.onStateChanges(this.game.state);
   }
 
   onStateChanges(state: TGameState) {

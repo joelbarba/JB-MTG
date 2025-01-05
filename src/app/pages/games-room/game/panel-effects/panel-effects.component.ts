@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { BfConfirmService, BfDnDModule, BfDnDService, BfUiLibModule } from 'bf-ui-lib';
-import { ISummonOp, ITargetOp } from '../game.component';
-import { GameStateService } from '../../game-state.service';
+import { GameStateService } from '../gameLogic/game-state.service';
 import { TActionParams, TEffect, TGameCard, TGameState, TPlayer } from '../../../../core/types';
 import { Subscription } from 'rxjs';
 import { GameCardComponent } from "../game-card/game-card.component";
+import { GameCardEventsService } from '../gameLogic/game-card-events.service';
+import { WindowsService } from '../gameLogic/windows.service';
 
 @Component({
   selector: 'panel-effects',
@@ -24,13 +25,10 @@ import { GameCardComponent } from "../game-card/game-card.component";
   styleUrl: './panel-effects.component.scss'
 })
 export class PanelEffectsComponent {
-  @Input({ required: true }) card!: TGameCard;
-  @Output() selectCard  = new EventEmitter<TGameCard>();
-  @Output() hoverCard   = new EventEmitter<any>();
-  @Output() clearHover  = new EventEmitter<any>();
-  @Output() end         = new EventEmitter<any>();
+  card!: TGameCard;
   minimized = false;
   stateSub!: Subscription;
+  winSub!: Subscription;
 
   title = 'Effects';
   
@@ -38,11 +36,31 @@ export class PanelEffectsComponent {
 
   hCardsLen = 1;  // Max number of cards on a horizontal line
 
-  constructor(public game: GameStateService) {}
+  constructor(
+    public game: GameStateService,
+    public cardEv: GameCardEventsService,
+    public win: WindowsService,
+  ) {}
 
   ngOnInit() {
     // this.stateSub = this.game.state$.subscribe(state => this.onStateChanges(state));
     // this.onStateChanges(this.game.state);
+    this.winSub = this.win.change$.subscribe(() => this.onCardUpdate());
+    this.onCardUpdate();
+  }
+
+  ngOnChanges() {
+    
+  }
+  ngOnDestroy() {
+    this.stateSub?.unsubscribe();
+    this.winSub?.unsubscribe();
+  }
+
+  onCardUpdate() {
+    if (!this.win.effectsPanel.card) { return; }
+
+    this.card = this.win.effectsPanel.card;
     this.effectCards = this.game.state.effects
       .filter(effect => effect.targets.includes(this.card.gId))
       .map(effect => {
@@ -51,14 +69,13 @@ export class PanelEffectsComponent {
       .sort((a, b) => a.id > b.id ? 1 : -1);
 
     this.hCardsLen = this.effectCards.length;
+    this.title = `${this.card.name}'s Effects`;
     console.log('Effect Cards for ', this.effectCards);
   }
 
-  ngOnChanges() {
-    this.title = `${this.card.name}'s Effects`;
-  }
-  ngOnDestroy() {
-    // if (this.stateSub) { this.stateSub.unsubscribe(); }
+  selectCard(card: TGameCard) {
+    this.cardEv.selectCard(card);
+    this.win.effectsPanel.close();
   }
 
   // onStateChanges(state: TGameState) {

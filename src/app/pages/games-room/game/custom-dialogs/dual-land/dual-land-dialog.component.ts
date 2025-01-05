@@ -2,12 +2,14 @@ import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { BfConfirmService, BfDnDModule, BfDnDService, BfUiLibModule } from 'bf-ui-lib';
-import { ManaArrayComponent } from '../../mana-array/mana-array.component';
+import { Subscription } from 'rxjs';
+import { BfDnDModule, BfUiLibModule } from 'bf-ui-lib';
 import { GameCardComponent } from '../../game-card/game-card.component';
-import { TCast, TGameCard } from '../../../../../core/types';
+import { TGameCard } from '../../../../../core/types';
 import { ManaIconComponent } from "../../mana-icon/mana-icon.component";
-import { GameStateService } from '../../../game-state.service';
+import { GameStateService } from '../../gameLogic/game-state.service';
+import { CardOpServiceNew } from '../../gameLogic/cardOp.service';
+import { WindowsService } from '../../gameLogic/windows.service';
 
 
 @Component({
@@ -26,17 +28,31 @@ import { GameStateService } from '../../../game-state.service';
   ],
 })
 export class DualLandDialogComponent {
-  @Input({ required: true }) card!: TGameCard;
+  card: TGameCard | null = null;
+  winSub!: Subscription;
 
   mana1!: 0 | 1 | 2 | 3 | 4 | 5;
   mana2!: 0 | 1 | 2 | 3 | 4 | 5;
 
   constructor(
-    private game: GameStateService,
+    public cardOp: CardOpServiceNew,
+    public win: WindowsService,
   ) {}
 
-  ngOnChanges() {
-    switch (this.card.name.replaceAll(' ', '')) {
+  ngOnInit() {
+    this.winSub = this.win.change$.subscribe(() => this.onCardUpdate());
+    this.onCardUpdate();
+  }
+
+  ngOnDestroy() {
+    this.winSub?.unsubscribe();
+  }
+
+  ngOnChanges() {}
+
+  onCardUpdate() {
+    this.card = this.win.customDialog.card;
+    switch (this.card?.name.replaceAll(' ', '')) {
       case 'Bayou':           this.mana1 = 3; this.mana2 = 5; break;
       case 'Badlands':        this.mana1 = 3; this.mana2 = 4; break;
       case 'Plateau':         this.mana1 = 2; this.mana2 = 4; break;
@@ -51,12 +67,9 @@ export class DualLandDialogComponent {
     }
   }
 
-  cancel() {
-    this.game.action('cancel-ability');
-  }  
   
   select(mana: 0 | 1 | 2 | 3 | 4 | 5) {
-    const params = { gId: this.card.gId, targets: ['custom-color-' + mana] };
-    this.game.action('trigger-ability', params);
+    const target = 'custom-color-' + mana;
+    this.cardOp.selectTargets([target]);
   }
 }

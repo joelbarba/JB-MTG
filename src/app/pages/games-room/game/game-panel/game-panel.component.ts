@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { DocumentReference, Firestore, collection, doc, getDoc, getDocs, onSnapshot, query, setDoc, DocumentData, Unsubscribe } from '@angular/fire/firestore';
 import { BfConfirmService, BfGrowlService, BfUiLibModule } from 'bf-ui-lib';
-import { GameStateService } from '../../game-state.service';
+import { GameStateService } from '../gameLogic/game-state.service';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { getTime } from '../../../../core/common/commons';

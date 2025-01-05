@@ -1,4 +1,4 @@
-export type TColor = 'uncolored' | 'blue' | 'white' | 'black' | 'red' | 'green';
+export type TColor = 'uncolored' | 'blue' | 'white' | 'black' | 'red' | 'green' | 'special';
 export type TCast = [number, number, number, number, number, number];
 export type TCardType = 'land' | 'creature' | 'instant' | 'interruption' | 'artifact' | 'sorcery' | 'enchantment';
 export type TCardExtraType = TCardType | 'island' | 'plains' | 'swamp' | 'mountain' | 'forest';
@@ -78,6 +78,7 @@ export type TEffect = {
   gId: string; // gId of the card that generated the effect
   scope: 'permanent' | 'turn' | 'endTurn';
   targets: Array<string>; // Array of gIds or player1 or player2
+  xValue?: number; // In case of effects that add X attack/defense
 }
 
 export type TGameDBState = {
@@ -99,33 +100,32 @@ export type TGameDBState = {
 export type TGameState = TGameDBState & { options: Array<TGameOption> };
 export type TGameHistory = TGameState & { history: Array<TGameOption & { time: string, player: '1' | '2' }>; }
 
-export type TDBGameCard = TCard & {
-  gId: string;
-  owner: '1' | '2';       // player 1 | player 2
-  controller: '1' | '2';  // player 1 | player 2
-  order: number;
-  location: TCardLocation;
-  isTapped: boolean;
-  status: null | 'summoning' | 'sickness'
-               | 'summon:waitingMana'  | 'summon:selectingMana'  | 'summon:selectingTargets' 
-               | 'ability:waitingMana' | 'ability:selectingMana' | 'ability:selectingTargets';
+export type TDBGameCard = {
+  name        : string;
+  id          : string; // c000000
+  gId         : string; // g000
+  owner       : '1' | '2';  // player 1 | player 2
+  controller  : '1' | '2';  // player 1 | player 2
+  order       : number;
+  location    : TCardLocation;
+  isTapped    : boolean;
+  status: null | 'sickness',
   combatStatus: null | 'combat:attacking' | 'combat:defending' | 'combat:selectingTarget';
-  isDying: boolean,     // If card.canRegenerate, you get a special step to trigger the regeneration ability
-  // regenerate: boolean,  // If true, next time the creature dies it will regenerate
-
-  customDialog: null | string;  // If the card requires a custom dialog to open when it's :selectingTargets
+  isDying: boolean,  // If card.canRegenerate, you get a special step to trigger the regeneration ability
 
   targets: Array<string>;         // Aarray of gIds, playerA, playerB
   blockingTarget: string | null;  // For combat: When defending, the gId of the attacking creature this one is blocking
+
+  xValue: number; // Value of the manaExtra used when actioning the card
 
   turnDamage: number;
   turnAttack: number;  // <-- attack + effects
   turnDefense: number; // <-- defense + effects
 }
 
-export type TGameCard = TDBGameCard & { // Not in DB (calculated when options)
+export type TGameCard = TDBGameCard & TCard & { // Not in DB (fixed properties from TCard + extended props & functions)
   selectableAction?: null | TGameOption;
-  selectableTarget?: null | { text: string, value: string };
+  // selectableTarget?: null | { text: string, value: string };
   effectsFrom?: Array<TEffect>;
   targetOf?: Array<TGameCard>;
   uniqueTargetOf?: Array<TGameCard>;
@@ -141,9 +141,10 @@ export type TGameCard = TDBGameCard & { // Not in DB (calculated when options)
   canAttack: (state: TGameState) => boolean;  // Whether the creature can be selected to attack
   canDefend: (state: TGameState) => boolean;  // Whether the creature can be selected to defend
   targetBlockers: (state: TGameState) => Array<string>; // List of attackers the creature can block
-  getSummonCost:  (state: TGameState) => { mana: TCast, neededTargets?: number, possibleTargets?: string[], customDialog?: string } | null; // Cost to summon the card
-  getAbilityCost: (state: TGameState) => { mana: TCast, neededTargets?: number, possibleTargets?: string[], customDialog?: string, tap: boolean, text: string } | null; // Cost to trigger a card ability
+  getSummonCost:  (state: TGameState) => TActionCost | null; // Cost to summon the card
+  getAbilityCost: (state: TGameState) => TActionCost | null; // Cost to trigger a card ability
 }
+export type TActionCost = { mana: TCast, xMana?: TCast, neededTargets?: number, possibleTargets?: string[], customDialog?: boolean, tap?: boolean, text?: string };
 export type TGameCards = Array<TGameCard>;
 export type TExtGameCard = TGameCard & {
   posX: number;
@@ -151,6 +152,9 @@ export type TExtGameCard = TGameCard & {
   zInd: number;
   grid: 'A' | 'B';
 }
+
+
+
 
 
 export type TPlayer = {
@@ -163,7 +167,6 @@ export type TPlayer = {
   summonedLands: number;  // Only 1 per turn
   stackCall: boolean;  // true if the spell-stack needs to stop on the player
   selectableAction?: null | TGameOption;
-  selectableTarget?: null | { text: string, value: string };
 }
 
 export type TGameOption = { action: TAction, params: TActionParams, text?: string };
@@ -175,12 +178,12 @@ export type TAction = 'start-game'
 | 'untap-all'
 | 'draw' 
 | 'summon-land' 
-| 'summon-creature'
+// | 'summon-creature'
 | 'summon-spell'
-| 'cancel-summon'
-| 'cancel-ability'
-| 'select-card-to-discard'
 | 'trigger-ability'
+// | 'update-op'
+// | 'cancel-op'
+| 'select-card-to-discard'
 | 'burn-mana'
 | 'select-attacking-creature'
 | 'cancel-attack'
@@ -194,9 +197,12 @@ export type TAction = 'start-game'
 ;
 
 export type TActionParams = { 
-  gId?: string;
-  manaForUncolor?: TCast,
-  targets?: Array<string> 
+  gId               ?: string;
+  manaToUse         ?: TCast,
+  manaForUncolor    ?: TCast,
+  manaExtra         ?: TCast,
+  isExtraManaReady  ?: boolean,
+  targets           ?: Array<string> 
 }
 
-
+export type TCardOpStatus = 'waitingMana' | 'selectingMana' | 'waitingExtraMana' | 'selectingTargets';

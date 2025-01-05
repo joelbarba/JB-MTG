@@ -1,24 +1,26 @@
-<div class="selecting-mana" [class.minimized]="summonOp.minimized">
-  <div class="min-btn" (click)="summonOp.minimized = !summonOp.minimized">{{summonOp.minimized ? summonOp.title : '-'}}</div>
-  <h2>{{summonOp.title}}</h2>
-  <div class="center" *ngIf="summonOp.card">
-    <game-card [card]="summonOp.card" from="panelSelMana"></game-card>
+<div class="selecting-mana" [class.minimized]="win.selectManaDialog.size === 'min'">
+  <div [hidden]="win.selectManaDialog.size === 'min'" class="min-btn" (click)="win.selectManaDialog.minimize()">-</div>
+  <div [hidden]="win.selectManaDialog.size === 'max'" class="max-btn" (click)="win.selectManaDialog.maximize()">Mana Selection</div>
+
+  <h2>Mana Selection</h2>
+  <div class="center" *ngIf="cardOp.card">
+    <game-card [card]="cardOp.card" from="panelSelMana"></game-card>
   </div>
-  <div>{{summonOp.text}}</div>
+  <div>Select the mana from your mana pool you want to use for {{cardOp.card?.name}}</div>
   <div class="mana-count">      
     <div class="v-align selected-mana-count">
       <span style="margin-right: 15px;">Selected Mana:</span>
-      <mana-array [mana]="summonOp.manaReserved"></mana-array>
+      <mana-array *ngIf="cardOp.params.manaToUse" [mana]="cardOp.params.manaToUse"></mana-array>
     </div>
     <div class="v-align total-mana-needed">
       <span style="margin-right: 15px;">Total Mana Needed:</span>
-      <mana-array [mana]="summonOp.cast"></mana-array>
+      <mana-array [mana]="cardOp.manaCost"></mana-array>
     </div>
   </div>
   <div class="btns-box">
-    <bf-btn bfText="Cancel" bfIcon="icon-cross" (bfClick)="summonOp.cancel()"></bf-btn>
-    <bf-btn bfText="Summon Card" bfIcon="icon-arrow-right3"
-            [bfDisabled]="!summonOp.showSummonBtn" (bfClick)="summonOp.tryToSummon()">
+    <bf-btn bfText="Cancel" bfIcon="icon-cross" (bfClick)="cardOp.cancel()"></bf-btn>
+    <bf-btn bfText="Go Ahead With Selection" bfIcon="icon-arrow-right3"
+            [bfDisabled]="!cardOp.showManaOkBtn" (bfClick)="cardOp.tryToExecute()">
     </bf-btn>
   </div>
 </div>

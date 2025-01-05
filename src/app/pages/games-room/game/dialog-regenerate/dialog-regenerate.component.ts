@@ -3,12 +3,14 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { BfDnDModule, BfUiLibModule } from 'bf-ui-lib';
-import { GameStateService } from '../../game-state.service';
+import { GameStateService } from '../gameLogic/game-state.service';
 import { TGameCard, TGameState } from '../../../../core/types';
 import { GameCardComponent } from '../game-card/game-card.component';
-import { ISummonOp } from '../game.component';
 import { ManaArrayComponent } from "../mana-array/mana-array.component";
 import { Subscription } from 'rxjs';
+import { CardOpServiceNew } from '../gameLogic/cardOp.service';
+import { GameCardEventsService } from '../gameLogic/game-card-events.service';
+import { WindowsService } from '../gameLogic/windows.service';
 
 
 @Component({
@@ -27,10 +29,6 @@ import { Subscription } from 'rxjs';
 ]
 })
 export class DialogRegenerateComponent {
-  // @Input({ required: true }) card!: TGameCard;
-  // @Input() mainInfo = '';
-  @Input() summonOp?: ISummonOp;
-
   creatures!: TGameCard[];
   card?: TGameCard;
 
@@ -44,6 +42,9 @@ export class DialogRegenerateComponent {
 
   constructor(
     private game: GameStateService,
+    public cardOp: CardOpServiceNew,
+    public cardEv: GameCardEventsService,
+    public win: WindowsService,
   ) {}
 
   ngOnInit() {
@@ -60,13 +61,14 @@ export class DialogRegenerateComponent {
     this.creatures = state.cards.filter(c => c.controller === state.control && c.canRegenerate && c.isDying);
     this.card = this.creatures.length === 1 ? this.creatures[0] : undefined;
     
-    if (this.card) { // Immediately trigger the 'regenerate-creature' action
-      setTimeout(() => {
-        if (this.youControl && this.card && this.card.selectableAction) {
-          this.game.action(this.card.selectableAction.action, this.card.selectableAction.params);
-        }    
-      });
-    }
+    // if (this.card) { // Immediately trigger the 'regenerate-creature' action
+    //   setTimeout(() => {
+    //     if (this.youControl && this.card && this.card.selectableAction) {
+    //       // this.card.selectableAction.action = 'regenerate-creature';
+    //       this.game.action('regenerate-creature', this.card.selectableAction.params);
+    //     }    
+    //   });
+    // }
   }
 
   ngOnDestroy() {
@@ -79,11 +81,10 @@ export class DialogRegenerateComponent {
 
   selectCard(card: TGameCard) {
     if (card.selectableAction) {
-      this.game.action(card.selectableAction.action, card.selectableAction.params);
+      // card.selectableAction.action = 'regenerate-creature';
+      // this.game.action('regenerate-creature', card.selectableAction.params);
+      this.cardOp.startNew(card.gId, 'trigger-ability', { gId: card.gId });
     }
   }
   
-  select() {
-    // this.game.action('trigger-ability', params);
-  }
 }

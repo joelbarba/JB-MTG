@@ -3,13 +3,13 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { BfConfirmService, BfDnDModule, BfDnDService, BfUiLibModule } from 'bf-ui-lib';
-import { ISummonOp, ITargetOp } from '../game.component';
-import { GameStateService } from '../../game-state.service';
+import { GameStateService } from '../gameLogic/game-state.service';
 import { ESubPhase, TActionParams, TGameCard, TGameState } from '../../../../core/types';
 import { Subscription } from 'rxjs';
 import { HoverTipDirective } from '../../../../core/common/internal-lib/bf-tooltip/bf-tooltip.directive';
-import { extendCardLogic } from '../gameLogic/game.card-specifics';
 import { GameCardComponent } from "../game-card/game-card.component";
+import { WindowsService } from '../gameLogic/windows.service';
+import { GameCardEventsService } from '../gameLogic/game-card-events.service';
 
 type TCol = {
   attackingCard: TGameCard;
@@ -34,13 +34,13 @@ type TCol = {
   styleUrl: './dialog-combat.component.scss'
 })
 export class DialogCombatComponent {
-  @Input({ required: true }) attacker!: 'A' | 'B';
-  @Output() end = new EventEmitter<any>();
-  @Output() selectCard = new EventEmitter<TGameCard>();
-  @Output() hoverCard = new EventEmitter<any>();
-  @Output() clearHover = new EventEmitter<any>();
-  @Output() selectEffects = new EventEmitter<any>();
-
+  // @Input({ required: true }) attacker!: 'A' | 'B';
+  // @Output() end = new EventEmitter<any>();
+  // @Output() selectCard = new EventEmitter<TGameCard>();
+  // @Output() hoverCard = new EventEmitter<any>();
+  // @Output() clearHover = new EventEmitter<any>();
+  // @Output() selectEffects = new EventEmitter<any>();
+  attacker!: 'A' | 'B';
   stateSub!: Subscription;
   minimized = false;
 
@@ -64,7 +64,11 @@ export class DialogCombatComponent {
 
   hCardsLen = 1;  // Max number of cards on a horizontal line  
 
-  constructor(public game: GameStateService) {}
+  constructor(
+    public game: GameStateService,
+    public cardEv: GameCardEventsService,
+    public win: WindowsService,
+  ) {}
 
   ngOnInit() {
     
@@ -73,7 +77,7 @@ export class DialogCombatComponent {
     // const interruptingPlayer  = this.summoner === 'A' ? this.game.playerB() : this.game.playerA();
     // console.log('Summoning Event', this.card);
     const youControl = (this.game.state.control === this.game.playerANum);
-    
+    this.attacker = this.win.combatDialog.attacker;
     if (this.attacker === 'A') {
       this.title = `Combat: Attacking`;
 
@@ -168,7 +172,7 @@ export class DialogCombatComponent {
       this.defenderLookingForTarget = this.game.state.cards.find(c => c.combatStatus === 'combat:selectingTarget');
       if (this.defenderLookingForTarget) {
         this.mainInfo = `Select what creature you want ${this.defenderLookingForTarget.name} to defend against`;
-        const possibleBlockers = extendCardLogic(this.defenderLookingForTarget).targetBlockers(state);
+        const possibleBlockers = this.defenderLookingForTarget.targetBlockers(state);
         this.combatCards.forEach(col => {
           col.isPossibleTarget = possibleBlockers.includes(col.attackingCard.gId);
         });
@@ -235,9 +239,7 @@ export class DialogCombatComponent {
     this.interval = setInterval(() => {
       this.progressBar = Math.min(100, ((new Date()).getTime() - ctrlTime) * 200 / waitingMs);
       if (this.progressBar >= 100) { // Max reach
-        clearInterval(this.interval); 
         console.log('AUTO Continue');
-        this.showTimer = false;
         this.releaseStack();
       }
     }, 25);
@@ -251,25 +253,24 @@ export class DialogCombatComponent {
     if (this.subPhase === 'afterCombat') { this.waitAfterCombat = true; }
   }
 
+
   submitAttack()  { this.game.action('submit-attack'); }
   submitDefense() { this.game.action('submit-defense'); }
   cancelAttack()  { this.game.action('cancel-attack'); }
   cancelDefense() { this.game.action('cancel-defense'); }
 
   releaseStack() {
+    clearInterval(this.interval);
+    this.showTimer = false;
     this.game.action('release-stack');
   }
 
-  selectEffectsBadge(card: TGameCard, ev?: MouseEvent) {
-    this.selectEffects.emit(card);
-    if (ev) { ev.stopPropagation(); }
-  }
 
 
   close() {
     if (this.stateSub) { this.stateSub.unsubscribe(); }
-    // if (this.interval) { clearInterval(this.interval); }
-    this.end.emit();
+    if (this.interval) { clearInterval(this.interval); }
+    this.win.combatDialog.close();
   }
 
 }

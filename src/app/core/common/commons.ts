@@ -3,7 +3,7 @@ import { TFullUnit } from "../dataService";
 import { TCard } from "../types";
 
 export const colors = [
-  { value: 'uncolored'}, 
+  { value: 'uncolored'},
   { value: 'blue'}, 
   { value: 'white'},
   { value: 'black'}, 

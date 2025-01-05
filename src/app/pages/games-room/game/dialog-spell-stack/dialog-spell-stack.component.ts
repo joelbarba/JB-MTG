@@ -3,12 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { BfConfirmService, BfDnDModule, BfDnDService, BfUiLibModule } from 'bf-ui-lib';
-import { ISummonOp, ITargetOp } from '../game.component';
-import { GameStateService } from '../../game-state.service';
+import { GameStateService } from '../gameLogic/game-state.service';
 import { TActionParams, TGameCard, TGameState, TPlayer } from '../../../../core/types';
 import { Subscription } from 'rxjs';
 import { StackCardWithTargetsComponent } from './stack-card-with-targets/stack-card-with-targets.component';
-import { extendCardLogic } from '../gameLogic/game.card-specifics';
+import { GameCardEventsService } from '../gameLogic/game-card-events.service';
+import { WindowsService } from '../gameLogic/windows.service';
 
 export type TStackTree = {
   card: TGameCard | null,
@@ -32,15 +32,14 @@ export type TStackTree = {
   styleUrl: './dialog-spell-stack.component.scss'
 })
 export class DialogSpellStackComponent {
-  @Input() panelSize: 'min' | 'max' = 'max';
-  @Output() selectCard    = new EventEmitter<TGameCard>();
-  @Output() selectPlayer  = new EventEmitter<TPlayer>();
-  @Output() hoverCard     = new EventEmitter<any>();
-  @Output() clearHover    = new EventEmitter<any>();
-  @Output() end           = new EventEmitter<any>();
+  // @Input() panelSize: 'min' | 'max' = 'max';
+  // @Output() selectCard    = new EventEmitter<TGameCard>();
+  // @Output() hoverCard     = new EventEmitter<any>();
+  // @Output() clearHover    = new EventEmitter<any>();
+  // @Output() end           = new EventEmitter<any>();
   minimized = false;
 
-  TIMER_TIME = 5000;
+  TIMER_TIME = 500000000;
 
   title = 'Spell Stack';
   youControl: boolean = false;
@@ -66,7 +65,11 @@ export class DialogSpellStackComponent {
   @ViewChild('stackWindow', { read: ElementRef, static: false }) stackWindow!: ElementRef;
   @ViewChild('stackEl', { read: ElementRef, static: false }) stackEl!: ElementRef;
 
-  constructor(public game: GameStateService) {}
+  constructor(
+    public game: GameStateService,
+    public cardEv: GameCardEventsService,
+    public win: WindowsService,
+  ) {}
 
   ngOnInit() {
     this.stateSub = this.game.state$.subscribe(state => this.onStateChanges(state));
@@ -78,9 +81,9 @@ export class DialogSpellStackComponent {
     // console.log('Window rect. Height=', this.windowHeight, this.stackWindow.nativeElement.getBoundingClientRect());
   }
 
-  ngOnChanges(changes: SimpleChanges) {
-    if (changes['panelSize']) { this.minimized = this.panelSize === 'min'; }
-  }
+  // ngOnChanges(changes: SimpleChanges) {
+  //   if (changes['panelSize']) { this.minimized = this.panelSize === 'min'; }
+  // }
 
   ngOnDestroy() {
     if (this.stateSub) { this.stateSub.unsubscribe(); }
@@ -134,7 +137,7 @@ export class DialogSpellStackComponent {
      
       // Select cards that are targetting the target
       const cardsTargetting = state.cards.filter(card => {
-        if (card.type === 'creature' && card.status?.slice(0,6) === 'combat') { return false; } // Omit defending creatures in combat (target = attacker)
+        if (card.type === 'creature' && card.combatStatus) { return false; } // Omit defending creatures in combat (target = attacker)
         return card.targets.indexOf(target) >= 0; 
       }).sort((a, b) => { // Cards that are not in the stack go first (left)
         if (a.location === 'stack' && b.location !== 'stack') { return 1; }
@@ -159,9 +162,10 @@ export class DialogSpellStackComponent {
 
 
     // Fakely run the stack to figure out the shadow damage (the damage creatures and players will receive after the stack is executed)
-    const fakeState = JSON.parse(JSON.stringify(state)) as TGameState;
+    const fakeState = this.game.convertfromDBState(JSON.parse(JSON.stringify(state)));
+
     const fakeStack = fakeState.cards.filter(c => c.location === 'stack').sort((a, b) => a.order > b.order ? -1 : 1); // reverse order
-    fakeStack.forEach(card => card.location === 'stack' && extendCardLogic(card).onSummon(fakeState));
+    fakeStack.forEach(card => card.location === 'stack' && card.onSummon(fakeState));
     this.game.applyEffects(fakeState);
     this.rootTargets.filter(i => !!i.card).forEach(item => {
       const fakeMatch = fakeState.cards.find(c => c.gId === item.card?.gId);
@@ -294,7 +298,7 @@ export class DialogSpellStackComponent {
   close() {
     if (this.stateSub) { this.stateSub.unsubscribe(); }
     if (this.interval) { clearInterval(this.interval); }
-    this.end.emit();
+    this.win.spellStackDialog.close();
   }
 
 }

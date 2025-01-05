@@ -192,6 +192,7 @@ export class DataService {
       id: 0,
       deckId1: player1.deckId,
       deckId2: '', // Waiting for player 2 to accept the request and add a deck
+      // opStack: [],
     };
 
     console.log('New Game', newGame);
@@ -244,9 +245,9 @@ export class DataService {
       const card = this.dbCards.find(c => c.id === cardId);
       if (!card) { return null; }
       if (!testingMode) { order = Math.round(Math.random() * 9999); } // Shuffle
-      // if (card['units']) { delete card.units };
       return {
-        ...card,
+        id: card.id,
+        name: card.name,
         gId: '',
         order,
         location: 'deck' + playerNum as TCardLocation, 
@@ -257,7 +258,7 @@ export class DataService {
         customDialog: null,
         combatStatus: null,
         isDying: false,
-        // regenerate: false,
+        xValue: 0,
         targets: [],
         blockingTarget: null,
         turnDamage: 0,
@@ -290,16 +291,19 @@ export class DataService {
   private testDecks() {
     const cardsDeck1 = [
       'c000005',  // Forest
+      'c000003',  // Swamp
       'c000013',  // Bayou
       'c000026',  // Black Knight
+      'c000027',  // Dark Ritual
+      'c000010',  // Mox Sapphire
+      'c000023',  // Ancestral Recall
+      'c000060',  // Disintegrate
       'c000021',  // Underground Sea
       'c000014',  // Badlands
-      'c000023',  // Ancestral Recall
-      'c000010',  // Mox Sapphire
       'c000067',  // Weakness
       'c000112',  // Timetwister
-      'c000003',  // Swamp
       'c000111',  // Sinkhole
+      'c000038',  // Counterspell
       'c000012',  // Black Lotus
       'c000081',  // WillOTheWisp
       'c000131',  // GhostShip
@@ -340,10 +344,12 @@ export class DataService {
       'c000013',  // Bayou
       'c000014',  // Badlands
       'c000018',  // Taiga
+      'c000060',  // Disintegrate
+      'c000027',  // Dark Ritual
+      'c000027',  // Dark Ritual
       'c000051',  // Llanowar Elves
       'c000006',  // Mox Emerald
       'c000009',  // Mox Ruby
-      'c000084',  // Righteousness
       'c000035',  // KirdApe
       'c000008',  // Mox Pearl
       'c000008',  // Mox Pearl
@@ -359,6 +365,7 @@ export class DataService {
       'c000046',  // Granite Gargoley
       'c000053',  // Ornithopter
       'c000019',  // Tropical Island
+      'c000084',  // Righteousness
       'c000033',  // Shivan Dragon
       'c000032',  // Lighting Bolt      
       'c000032',  // Lighting Bolt

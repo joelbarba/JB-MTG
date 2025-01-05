@@ -7,7 +7,7 @@ import { drawCard, endGame, getCards, killCreature, killDamagedCreatures, moveCa
 
 export const extendCardLogic = (card: TGameCard): TGameCard => {
   const gId = card.gId;
-  if (card.hasOwnProperty('onSummon')) { return card; }
+  // if (card.hasOwnProperty('onSummon')) { return card; }
   // The card object when extended is a reference of the nextState at the begining of the reducer
   // so it always points to the cards of the same state is passed on the functions.
   // But to be 100% pure, we should filter the object from the given nextState in every function --> const card = getCard(nextState);
@@ -440,35 +440,63 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
 
   function c000046_GraniteGargoyle() {
     commonCreature();
-    card.getAbilityCost = () => ({
-      mana: [0,0,0,0,1,0], tap: false,
-      neededTargets: 0, possibleTargets: [], 
-      text: `Pay 1 red mana to add +0/+1`,
-    });
+    card.getAbilityCost = () => ({ mana: [0,0,0,0,0,0], xMana: [0,0,0,0,1,0], tap: false, text: `Pay 1 red mana to add +0/+1` });
     card.onAbility = (nextState: TGameState) => {
-      nextState.effects.push({ scope: 'turn', gId, targets: [], id: randomId('e') });
+      nextState.effects.push({ scope: 'turn', gId, targets: [], id: randomId('e'), xValue: card.xValue });
+      card.xValue = 0;
     };
-    card.onEffect = (nextState: TGameState, effectId: string) => { // Add +0/+1 to target creature
+    card.onEffect = (nextState: TGameState, effectId: string) => { // Add +0/+1
       const { card } = getShorts(nextState);
-      card.turnDefense += 1;
+      const effect = nextState.effects.find(e => e.id === effectId);
+      card.turnDefense += effect?.xValue || 0;
     }
   }
 
   function c000033_ShivanDragon() {
     commonCreature();
-    card.getAbilityCost = () => ({
-      mana: [0,0,0,0,1,0], tap: false,
-      neededTargets: 0, possibleTargets: [], 
-      text: `Pay 1 red mana to add +1/+0`,
-    });
+    card.getAbilityCost = () => ({ mana: [0,0,0,0,0,0], xMana: [0,0,0,0,1,0], tap: false, text: `Pay 1 red mana to add +1/+0` });
     card.onAbility = (nextState: TGameState) => {
-      nextState.effects.push({ scope: 'turn', gId, targets: [], id: randomId('e') });
+      nextState.effects.push({ scope: 'turn', gId, targets: [], id: randomId('e'), xValue: card.xValue });
+      card.xValue = 0;
     };
-    card.onEffect = (nextState: TGameState, effectId: string) => { // Add +1/+0 to target creature
+    card.onEffect = (nextState: TGameState, effectId: string) => { // Add +1/+0
       const { card } = getShorts(nextState);
-      card.turnAttack += 1;
+      const effect = nextState.effects.find(e => e.id === effectId);
+      card.turnAttack += effect?.xValue || 0;
     }
   }
+
+  function c000120_CarrionAnts() {
+    commonCreature();
+    card.getAbilityCost = () => ({ mana: [0,0,0,0,0,0], xMana: [1,1,1,1,1,1], tap: false, text: `Pay 1 mana to add +1/+1`, });
+    card.onAbility = (nextState: TGameState) => {
+      nextState.effects.push({ scope: 'turn', gId, targets: [], id: randomId('e'), xValue: card.xValue });
+      card.xValue = 0;
+    };
+    card.onEffect = (nextState: TGameState, effectId: string) => { // Add +1/+1 to creature
+      const { card } = getShorts(nextState);
+      const effect = nextState.effects.find(e => e.id === effectId);
+      card.turnAttack += effect?.xValue || 0;
+      card.turnDefense += effect?.xValue || 0;
+    }    
+  }
+
+  function c000135_KillerBees() {
+    commonCreature();
+    card.getAbilityCost = () => ({ mana: [0,0,0,0,0,0], xMana: [0,0,0,0,0,1], tap: false, text: `Pay 1 green mana to add +1/+1`, });
+    card.getAbilityCost = () => ({ mana: [0,0,0,0,0,0], xMana: [0,0,0,0,0, 1], tap: false, text: `Pay 1 green mana to add +1/+1` });
+    card.onAbility = (nextState: TGameState) => {
+      nextState.effects.push({ scope: 'turn', gId, targets: [], id: randomId('e'), xValue: card.xValue });
+      card.xValue = 0;
+    };
+    card.onEffect = (nextState: TGameState, effectId: string) => { // Add +0/+1
+      const { card } = getShorts(nextState);
+      const effect = nextState.effects.find(e => e.id === effectId);
+      card.turnAttack += effect?.xValue || 0;
+      card.turnDefense += effect?.xValue || 0;
+    }
+  }
+
 
   function c000027_DarkRitual() { 
     card.onSummon = (nextState: TGameState) => { // Adds 3 black mana
@@ -484,23 +512,10 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     };
     card.onSummon = (nextState: TGameState) => {
       const { targetId, deck } = getShorts(nextState);
-
       const playerNum = targetId === 'player1' ? '1' : '2';
-      const playerDeck = deck.filter(c => c.owner === playerNum);
-
       drawCard(nextState, playerNum);
       drawCard(nextState, playerNum);
       drawCard(nextState, playerNum);
-
-      // if (playerDeck.length <= 3) {
-      //   const winner = targetId === 'player1' ? '2' : '1';
-      //   endGame(nextState, winner);
-
-      // } else {
-      //   moveCard(nextState, playerDeck[0].gId, 'hand');
-      //   moveCard(nextState, playerDeck[1].gId, 'hand');
-      //   moveCard(nextState, playerDeck[2].gId, 'hand');
-      // }
       moveCardToGraveyard(nextState, gId);
     };
   }
@@ -524,7 +539,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
       const possibleTargets = [1, 2, 3, 4, 5].map(v => 'custom-color-' + v);
       return {
         mana: [0,0,0,0,0,0], tap: true,
-        neededTargets: 3, possibleTargets, customDialog: 'BlackLotus', // Targets will be the colors (1,2,3,4,5)
+        neededTargets: 3, possibleTargets, customDialog: true, // Targets will be the colors (1,2,3,4,5)
         text: `Tap to add 3 mana of any single color`
       }
     };
@@ -534,7 +549,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
         const mana = Number.parseInt(target.split('custom-color-')[1]);
         cardPlayer.manaPool[mana] += 1;
       });
-      card.customDialog = null;
+      card.targets = [];
       moveCardToGraveyard(nextState, gId);
     };
   }
@@ -549,7 +564,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
       const possibleTargets = ['custom-color-' + color1, 'custom-color-' + color2];
       return {
         mana: [0,0,0,0,0,0], tap: true,
-        neededTargets: 1, possibleTargets, customDialog: card.name.replaceAll(' ', ''), // Target will be the color
+        neededTargets: 1, possibleTargets, customDialog: true, // Target will be the color
         text: `Tap ${card.name} to get 1 mana`
       }
     };
@@ -566,7 +581,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
         const mana = Number.parseInt(card.targets[0].split('custom-color-')[1]);
         cardPlayer.manaPool[mana] += 1;
         card.isTapped = true;
-        card.customDialog = null;
+        card.targets = [];
       } 
     };
   }
@@ -595,11 +610,12 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
 
   function c000069_WrathOfGod() {
     card.onSummon = (nextState: TGameState) => {
-      const { tableStack } = getShorts(nextState);
+      const { tableStack, card } = getShorts(nextState);
       tableStack.filter(c => c.type === 'creature').forEach(creature => {
         console.log(`Creature ${creature.gId} ${creature.name} is destroyed`);
         killCreature(nextState, creature.gId);
       });
+      moveCardToGraveyard(nextState, card.gId);
     };
   }
 
@@ -625,31 +641,6 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   }
 
 
-  function c000120_CarrionAnts() {
-    commonCreature();
-    card.getAbilityCost = () => ({ mana: [1,0,0,0,0,0], tap: false, text: `Pay 1 mana to add +1/+1`, });
-    card.onAbility = (nextState: TGameState) => {
-      nextState.effects.push({ scope: 'turn', gId, targets: [], id: randomId('e') });
-    };
-    card.onEffect = (nextState: TGameState, effectId: string) => { // Add +1/+1 to target creature
-      const { card } = getShorts(nextState);
-      card.turnAttack += 1;
-      card.turnDefense += 1;
-    }    
-  }
-
-  function c000135_KillerBees() {
-    commonCreature();
-    card.getAbilityCost = () => ({ mana: [0,0,0,0,0,1], tap: false, text: `Pay 1 green mana to add +1/+1`, });
-    card.onAbility = (nextState: TGameState) => {
-      nextState.effects.push({ scope: 'turn', gId, targets: [], id: randomId('e') });
-    };
-    card.onEffect = (nextState: TGameState, effectId: string) => { // Add +1/+1 to target creature
-      const { card } = getShorts(nextState);
-      card.turnAttack += 1;
-      card.turnDefense += 1;
-    }    
-  }
 
   function c000076_SerraAngel() {
     commonCreature();
@@ -672,7 +663,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
       const lands = nextState.cards.filter(c => c.controller === otherPlayer.num && c.location.slice(0,4) === 'tble' && c.type === 'land');
       let hasForest = false;
       lands.forEach(land => {
-        if (extendCardLogic(land).isType('forest')) {
+        if (land.isType('forest')) {
           hasForest = true;
         }
       });
@@ -689,34 +680,37 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   function c000111_Sinkhole() {
     card.getSummonCost = (nextState: TGameState) => {
       const { tableStack } = getShorts(nextState);
-      const possibleTargets = tableStack.filter(c => extendCardLogic(c).isType('land')).map(c => c.gId);
+      const possibleTargets = tableStack.filter(c => c.isType('land')).map(c => c.gId);
       return { mana: card.cast, neededTargets: 1, possibleTargets }; // targets = any lands in play
     };
     card.onSummon = (nextState: TGameState) => {
       const { targetId } = getShorts(nextState);
       moveCardToGraveyard(nextState, targetId); // Destroy land
+      moveCardToGraveyard(nextState, card.gId); // Destroy itself
     };
   }
 
   function c000058_Shatter() {
     card.getSummonCost = (nextState: TGameState) => {
       const { tableStack } = getShorts(nextState);
-      const possibleTargets = tableStack.filter(c => extendCardLogic(c).isType('artifact')).map(c => c.gId);
+      const possibleTargets = tableStack.filter(c => c.isType('artifact')).map(c => c.gId);
       return { mana: card.cast, neededTargets: 1, possibleTargets }; // targets = any artifact
     };
     card.onSummon = (nextState: TGameState) => {
       const { targetId } = getShorts(nextState);
       moveCardToGraveyard(nextState, targetId); // Destroy artifact
+      moveCardToGraveyard(nextState, card.gId); // Destroy itself
     };
   }
 
   function c000059_Shatterstorm() {
     card.onSummon = (nextState: TGameState) => {
       const { tableStack } = getShorts(nextState);
-      tableStack.filter(c => extendCardLogic(c).isType('artifact')).forEach(artifact => {
+      tableStack.filter(c => c.isType('artifact')).forEach(artifact => {
         console.log(`Artifact ${artifact.gId} ${artifact.name} is destroyed`);
         moveCardToGraveyard(nextState, artifact.gId); // Destroy artifact
       });
+      moveCardToGraveyard(nextState, card.gId); // Destroy itself
     };
   }
 
@@ -739,7 +733,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
         drawCard(nextState, '1'); // Player1
         drawCard(nextState, '2'); // Player2
       }
-      moveCardToGraveyard(nextState, card.gId)
+      moveCardToGraveyard(nextState, card.gId); // Destroy itself
     };
   }
 
@@ -758,7 +752,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
         drawCard(nextState, '1'); // Player1
         drawCard(nextState, '2'); // Player2
       }
-      moveCardToGraveyard(nextState, card.gId)
+      moveCardToGraveyard(nextState, card.gId); // Destroy itself
     };
   }
 
@@ -799,7 +793,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     card.onSummon = (nextState: TGameState) => {
       const { targetId } = getShorts(nextState);
       nextState.effects.push({ scope: 'turn', gId, targets: [targetId], id: randomId('e') });
-      moveCardToGraveyard(nextState, gId);
+      moveCardToGraveyard(nextState, card.gId); // Destroy itself
     }
     card.onEffect = (nextState: TGameState, effectId: string) => { // Add +7/+7 to target creature
       const { targetCreatures } = getShorts(nextState);
@@ -814,8 +808,8 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   }
 
   // 
-  // Weakness
-  // Wheel of Fortune
+  // Weakness + Righteousness
+  // 
   // Swords To Plowshares
   // Unsummon
   // Terror
@@ -834,7 +828,21 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
 
 
 
-
+  function c000060_Disintegrate() {
+    card.getSummonCost = (nextState: TGameState) => {
+      const { targetCreatures } = getShorts(nextState);
+      const possibleTargets = [ ...targetCreatures().map(c => c.gId), 'playerA', 'playerB'];
+      return { mana: [2,0,0,0,1,0], xMana: [1,1,1,1,1,1], neededTargets: 1, possibleTargets };
+    };    
+    card.onSummon = (nextState: TGameState) => {
+      const { targetCreatures, targetId, card } = getShorts(nextState);
+      const targetCreature = targetCreatures().find(c => c.gId === targetId);
+      if      (targetId === 'player1') { nextState.player1.life -= card.xValue; } // Deals X points of damage to player1
+      else if (targetId === 'player2') { nextState.player2.life -= card.xValue; } // Deals X points of damage to player2
+      else if (targetCreature) { targetCreature.turnDamage += card.xValue; } // Deals X points of damage to target creature    
+      moveCardToGraveyard(nextState, card.gId); // Destroy itself
+    }
+  }
 
 
 
@@ -845,7 +853,6 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   function c000029_Fork() {}
   function c000030_HowlingMine() {}
   function c000031_HypnoticSpecter() {}  
-  function c000060_Disintegrate() {}
   function c000061_DemonicTutor() {}
   function c000062_EyeForAnEye() {}
   function c000063_IvoryTower() {}

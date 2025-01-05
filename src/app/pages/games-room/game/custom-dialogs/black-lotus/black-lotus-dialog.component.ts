@@ -6,7 +6,10 @@ import { BfDnDModule, BfUiLibModule } from 'bf-ui-lib';
 import { GameCardComponent } from '../../game-card/game-card.component';
 import { TGameCard } from '../../../../../core/types';
 import { ManaIconComponent } from "../../mana-icon/mana-icon.component";
-import { GameStateService } from '../../../game-state.service';
+import { GameStateService } from '../../gameLogic/game-state.service';
+import { CardOpServiceNew } from '../../gameLogic/cardOp.service';
+import { Subscription } from 'rxjs';
+import { WindowsService } from '../../gameLogic/windows.service';
 
 
 @Component({
@@ -25,7 +28,9 @@ import { GameStateService } from '../../../game-state.service';
   styleUrl: './black-lotus-dialog.component.scss'
 })
 export class BlackLotusDialogComponent {
-  @Input({ required: true }) card!: TGameCard;
+  card: TGameCard | null = null;
+  winSub!: Subscription;
+  title = 'Black Lotus';
 
   mana1?: 0 | 1 | 2 | 3 | 4 | 5;
   mana2?: 0 | 1 | 2 | 3 | 4 | 5;
@@ -33,21 +38,29 @@ export class BlackLotusDialogComponent {
 
   constructor(
     private game: GameStateService,
+    public cardOp: CardOpServiceNew,
+    public win: WindowsService,
   ) {}
 
+  ngOnInit() {
+    this.winSub = this.win.change$.subscribe(() => this.card = this.win.customDialog.card);
+    this.card = this.win.customDialog.card
+  }
+
+  ngOnDestroy() {
+    this.winSub?.unsubscribe();
+  }
+
   cancel() {
-    this.game.action('cancel-ability');
+    this.cardOp.cancel();
   }  
   
   select() {
-    const params = {
-      gId: this.card.gId,
-      targets: [
-        'custom-color-' + this.mana1,
-        'custom-color-' + this.mana2,
-        'custom-color-' + this.mana3,
-      ]
-    };
-    this.game.action('trigger-ability', params);
+    const targets = [
+      'custom-color-' + this.mana1,
+      'custom-color-' + this.mana2,
+      'custom-color-' + this.mana3,
+    ];
+    this.cardOp.selectTargets(targets)
   }
 }

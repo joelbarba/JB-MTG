@@ -1,0 +1,27 @@
+@import '../game.vars.scss';
+
+.selecting-mana {
+  background: $dialog-selecting-mana-bg;  
+
+  @include panel-basics();
+  @include fixed-panel(17%, 25%, 15%);
+
+  .mana-count { 
+    width: 100%;
+    padding: 0 30px;
+    display: flex;
+    justify-content: space-around;
+    .selected-mana-count { text-align: left; }
+    .total-mana-needed { text-align: right; }
+   }
+  .mana { margin-left: 5px; img { border-radius: 100%; padding: 1px; background: black; }}
+
+  .btns-box {
+    margin-top: 40px;
+  }
+  .left-btn {
+    flex: 1;
+    text-align: left;
+    margin-left: 0;
+  }
+}

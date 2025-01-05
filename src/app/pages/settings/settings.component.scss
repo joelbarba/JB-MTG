@@ -71,4 +71,16 @@ h2 { padding: 15px 15px 0 15px; }
     }
     .ref-font { font-family: monospace; }
   }
+
+  .cards-db-code {
+    position: fixed;
+    top: 90px; left: 100px; right: 30px; bottom: 40px;
+    border: 1px solid black;
+    border-radius: 5px;
+    background: white;
+    z-index: 100;
+    bf-btn { float: right; }
+    padding: 20px;
+    pre { max-height: 100%; }
+  }
 }

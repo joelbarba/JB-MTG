@@ -126,7 +126,7 @@
   // Smaller size for the table
     max-width: calc(var(--card-width) * 0.81);    // 121
     max-height: calc(var(--card-height) * 0.81);  // 170
-    &.is-selected-attack, &.is-selected-defense {  display: none; } // table card when seleced for combat
+    &.is-selected-attack, &.is-selected-defense { display: none; } // table card when seleced for combat
     &.is-tapped {
       // transform-origin: center;
       margin-left: 30px !important;

@@ -1,5 +1,5 @@
 <div class="effects-panel h-cards-len-{{hCardsLen}} v-cards-len-2">
-  <div class="close-btn" (click)="end.emit()">x</div>
+  <div class="close-btn" (click)="win.effectsPanel.close()">x</div>
   <h2>{{title}}</h2>
 
   <div>All these cards play effects on <b>{{card.name}}</b>:</div>
@@ -9,10 +9,12 @@
       <!-- Effect {{effect.id}} ({{effect.scope}}) -->
       <span class="owner-text">{{effect.card?.owner === game.playerANum ? 'Yours' : "Opponent's"}}</span>
       <game-card *ngIf="effect.card" 
-        [card]="effect.card" 
-        from="panelEffects"
-        (click)="selectCard.emit(effect.card); end.emit()"
-      ></game-card>
+                 [card]="effect.card" 
+                 from="panelEffects"
+                 (mouseenter)="cardEv.hoverCard$.next(effect.card)"
+                 (mouseleave)="cardEv.hoverCard$.next(null)"
+                 (click)="selectCard(effect.card)">
+      </game-card>
     </div>
 
 
@@ -23,12 +25,14 @@
   <div class="main-card">
     <span class="owner-text">{{card.owner === game.playerANum ? 'Yours' : "Opponent's"}}</span>
     <game-card [card]="card" from="panelEffects"
-               (click)="selectCard.emit(card); end.emit()">
+               (mouseenter)="cardEv.hoverCard$.next(card)"
+               (mouseleave)="cardEv.hoverCard$.next(null)"
+               (click)="selectCard(card)">
     </game-card>
   </div>
 
   <div class="btns-box">
-    <bf-btn (bfClick)="end.emit()" bfText="Close" bfIcon="icon-cross"></bf-btn>
+    <bf-btn (bfClick)="win.effectsPanel.close()" bfText="Close" bfIcon="icon-cross"></bf-btn>
   </div>
   
 </div>

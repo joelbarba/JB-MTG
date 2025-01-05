@@ -1,7 +1,9 @@
 @import '../game.vars.scss';
 
-.mana + .mana { margin-left: 5px; }
+// .mana + .mana { margin-left: 5px; }
 .mana {
+  margin: 2.5px;
+  display: inline-block;
   img {
     border-radius: 100%;
     padding: 1px;

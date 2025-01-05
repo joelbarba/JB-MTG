@@ -6,13 +6,13 @@ import { BfConfirmService, BfDnDModule, BfDnDService, BfUiLibModule } from 'bf-u
 import { GameCardComponent } from "../game-card/game-card.component";
 import { ManaArrayComponent } from "../mana-array/mana-array.component";
 import { CardOpServiceNew } from '../gameLogic/cardOp.service';
-import { GameCardEventsService } from '../gameLogic/game-card-events.service';
+import { TCast } from '../../../../core/types';
 import { WindowsService } from '../gameLogic/windows.service';
 
 @Component({
-  selector    : 'dialog-selecting-mana',
-  templateUrl : './dialog-selecting-mana.component.html',
-  styleUrl    : './dialog-selecting-mana.component.scss',
+  selector    : 'dialog-selecting-extra-mana',
+  templateUrl : './dialog-selecting-extra-mana.component.html',
+  styleUrl    : './dialog-selecting-extra-mana.component.scss',
   standalone: true,
   imports: [
     CommonModule,
@@ -24,13 +24,21 @@ import { WindowsService } from '../gameLogic/windows.service';
     ManaArrayComponent,
   ],
 })
-export class DialogSelectingManaComponent {
+export class DialogSelectingExtraManaComponent {
 
   constructor(
     public cardOp: CardOpServiceNew,
-    public cardEv: GameCardEventsService,
     public win: WindowsService,
   ) {}
 
   numArr(num: number): Array<number> { return Array.from(Array(num).keys()) }
+
+  totalMana(cast?: TCast) {    
+    return cast ? cast.reduce((a, v) => a + v, 0) : 0;
+  }
+
+  isAllSelected() {
+    return this.cardOp.manaToDisplay.reduce((a,v) => a + v, 0) <= 0;
+  }
+
 }

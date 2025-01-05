@@ -12,25 +12,27 @@
           <game-card [card]="topGravB" from="gravB"
                     [class.empty]="!topGravB"
                     [selectable]="false"
-                    (click)="graveyardPanel = graveyardPanel === 'B' ? null : 'B'">
+                    (click)="win.graveyardPanel.toggle('B')">
           </game-card>
         </div>
   
         <div class="life" 
-             [class.is-selectable]="playerB.selectableAction || playerB.selectableTarget"
-             (click)="selectPlayer(playerB)">
+            (mouseleave)="itemInfo = ''"
+            (mouseenter)="itemInfo = 'Select target player (opponent)'"
+            [class.is-selectable]="isPlayerSelectable(playerB.num)"
+            (click)="selectPlayer(playerB.num)">
           <!-- Life: {{playerB.life}} -->
           {{playerB.name}}: {{playerB.life}}
         </div>
       </div>
 
       <div class="mana-pool">
-        <div class="mana"> <img src="assets/images/Xmana.png">    <span>{{displayManaPool('B', 0)}}</span> </div>
-        <div class="mana"> <img src="assets/images/blueMana.png"> <span>{{displayManaPool('B', 1)}}</span> </div>
-        <div class="mana"> <img src="assets/images/whiteMana.png"><span>{{displayManaPool('B', 2)}}</span> </div>
-        <div class="mana"> <img src="assets/images/blackMana.png"><span>{{displayManaPool('B', 3)}}</span> </div>
-        <div class="mana"> <img src="assets/images/redMana.png">  <span>{{displayManaPool('B', 4)}}</span> </div>
-        <div class="mana"> <img src="assets/images/greenMana.png"><span>{{displayManaPool('B', 5)}}</span> </div>
+        <div class="mana"> <img src="assets/images/Xmana.png">    <span>{{playerB.manaPool[0]}}</span> </div>
+        <div class="mana"> <img src="assets/images/blueMana.png"> <span>{{playerB.manaPool[1]}}</span> </div>
+        <div class="mana"> <img src="assets/images/whiteMana.png"><span>{{playerB.manaPool[2]}}</span> </div>
+        <div class="mana"> <img src="assets/images/blackMana.png"><span>{{playerB.manaPool[3]}}</span> </div>
+        <div class="mana"> <img src="assets/images/redMana.png">  <span>{{playerB.manaPool[4]}}</span> </div>
+        <div class="mana"> <img src="assets/images/greenMana.png"><span>{{playerB.manaPool[5]}}</span> </div>
       </div>
 
     </div>
@@ -48,9 +50,11 @@
 
     <div class="player-A">
       <div class="left">
-        <div class="life"
-             [class.is-selectable]="playerA.selectableAction || playerA.selectableTarget"
-             (click)="selectPlayer(playerA)">
+        <div class="life" 
+             (mouseleave)="itemInfo = ''"
+             (mouseenter)="itemInfo = 'Select target player (you)'"
+             [class.is-selectable]="isPlayerSelectable(playerA.num)"
+             (click)="selectPlayer(playerA.num)">
           <!-- Life: {{playerA.life}} -->
           {{playerA.name}}: {{playerA.life}}
         </div>
@@ -65,19 +69,19 @@
           <game-card [card]="topGravA" from="gravA"
                      [class.empty]="!topGravA"
                      [selectable]="false"
-                     (click)="graveyardPanel = graveyardPanel === 'A' ? null : 'A'">
+                     (click)="win.graveyardPanel.toggle('A')">
           </game-card>
         </div>
 
       </div>
 
-      <div class="mana-pool" [class.selectable]="summonOp.status === 'selectingMana'">
-        <div class="mana" (click)="selectManaPool('A', 0)"> <img src="assets/images/Xmana.png">    <span>{{displayManaPool('A', 0)}}</span> </div>
-        <div class="mana" (click)="selectManaPool('A', 1)"> <img src="assets/images/blueMana.png"> <span>{{displayManaPool('A', 1)}}</span> </div>
-        <div class="mana" (click)="selectManaPool('A', 2)"> <img src="assets/images/whiteMana.png"><span>{{displayManaPool('A', 2)}}</span> </div>
-        <div class="mana" (click)="selectManaPool('A', 3)"> <img src="assets/images/blackMana.png"><span>{{displayManaPool('A', 3)}}</span> </div>
-        <div class="mana" (click)="selectManaPool('A', 4)"> <img src="assets/images/redMana.png">  <span>{{displayManaPool('A', 4)}}</span> </div>
-        <div class="mana" (click)="selectManaPool('A', 5)"> <img src="assets/images/greenMana.png"><span>{{displayManaPool('A', 5)}}</span> </div>
+      <div class="mana-pool" [class.selectable]="cardOp.status === 'selectingMana' || cardOp.status === 'waitingExtraMana'">
+        <div class="mana" (click)="selectManaPool('A', 0)"> <img src="assets/images/Xmana.png">    <span>{{cardOp.manaToDisplay[0]}}</span> </div>
+        <div class="mana" (click)="selectManaPool('A', 1)"> <img src="assets/images/blueMana.png"> <span>{{cardOp.manaToDisplay[1]}}</span> </div>
+        <div class="mana" (click)="selectManaPool('A', 2)"> <img src="assets/images/whiteMana.png"><span>{{cardOp.manaToDisplay[2]}}</span> </div>
+        <div class="mana" (click)="selectManaPool('A', 3)"> <img src="assets/images/blackMana.png"><span>{{cardOp.manaToDisplay[3]}}</span> </div>
+        <div class="mana" (click)="selectManaPool('A', 4)"> <img src="assets/images/redMana.png">  <span>{{cardOp.manaToDisplay[4]}}</span> </div>
+        <div class="mana" (click)="selectManaPool('A', 5)"> <img src="assets/images/greenMana.png"><span>{{cardOp.manaToDisplay[5]}}</span> </div>
       </div>
     </div>
 
@@ -112,20 +116,17 @@
         <game-card *ngFor="let card of handB" [card]="card" from="handB" [back]="true"></game-card>
       </div>
 
-      <div class="play-box"
-           bfDropContainer
-          (bfDrop)="moveCardPosition($event)" 
-          (dblclick)="autoPositionGameCards()">
+      <!-- bfDropContainer (bfDrop)="moveCardPosition($event)"  -->
+      <div class="play-box" (dblclick)="autoPositionGameCards()">
 
+        <!-- [bfDraggable]="card" (dragstart)="dragStart($event, card)" -->
         <game-card *ngFor="let card of displayTableB" [card]="card" from="tbleB"
           [style.left.px]="card.posX"
           [style.top.px]="card.posY"
           [style.z-index]="card.zInd"
-          [bfDraggable]="card"
-          (dragstart)="dragStart($event, card)"
           (click)="selectCardFromTable(card)"
-          (mouseenter)="game.hoverCard$.next(card)"
-          (mouseleave)="game.hoverCard$.next(null)">
+          (mouseenter)="cardEv.hoverCard$.next(card)"
+          (mouseleave)="cardEv.hoverCard$.next(null)">
         </game-card>
 
 
@@ -136,16 +137,20 @@
                   (mouseover)="itemInfo = skipPhase.enabled ? skipPhase.help : skipPhase.whyNot"
                   (mouseleave)="itemInfo = ''">
           </bf-btn>
-          <bf-btn *ngFor="let gBtn of globalButtons" style="margin-left: 15px;"
+          <bf-btn *ngFor="let gBtn of globalButtons"
                   [bfText]="gBtn.text" [bfIcon]="gBtn.icon" (bfClick)="gBtn.clickFn()">
           </bf-btn>
-          <span [hidden]="!mainInfo || itemInfo" class="main-info">
-            <span>{{mainInfo}}</span>
-            <span *ngIf="summonOp.status === 'waitingMana'">
-              <mana-array style="margin-left: 5px;" class="md" [mana]="summonOp.cast"></mana-array>
+          <bf-btn *ngIf="cardOp.status" [bfText]="'Cancel ' + cardOp.card?.name" 
+                  bfIcon="icon-cross" (bfClick)="cardOp.cancel()">
+          </bf-btn>
+          <span class="main-info" *ngIf="mainInfo && !opInfo && !itemInfo">{{mainInfo}}</span>
+          <span class="main-info" *ngIf="opInfo && !itemInfo">
+            <span>{{opInfo}}</span>
+            <span *ngIf="cardOp.status === 'waitingMana'">
+              <mana-array style="margin-left: 5px;" class="md" [mana]="cardOp.manaNeeded"></mana-array>
             </span>
           </span>
-          <span [hidden]="!itemInfo" class="main-info">{{itemInfo}}</span>
+          <span class="main-info" *ngIf="itemInfo">{{itemInfo}}</span>
         </div>
         <!-- -------------------------------------------------------------------- -->
 
@@ -184,25 +189,22 @@
         <game-card *ngFor="let card of handA"  [card]="card" from="handA"
           (click)="selectCardFromYourHand(card)"
           [hoverTip]="card.selectableAction?.text || ''"
-          (mouseenter)="game.hoverCard$.next(card)"
-          (mouseleave)="game.hoverCard$.next(null)">
+          (mouseenter)="cardEv.hoverCard$.next(card)"
+          (mouseleave)="cardEv.hoverCard$.next(null)">
         </game-card>
       </div>
 
-      <div class="play-box"
-           bfDropContainer
-           (bfDrop)="moveCardPosition($event)" 
-           (dblclick)="autoPositionGameCards()">
+      <!-- bfDropContainer (bfDrop)="moveCardPosition($event)" -->
+      <div class="play-box" (dblclick)="autoPositionGameCards()">
 
+        <!-- [bfDraggable]="card" (dragstart)="dragStart($event, card)" -->
         <game-card *ngFor="let card of displayTableA" [card]="card" from="tbleA"
           [style.left.px]="card.posX"
           [style.top.px]="card.posY"
           [style.z-index]="card.zInd"
-          [bfDraggable]="card"
-          (dragstart)="dragStart($event, card)"
           (click)="selectCardFromTable(card)"
-          (mouseenter)="game.hoverCard$.next(card)"
-          (mouseleave)="game.hoverCard$.next(null)">
+          (mouseenter)="cardEv.hoverCard$.next(card)"
+          (mouseleave)="cardEv.hoverCard$.next(null)">
         </game-card>
 
       </div>
@@ -210,80 +212,50 @@
     </div>
   </div>
 
-  <!-- Graveyard Panel -->
-  <panel-graveyard *ngIf="graveyardPanel"
-    [playerLetter]="graveyardPanel"
-    (selectCard)="selectCard($event)"
-    (end)="graveyardPanel = null">
-  </panel-graveyard>
-
-
-  <!-- Generic Dialog -->
-  <div *ngIf="dialog" class="dialog-box" [class]="dialog.type" 
-      [style.background]="dialog.background" [style.color]="dialog.color">
-    <h2 *ngIf="dialog.title">{{dialog.title}}</h2>
-    <h3 *ngIf="dialog.icon"><span [class]="dialog.icon"></span></h3>
-    <p *ngIf="dialog.text" [innerHtml]="dialog.text"></p>
-    <div class="dialog-btn-box">
-      <div *ngFor="let button of dialog.buttons">
-        <bf-btn [bfText]="button.text" [class]="button.class" bfIcon="icon-arrow-right3" (click)="button.action()"></bf-btn>
-      </div>
-    </div>
-  </div>
-
-
-  <dialog-combat 
-    *ngIf="combatPanel"
-    [attacker]="combatPanelAttacker"    
-    (selectCard)="selectCard($event)"
-    (end)="combatPanel = false">
-  </dialog-combat>
-
-
-  <!-- Dialog: Selecting Mana (cherry pick on summoning) -->
-  <dialog-selecting-mana 
-    *ngIf="summonOp.status === 'selectingMana'" 
-    [summonOp]="summonOp">
-  </dialog-selecting-mana>
-
-
-  <dialog-spell-stack 
-    *ngIf="spellStackPanel"
-    [panelSize]="spellStackPanelSize"
-    (selectCard)="selectCard($event)"
-    (selectPlayer)="selectPlayer($event)"
-    (end)="spellStackPanel = false" >
-  </dialog-spell-stack>
-  <!-- spellStackPanelSize={{spellStackPanelSize}} -->
-  <!-- panel={{panel}} -->
-
-  <dialog-regenerate 
-    *ngIf="regenerateCreature"
-    [summonOp]="summonOp">
-  </dialog-regenerate>
-
-  <!-- Effects Floating Panel -->
-  <panel-effects *ngIf="effectsPanelCard"
-    [card]="effectsPanelCard"
-    (selectCard)="selectCard($event)"
-    (end)="effectsPanelCard = null">
-  </panel-effects>
+  
+  
+  <panel-graveyard             *ngIf="win.graveyardPanel.display"   [style.z-index]="win.graveyardPanel.zInd"></panel-graveyard>
+  <dialog-damage               *ngIf="win.damageDialog.display"     [style.z-index]="win.damageDialog.zInd"></dialog-damage>
+  <dialog-combat               *ngIf="win.combatDialog.display"     [style.z-index]="win.combatDialog.zInd"></dialog-combat>
+  <dialog-selecting-mana       *ngIf="win.selectManaDialog.display" [style.z-index]="win.selectManaDialog.zInd"></dialog-selecting-mana>
+  <dialog-spell-stack          *ngIf="win.spellStackDialog.display" [style.z-index]="win.spellStackDialog.zInd"></dialog-spell-stack>
+  <dialog-regenerate           *ngIf="win.regenerateDialog.display" [style.z-index]="win.regenerateDialog.zInd"></dialog-regenerate>
+  <dialog-selecting-extra-mana *ngIf="win.extraManaDialog.display"  [style.z-index]="win.extraManaDialog.zInd"></dialog-selecting-extra-mana>
+  <panel-effects               *ngIf="win.effectsPanel.display"     [style.z-index]="win.effectsPanel.zInd"></panel-effects>
 
   <!-- Custom Card Dialogs -->
-  <black-lotus-dialog *ngIf="customDialogs['BlackLotus']" [card]="customDialogs['BlackLotus']"></black-lotus-dialog>
-  <dual-land-dialog   *ngIf="customDialogs['Bayou']"           [card]="customDialogs['Bayou']"></dual-land-dialog>
-  <dual-land-dialog   *ngIf="customDialogs['Badlands']"        [card]="customDialogs['Badlands']"></dual-land-dialog>
-  <dual-land-dialog   *ngIf="customDialogs['Plateau']"         [card]="customDialogs['Plateau']"></dual-land-dialog>
-  <dual-land-dialog   *ngIf="customDialogs['Savannah']"        [card]="customDialogs['Savannah']"></dual-land-dialog>
-  <dual-land-dialog   *ngIf="customDialogs['Scrubland']"       [card]="customDialogs['Scrubland']"></dual-land-dialog>
-  <dual-land-dialog   *ngIf="customDialogs['Taiga']"           [card]="customDialogs['Taiga']"></dual-land-dialog>
-  <dual-land-dialog   *ngIf="customDialogs['TropicalIsland']"  [card]="customDialogs['TropicalIsland']"></dual-land-dialog>
-  <dual-land-dialog   *ngIf="customDialogs['Tundra']"          [card]="customDialogs['Tundra']"></dual-land-dialog>
-  <dual-land-dialog   *ngIf="customDialogs['UndergroundSea']"  [card]="customDialogs['UndergroundSea']"></dual-land-dialog>
-  <dual-land-dialog   *ngIf="customDialogs['VolcanicIsland']"  [card]="customDialogs['VolcanicIsland']"></dual-land-dialog>
+  <black-lotus-dialog *ngIf="win.customDialog.name === 'BlackLotus'"     [style.z-index]="win.customDialog.zInd"></black-lotus-dialog>
+  <dual-land-dialog   *ngIf="win.customDialog.name === 'Bayou'"          [style.z-index]="win.customDialog.zInd"></dual-land-dialog>
+  <dual-land-dialog   *ngIf="win.customDialog.name === 'Badlands'"       [style.z-index]="win.customDialog.zInd"></dual-land-dialog>
+  <dual-land-dialog   *ngIf="win.customDialog.name === 'Plateau'"        [style.z-index]="win.customDialog.zInd"></dual-land-dialog>
+  <dual-land-dialog   *ngIf="win.customDialog.name === 'Savannah'"       [style.z-index]="win.customDialog.zInd"></dual-land-dialog>
+  <dual-land-dialog   *ngIf="win.customDialog.name === 'Scrubland'"      [style.z-index]="win.customDialog.zInd"></dual-land-dialog>
+  <dual-land-dialog   *ngIf="win.customDialog.name === 'Taiga'"          [style.z-index]="win.customDialog.zInd"></dual-land-dialog>
+  <dual-land-dialog   *ngIf="win.customDialog.name === 'TropicalIsland'" [style.z-index]="win.customDialog.zInd"></dual-land-dialog>
+  <dual-land-dialog   *ngIf="win.customDialog.name === 'Tundra'"         [style.z-index]="win.customDialog.zInd"></dual-land-dialog>
+  <dual-land-dialog   *ngIf="win.customDialog.name === 'UndergroundSea'" [style.z-index]="win.customDialog.zInd"></dual-land-dialog>
+  <dual-land-dialog   *ngIf="win.customDialog.name === 'VolcanicIsland'" [style.z-index]="win.customDialog.zInd"></dual-land-dialog>
 </div>
 
 
+<!-- Debug Panel for cardOp -->
+<!-- <div *ngIf="game.state && cardOp.status" style="position: fixed; top: 400px; left: 10px; background: lightgray; padding: 10px; z-index: 2000; font-family: monospace;">
+  cardOp
+  <br/>status = {{cardOp.status}}
+  <br/>action = {{cardOp.action | json}}
+  <br/>manaPool.......{{cardOp.manaPool | json}}
+  <br/>manaAvailable..{{cardOp.manaAvailable | json}}  
+  <br/>manaToDisplay..{{cardOp.manaToDisplay | json}}  
+  <br/>manaCost.......{{cardOp.manaCost | json}}
+  <br/>manaNeeded.....{{cardOp.manaNeeded | json}}
+  <br/>params=
+  <br/>manaToUse......{{cardOp.params.manaToUse | json}}
+  <br/>manaForUncolor.{{cardOp.params.manaForUncolor | json}}
+  <br/>manaExtra......{{cardOp.params.manaExtra | json}}
+  <br/>----
+  <br/>isExtraManaReady = {{cardOp.params.isExtraManaReady | json}}
+  <br/>targets = {{cardOp.params.targets | json}}
+</div> -->
 
 
 <!-- Debug Panel -->
@@ -294,21 +266,8 @@
     <span>control={{game.state.control}} ====> {{(game.state.control === game.playerANum ? 'YOU' : 'Opponent') + ' (player ' + game.state.control + ') got control'}}</span>
     <br/>phase$={{game.state.phase}}
     <br/>subPhase={{game.state.subPhase}}
-    <!-- <br/>options = {{state.options | json}} -->
-    <br/>
-    <div *ngIf="summonOp.status !== 'off'">
-      summonOp - status = {{summonOp.status}}
-      <br/>action={{summonOp.action | json}}
-      <br/>params={{summonOp.params | json}}
-      <br/>text = {{summonOp.text}}
-      <br/>manaReserved={{summonOp.manaReserved | json}}
-      <br/>manaLeft={{summonOp.manaLeft | json}}
-      <br/><bf-btn (bfClick)="summonOp.cancel()" bfText="Cancel"></bf-btn>
-      <bf-btn style="margin-left: 15px;" (bfClick)="summonOp.tryToSummon()" bfText="tryToSummon"
-              [bfDisabled]="!summonOp.showSummonBtn"></bf-btn>
-    </div>
-  </div>
-  
+    <br/><bf-btn (bfClick)="game.debugPanel = false"  bfText="Close Panel"></bf-btn>
+  </div>  
   <div style="display: flex; margin-top: 30px;">
     <div *ngFor="let location of debugLocations">
       <div style="padding: 5px; border: 1px solid gray;" *ngIf="cardFilter(location) as list">

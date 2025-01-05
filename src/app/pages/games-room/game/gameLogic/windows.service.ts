@@ -1,0 +1,221 @@
+import { Injectable } from '@angular/core';
+import { Subject } from 'rxjs';
+import { TCardOpStatus, TGameCard, TGameState } from '../../../../core/types';
+import { GameStateService } from './game-state.service';
+import { CardOpServiceNew } from './cardOp.service';
+import { getCards } from './game.utils';
+
+
+type TDialogButton = { text: string, class: string, action: () => void };
+
+@Injectable({ providedIn: 'root' })
+export class WindowsService {
+  change$ = new Subject<void>;
+  defaultPayer: 'A' | 'B' = 'A';
+  defaultCard: TGameCard | null = null;
+  private readonly ZINDEX_OFFSET = 1000;
+
+  graveyardPanel = {
+    display: false, zInd: 0, size: 'max', player: this.defaultPayer,
+    open: (player: 'A' | 'B') => { this.graveyardPanel.player = player; this.open(0); },
+    close: () => this.close(0),
+    toggle: (player: 'A' | 'B') => {
+      (this.graveyardPanel.display && this.graveyardPanel.player === player)
+      ? this.graveyardPanel.close()
+      : this.graveyardPanel.open(player);
+    },
+  };
+
+  damageDialog = {
+    display: false, zInd: 0, size: 'max', title: '', icon: 'icon-fire', buttons: [] as TDialogButton[], text: '',
+    maximize: () => this.maximize(1), open: () => this.open(1),
+    minimize: () => this.minimize(1), close: () => this.close(1),
+  };
+  
+  combatDialog = {
+    display: false, zInd: 0, size: 'max', attacker: this.defaultPayer,
+    open: (attacker: 'A' | 'B') => { this.combatDialog.attacker = attacker; this.open(2); },
+    close: () => this.close(2),
+    maximize: () => this.maximize(2),
+    minimize: () => this.minimize(2),
+  };
+
+  selectManaDialog = {
+    display: false, zInd: 0, size: 'max',
+    maximize: () => this.maximize(3), open: () => this.open(3),
+    minimize: () => this.minimize(3), close: () => this.close(3),
+  };
+
+  spellStackDialog = {
+    display: false, zInd: 0, size: 'max',
+    maximize: () => this.maximize(4), open: () => this.open(4),
+    minimize: () => this.minimize(4), close: () => this.close(4),
+  };
+
+  regenerateDialog = {
+    display: false, zInd: 0, size: 'max',
+    maximize: () => this.maximize(5), open: () => this.open(5),
+    minimize: () => this.minimize(5), close: () => this.close(5),
+  };
+
+  extraManaDialog = {
+    display: false, zInd: 0, size: 'max',
+    maximize: () => this.maximize(6), open: () => this.open(6),
+    minimize: () => this.minimize(6), close: () => this.close(6),
+  };
+
+  effectsPanel = {
+    display: false, zInd: 0, size: 'max', card: this.defaultCard,
+    maximize: () => this.maximize(7),
+    minimize: () => this.minimize(7), close: () => this.close(7),
+    open: (card: TGameCard) => { this.effectsPanel.card = card; this.open(7); }
+  };
+
+  customDialog = {
+    display: false, zInd: 0, size: 'max', name: '', card: this.defaultCard,
+    maximize: () => this.maximize(8), 
+    minimize: () => this.minimize(8), 
+    close: () => {
+      this.customDialog.name = '';
+      this.customDialog.card = null;
+      this.close(8);
+    },
+    open: () => {
+      if (this.cardOp.customDialog) {
+        this.customDialog.name = this.cardOp.customDialog;
+        this.customDialog.card = this.cardOp.card as TGameCard;
+        this.open(8);
+      }
+    }
+  };
+
+
+  allWindows = [
+    this.graveyardPanel,    // 0
+    this.damageDialog,      // 1
+    this.combatDialog,      // 2
+    this.selectManaDialog,  // 3
+    this.spellStackDialog,  // 4
+    this.regenerateDialog,  // 5
+    this.extraManaDialog,   // 6
+    this.effectsPanel,      // 7
+    this.customDialog,      // 8
+  ]
+  
+
+
+  // prevState!: TGameState;
+  prevCardOpStatus: TCardOpStatus | null = null;
+
+
+  constructor(
+    private game: GameStateService,
+    private cardOp: CardOpServiceNew,
+  ) {}
+
+  updateWindows() {
+    const youControl = this.game.playerANum === this.game.state.control;
+
+
+    // "Select Mana Dialog" (Open / Close logic)
+    if (this.prevCardOpStatus !== this.cardOp.status) {
+      if (this.cardOp.status    === 'selectingMana') { this.selectManaDialog.open(); }
+      if (this.prevCardOpStatus === 'selectingMana') { this.selectManaDialog.close(); }
+    }
+
+    // "Select Extra Mana Dialog" (Open / Close logic)
+    if (this.prevCardOpStatus !== this.cardOp.status) {
+      if (this.cardOp.status    === 'waitingExtraMana') { this.extraManaDialog.open(); }
+      if (this.prevCardOpStatus === 'waitingExtraMana') { this.extraManaDialog.close(); }
+    }
+
+
+    // "Combat Dialog" (Open / Close logic) ---> Done in game controller (updateCombatOperation)
+    // if (this.game.state.phase === 'combat') {
+    //   const { tableA, tableB } = getCards(this.game.state, this.game.playerANum);      
+      
+    //   // If you have attacking creatures (you are leading an attack)
+    //   const attackingCreatures = tableA.find(c => c.combatStatus === 'combat:attacking');
+    //   if (attackingCreatures) { this.combatDialog.open('A'); }
+  
+    //   // If the opponent is attacking you
+    //   const opponentAttack = tableB.find(c => c.combatStatus === 'combat:attacking');
+    //   const defendingCreatures = tableA.find(c => c.combatStatus === 'combat:defending');
+    //   if (opponentAttack || defendingCreatures) { this.combatDialog.open('B'); }
+
+    // } else { this.combatDialog.close(); }
+    
+
+    // "Spell Stack Dialog" (Open / Close logic)
+    const anySpellsInTheStack = !!this.game.state.cards.find(c => c.location === 'stack');
+    if (anySpellsInTheStack && (this.game.state.player1.stackCall || this.game.state.player2.stackCall)) {
+      this.spellStackDialog.open();
+      
+      if (youControl && this.cardOp?.card?.controller === this.game.playerANum) {
+        // If summoning a card and waiting for mana, minimize it (so the lands on the table get visible)
+        if (this.cardOp.status === 'waitingMana')   { this.spellStackDialog.minimize(); }
+        if (this.cardOp.status === 'selectingMana') { this.spellStackDialog.minimize(); }
+        
+        // If summoning a card and selecting a target, maximize it because its' most likely one on the stack
+        if (this.cardOp.status === 'selectingTargets') { this.spellStackDialog.maximize(); }
+      }
+    }
+
+
+    // "Damage Dialog: Mana Burn" (Open / Close logic)
+    this.damageDialog.close();
+    if (this.game.state.phase === 'end' && this.game.state.options.find(op => op.action === 'burn-mana')) {
+      const totalMana = this.game.playerA().manaPool.reduce((a, v) => a + v, 0);
+      this.damageDialog.title = 'Mana Burn';
+      this.damageDialog.icon = 'icon-fire';
+      this.damageDialog.text = `There is ${totalMana} unspent mana into your mana pool.<br/> It deals ${totalMana} damage to you`;
+      this.damageDialog.buttons = [{ text: 'Ok, burn it', class: 'quaternary', action: () => this.game.action('burn-mana') }];
+      this.damageDialog.open();
+    }
+    
+    // "Regenerate Dialog" (Open / Close logic)
+    // If a creature that can be regenerated is dying, open the regenerate dialog
+    if (this.game.state.cards.find(c => c.canRegenerate && c.isDying)) { this.regenerateDialog.open(); } 
+    else { this.regenerateDialog.close(); }
+
+    // "Custom Dialogs" (Open / Close logic)
+    if (youControl && this.cardOp.customDialog) { this.customDialog.open(); }
+    else { this.customDialog.close(); }
+
+
+    // this.prevState = JSON.parse(JSON.stringify(this.game.state));
+    this.prevCardOpStatus = this.cardOp.status;
+  }
+
+
+  private open(winIndex: number) {
+    const prevDisplay = this.allWindows[winIndex].display;
+    const prevZIndex = this.allWindows[winIndex].zInd;
+    this.allWindows[winIndex].display = true;
+    this.allWindows[winIndex].zInd = this.ZINDEX_OFFSET;
+    this.allWindows[winIndex].zInd = this.nextIndex();
+    if (prevDisplay === false || prevZIndex !== this.allWindows[winIndex].zInd) { this.change$.next(); }
+  }
+  private close(winIndex: number) {
+    const prevDisplay = this.allWindows[winIndex].display;
+    this.allWindows[winIndex].display = false;
+    this.allWindows[winIndex].zInd = this.ZINDEX_OFFSET;
+    if (prevDisplay === true) { this.change$.next(); }
+  }
+
+  private minimize(winIndex: number) {
+    this.allWindows[winIndex].size = 'min';
+    this.change$.next();
+  }
+  private maximize(winIndex: number) {
+    this.allWindows[winIndex].size = 'max';
+    this.change$.next();
+  }
+
+  private nextIndex() {
+    return this.allWindows.reduce((a,w) => Math.max(a, w.zInd), this.ZINDEX_OFFSET) + 1;
+  }
+
+
+}
+

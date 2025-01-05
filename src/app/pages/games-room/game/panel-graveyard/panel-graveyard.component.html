@@ -1,5 +1,5 @@
 <div class="graveyard-panel">
-  <div class="close-btn" (click)="end.emit()">x</div>
+  <div class="close-btn" (click)="win.graveyardPanel.close()">x</div>
   <h2>{{title}}</h2>
 
   <div class="card-list">
@@ -7,7 +7,7 @@
   </div>
 
   <div class="btns-box">
-    <bf-btn (bfClick)="end.emit()" bfText="Close" bfIcon="icon-cross"></bf-btn>
+    <bf-btn (bfClick)="win.graveyardPanel.close()" bfText="Close" bfIcon="icon-cross"></bf-btn>
   </div>
   
 </div>
