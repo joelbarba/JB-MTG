@@ -39,10 +39,6 @@ export class GameStateService {
   debugPanel = false;
 
 
-  // This is to interact accross game components (should be in an independent service actually)
-  hoverCard$ = new Subject<TGameCard | null>;
-  effectsBadge$ = new Subject<{ card: TGameCard, ev: MouseEvent }>;
-
 
   playerA = () => this.playerANum === '1' ? this.state.player1 : this.state.player2;
   playerB = () => this.playerBNum === '1' ? this.state.player1 : this.state.player2;

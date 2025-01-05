@@ -7,6 +7,8 @@ import { GameStateService } from '../gameLogic/game-state.service';
 import { TActionParams, TGameCard, TGameState, TPlayer } from '../../../../core/types';
 import { Subscription } from 'rxjs';
 import { StackCardWithTargetsComponent } from './stack-card-with-targets/stack-card-with-targets.component';
+import { GameCardEventsService } from '../gameLogic/game-card-events.service';
+import { WindowsService } from '../gameLogic/windows.service';
 
 export type TStackTree = {
   card: TGameCard | null,
@@ -30,11 +32,11 @@ export type TStackTree = {
   styleUrl: './dialog-spell-stack.component.scss'
 })
 export class DialogSpellStackComponent {
-  @Input() panelSize: 'min' | 'max' = 'max';
-  @Output() selectCard    = new EventEmitter<TGameCard>();
-  @Output() hoverCard     = new EventEmitter<any>();
-  @Output() clearHover    = new EventEmitter<any>();
-  @Output() end           = new EventEmitter<any>();
+  // @Input() panelSize: 'min' | 'max' = 'max';
+  // @Output() selectCard    = new EventEmitter<TGameCard>();
+  // @Output() hoverCard     = new EventEmitter<any>();
+  // @Output() clearHover    = new EventEmitter<any>();
+  // @Output() end           = new EventEmitter<any>();
   minimized = false;
 
   TIMER_TIME = 500000000;
@@ -63,7 +65,11 @@ export class DialogSpellStackComponent {
   @ViewChild('stackWindow', { read: ElementRef, static: false }) stackWindow!: ElementRef;
   @ViewChild('stackEl', { read: ElementRef, static: false }) stackEl!: ElementRef;
 
-  constructor(public game: GameStateService) {}
+  constructor(
+    public game: GameStateService,
+    public cardEv: GameCardEventsService,
+    public win: WindowsService,
+  ) {}
 
   ngOnInit() {
     this.stateSub = this.game.state$.subscribe(state => this.onStateChanges(state));
@@ -75,9 +81,9 @@ export class DialogSpellStackComponent {
     // console.log('Window rect. Height=', this.windowHeight, this.stackWindow.nativeElement.getBoundingClientRect());
   }
 
-  ngOnChanges(changes: SimpleChanges) {
-    if (changes['panelSize']) { this.minimized = this.panelSize === 'min'; }
-  }
+  // ngOnChanges(changes: SimpleChanges) {
+  //   if (changes['panelSize']) { this.minimized = this.panelSize === 'min'; }
+  // }
 
   ngOnDestroy() {
     if (this.stateSub) { this.stateSub.unsubscribe(); }
@@ -292,7 +298,7 @@ export class DialogSpellStackComponent {
   close() {
     if (this.stateSub) { this.stateSub.unsubscribe(); }
     if (this.interval) { clearInterval(this.interval); }
-    this.end.emit();
+    this.win.spellStackDialog.close();
   }
 
 }

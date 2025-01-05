@@ -1,5 +1,7 @@
-<div class="dialog-container" [class.minimized]="minimized">
-  <div class="min-btn" (click)="minimized = !minimized">{{minimized ? title : '-'}}</div>
+<div class="dialog-container" [class.minimized]="win.regenerateDialog.size === 'min'">
+  <div [hidden]="win.regenerateDialog.size === 'min'" class="min-btn" (click)="win.regenerateDialog.minimize()">-</div>
+  <div [hidden]="win.regenerateDialog.size === 'max'" class="max-btn" (click)="win.regenerateDialog.maximize()">Regenerate</div>
+
   <h2>Regenerate</h2>
 
   <div class="center">

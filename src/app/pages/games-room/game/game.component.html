@@ -12,7 +12,7 @@
           <game-card [card]="topGravB" from="gravB"
                     [class.empty]="!topGravB"
                     [selectable]="false"
-                    (click)="graveyardPanel = graveyardPanel === 'B' ? null : 'B'">
+                    (click)="win.graveyardPanel.toggle('B')">
           </game-card>
         </div>
   
@@ -69,7 +69,7 @@
           <game-card [card]="topGravA" from="gravA"
                      [class.empty]="!topGravA"
                      [selectable]="false"
-                     (click)="graveyardPanel = graveyardPanel === 'A' ? null : 'A'">
+                     (click)="win.graveyardPanel.toggle('A')">
           </game-card>
         </div>
 
@@ -125,8 +125,8 @@
           [style.top.px]="card.posY"
           [style.z-index]="card.zInd"
           (click)="selectCardFromTable(card)"
-          (mouseenter)="game.hoverCard$.next(card)"
-          (mouseleave)="game.hoverCard$.next(null)">
+          (mouseenter)="cardEv.hoverCard$.next(card)"
+          (mouseleave)="cardEv.hoverCard$.next(null)">
         </game-card>
 
 
@@ -189,8 +189,8 @@
         <game-card *ngFor="let card of handA"  [card]="card" from="handA"
           (click)="selectCardFromYourHand(card)"
           [hoverTip]="card.selectableAction?.text || ''"
-          (mouseenter)="game.hoverCard$.next(card)"
-          (mouseleave)="game.hoverCard$.next(null)">
+          (mouseenter)="cardEv.hoverCard$.next(card)"
+          (mouseleave)="cardEv.hoverCard$.next(null)">
         </game-card>
       </div>
 
@@ -203,8 +203,8 @@
           [style.top.px]="card.posY"
           [style.z-index]="card.zInd"
           (click)="selectCardFromTable(card)"
-          (mouseenter)="game.hoverCard$.next(card)"
-          (mouseleave)="game.hoverCard$.next(null)">
+          (mouseenter)="cardEv.hoverCard$.next(card)"
+          (mouseleave)="cardEv.hoverCard$.next(null)">
         </game-card>
 
       </div>
@@ -213,15 +213,11 @@
   </div>
 
   <!-- Graveyard Panel -->
-  <panel-graveyard *ngIf="graveyardPanel"
-    [playerLetter]="graveyardPanel"
-    (selectCard)="selectCard($event)"
-    (end)="graveyardPanel = null">
-  </panel-graveyard>
+  <panel-graveyard *ngIf="win.graveyardPanel.display" [style.z-index]="win.graveyardPanel.zInd"></panel-graveyard>
 
 
   <!-- Generic Dialog -->
-  <div *ngIf="dialog" class="dialog-box" [class]="dialog.type" 
+  <!-- <div *ngIf="dialog" class="dialog-box" [class]="dialog.type" 
       [style.background]="dialog.background" [style.color]="dialog.color">
     <h2 *ngIf="dialog.title">{{dialog.title}}</h2>
     <h3 *ngIf="dialog.icon"><span [class]="dialog.icon"></span></h3>
@@ -231,54 +227,41 @@
         <bf-btn [bfText]="button.text" [class]="button.class" bfIcon="icon-arrow-right3" (click)="button.action()"></bf-btn>
       </div>
     </div>
-  </div>
+  </div> -->
 
 
-  <dialog-combat 
-    *ngIf="combatPanel"
-    [attacker]="combatPanelAttacker"    
-    (selectCard)="selectCard($event)"
-    (end)="combatPanel = false">
-  </dialog-combat>
-
+  <!-- Dialog: Combat -->
+  <dialog-damage *ngIf="win.damageDialog.display" [style.z-index]="win.damageDialog.zInd"></dialog-damage>
+  <dialog-combat *ngIf="win.combatDialog.display" [style.z-index]="win.combatDialog.zInd"></dialog-combat>
 
   <!-- Dialog: Selecting Mana (cherry pick on summoning) -->
-  <dialog-selecting-mana *ngIf="cardOp.status === 'selectingMana'"></dialog-selecting-mana>
+  <dialog-selecting-mana *ngIf="win.selectManaDialog.display" [style.z-index]="win.selectManaDialog.zInd"></dialog-selecting-mana>
 
-
-  <dialog-spell-stack 
-    *ngIf="spellStackPanel"
-    [panelSize]="spellStackPanelSize"
-    (selectCard)="selectCard($event)"
-    (end)="spellStackPanel = false" >
-  </dialog-spell-stack>
-  <!-- spellStackPanelSize={{spellStackPanelSize}} -->
-  <!-- panel={{panel}} -->
-
-  <dialog-regenerate *ngIf="regenerateCreature"></dialog-regenerate>
+  <!-- Dialog: Spell Stack -->
+  <dialog-spell-stack *ngIf="win.spellStackDialog.display" [style.z-index]="win.spellStackDialog.zInd"></dialog-spell-stack>
+  
+  <!-- Dialog: Regenerate -->
+  <dialog-regenerate *ngIf="win.regenerateDialog.display" [style.z-index]="win.regenerateDialog.zInd"></dialog-regenerate>
 
   <!-- Dialog: Selecting Extra Mana (for cards with X cost) -->
-  <dialog-selecting-extra-mana *ngIf="cardOp.status === 'waitingExtraMana'"></dialog-selecting-extra-mana>
-
+  <dialog-selecting-extra-mana *ngIf="win.extraManaDialog.display" [style.z-index]="win.extraManaDialog.zInd"></dialog-selecting-extra-mana>
+  
   <!-- Effects Floating Panel -->
-  <panel-effects *ngIf="effectsPanelCard"
-    [card]="effectsPanelCard"
-    (selectCard)="selectCard($event)"
-    (end)="effectsPanelCard = null">
-  </panel-effects>
+  <panel-effects *ngIf="win.effectsPanel.display" [style.z-index]="win.effectsPanel.zInd"></panel-effects>
+
 
   <!-- Custom Card Dialogs -->
-  <black-lotus-dialog *ngIf="customDialogs['BlackLotus']" [card]="customDialogs['BlackLotus']"></black-lotus-dialog>
-  <dual-land-dialog   *ngIf="customDialogs['Bayou']"           [card]="customDialogs['Bayou']"></dual-land-dialog>
-  <dual-land-dialog   *ngIf="customDialogs['Badlands']"        [card]="customDialogs['Badlands']"></dual-land-dialog>
-  <dual-land-dialog   *ngIf="customDialogs['Plateau']"         [card]="customDialogs['Plateau']"></dual-land-dialog>
-  <dual-land-dialog   *ngIf="customDialogs['Savannah']"        [card]="customDialogs['Savannah']"></dual-land-dialog>
-  <dual-land-dialog   *ngIf="customDialogs['Scrubland']"       [card]="customDialogs['Scrubland']"></dual-land-dialog>
-  <dual-land-dialog   *ngIf="customDialogs['Taiga']"           [card]="customDialogs['Taiga']"></dual-land-dialog>
-  <dual-land-dialog   *ngIf="customDialogs['TropicalIsland']"  [card]="customDialogs['TropicalIsland']"></dual-land-dialog>
-  <dual-land-dialog   *ngIf="customDialogs['Tundra']"          [card]="customDialogs['Tundra']"></dual-land-dialog>
-  <dual-land-dialog   *ngIf="customDialogs['UndergroundSea']"  [card]="customDialogs['UndergroundSea']"></dual-land-dialog>
-  <dual-land-dialog   *ngIf="customDialogs['VolcanicIsland']"  [card]="customDialogs['VolcanicIsland']"></dual-land-dialog>
+  <black-lotus-dialog *ngIf="win.customDialog.name === 'BlackLotus'"     [style.z-index]="win.customDialog.zInd"></black-lotus-dialog>
+  <dual-land-dialog   *ngIf="win.customDialog.name === 'Bayou'"          [style.z-index]="win.customDialog.zInd"></dual-land-dialog>
+  <dual-land-dialog   *ngIf="win.customDialog.name === 'Badlands'"       [style.z-index]="win.customDialog.zInd"></dual-land-dialog>
+  <dual-land-dialog   *ngIf="win.customDialog.name === 'Plateau'"        [style.z-index]="win.customDialog.zInd"></dual-land-dialog>
+  <dual-land-dialog   *ngIf="win.customDialog.name === 'Savannah'"       [style.z-index]="win.customDialog.zInd"></dual-land-dialog>
+  <dual-land-dialog   *ngIf="win.customDialog.name === 'Scrubland'"      [style.z-index]="win.customDialog.zInd"></dual-land-dialog>
+  <dual-land-dialog   *ngIf="win.customDialog.name === 'Taiga'"          [style.z-index]="win.customDialog.zInd"></dual-land-dialog>
+  <dual-land-dialog   *ngIf="win.customDialog.name === 'TropicalIsland'" [style.z-index]="win.customDialog.zInd"></dual-land-dialog>
+  <dual-land-dialog   *ngIf="win.customDialog.name === 'Tundra'"         [style.z-index]="win.customDialog.zInd"></dual-land-dialog>
+  <dual-land-dialog   *ngIf="win.customDialog.name === 'UndergroundSea'" [style.z-index]="win.customDialog.zInd"></dual-land-dialog>
+  <dual-land-dialog   *ngIf="win.customDialog.name === 'VolcanicIsland'" [style.z-index]="win.customDialog.zInd"></dual-land-dialog>
 </div>
 
 <!-- Debug Panel for cardOp -->

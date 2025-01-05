@@ -18,9 +18,10 @@
      [class.is-summoning]="isSummonOp()"
      [class.is-dying]="card.type === 'creature' && (card.turnDefense <= card.turnDamage || (shadow && shadow.defense <= shadow.damage))"
      [class.has-targets]="!!card.targets.length"
+     [hidden]="isEnchantingCombatCreature"
      [hoverTip]="getHoverTip()" tipId="card"     
-     (mouseenter)="!back && game.hoverCard$.next(card)"
-     (mouseleave)="!back && game.hoverCard$.next(null)">
+     (mouseenter)="!back && cardEv.hoverCard$.next(card)"
+     (mouseleave)="!back && cardEv.hoverCard$.next(null)">
      
   <img [src]="'/assets/images/cards/' + (back ? 'card_back.jpg' : card.image)">
 
@@ -40,7 +41,7 @@
   </div>
 
   <span class="effects-badge" *ngIf="from !== 'panelEffects' && card.effectsFrom?.length"
-        (click)="game.effectsBadge$.next({ card, ev: $event })"
+        (click)="openEffectBadge(card, $event)"
         [hoverTip]="'There are ' + card.effectsFrom?.length + ' effects applied on this card'" tipId="badge">
     <span>{{card.effectsFrom?.length}}</span>
   </span>

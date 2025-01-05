@@ -8,6 +8,8 @@ import { TGameCard } from '../../../../../core/types';
 import { ManaIconComponent } from "../../mana-icon/mana-icon.component";
 import { GameStateService } from '../../gameLogic/game-state.service';
 import { CardOpServiceNew } from '../../gameLogic/cardOp.service';
+import { Subscription } from 'rxjs';
+import { WindowsService } from '../../gameLogic/windows.service';
 
 
 @Component({
@@ -26,7 +28,9 @@ import { CardOpServiceNew } from '../../gameLogic/cardOp.service';
   styleUrl: './black-lotus-dialog.component.scss'
 })
 export class BlackLotusDialogComponent {
-  @Input({ required: true }) card!: TGameCard;
+  card: TGameCard | null = null;
+  winSub!: Subscription;
+  title = 'Black Lotus';
 
   mana1?: 0 | 1 | 2 | 3 | 4 | 5;
   mana2?: 0 | 1 | 2 | 3 | 4 | 5;
@@ -35,10 +39,19 @@ export class BlackLotusDialogComponent {
   constructor(
     private game: GameStateService,
     public cardOp: CardOpServiceNew,
+    public win: WindowsService,
   ) {}
 
+  ngOnInit() {
+    this.winSub = this.win.change$.subscribe(() => this.card = this.win.customDialog.card);
+    this.card = this.win.customDialog.card
+  }
+
+  ngOnDestroy() {
+    this.winSub?.unsubscribe();
+  }
+
   cancel() {
-    // this.game.action('cancel-op');
     this.cardOp.cancel();
   }  
   

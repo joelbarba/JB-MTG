@@ -1,6 +1,6 @@
-<div class="combat h-cards-len-{{hCardsLen}}" [class.minimized]="minimized">
-  <div [hidden]="minimized"  class="min-btn" (click)="minimized = true">-</div>
-  <div [hidden]="!minimized" class="max-btn" (click)="minimized = false">Combat</div>
+<div class="combat h-cards-len-{{hCardsLen}}" [class.minimized]="win.combatDialog.size === 'min'">
+  <div [hidden]="win.combatDialog.size === 'min'" class="min-btn" (click)="win.combatDialog.minimize()">-</div>
+  <div [hidden]="win.combatDialog.size === 'max'" class="max-btn" (click)="win.combatDialog.maximize()">Combat</div>
 
   <div>
     <h2>{{title}}</h2>
@@ -23,7 +23,7 @@
 
         <!-- Defending Creature -->
         <game-card [card]="col.defendingCard" *ngIf="col.defendingCard" 
-                   from="combatDefenderUp" (click)="selectCard.emit(col.defendingCard)">
+                   from="combatDefenderUp" (click)="cardEv.selectCard(col.defendingCard)">
         </game-card>
 
         <!-- Empty Slot for defender -->
@@ -52,7 +52,7 @@
 
         <!-- Attacking Creature -->
         <game-card [card]="col.attackingCard" from="combatAttackerDown"
-                   (click)="selectCard.emit(col.attackingCard)">
+                   (click)="cardEv.selectCard(col.attackingCard)">
         </game-card>
 
       </div>
@@ -74,7 +74,7 @@
 
         <!-- Attacking Creature -->
         <game-card [card]="col.attackingCard" from="combatAttackerUp"
-                   (click)="selectCard.emit(col.attackingCard)">
+                   (click)="cardEv.selectCard(col.attackingCard)">
         </game-card>
 
         <!-- Damage Arrows -->
@@ -108,7 +108,7 @@
 
         <!-- Defending Creature -->
         <game-card [card]="col.defendingCard" *ngIf="col.defendingCard"
-                   from="combatDefenderDown" (click)="selectCard.emit(col.defendingCard)">
+                   from="combatDefenderDown" (click)="cardEv.selectCard(col.defendingCard)">
         </game-card>
 
       </div>

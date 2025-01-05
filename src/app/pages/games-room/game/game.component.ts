@@ -19,11 +19,14 @@ import { ManaArrayComponent } from './mana-array/mana-array.component';
 import { GamePanelComponent } from "./game-panel/game-panel.component";
 import { GameCardComponent } from "./game-card/game-card.component";
 import { BfTooltipService } from '../../../core/common/internal-lib/bf-tooltip/bf-tooltip.service';
-import { BlackLotusDialogComponent } from "./specific-dialogs/black-lotus/black-lotus-dialog.component";
-import { DualLandDialogComponent } from "./specific-dialogs/dual-land/dual-land-dialog.component";
+import { BlackLotusDialogComponent } from "./custom-dialogs/black-lotus/black-lotus-dialog.component";
+import { DualLandDialogComponent } from "./custom-dialogs/dual-land/dual-land-dialog.component";
 import { DialogRegenerateComponent } from './dialog-regenerate/dialog-regenerate.component';
 import { DialogSelectingExtraManaComponent} from "./dialog-selecting-extra-mana/dialog-selecting-extra-mana.component";
 import { CardOpServiceNew } from './gameLogic/cardOp.service';
+import { WindowsService } from './gameLogic/windows.service';
+import { GameCardEventsService } from './gameLogic/game-card-events.service';
+import { DialogDamageComponent } from "./dialog-damage/dialog-damage.component";
 
 export interface ICard {
   img: string;
@@ -60,6 +63,7 @@ interface IDialog { type: 'xs' | 'sm' | 'md' | 'lg', title: string, text: string
     DualLandDialogComponent,
     DialogRegenerateComponent,
     DialogSelectingExtraManaComponent,
+    DialogDamageComponent
 ],
   templateUrl: './game.component.html',
   styleUrls: ['./game.component.scss'],
@@ -127,6 +131,8 @@ export class GameComponent {
     private hostElement: ElementRef,
     private tooltipService: BfTooltipService,
     public cardOp: CardOpServiceNew,
+    public cardEv: GameCardEventsService,
+    public win: WindowsService,
   ) {
     this.shell.gameMode('on');
   }
@@ -136,7 +142,7 @@ export class GameComponent {
     console.log('Entering Game ID', gameId);
     await this.game.activateGame(gameId);
 
-    this.subs.push(this.game.hoverCard$.subscribe(hoveringCard => {
+    this.subs.push(this.cardEv.hoverCard$.subscribe(hoveringCard => {
       if (hoveringCard) {
         this.fullCard.img = hoveringCard.image;
         this.fullCard.border = hoveringCard.border || 'white';
@@ -144,10 +150,6 @@ export class GameComponent {
       } else {
         // this.itemInfo = '';
       }
-    }));
-    this.subs.push(this.game.effectsBadge$.subscribe(item => {
-      this.effectsPanelCard = item.card;
-      if (item.ev) { item.ev.stopPropagation(); }
     }));
 
 
@@ -203,6 +205,7 @@ export class GameComponent {
 
       this.autoAdvance();
       this.autoPositionGameCards();
+      this.win.updateWindows();
     }));
 
 
@@ -220,20 +223,19 @@ export class GameComponent {
         if (this.cardOp.status === 'selectingTargets') { this.opInfo = `Select target for ${cardName}`; }
       }
 
-      this.customDialogs = {};
-      if (this.state.control === this.game.playerANum && this.cardOp.customDialog && this.cardOp.card) {
-        this.customDialogs[this.cardOp.customDialog] = this.cardOp.card;
-      }
+      // this.customDialogs = {};
+      // if (this.state.control === this.game.playerANum && this.cardOp.customDialog && this.cardOp.card) {
+      //   this.customDialogs[this.cardOp.customDialog] = this.cardOp.card;
+      // }
 
       this.updateCombatOperation();
-      this.updateSpellStack();
+      // this.updateSpellStack();
+      this.win.updateWindows();
     }
 
 
   }
 
-  // Check cards that need custom dialogs to be opened
-  customDialogs: { [key:string]: TGameCard } = {};
 
   ngOnDestroy() {
     this.game.deactivateGame();
@@ -582,31 +584,24 @@ export class GameComponent {
 
     // this.updateSummonOperation();
     this.updateCombatOperation();
-    this.updateSpellStack();
+    // this.updateSpellStack();
     // this.updateCustomDialogs();
 
     // If a creature that can be regenerated is dying, open the regenerate dialog
-    this.regenerateCreature = this.state.cards.find(c => c.canRegenerate && c.isDying);
+    // this.regenerateCreature = this.state.cards.find(c => c.canRegenerate && c.isDying);
   }
 
-  regenerateCreature?:TGameCard;
+  // regenerateCreature?:TGameCard;
 
-  
-  combatPanel = false;
-  combatPanelAttacker: 'A' | 'B' = 'A';
-  combatPanelSize: 'min' | 'max' = 'max';
 
   // On state change, detect and update the status of a combat operation
   updateCombatOperation() {
-    this.combatPanel = false;
-
     if (this.state.phase === 'combat') {
       
       // If you have attacking creatures (you are leading an attack)
       const attackingCreatures = this.tableA.find(c => c.combatStatus === 'combat:attacking');
       if (attackingCreatures) {
-        this.combatPanel = true;
-        this.combatPanelAttacker = 'A';
+        this.win.combatDialog.open('A');
         if (this.game.state.subPhase === 'selectAttack')  { this.mainInfo = 'Selecting creatures to attack'; }
         if (this.game.state.subPhase === 'selectDefense') { this.mainInfo = 'Waiting for the opponent to select a defense'; }
       }
@@ -615,34 +610,35 @@ export class GameComponent {
       const opponentAttack = this.tableB.find(c => c.combatStatus === 'combat:attacking');
       const defendingCreatures = this.tableA.find(c => c.combatStatus === 'combat:defending');
       if (opponentAttack || defendingCreatures) {
-        this.combatPanel = true;
-        this.combatPanelAttacker = 'B';
+        this.win.combatDialog.open('B');
         if (this.game.state.subPhase === 'selectAttack')  { this.mainInfo = 'Waiting for the opponent to attack'; }
         if (this.game.state.subPhase === 'selectDefense') { this.mainInfo = 'Selecting creatures to defend'; }
       }
-    }
 
+    } else {
+      this.win.combatDialog.close();
+    }
   }
 
 
-  spellStackPanel = false;
-  spellStackPanelSize: 'min' | 'max' = 'max';
-  updateSpellStack() {    
-    const anySpellsInTheStack = !!this.state.cards.find(c => c.location === 'stack');
-    this.spellStackPanel = anySpellsInTheStack && (this.state.player1.stackCall || this.state.player2.stackCall);
+  // spellStackPanel = false;
+  // spellStackPanelSize: 'min' | 'max' = 'max';
+  // updateSpellStack() {    
+  //   const anySpellsInTheStack = !!this.state.cards.find(c => c.location === 'stack');
+  //   this.spellStackPanel = anySpellsInTheStack && (this.state.player1.stackCall || this.state.player2.stackCall);
 
-    if (this.youControl && this.spellStackPanel && this.cardOp?.card?.controller === this.game.playerANum) {
-      // If summoning a card and waiting for mana, minimize it (so the lands on the table get visible)
-      if (this.cardOp?.status === 'waitingMana')   { this.spellStackPanelSize = 'min'; }
-      if (this.cardOp?.status === 'selectingMana') { this.spellStackPanelSize = 'min'; }
+  //   if (this.youControl && this.spellStackPanel && this.cardOp?.card?.controller === this.game.playerANum) {
+  //     // If summoning a card and waiting for mana, minimize it (so the lands on the table get visible)
+  //     if (this.cardOp?.status === 'waitingMana')   { this.spellStackPanelSize = 'min'; }
+  //     if (this.cardOp?.status === 'selectingMana') { this.spellStackPanelSize = 'min'; }
   
-      // If summoning a card and selecting a target, maximize it because its' most likely one on the stack
-      if (this.cardOp?.status === 'selectingTargets') { this.spellStackPanelSize = 'max'; }
-    }
-  }
+  //     // If summoning a card and selecting a target, maximize it because its' most likely one on the stack
+  //     if (this.cardOp?.status === 'selectingTargets') { this.spellStackPanelSize = 'max'; }
+  //   }
+  // }
 
-  graveyardPanel: 'A' | 'B' | null = null;
-  effectsPanelCard: TGameCard | null = null;
+
+  // effectsPanelCard: TGameCard | null = null;
 
 
 
@@ -661,24 +657,15 @@ export class GameComponent {
   }
 
   selectCardFromYourHand(card: TGameCard) {
-    this.selectCard(card);
+    this.cardEv.selectCard(card);
   }
 
   selectCardFromTable(card: TExtGameCard) {
     this.focusPlayCard(card);
-    this.selectCard(card);
+    this.cardEv.selectCard(card);
   }
 
-  selectCard(card: TGameCard) {
-    if (this.cardOp.status === 'selectingTargets') {
-      if (this.cardOp.possibleTargets.find(t => t === card.gId)) {
-        this.cardOp.selectTargets([card.gId]);
-      }
-    }
-    else if (card.selectableAction) { // You can't action when selecting targets
-      this.cardOp.startNew(card.gId, card.selectableAction.action, card.selectableAction.params);
-    }
-  }
+
 
 
   selectPlayer(num: '1' | '2') {

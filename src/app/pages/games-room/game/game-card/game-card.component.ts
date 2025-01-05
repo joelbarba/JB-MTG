@@ -10,6 +10,8 @@ import { Subscription } from 'rxjs';
 import { TGameCard } from '../../../../core/types';
 import { HoverTipDirective } from '../../../../core/common/internal-lib/bf-tooltip/bf-tooltip.directive';
 import { CardOpServiceNew } from '../gameLogic/cardOp.service';
+import { GameCardEventsService } from '../gameLogic/game-card-events.service';
+import { WindowsService } from '../gameLogic/windows.service';
 
 
 @Component({
@@ -43,6 +45,8 @@ export class GameCardComponent {
     public firestore: Firestore,
     public growl: BfGrowlService,
     public cardOp: CardOpServiceNew,
+    public cardEv: GameCardEventsService,
+    public win: WindowsService,
   ) {
 
   }
@@ -50,12 +54,26 @@ export class GameCardComponent {
   ngOnInit() {
   }
 
-  ngOnChanges() { }
+
+  isEnchantingCombatCreature = false;
+  ngOnChanges() {
+    this.isEnchantingCombatCreature = false;
+    if (this.card?.isType('enchantment')) {
+      this.isEnchantingCombatCreature = !!this.game.state.cards
+        .filter(c => this.card && this.card.targets.indexOf(c.gId) >= 0)
+        .filter(c => c.combatStatus === 'combat:attacking' || c.combatStatus === 'combat:defending').length;
+    }
+  }
 
   ngAfterViewInit() {}
 
   ngOnDestroy() {
     // if (this.stateSub) { this.stateSub.unsubscribe(); }
+  }
+
+  openEffectBadge(card: TGameCard, ev: MouseEvent) {
+    if (ev) { ev.stopPropagation(); }
+    this.win.effectsPanel.open(card);
   }
 
   isSummonOp() {

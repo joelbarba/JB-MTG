@@ -9,6 +9,7 @@ import { Subscription } from 'rxjs';
 import { TStackTree } from '../dialog-spell-stack.component';
 import { GameCardComponent } from "../../game-card/game-card.component";
 import { CardOpServiceNew } from '../../gameLogic/cardOp.service';
+import { GameCardEventsService } from '../../gameLogic/game-card-events.service';
 
 @Component({
   selector: 'stack-card-with-targets',
@@ -26,9 +27,6 @@ import { CardOpServiceNew } from '../../gameLogic/cardOp.service';
 })
 export class StackCardWithTargetsComponent {
   @Input({ required: true }) item!: TStackTree; // Can be a card or a player
-  @Output() selectCard    = new EventEmitter<TGameCard>();
-  @Output() hoverCard     = new EventEmitter<any>();
-  @Output() clearHover    = new EventEmitter<any>();
 
   targetPlayerText = '';
   playerLetter!: 'A' | 'B';
@@ -36,6 +34,7 @@ export class StackCardWithTargetsComponent {
   constructor(
     public game: GameStateService,
     public cardOp: CardOpServiceNew,
+    public cardEv: GameCardEventsService,
   ) {}
 
   ngOnInit() {

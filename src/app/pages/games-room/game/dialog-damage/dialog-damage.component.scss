@@ -1,0 +1,36 @@
+@import '../game.vars.scss';
+
+.dialog-container {
+  color: white;
+  background: crimson;
+  // background: $dialog-custom-bg;
+  // background: snow;
+  // background: seashell;
+  // background: oldlace;
+  // background: papayawhip;
+  // background: mintcream;
+  // background: lightyellow;
+
+  @include panel-basics();
+  @include fixed-panel(20%, 30%, 19%);
+
+  h3 { font-size: 60px; } // icon
+
+  &:not(.minimized) {
+    min-width: 650px; min-height: 50px;
+    @media screen and (max-height: 1050px) { min-width: 500px; min-height: 400px; }
+    @media screen and (max-height: 900px)  { min-width: 400px; min-height: 300px; }
+  }
+
+
+
+  .btns-box {
+    .your-selection {
+      flex: 1;
+      text-align: left;
+      margin-left: 30px;
+      mana-icon { margin-left: 10px; }
+    }
+  }
+}
+

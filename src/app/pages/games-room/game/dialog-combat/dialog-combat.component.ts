@@ -8,6 +8,8 @@ import { ESubPhase, TActionParams, TGameCard, TGameState } from '../../../../cor
 import { Subscription } from 'rxjs';
 import { HoverTipDirective } from '../../../../core/common/internal-lib/bf-tooltip/bf-tooltip.directive';
 import { GameCardComponent } from "../game-card/game-card.component";
+import { WindowsService } from '../gameLogic/windows.service';
+import { GameCardEventsService } from '../gameLogic/game-card-events.service';
 
 type TCol = {
   attackingCard: TGameCard;
@@ -32,13 +34,13 @@ type TCol = {
   styleUrl: './dialog-combat.component.scss'
 })
 export class DialogCombatComponent {
-  @Input({ required: true }) attacker!: 'A' | 'B';
-  @Output() end = new EventEmitter<any>();
-  @Output() selectCard = new EventEmitter<TGameCard>();
-  @Output() hoverCard = new EventEmitter<any>();
-  @Output() clearHover = new EventEmitter<any>();
-  @Output() selectEffects = new EventEmitter<any>();
-
+  // @Input({ required: true }) attacker!: 'A' | 'B';
+  // @Output() end = new EventEmitter<any>();
+  // @Output() selectCard = new EventEmitter<TGameCard>();
+  // @Output() hoverCard = new EventEmitter<any>();
+  // @Output() clearHover = new EventEmitter<any>();
+  // @Output() selectEffects = new EventEmitter<any>();
+  attacker!: 'A' | 'B';
   stateSub!: Subscription;
   minimized = false;
 
@@ -62,7 +64,11 @@ export class DialogCombatComponent {
 
   hCardsLen = 1;  // Max number of cards on a horizontal line  
 
-  constructor(public game: GameStateService) {}
+  constructor(
+    public game: GameStateService,
+    public cardEv: GameCardEventsService,
+    public win: WindowsService,
+  ) {}
 
   ngOnInit() {
     
@@ -71,7 +77,7 @@ export class DialogCombatComponent {
     // const interruptingPlayer  = this.summoner === 'A' ? this.game.playerB() : this.game.playerA();
     // console.log('Summoning Event', this.card);
     const youControl = (this.game.state.control === this.game.playerANum);
-    
+    this.attacker = this.win.combatDialog.attacker;
     if (this.attacker === 'A') {
       this.title = `Combat: Attacking`;
 
@@ -259,16 +265,12 @@ export class DialogCombatComponent {
     this.game.action('release-stack');
   }
 
-  selectEffectsBadge(card: TGameCard, ev?: MouseEvent) {
-    this.selectEffects.emit(card);
-    if (ev) { ev.stopPropagation(); }
-  }
 
 
   close() {
     if (this.stateSub) { this.stateSub.unsubscribe(); }
     if (this.interval) { clearInterval(this.interval); }
-    this.end.emit();
+    this.win.combatDialog.close();
   }
 
 }

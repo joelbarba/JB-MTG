@@ -2,10 +2,7 @@
 
   <div class="targets-of-list">
     <div class="target-of" *ngFor="let tCard of item.targetOf">
-      <stack-card-with-targets [item]="tCard"
-                               (selectCard)="selectCard.emit($event)"
-                               (hoverCard)="hoverCard.emit($event)" (clearHover)="clearHover.emit()">
-      </stack-card-with-targets>
+      <stack-card-with-targets [item]="tCard"></stack-card-with-targets>
       <div class="vbar"></div>
     </div>
   </div>
@@ -18,8 +15,8 @@
     <game-card [card]="item.card" *ngIf="item.card"
       from="stack"
       [shadow]="item.shadow"
-      (click)="selectCard.emit(item.card)"
-      (mouseover)="hoverCard.emit(item.card)" (mouseleave)="clearHover.emit()">
+      (click)="cardEv.selectCard(item.card)"
+      (mouseover)="cardEv.hoverCard$.next(item.card)" (mouseleave)="cardEv.hoverCard$.next(null)">
     </game-card>
 
     <!-- Target Player -->

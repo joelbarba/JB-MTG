@@ -1,12 +1,14 @@
-<div class="dialog-container" [class.minimized]="false">
-  <!-- <div class="min-btn" (click)="summonOp.minimized = !summonOp.minimized">{{summonOp.minimized ? summonOp.title : '-'}}</div> -->
-  <h2>{{card.name}}</h2>
+<div class="dialog-container" [class.minimized]="win.customDialog.size === 'min'">
+  <div [hidden]="win.customDialog.size === 'min'" class="min-btn" (click)="win.customDialog.minimize()">-</div>
+  <div [hidden]="win.customDialog.size === 'max'" class="max-btn" (click)="win.customDialog.maximize()">{{card?.name}}</div>
+
+  <h2>{{card?.name}}</h2>
   <div class="center">
     <game-card [card]="card" from="customDialog"></game-card>
   </div>
 
   <div class="select-box">
-    <p>Tapping {{card.name}} to add mana</p>
+    <p>Tapping {{card?.name}} to add mana</p>
     <p>Select 1 mana:</p>
 
     <div class="mana-options">

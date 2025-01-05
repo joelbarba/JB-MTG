@@ -1,10 +1,9 @@
-<div class="selecting-mana" [class.minimized]="cardOp.minimizeExtraManaDialog">
-  <div class="min-btn" (click)="cardOp.minimizeExtraManaDialog = !cardOp.minimizeExtraManaDialog">
-    {{cardOp.minimizeExtraManaDialog ? 'Extra Mana' : '-'}}
-  </div>
+<div class="selecting-mana" [class.minimized]="win.extraManaDialog.size === 'min'">
+  <div [hidden]="win.extraManaDialog.size === 'min'" class="min-btn" (click)="win.extraManaDialog.minimize()">-</div>
+  <div [hidden]="win.extraManaDialog.size === 'max'" class="max-btn" (click)="win.extraManaDialog.maximize()">Extra Mana</div>
 
-  <h2>Adding Extra Mana</h2>
-  <div>Add the X mana you want to use for {{cardOp.card?.name}}</div>
+  <h2>Extra Mana</h2>
+  <div>Add the extra mana you want to use for {{cardOp.card?.name}}</div>
   <div class="center" *ngIf="cardOp.card">
     <game-card [card]="cardOp.card" from="panelSelMana"></game-card>
   </div>

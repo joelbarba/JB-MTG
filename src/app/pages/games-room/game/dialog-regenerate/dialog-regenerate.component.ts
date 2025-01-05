@@ -9,6 +9,8 @@ import { GameCardComponent } from '../game-card/game-card.component';
 import { ManaArrayComponent } from "../mana-array/mana-array.component";
 import { Subscription } from 'rxjs';
 import { CardOpServiceNew } from '../gameLogic/cardOp.service';
+import { GameCardEventsService } from '../gameLogic/game-card-events.service';
+import { WindowsService } from '../gameLogic/windows.service';
 
 
 @Component({
@@ -41,6 +43,8 @@ export class DialogRegenerateComponent {
   constructor(
     private game: GameStateService,
     public cardOp: CardOpServiceNew,
+    public cardEv: GameCardEventsService,
+    public win: WindowsService,
   ) {}
 
   ngOnInit() {

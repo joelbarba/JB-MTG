@@ -1,0 +1,22 @@
+<div class="dialog-container" [class.minimized]="win.damageDialog.size === 'min'">
+  <!-- <div [hidden]="win.damageDialog.size === 'min'" class="min-btn" (click)="win.damageDialog.minimize()">-</div> -->
+  <!-- <div [hidden]="win.damageDialog.size === 'max'" class="max-btn" (click)="win.damageDialog.maximize()">{{title}}</div> -->
+
+  <h2>{{title}}</h2>
+
+  <h3 *ngIf="win.damageDialog.icon"><span [class]="win.damageDialog.icon"></span></h3>
+  <p *ngIf="win.damageDialog.text" [innerHtml]="win.damageDialog.text"></p>
+
+  <div class="center">
+      <!-- <game-card [card]="card"></game-card> -->
+  </div>
+
+
+  <div class="btns-box" *ngIf="youControl">
+    <!-- <bf-btn bfText="Cancel" bfIcon="icon-cross" (bfClick)="cardOp.cancel()"></bf-btn> -->
+    <bf-btn *ngFor="let button of win.damageDialog.buttons"
+            [bfText]="button.text" [class]="button.class" bfIcon="icon-arrow-right3" 
+            (click)="button.action()">
+    </bf-btn>
+  </div>
+</div>

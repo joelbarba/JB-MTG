@@ -6,6 +6,8 @@ import { BfConfirmService, BfDnDModule, BfDnDService, BfUiLibModule } from 'bf-u
 import { GameCardComponent } from "../game-card/game-card.component";
 import { ManaArrayComponent } from "../mana-array/mana-array.component";
 import { CardOpServiceNew } from '../gameLogic/cardOp.service';
+import { GameCardEventsService } from '../gameLogic/game-card-events.service';
+import { WindowsService } from '../gameLogic/windows.service';
 
 @Component({
   selector    : 'dialog-selecting-mana',
@@ -24,7 +26,11 @@ import { CardOpServiceNew } from '../gameLogic/cardOp.service';
 })
 export class DialogSelectingManaComponent {
 
-  constructor(public cardOp: CardOpServiceNew) {}
+  constructor(
+    public cardOp: CardOpServiceNew,
+    public cardEv: GameCardEventsService,
+    public win: WindowsService,
+  ) {}
 
   numArr(num: number): Array<number> { return Array.from(Array(num).keys()) }
 }

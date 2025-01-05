@@ -1,6 +1,7 @@
-<div class="spell-stack h-cards-len-{{hCardsLen}} v-cards-len-{{vCardsLen}}" 
-     [class.minimized]="minimized">
-  <div class="min-btn" (click)="minimized = !minimized">{{minimized ? title : '-'}}</div>
+<div class="spell-stack h-cards-len-{{hCardsLen}} v-cards-len-{{vCardsLen}}" [class.minimized]="win.spellStackDialog.size === 'min'">
+  <div [hidden]="win.spellStackDialog.size === 'min'" class="min-btn" (click)="win.spellStackDialog.minimize()">-</div>
+  <div [hidden]="win.spellStackDialog.size === 'max'" class="max-btn" (click)="win.spellStackDialog.maximize()">Spell Stack</div>
+
   <h2>{{title}}</h2>
 
   <div class="stack-box" #stackWindow [class.has-scroll]="hasScroll">
@@ -8,9 +9,7 @@
     <div class="stack" #stackEl>
       <stack-card-with-targets
         *ngFor="let rootTarget of rootTargets"
-        [item]="rootTarget"
-        (selectCard)="selectCard.emit($event)"
-        (hoverCard)="hoverCard.emit($event)" (clearHover)="clearHover.emit()">
+        [item]="rootTarget">
       </stack-card-with-targets>
     </div>
 

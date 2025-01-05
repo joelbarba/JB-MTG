@@ -300,42 +300,7 @@
 
 
 
-.dialog-box {
-  position: fixed;
-  z-index: 1000;
-  &.lg {
-    top: 100px;
-    left: 550px;
-    right: 50px;
-    bottom: 150px;
-  }
-  &.md {
-    top: calc(50% - 300px);
-    left: calc(50% - 400px);
-    right: calc(50% - 400px);
-    bottom: calc(50% - 200px);
-  }
-  &.sm {
-    top: calc(50% - 200px);
-    left: calc(50% - 300px);
-    right: calc(50% - 300px);
-    bottom: calc(50% - 100px);
-  }
-  background: honeydew;
-  border: 1px solid #737373;
-  padding: 15px;
-  border-radius: 10px;
-  box-shadow: 11px 9px 15px 2px #676767;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  h2 { font-size: 35px; } // title
-  h3 { font-size: 60px; } // icon
-  .dialog-btn-box {
-    text-align: right;
-  }
-}
+
 
 
 

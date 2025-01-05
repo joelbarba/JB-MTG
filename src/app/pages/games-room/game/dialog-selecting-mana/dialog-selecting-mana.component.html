@@ -1,7 +1,6 @@
-<div class="selecting-mana" [class.minimized]="cardOp.minimizeSelectManaDialog">
-  <div class="min-btn" (click)="cardOp.minimizeSelectManaDialog = !cardOp.minimizeSelectManaDialog">
-    {{cardOp.minimizeSelectManaDialog ? 'Mana Selection' : '-'}}
-  </div>
+<div class="selecting-mana" [class.minimized]="win.selectManaDialog.size === 'min'">
+  <div [hidden]="win.selectManaDialog.size === 'min'" class="min-btn" (click)="win.selectManaDialog.minimize()">-</div>
+  <div [hidden]="win.selectManaDialog.size === 'max'" class="max-btn" (click)="win.selectManaDialog.maximize()">Mana Selection</div>
 
   <h2>Mana Selection</h2>
   <div class="center" *ngIf="cardOp.card">
