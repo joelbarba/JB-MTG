@@ -3,6 +3,7 @@ import { Subject } from 'rxjs';
 import { TCardOpStatus, TGameCard, TGameState } from '../../../../core/types';
 import { GameStateService } from './game-state.service';
 import { CardOpServiceNew } from './cardOp.service';
+import { getCards } from './game.utils';
 
 
 type TDialogButton = { text: string, class: string, action: () => void };
@@ -88,19 +89,6 @@ export class WindowsService {
     }
   };
 
-  // Check cards that need custom dialogs to be opened
-  // customDialogs: { [key:string]: TCustomDialog } = {};
-  
-
-  // <!-- Graveyard Panel -->
-  // <!-- Generic Dialog -->
-  // <dialog-combat 
-  // <!-- Dialog: Selecting Mana (cherry pick on summoning) -->
-  // <dialog-spell-stack
-  // <dialog-regenerate *ngIf="regenerateCreature"></dialog-regenerate>
-  // <!-- Dialog: Selecting Extra Mana (for cards with X cost) -->
-  // <!-- Effects Floating Panel -->
-  // <!-- Custom Card Dialogs -->
 
   allWindows = [
     this.graveyardPanel,    // 0
@@ -128,30 +116,37 @@ export class WindowsService {
   updateWindows() {
     const youControl = this.game.playerANum === this.game.state.control;
 
-    // Open / Close "Damage Dialog: Mana Burn"
-    this.damageDialog.close();
-    if (this.game.state.phase === 'end' && this.game.state.options.find(op => op.action === 'burn-mana')) {
-      const totalMana = this.game.playerA().manaPool.reduce((a, v) => a + v, 0);
-      this.damageDialog.title = 'Mana Burn';
-      this.damageDialog.icon = 'icon-fire';
-      this.damageDialog.text = `There is ${totalMana} unspent mana into your mana pool.<br/> It deals ${totalMana} damage to you`;
-      this.damageDialog.buttons = [{ text: 'Ok, burn it', class: 'quaternary', action: () => this.game.action('burn-mana') }];
-      this.damageDialog.open();
-    }
 
-    // Open / Close "Select Mana Dialog"
+    // "Select Mana Dialog" (Open / Close logic)
     if (this.prevCardOpStatus !== this.cardOp.status) {
       if (this.cardOp.status    === 'selectingMana') { this.selectManaDialog.open(); }
       if (this.prevCardOpStatus === 'selectingMana') { this.selectManaDialog.close(); }
     }
 
-    // Open / Close "Select Extra Mana Dialog"
+    // "Select Extra Mana Dialog" (Open / Close logic)
     if (this.prevCardOpStatus !== this.cardOp.status) {
       if (this.cardOp.status    === 'waitingExtraMana') { this.extraManaDialog.open(); }
       if (this.prevCardOpStatus === 'waitingExtraMana') { this.extraManaDialog.close(); }
     }
+
+
+    // "Combat Dialog" (Open / Close logic) ---> Done in game controller (updateCombatOperation)
+    // if (this.game.state.phase === 'combat') {
+    //   const { tableA, tableB } = getCards(this.game.state, this.game.playerANum);      
+      
+    //   // If you have attacking creatures (you are leading an attack)
+    //   const attackingCreatures = tableA.find(c => c.combatStatus === 'combat:attacking');
+    //   if (attackingCreatures) { this.combatDialog.open('A'); }
+  
+    //   // If the opponent is attacking you
+    //   const opponentAttack = tableB.find(c => c.combatStatus === 'combat:attacking');
+    //   const defendingCreatures = tableA.find(c => c.combatStatus === 'combat:defending');
+    //   if (opponentAttack || defendingCreatures) { this.combatDialog.open('B'); }
+
+    // } else { this.combatDialog.close(); }
     
-    // Open / Close "Spell Stack Dialog"
+
+    // "Spell Stack Dialog" (Open / Close logic)
     const anySpellsInTheStack = !!this.game.state.cards.find(c => c.location === 'stack');
     if (anySpellsInTheStack && (this.game.state.player1.stackCall || this.game.state.player2.stackCall)) {
       this.spellStackDialog.open();
@@ -165,13 +160,25 @@ export class WindowsService {
         if (this.cardOp.status === 'selectingTargets') { this.spellStackDialog.maximize(); }
       }
     }
+
+
+    // "Damage Dialog: Mana Burn" (Open / Close logic)
+    this.damageDialog.close();
+    if (this.game.state.phase === 'end' && this.game.state.options.find(op => op.action === 'burn-mana')) {
+      const totalMana = this.game.playerA().manaPool.reduce((a, v) => a + v, 0);
+      this.damageDialog.title = 'Mana Burn';
+      this.damageDialog.icon = 'icon-fire';
+      this.damageDialog.text = `There is ${totalMana} unspent mana into your mana pool.<br/> It deals ${totalMana} damage to you`;
+      this.damageDialog.buttons = [{ text: 'Ok, burn it', class: 'quaternary', action: () => this.game.action('burn-mana') }];
+      this.damageDialog.open();
+    }
     
-    // Open / Close "Regenerate Dialog"
+    // "Regenerate Dialog" (Open / Close logic)
     // If a creature that can be regenerated is dying, open the regenerate dialog
     if (this.game.state.cards.find(c => c.canRegenerate && c.isDying)) { this.regenerateDialog.open(); } 
     else { this.regenerateDialog.close(); }
 
-    // Open / Close "Custom Dialogs"
+    // "Custom Dialogs" (Open / Close logic)
     if (youControl && this.cardOp.customDialog) { this.customDialog.open(); }
     else { this.customDialog.close(); }
 
@@ -212,74 +219,3 @@ export class WindowsService {
 
 }
 
-
-
-/*
-  <!-- Graveyard Panel -->
-  <panel-graveyard *ngIf="graveyardPanel"
-    [playerLetter]="graveyardPanel"
-    (selectCard)="selectCard($event)"
-    (end)="graveyardPanel = null">
-  </panel-graveyard>
-
-
-  <!-- Generic Dialog -->
-  <div *ngIf="dialog" class="dialog-box" [class]="dialog.type" 
-      [style.background]="dialog.background" [style.color]="dialog.color">
-    <h2 *ngIf="dialog.title">{{dialog.title}}</h2>
-    <h3 *ngIf="dialog.icon"><span [class]="dialog.icon"></span></h3>
-    <p *ngIf="dialog.text" [innerHtml]="dialog.text"></p>
-    <div class="dialog-btn-box">
-      <div *ngFor="let button of dialog.buttons">
-        <bf-btn [bfText]="button.text" [class]="button.class" bfIcon="icon-arrow-right3" (click)="button.action()"></bf-btn>
-      </div>
-    </div>
-  </div>
-
-
-  <dialog-combat 
-    *ngIf="combatPanel"
-    [attacker]="combatPanelAttacker"    
-    (selectCard)="selectCard($event)"
-    (end)="combatPanel = false">
-  </dialog-combat>
-
-
-  <!-- Dialog: Selecting Mana (cherry pick on summoning) -->
-  <dialog-selecting-mana *ngIf="cardOp.status === 'selectingMana'"></dialog-selecting-mana>
-
-
-  <dialog-spell-stack 
-    *ngIf="spellStackPanel"
-    [panelSize]="spellStackPanelSize"
-    (selectCard)="selectCard($event)"
-    (end)="spellStackPanel = false" >
-  </dialog-spell-stack>
-  <!-- spellStackPanelSize={{spellStackPanelSize}} -->
-  <!-- panel={{panel}} -->
-
-  <dialog-regenerate *ngIf="regenerateCreature"></dialog-regenerate>
-
-  <!-- Dialog: Selecting Extra Mana (for cards with X cost) -->
-  <dialog-selecting-extra-mana *ngIf="cardOp.status === 'waitingExtraMana'"></dialog-selecting-extra-mana>
-
-  <!-- Effects Floating Panel -->
-  <panel-effects *ngIf="effectsPanelCard"
-    [card]="effectsPanelCard"
-    (selectCard)="selectCard($event)"
-    (end)="effectsPanelCard = null">
-  </panel-effects>
-
-  <!-- Custom Card Dialogs -->
-  <black-lotus-dialog *ngIf="customDialogs['BlackLotus']" [card]="customDialogs['BlackLotus']"></black-lotus-dialog>
-  <dual-land-dialog   *ngIf="customDialogs['Bayou']"           [card]="customDialogs['Bayou']"></dual-land-dialog>
-  <dual-land-dialog   *ngIf="customDialogs['Badlands']"        [card]="customDialogs['Badlands']"></dual-land-dialog>
-  <dual-land-dialog   *ngIf="customDialogs['Plateau']"         [card]="customDialogs['Plateau']"></dual-land-dialog>
-  <dual-land-dialog   *ngIf="customDialogs['Savannah']"        [card]="customDialogs['Savannah']"></dual-land-dialog>
-  <dual-land-dialog   *ngIf="customDialogs['Scrubland']"       [card]="customDialogs['Scrubland']"></dual-land-dialog>
-  <dual-land-dialog   *ngIf="customDialogs['Taiga']"           [card]="customDialogs['Taiga']"></dual-land-dialog>
-  <dual-land-dialog   *ngIf="customDialogs['TropicalIsland']"  [card]="customDialogs['TropicalIsland']"></dual-land-dialog>
-  <dual-land-dialog   *ngIf="customDialogs['Tundra']"          [card]="customDialogs['Tundra']"></dual-land-dialog>
-  <dual-land-dialog   *ngIf="customDialogs['UndergroundSea']"  [card]="customDialogs['UndergroundSea']"></dual-land-dialog>
-  <dual-land-dialog   *ngIf="customDialogs['VolcanicIsland']"  [card]="customDialogs['VolcanicIsland']"></dual-land-dialog>
-*/

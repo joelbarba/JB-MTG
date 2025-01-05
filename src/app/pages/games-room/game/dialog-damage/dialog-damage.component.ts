@@ -56,18 +56,6 @@ export class DialogDamageComponent {
 
   onUpdate() {
     this.youControl = this.game.state.control === this.game.playerANum;
-    // const totalMana = this.game.playerA().manaPool.reduce((a, v) => a + v, 0);
-    // this.dialog = {
-    //   type: 'sm',
-    //   title: 'Mana burn',
-    //   icon: 'icon-fire',
-    //   background: 'crimson',
-    //   color: 'white',
-    //   text: `There is ${totalMana} unspent mana into your mana pool.<br/> It deals ${totalMana} damage to you`,
-    //   buttons: [
-    //     { text: 'Ok, burn it', class: 'quaternary', action: () => this.game.action('burn-mana') }
-    //   ]
-    // };
   }
   
 }

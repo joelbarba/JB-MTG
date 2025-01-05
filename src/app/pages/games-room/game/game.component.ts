@@ -28,16 +28,6 @@ import { WindowsService } from './gameLogic/windows.service';
 import { GameCardEventsService } from './gameLogic/game-card-events.service';
 import { DialogDamageComponent } from "./dialog-damage/dialog-damage.component";
 
-export interface ICard {
-  img: string;
-  posX?: number;
-  posY?: number;
-  zInd?: number;
-}
-
-
-interface IDialog { type: 'xs' | 'sm' | 'md' | 'lg', title: string, text: string, icon?: string, background?: string, color?: string,
-  buttons: Array<{ text: string, class: string; action: any }> }
 
 
 
@@ -111,7 +101,6 @@ export class GameComponent {
 
   globalButtons: Array<{ id: string, text: string, icon: string, clickFn: () => void }> = [];
 
-  dialog: null | IDialog = null;  
 
   mainInfo = '';  // General info for the state
   opInfo = '';    // Info about the current operation
@@ -164,7 +153,6 @@ export class GameComponent {
 
       // console.log('New State:', state);      
       this.state = state;
-      // this.calcStateChanges(this.game.prevState, state);
 
       // Threat Special statuses - status: 'created' | 'playing' | 'player1win' | 'player2win' | 'error';
       if (state.status === 'error') { console.error('STATUS ERROR'); }
@@ -195,22 +183,23 @@ export class GameComponent {
 
       this.topGravA = gCards.graveyardA.at(-1) || null;
       this.topGravB = gCards.graveyardB.at(-1) || null;
-
-      this.setVarsFromStateChange();
-      this.showToastMesssages();
-      this.triggerDialogs();
       
+
       this.cardOp.onStateUpdate(state);
       // if (this.cardOp.status) { this.mainInfo = this.cardOp.text; }
 
+      this.win.updateWindows();
+      this.updateCombatOperation();
+      this.setVarsFromStateChange();
+      this.showToastMesssages();
       this.autoAdvance();
       this.autoPositionGameCards();
-      this.win.updateWindows();
     }));
 
 
-    
-    this.cardOp.onUpdate = () => { // When card operation updates
+
+    // When card operation updates
+    this.cardOp.onUpdate = () => {
       this.opInfo = '';
 
       // If an ongoing operation, show its status info
@@ -223,16 +212,9 @@ export class GameComponent {
         if (this.cardOp.status === 'selectingTargets') { this.opInfo = `Select target for ${cardName}`; }
       }
 
-      // this.customDialogs = {};
-      // if (this.state.control === this.game.playerANum && this.cardOp.customDialog && this.cardOp.card) {
-      //   this.customDialogs[this.cardOp.customDialog] = this.cardOp.card;
-      // }
-
       this.updateCombatOperation();
-      // this.updateSpellStack();
       this.win.updateWindows();
     }
-
 
   }
 
@@ -293,10 +275,7 @@ export class GameComponent {
 
 
 
-  // Debugging tools
-  debugLocations: Array<TCardLocation> = ['stack', 'deck1', 'deck2', 'hand1', 'hand2', 'tble1', 'tble2', 'grav1', 'grav2', 'discarded'];
-  cardFilter(location: TCardLocation) { return this.state.cards.filter(c => c.location === location); }
-  debugCard(card: TGameCard) { console.log(card.name, card); }
+
 
   setVarsFromStateChange() {
     const yourOptions = this.game.doYouHaveControl() ? this.state.options : [];
@@ -322,15 +301,6 @@ export class GameComponent {
       this.globalButtons.push({ id: 'untap-all', text: 'Untap All', icon: 'icon-undo2', clickFn });
     }
 
-    // If cancel operation
-    // const cancelSummonOp = yourOptions.find(op => op.action === 'cancel-op');
-    // if (cancelSummonOp) {
-    //   this.globalButtons.push({
-    //     id: 'cancel-op', text: cancelSummonOp.text || 'Cancel',
-    //     icon: 'icon-cross', clickFn: () => this.cardOp.cancel() 
-    //   });
-    // }
-
   }
 
   showToastMesssages() {
@@ -347,10 +317,9 @@ export class GameComponent {
       const cardName = `<br/><b>${card?.name || ''}</b>`;
       
       if (lastAction.player !== this.game.playerANum) { // Actions from opponent
-
-        if (lastAction.action === 'summon-land')     { toast(`<b>${playerB.name}</b> summoned a ${cardName}`,               'icon-arrow-down16'); }
-        // if (lastAction.action === 'summon-creature') { toast(`<b>${playerB.name}</b> is summoning a creature: ${cardName}`, 'icon-arrow-down16'); }
-        if (lastAction.action === 'summon-spell')    { toast(`<b>${playerB.name}</b> is casting a ${cardName}`,             'icon-arrow-down16'); }
+        if (lastAction.action === 'summon-land')     { toast(`<b>${playerB.name}</b> summoned a ${cardName}`,   'icon-arrow-down16'); }
+        if (lastAction.action === 'summon-spell')    { toast(`<b>${playerB.name}</b> is casting a ${cardName}`, 'icon-arrow-down16'); }
+        if (lastAction.action === 'submit-attack')   { toast(`<b>${playerB.name}</b> is attacking you`, 'icon-sword'); }
       }
     }
   }
@@ -433,34 +402,12 @@ export class GameComponent {
 
 
 
-  extendTableCard(card: TGameCard, grid: 'A'| 'B'): TExtGameCard {
-    const extInfo = this.positions[card.gId];
-    if (extInfo) { return { ...card, ...extInfo, grid }; }
-    this.positions[card.gId] = this.defaultCardPos(card); // Find the position on the table for the first time
-    return { ...card, ...this.positions[card.gId], grid };
-  }
 
-  defaultCardPos(card: TGameCard | TExtGameCard) {
-    const x = card.order % 15;
-    const y = Math.floor(card.order / 15);
-    if (card.location === 'tble' + this.game.playerANum) {
-      return { posX: 20 + (x * 135), posY: 20 + (y * 180), zInd: 100 + card.order };  // Your card (table A)
-    } else {
-      return { posX: 20 + (x * 135), posY: 230 + (y * 180), zInd: 100 + card.order }; // Opponent's card (B)
-    }
-  }
 
 
   displayTableA: Array<TExtGameCard> = [];  // tableA + playing cards from B that target cards from tableA
   displayTableB: Array<TExtGameCard> = [];  // tableB + playing cards from A that target cards from tableB
   autoPositionGameCards() {
-    // if (table === 'A') {
-    //   this.tableA = this.tableA.map(card => ({ ...card, ...this.defaultCardPos(card) }));
-    //   this.tableA.forEach(({ gId, posX, posY, zInd }) => { this.positions[gId] = { posX, posY, zInd }; })
-    // } else {
-    //   this.tableB = this.tableB.map(card => ({ ...card, ...this.defaultCardPos(card) }));
-    //   this.tableB.forEach(({ gId, posX, posY, zInd }) => { this.positions[gId] = { posX, posY, zInd }; })
-    // }
 
     // Order cards in a grid of columns: Lands + Creatures + Others
     const positionTable = (tableCards: Array<TExtGameCard>) => {
@@ -544,6 +491,22 @@ export class GameComponent {
     });
   }
 
+  extendTableCard(card: TGameCard, grid: 'A'| 'B'): TExtGameCard {
+    const extInfo = this.positions[card.gId];
+    if (extInfo) { return { ...card, ...extInfo, grid }; }
+    this.positions[card.gId] = this.defaultCardPos(card); // Find the position on the table for the first time
+    return { ...card, ...this.positions[card.gId], grid };
+  }
+
+  defaultCardPos(card: TGameCard | TExtGameCard) {
+    const x = card.order % 15;
+    const y = Math.floor(card.order / 15);
+    if (card.location === 'tble' + this.game.playerANum) {
+      return { posX: 20 + (x * 135), posY: 20 + (y * 180), zInd: 100 + card.order };  // Your card (table A)
+    } else {
+      return { posX: 20 + (x * 135), posY: 230 + (y * 180), zInd: 100 + card.order }; // Opponent's card (B)
+    }
+  }
 
   // Recalculate the z-index so the card gets on top of all others
   focusPlayCard(card: TExtGameCard) {
@@ -557,41 +520,6 @@ export class GameComponent {
 
 
 
-
-
-
-  // -------------------------- Dialogs --------------------------
-
-
-  triggerDialogs() {
-    this.dialog = null;
-
-    // Mana Burn dialog
-    if (this.state.options.find(op => op.action === 'burn-mana')) {
-      const totalMana = this.game.playerA().manaPool.reduce((a, v) => a + v, 0);
-      this.dialog = {
-        type: 'sm',
-        title: 'Mana burn',
-        icon: 'icon-fire',
-        background: 'crimson',
-        color: 'white',
-        text: `There is ${totalMana} unspent mana into your mana pool.<br/> It deals ${totalMana} damage to you`,
-        buttons: [
-          { text: 'Ok, burn it', class: 'quaternary', action: () => this.game.action('burn-mana') }
-        ]
-      };
-    }
-
-    // this.updateSummonOperation();
-    this.updateCombatOperation();
-    // this.updateSpellStack();
-    // this.updateCustomDialogs();
-
-    // If a creature that can be regenerated is dying, open the regenerate dialog
-    // this.regenerateCreature = this.state.cards.find(c => c.canRegenerate && c.isDying);
-  }
-
-  // regenerateCreature?:TGameCard;
 
 
   // On state change, detect and update the status of a combat operation
@@ -621,26 +549,6 @@ export class GameComponent {
   }
 
 
-  // spellStackPanel = false;
-  // spellStackPanelSize: 'min' | 'max' = 'max';
-  // updateSpellStack() {    
-  //   const anySpellsInTheStack = !!this.state.cards.find(c => c.location === 'stack');
-  //   this.spellStackPanel = anySpellsInTheStack && (this.state.player1.stackCall || this.state.player2.stackCall);
-
-  //   if (this.youControl && this.spellStackPanel && this.cardOp?.card?.controller === this.game.playerANum) {
-  //     // If summoning a card and waiting for mana, minimize it (so the lands on the table get visible)
-  //     if (this.cardOp?.status === 'waitingMana')   { this.spellStackPanelSize = 'min'; }
-  //     if (this.cardOp?.status === 'selectingMana') { this.spellStackPanelSize = 'min'; }
-  
-  //     // If summoning a card and selecting a target, maximize it because its' most likely one on the stack
-  //     if (this.cardOp?.status === 'selectingTargets') { this.spellStackPanelSize = 'max'; }
-  //   }
-  // }
-
-
-  // effectsPanelCard: TGameCard | null = null;
-
-
 
 
 
@@ -665,9 +573,6 @@ export class GameComponent {
     this.cardEv.selectCard(card);
   }
 
-
-
-
   selectPlayer(num: '1' | '2') {
     return this.cardOp.selectTargetPlayer(num);
   }
@@ -676,4 +581,10 @@ export class GameComponent {
     return this.cardOp.isTargetPlayer(num); 
   }
 
+
+
+  // Debugging tools
+  debugLocations: Array<TCardLocation> = ['stack', 'deck1', 'deck2', 'hand1', 'hand2', 'tble1', 'tble2', 'grav1', 'grav2', 'discarded'];
+  cardFilter(location: TCardLocation) { return this.state.cards.filter(c => c.location === location); }
+  debugCard(card: TGameCard) { console.log(card.name, card); }
 }

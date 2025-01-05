@@ -2,14 +2,7 @@
 
 .dialog-container {
   color: white;
-  background: crimson;
-  // background: $dialog-custom-bg;
-  // background: snow;
-  // background: seashell;
-  // background: oldlace;
-  // background: papayawhip;
-  // background: mintcream;
-  // background: lightyellow;
+  background: $dialog-damage-bg;
 
   @include panel-basics();
   @include fixed-panel(20%, 30%, 19%);
