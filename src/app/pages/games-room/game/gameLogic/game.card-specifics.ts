@@ -610,11 +610,12 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
 
   function c000069_WrathOfGod() {
     card.onSummon = (nextState: TGameState) => {
-      const { tableStack } = getShorts(nextState);
+      const { tableStack, card } = getShorts(nextState);
       tableStack.filter(c => c.type === 'creature').forEach(creature => {
         console.log(`Creature ${creature.gId} ${creature.name} is destroyed`);
         killCreature(nextState, creature.gId);
       });
+      moveCardToGraveyard(nextState, card.gId);
     };
   }
 
