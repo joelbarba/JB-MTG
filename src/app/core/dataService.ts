@@ -293,15 +293,20 @@ export class DataService {
       'c000005',  // Forest
       'c000003',  // Swamp
       'c000013',  // Bayou
-      'c000026',  // Black Knight
+      'c000070',  // Howl From Beyond
+      'c000093',  // Braingeyser
+      'c000100',  // Mind Twist
       'c000027',  // Dark Ritual
-      'c000010',  // Mox Sapphire
+      'c000027',  // Dark Ritual
+      'c000027',  // Dark Ritual
       'c000023',  // Ancestral Recall
-      'c000060',  // Disintegrate
       'c000021',  // Underground Sea
+      'c000010',  // Mox Sapphire
+      'c000060',  // Disintegrate
       'c000014',  // Badlands
       'c000067',  // Weakness
       'c000112',  // Timetwister
+      'c000026',  // Black Knight
       'c000111',  // Sinkhole
       'c000038',  // Counterspell
       'c000012',  // Black Lotus
@@ -344,8 +349,7 @@ export class DataService {
       'c000013',  // Bayou
       'c000014',  // Badlands
       'c000018',  // Taiga
-      'c000060',  // Disintegrate
-      'c000027',  // Dark Ritual
+      'c000108',  // Earthquake
       'c000027',  // Dark Ritual
       'c000051',  // Llanowar Elves
       'c000006',  // Mox Emerald
@@ -357,10 +361,12 @@ export class DataService {
       'c000091',  // BirdsOfParadise
       'c000041',  // Elvis Archers
       'c000058',  // Shatter
+      'c000060',  // Disintegrate
       'c000032',  // Lighting Bolt
       'c000068',  // WheelOfFortune
       'c000041',  // Elvis Archers
       'c000059',  // Shatterstorm
+      'c000027',  // Dark Ritual
       'c000043',  // Giant Growth
       'c000046',  // Granite Gargoley
       'c000053',  // Ornithopter

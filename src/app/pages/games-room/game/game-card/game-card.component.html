@@ -30,6 +30,11 @@
     <span class="icon-power"></span>
   </span>
 
+  <span class="damage-points" *ngIf="(card.xValue ?? -1) > 0">
+    <span>{{card.xValue}}</span>
+    <span class="icon-cross"></span>
+  </span>
+
   <span class="attack-defense delta" *ngIf="card?.type === 'creature' && shadow?.delta">{{shadow?.delta}}</span>
   <span class="attack-defense shado" *ngIf="card?.type === 'creature' && shadow?.force">{{shadow?.force}}</span>
   <span class="attack-defense" [class.turn]="shadow?.delta" *ngIf="card?.type === 'creature'">

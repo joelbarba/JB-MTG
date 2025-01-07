@@ -30,7 +30,8 @@ h2 { padding: 15px 15px 0 15px; }
         display: inline-block;
         margin: 2.5px 4px;
         text-align: center;
-        &.not-ready mtg-card { opacity: 30%; border: 3px solid red; }
+        &.ready mtg-card { opacity: 30%; border: 3px solid red; }
+        // &.not-ready mtg-card { opacity: 30%; border: 3px solid red; }
         mtg-card {
           cursor: pointer;
           border: 3px solid transparent;

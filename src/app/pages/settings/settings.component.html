@@ -132,7 +132,9 @@
 
     <div class="all-cards">
       <div *ngFor="let card of cardsList.renderList$ | async" (click)="selectCard(card)"
-           class="card-wrapper" [class.not-ready]="highlightNoneReady && !card.readyToPlay">
+           class="card-wrapper" 
+           [class.ready]="highlightNoneReady && card.readyToPlay"
+           [class.not-ready]="highlightNoneReady && !card.readyToPlay">
         {{card.id}}
         <mtg-card [cardImg]="card.image" class="sm" [border]="card.border" [class.selected]="selCard?.id === card.id"></mtg-card>
       </div>

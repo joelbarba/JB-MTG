@@ -807,14 +807,112 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     }
   }
 
+
+
+
+  // Cards that use extra X mana
+  function c000060_Disintegrate() {
+    card.getSummonCost = (nextState: TGameState) => {
+      const { targetCreatures, card } = getShorts(nextState);
+      const possibleTargets = [ ...targetCreatures().map(c => c.gId), 'playerA', 'playerB'];
+      return { mana: card.cast, xMana: [1,1,1,1,1,1], neededTargets: 1, possibleTargets };
+    };    
+    card.onSummon = (nextState: TGameState) => {
+      const { targetCreatures, targetId, card } = getShorts(nextState);
+      const targetCreature = targetCreatures().find(c => c.gId === targetId);
+      if      (targetId === 'player1') { nextState.player1.life -= card.xValue; } // Deals X points of damage to player1
+      else if (targetId === 'player2') { nextState.player2.life -= card.xValue; } // Deals X points of damage to player2
+      else if (targetCreature) { targetCreature.turnDamage += card.xValue; } // Deals X points of damage to target creature    
+      moveCardToGraveyard(nextState, card.gId); // Destroy itself
+    }
+  }
+
+
+  // 'c000070',  // Howl From Beyond
+  // 'c000093',  // Braingeyser
+  // 'c000100',  // Mind Twist
+  // 'c000108',  // Earthquake
+  function c000070_HowlFromBeyond() {
+    card.getSummonCost = (nextState: TGameState) => {
+      const { targetCreatures } = getShorts(nextState);
+      const possibleTargets = targetCreatures().map(c => c.gId); // Target must be any playing creature
+      return { mana: card.cast, xMana: [1,1,1,1,1,1], neededTargets: 1, possibleTargets };
+    };    
+    card.onSummon = (nextState: TGameState) => {
+      const { card, targetId } = getShorts(nextState);
+      nextState.effects.push({ scope: 'turn', gId, targets: [targetId], id: randomId('e'), xValue: card.xValue });
+      moveCardToGraveyard(nextState, gId); // Destroy itself (instant)
+    }
+    card.onEffect = (nextState: TGameState, effectId: string) => { // Add +X/+0 to target creature
+      const { targetCreatures } = getShorts(nextState);
+      const effect = nextState.effects.find(e => e.id === effectId);
+      const effectTargetId = effect?.targets[0]; // The card that the card's effect is targetting
+      const targetCreature = targetCreatures().find(c => c.gId === effectTargetId);
+      if (targetCreature) { targetCreature.turnAttack += effect?.xValue || 0; }
+    }
+  }
+
+  function c000093_Braingeyser() { 
+    card.getSummonCost = (nextState: TGameState) => {
+      const { card } = getShorts(nextState);
+      return { mana: card.cast, xMana: [1,1,1,1,1,1], neededTargets: 1, possibleTargets: ['playerA', 'playerB'] };
+    };    
+    card.onSummon = (nextState: TGameState) => {
+      const { targetId, card } = getShorts(nextState);
+      if (targetId === 'player1' || targetId === 'player2') {
+        const playerNum = targetId.split('player')[1] as '1' | '2';
+        for (let t = 0; t < card.xValue; t++) { drawCard(nextState, playerNum); }
+      }
+      moveCardToGraveyard(nextState, card.gId); // Destroy itself
+    }
+  }
+
+  function c000100_MindTwist() {
+    card.getSummonCost = (nextState: TGameState) => {
+      const { card } = getShorts(nextState);
+      return { mana: card.cast, xMana: [1,1,1,1,1,1], neededTargets: 0, possibleTargets: [] }; // Target is always opponent
+    };    
+    card.onSummon = (nextState: TGameState) => {
+      const { card, otherPlayer, hand } = getShorts(nextState);
+      const handB = hand.filter(c => c.controller === otherPlayer.num);
+      const maxNum = Math.min(handB.length, card.xValue); // Total number of cards to discard
+
+      // Shuffle cards in hand and take the X first
+      const cardsToDiscard = handB.map(c => ({ gId: c.gId, r: Math.random() })).sort((a,b) => a.r > b.r ? 1: -1).map(v => v.gId).slice(0, maxNum);
+      cardsToDiscard.forEach(gId => {
+        moveCardToGraveyard(nextState, gId); // Discard card
+      });
+
+      moveCardToGraveyard(nextState, card.gId); // Destroy itself
+    }
+  }
+
+  function c000108_Earthquake() {
+    card.getSummonCost = (nextState: TGameState) => {
+      const { card } = getShorts(nextState);
+      return { mana: card.cast, xMana: [1,1,1,1,1,1], neededTargets: 0, possibleTargets: [] };
+    };    
+    card.onSummon = (nextState: TGameState) => {
+      const { tableStack, card } = getShorts(nextState);      
+      tableStack.filter(c => c.type === 'creature' && !c.isFlying).forEach(creature => {
+        creature.turnDamage += card.xValue; // Deals X points of damage to each non flying creature
+      });
+      nextState.player1.life -= card.xValue; // Deals X points of damage to player1
+      nextState.player2.life -= card.xValue; // Deals X points of damage to player2
+      moveCardToGraveyard(nextState, card.gId); // Destroy itself
+    }
+  }
+
+
+
+
   // 
   // Weakness + Righteousness
-  // 
   // Swords To Plowshares
   // Unsummon
   // Terror
   // Erg Raiders
-  // Roay Assassin
+  // Royal Assassin
 
 
   // - Require dialog:
@@ -828,27 +926,6 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
 
 
 
-  function c000060_Disintegrate() {
-    card.getSummonCost = (nextState: TGameState) => {
-      const { targetCreatures } = getShorts(nextState);
-      const possibleTargets = [ ...targetCreatures().map(c => c.gId), 'playerA', 'playerB'];
-      return { mana: [2,0,0,0,1,0], xMana: [1,1,1,1,1,1], neededTargets: 1, possibleTargets };
-    };    
-    card.onSummon = (nextState: TGameState) => {
-      const { targetCreatures, targetId, card } = getShorts(nextState);
-      const targetCreature = targetCreatures().find(c => c.gId === targetId);
-      if      (targetId === 'player1') { nextState.player1.life -= card.xValue; } // Deals X points of damage to player1
-      else if (targetId === 'player2') { nextState.player2.life -= card.xValue; } // Deals X points of damage to player2
-      else if (targetCreature) { targetCreature.turnDamage += card.xValue; } // Deals X points of damage to target creature    
-      moveCardToGraveyard(nextState, card.gId); // Destroy itself
-    }
-  }
-
-
-
-
-
-
   // // Pending to be coded......
   function c000029_Fork() {}
   function c000030_HowlingMine() {}
@@ -859,9 +936,6 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   function c000064_ManaFlare() {}
   function c000065_Terror() {}
   function c000066_WarpArtifact() {}
-  function c000070_HowlFromBeyond() {}
-
-
   function c000074_PhantasmalForces() { }
   function c000077_SwordsToPlowshares() { }
   function c000079_Unsummon() { }
@@ -872,14 +946,12 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   function c000089_JuzamDjinn() { }
   function c000090_SengirVampire() { }
   function c000092_BlackVise() { }
-  function c000093_Braingeyser() { }
   function c000094_Clone() { }
   function c000095_ControlMagic() { }
   function c000096_CopyArtifact() { }
   function c000097_Fastbond() { }
   function c000098_Fireball() { }
   function c000099_Juggernaut() { }
-  function c000100_MindTwist() { }
   function c000101_Millstone() { }
   function c000102_NevinyrralsDisk() { }
   function c000103_Regrowth() { }
@@ -887,7 +959,6 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   function c000105_TheRack() { }
   function c000106_VesuvanDoppelganger() { }
   function c000107_AnimateDead() { }
-  function c000108_Earthquake() { }
   function c000109_GauntletOfMight() { }
   function c000110_IcyManipulator() { }
   function c000113_TheAbyss() { }
