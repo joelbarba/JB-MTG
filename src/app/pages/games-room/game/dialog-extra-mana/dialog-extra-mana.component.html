@@ -1,4 +1,5 @@
-<div class="selecting-mana" [class.minimized]="win.extraManaDialog.size === 'min'">
+<div class="selecting-mana" 
+     [class.minimized]="win.extraManaDialog.size === 'min'" [style.z-index]="win.extraManaDialog.zInd">
   <div [hidden]="win.extraManaDialog.size === 'min'" class="min-btn" (click)="win.extraManaDialog.minimize()">-</div>
   <div [hidden]="win.extraManaDialog.size === 'max'" class="max-btn" (click)="win.extraManaDialog.maximize()">Extra Mana</div>
 

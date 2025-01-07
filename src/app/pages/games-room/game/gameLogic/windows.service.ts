@@ -179,7 +179,9 @@ export class WindowsService {
     else { this.regenerateDialog.close(); }
 
     // "Custom Dialogs" (Open / Close logic)
-    if (youControl && this.cardOp.customDialog) { this.customDialog.open(); }
+    if (youControl && this.cardOp.customDialog) {
+      this.customDialog.open();
+    }
     else { this.customDialog.close(); }
 
 

@@ -811,6 +811,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
 
 
   // Cards that use extra X mana
+
   function c000060_Disintegrate() {
     card.getSummonCost = (nextState: TGameState) => {
       const { targetCreatures, card } = getShorts(nextState);
@@ -827,11 +828,6 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     }
   }
 
-
-  // 'c000070',  // Howl From Beyond
-  // 'c000093',  // Braingeyser
-  // 'c000100',  // Mind Twist
-  // 'c000108',  // Earthquake
   function c000070_HowlFromBeyond() {
     card.getSummonCost = (nextState: TGameState) => {
       const { targetCreatures } = getShorts(nextState);

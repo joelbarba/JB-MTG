@@ -11,7 +11,9 @@ import { WindowsService } from '../gameLogic/windows.service';
 import { GameCardEventsService } from '../gameLogic/game-card-events.service';
 
 @Component({
-  selector: 'panel-graveyard',
+  selector    :   'panel-graveyard',
+  templateUrl : './panel-graveyard.component.html',
+  styleUrl    : './panel-graveyard.component.scss',
   standalone: true,
   imports: [
     CommonModule,
@@ -21,8 +23,6 @@ import { GameCardEventsService } from '../gameLogic/game-card-events.service';
     BfUiLibModule,
     GameCardComponent
 ],
-  templateUrl: './panel-graveyard.component.html',
-  styleUrl: './panel-graveyard.component.scss'
 })
 export class PanelGraveyardComponent {
   stateSub!: Subscription;

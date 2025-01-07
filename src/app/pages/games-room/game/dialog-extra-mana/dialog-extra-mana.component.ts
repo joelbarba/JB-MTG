@@ -10,9 +10,9 @@ import { TCast } from '../../../../core/types';
 import { WindowsService } from '../gameLogic/windows.service';
 
 @Component({
-  selector    : 'dialog-selecting-extra-mana',
-  templateUrl : './dialog-selecting-extra-mana.component.html',
-  styleUrl    : './dialog-selecting-extra-mana.component.scss',
+  selector    : 'dialog-extra-mana',
+  templateUrl : './dialog-extra-mana.component.html',
+  styleUrl    : './dialog-extra-mana.component.scss',
   standalone: true,
   imports: [
     CommonModule,
@@ -24,7 +24,7 @@ import { WindowsService } from '../gameLogic/windows.service';
     ManaArrayComponent,
   ],
 })
-export class DialogSelectingExtraManaComponent {
+export class DialogExtraManaComponent {
 
   constructor(
     public cardOp: CardOpServiceNew,

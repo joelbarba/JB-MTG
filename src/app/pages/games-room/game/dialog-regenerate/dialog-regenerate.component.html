@@ -1,4 +1,5 @@
-<div class="dialog-container" [class.minimized]="win.regenerateDialog.size === 'min'">
+<div class="dialog-container"
+     [class.minimized]="win.regenerateDialog.size === 'min'" [style.z-index]="win.regenerateDialog.zInd">
   <div [hidden]="win.regenerateDialog.size === 'min'" class="min-btn" (click)="win.regenerateDialog.minimize()">-</div>
   <div [hidden]="win.regenerateDialog.size === 'max'" class="max-btn" (click)="win.regenerateDialog.maximize()">Regenerate</div>
 

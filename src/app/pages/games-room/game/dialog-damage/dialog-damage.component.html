@@ -1,4 +1,4 @@
-<div class="dialog-container" [class.minimized]="win.damageDialog.size === 'min'">
+<div class="dialog-container" [class.minimized]="win.damageDialog.size === 'min'" [style.z-index]="win.damageDialog.zInd">
   <!-- <div [hidden]="win.damageDialog.size === 'min'" class="min-btn" (click)="win.damageDialog.minimize()">-</div> -->
   <!-- <div [hidden]="win.damageDialog.size === 'max'" class="max-btn" (click)="win.damageDialog.maximize()">{{title}}</div> -->
 

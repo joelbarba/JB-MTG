@@ -1,7 +1,8 @@
-<div class="dialog-container" [class.minimized]="win.customDialog.size === 'min'">
+<div class="dialog-container" [class.minimized]="win.customDialog.size === 'min'" [style.z-index]="win.customDialog.zInd">
   <div [hidden]="win.customDialog.size === 'min'" class="min-btn" (click)="win.customDialog.minimize()">-</div>
   <div [hidden]="win.customDialog.size === 'max'" class="max-btn" (click)="win.customDialog.maximize()">{{card?.name}}</div>
 
+  win.customDialog.zInd={{win.customDialog.zInd}} xxxxxxxxxxxxxxxx
   <h2>{{card?.name}}</h2>
   <div class="center">
     <game-card [card]="card" from="customDialog"></game-card>

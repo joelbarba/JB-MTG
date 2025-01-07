@@ -20,7 +20,9 @@ type TCol = {
 
 
 @Component({
-  selector: 'dialog-combat',
+  selector    :   'dialog-combat',
+  templateUrl : './dialog-combat.component.html',
+  styleUrl    : './dialog-combat.component.scss',
   standalone: true,
   imports: [
     CommonModule,
@@ -30,8 +32,6 @@ type TCol = {
     BfUiLibModule,
     GameCardComponent,
 ],
-  templateUrl: './dialog-combat.component.html',
-  styleUrl: './dialog-combat.component.scss'
 })
 export class DialogCombatComponent {
   // @Input({ required: true }) attacker!: 'A' | 'B';

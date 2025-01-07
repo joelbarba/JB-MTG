@@ -1,4 +1,5 @@
-<div class="combat h-cards-len-{{hCardsLen}}" [class.minimized]="win.combatDialog.size === 'min'">
+<div class="combat h-cards-len-{{hCardsLen}}" 
+     [class.minimized]="win.combatDialog.size === 'min'" [style.z-index]="win.combatDialog.zInd">
   <div [hidden]="win.combatDialog.size === 'min'" class="min-btn" (click)="win.combatDialog.minimize()">-</div>
   <div [hidden]="win.combatDialog.size === 'max'" class="max-btn" (click)="win.combatDialog.maximize()">Combat</div>
 

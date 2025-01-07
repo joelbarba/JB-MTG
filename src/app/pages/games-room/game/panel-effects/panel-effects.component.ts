@@ -11,7 +11,9 @@ import { GameCardEventsService } from '../gameLogic/game-card-events.service';
 import { WindowsService } from '../gameLogic/windows.service';
 
 @Component({
-  selector: 'panel-effects',
+  selector    :   'panel-effects',
+  templateUrl : './panel-effects.component.html',
+  styleUrl    : './panel-effects.component.scss',
   standalone: true,
   imports: [
     CommonModule,
@@ -21,8 +23,6 @@ import { WindowsService } from '../gameLogic/windows.service';
     BfUiLibModule,
     GameCardComponent,
 ],
-  templateUrl: './panel-effects.component.html',
-  styleUrl: './panel-effects.component.scss'
 })
 export class PanelEffectsComponent {
   card!: TGameCard;

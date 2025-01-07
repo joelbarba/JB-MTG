@@ -13,7 +13,9 @@ import { WindowsService } from '../../gameLogic/windows.service';
 
 
 @Component({
-  selector: 'black-lotus-dialog',
+  selector    :   'black-lotus-dialog',
+  templateUrl : './black-lotus-dialog.component.html',
+  styleUrl    : './black-lotus-dialog.component.scss',
   standalone: true,
   imports: [
     CommonModule,
@@ -24,8 +26,6 @@ import { WindowsService } from '../../gameLogic/windows.service';
     GameCardComponent,
     ManaIconComponent,
   ],
-  templateUrl: './black-lotus-dialog.component.html',
-  styleUrl: './black-lotus-dialog.component.scss'
 })
 export class BlackLotusDialogComponent {
   card: TGameCard | null = null;

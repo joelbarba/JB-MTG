@@ -22,7 +22,7 @@ import { BfTooltipService } from '../../../core/common/internal-lib/bf-tooltip/b
 import { BlackLotusDialogComponent } from "./custom-dialogs/black-lotus/black-lotus-dialog.component";
 import { DualLandDialogComponent } from "./custom-dialogs/dual-land/dual-land-dialog.component";
 import { DialogRegenerateComponent } from './dialog-regenerate/dialog-regenerate.component';
-import { DialogSelectingExtraManaComponent} from "./dialog-selecting-extra-mana/dialog-selecting-extra-mana.component";
+import { DialogExtraManaComponent} from "./dialog-extra-mana/dialog-extra-mana.component";
 import { CardOpServiceNew } from './gameLogic/cardOp.service';
 import { WindowsService } from './gameLogic/windows.service';
 import { GameCardEventsService } from './gameLogic/game-card-events.service';
@@ -52,7 +52,7 @@ import { DialogDamageComponent } from "./dialog-damage/dialog-damage.component";
     BlackLotusDialogComponent,
     DualLandDialogComponent,
     DialogRegenerateComponent,
-    DialogSelectingExtraManaComponent,
+    DialogExtraManaComponent,
     DialogDamageComponent
 ],
   templateUrl: './game.component.html',

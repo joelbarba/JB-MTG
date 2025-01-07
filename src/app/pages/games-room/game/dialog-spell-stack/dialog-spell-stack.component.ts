@@ -18,7 +18,9 @@ export type TStackTree = {
 };
 
 @Component({
-  selector: 'dialog-spell-stack',
+  selector    :   'dialog-spell-stack',
+  templateUrl : './dialog-spell-stack.component.html',
+  styleUrl    : './dialog-spell-stack.component.scss',
   standalone: true,
   imports: [
     CommonModule,
@@ -28,8 +30,6 @@ export type TStackTree = {
     BfUiLibModule,
     StackCardWithTargetsComponent,
   ],
-  templateUrl: './dialog-spell-stack.component.html',
-  styleUrl: './dialog-spell-stack.component.scss'
 })
 export class DialogSpellStackComponent {
   // @Input() panelSize: 'min' | 'max' = 'max';
