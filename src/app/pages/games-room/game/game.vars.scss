@@ -79,8 +79,8 @@ $card-stack-highlight: #87c96c;     // When a spell with target in the stack
 
 // Panels
 $dialog-custom-bg: mintcream;
-$dialog-selecting-mana-bg: azure;
-$dialog-spell-stack-bg: honeydew;
+$dialog-selecting-mana-bg: ghostwhite ;
+$dialog-spell-stack-bg: azure;
 $dialog-combat-bg: ivory;
 $dialog-damage-bg: crimson;
 $panel-graveyard-bg: azure;
@@ -124,10 +124,13 @@ $table-center-left: calc(var(--left-panel-width) + var(--phases-col-width) + $ta
     top: 0;
     right: 0;
     font-size: 30px;
-    background: mediumaquamarine;
     padding: 0 20px;
-    // line-height: 30px;
     border-top-right-radius: 9px;
+    background: mediumaquamarine;
+    background: #d7d7d7;
+    border: 1px solid #afafaf;
+    border-bottom: 1px solid #9ba5a5;
+    border-left: 1px solid #9ba5a5;
     cursor: pointer;
   }
   &.minimized {
@@ -141,6 +144,14 @@ $table-center-left: calc(var(--left-panel-width) + var(--phases-col-width) + $ta
     div:not(.max-btn) { display: none; }
   }
   .max-btn { left: 0; line-height: 38px; }
+  .window-bg {
+    position: absolute;
+    z-index: -1;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+  }
 }
 
 @mixin fixed-panel($padding-left, $padding-top, $vertical-offset) {

@@ -30,10 +30,10 @@ export enum EPhase {
 }
 export enum ESubPhase {
   selectAttack   = 'selectAttack', 
-  attacking      = 'attacking', 
+  attacking      = 'attacking',
   selectDefense  = 'selectDefense', 
-  defending      = 'defending', 
-  afterCombat    = 'afterCombat',
+  beforeDamage   = 'beforeDamage',
+  afterDamage    = 'afterDamage',
   regenerate     = 'regenerate',
 }
 
@@ -92,6 +92,7 @@ export type TGameDBState = {
   player2: TPlayer;
   cards: Array<TGameCard>;
   effects: Array<TEffect>;
+  spellStackInitiator: null | '1' | '2'; // Remember the player num that initiated the spell stack (so control is returned after release)
   lastAction?: TGameOption & { time: string, player: '1' | '2' };
   id: number; // sequential order
   deckId1: string;
@@ -135,7 +136,7 @@ export type TGameCard = TDBGameCard & TCard & { // Not in DB (fixed properties f
   onDestroy: (state: TGameState) => void;   // What the card does when it's destroyed
   onDiscard: (state: TGameState) => void;   // What the card does when it's discarded
   onEffect:  (state: TGameState, effectId: string) => void;  // What the effect of the card does when it's applied
-  afterCombat: (state: TGameState) => void;  // What the card does after combat
+  afterDamage: (state: TGameState) => void;  // What the card does after combat
   isType:  (type: TCardExtraType) => boolean; // Checks if the card is of a certain type
   isColor: (color: TColor) => boolean; // Checks if the card is of a certain color
   canAttack: (state: TGameState) => boolean;  // Whether the creature can be selected to attack
@@ -178,11 +179,8 @@ export type TAction = 'start-game'
 | 'untap-all'
 | 'draw' 
 | 'summon-land' 
-// | 'summon-creature'
 | 'summon-spell'
 | 'trigger-ability'
-// | 'update-op'
-// | 'cancel-op'
 | 'select-card-to-discard'
 | 'burn-mana'
 | 'select-attacking-creature'
@@ -191,6 +189,7 @@ export type TAction = 'start-game'
 | 'select-defending-creature'
 | 'cancel-defense'
 | 'submit-defense'
+| 'continue-combat'
 | 'release-stack'
 | 'regenerate-creature'
 | 'cancel-regenerate'

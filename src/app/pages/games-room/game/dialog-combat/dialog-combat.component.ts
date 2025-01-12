@@ -31,18 +31,14 @@ type TCol = {
     FormsModule,
     BfUiLibModule,
     GameCardComponent,
+    HoverTipDirective,
 ],
 })
 export class DialogCombatComponent {
-  // @Input({ required: true }) attacker!: 'A' | 'B';
-  // @Output() end = new EventEmitter<any>();
-  // @Output() selectCard = new EventEmitter<TGameCard>();
-  // @Output() hoverCard = new EventEmitter<any>();
-  // @Output() clearHover = new EventEmitter<any>();
-  // @Output() selectEffects = new EventEmitter<any>();
+  TIMER_TIME = 500000000;
+
   attacker!: 'A' | 'B';
   stateSub!: Subscription;
-  minimized = false;
 
   canSubmitAttack = false;
   canSubmitDefense = false;
@@ -59,6 +55,7 @@ export class DialogCombatComponent {
   interval!: ReturnType<typeof setInterval>;
   progressBar = 0;
   showTimer = false;
+  diableButtons = false; // Do not allow changing sub-phase if you don't have control or while casting spells
 
   anyDefenders = false; // Whether there is any defender assigned
 
@@ -71,11 +68,6 @@ export class DialogCombatComponent {
   ) {}
 
   ngOnInit() {
-    
-    // const controlPlayer = this.game.state.control === '1' ? this.game.state.player1 : this.game.state.player2;
-    // const summonerPlayer      = this.summoner === 'A' ? this.game.playerA() : this.game.playerB();
-    // const interruptingPlayer  = this.summoner === 'A' ? this.game.playerB() : this.game.playerA();
-    // console.log('Summoning Event', this.card);
     const youControl = (this.game.state.control === this.game.playerANum);
     this.attacker = this.win.combatDialog.attacker;
     if (this.attacker === 'A') {
@@ -115,9 +107,12 @@ export class DialogCombatComponent {
     const playerB = this.game.playerANum === '1' ? state.player2 : state.player1;
     this.subPhase = this.game.state.subPhase;
     this.youControl = (this.game.state.control === this.game.playerANum);
+    const isSpellStackOn = !!state.cards.find(c => c.location === 'stack');
+    this.diableButtons = !this.youControl || isSpellStackOn;
 
-    this.attackingCreatures = this.game.state.cards.filter(c => c.combatStatus === 'combat:attacking').sort((a, b) => a.order > b.order ? 1 : -1);
-    this.defendingCreatures = this.game.state.cards.filter(c => c.combatStatus === 'combat:defending').sort((a, b) => a.order > b.order ? 1 : -1);
+    const tableCreatures = this.game.state.cards.filter(c => c.location.slice(0,4) === 'tble');
+    this.attackingCreatures = tableCreatures.filter(c => c.combatStatus === 'combat:attacking').sort((a, b) => a.order > b.order ? 1 : -1);
+    this.defendingCreatures = tableCreatures.filter(c => c.combatStatus === 'combat:defending').sort((a, b) => a.order > b.order ? 1 : -1);
 
     this.combatCards = this.attackingCreatures.map(attackingCard => {
       const defendingCard = this.defendingCreatures.find(c => c.blockingTarget === attackingCard.gId);
@@ -138,15 +133,15 @@ export class DialogCombatComponent {
         else { this.mainInfo = `You may play spells or abilities before the defense is set`; }
       }
       if (state.subPhase === 'selectDefense') { this.mainInfo = `Waiting for the opponent to select the defense`; }
-      if (state.subPhase === 'defending') {
+      if (state.subPhase === 'beforeDamage') {
         if (!this.youControl) { this.mainInfo = `Waiting for the opponent before the combat is executed`; }
         else {
           if (!this.anyDefenders) { this.mainInfo = `The opponent is not defending your attack.<br/>`;  }
           else { this.mainInfo = `The opponent has assigned their defense.<br/>`;  }
-          this.mainInfo += `You may play spells or abilities before the combat is executed`; 
+          this.mainInfo += `You may play spells or abilities before combat creatures deal damage to each other`; 
         }
       }
-      if (state.subPhase === 'afterCombat') {
+      if (state.subPhase === 'afterDamage') {
         if (!this.youControl) { this.mainInfo = `Waiting for the opponent before dying creatures are destroyed`; }
         else { this.mainInfo = `You may play spells or abilities before dying creatures are destroyed`; }
       }
@@ -158,11 +153,11 @@ export class DialogCombatComponent {
         else { this.mainInfo = `Wait for the opponent to play spells or abilities`; }
       }
       if (state.subPhase === 'selectDefense') { this.mainInfo = `Select what creatures you want to defend with, or do not defend`; }
-      if (state.subPhase === 'defending') {
+      if (state.subPhase === 'beforeDamage') {
         if (!this.youControl) { this.mainInfo = `Waiting for the opponent cast spells before the combat is executed`; }
-        else { this.mainInfo = `You may play spells or abilities before the combat is executed`; }
+        else { this.mainInfo = `You may play spells or abilities before combat creatures deal damage to each other`; }
       }
-      if (state.subPhase === 'afterCombat') {
+      if (state.subPhase === 'afterDamage') {
         if (!this.youControl) { this.mainInfo = `Waiting for the opponent cast spells before dying creatures are destroyed`; }
         else { this.mainInfo = `You may play spells or abilities before dying creatures are destroyed`; }
       }
@@ -220,24 +215,23 @@ export class DialogCombatComponent {
 
   waitAttacking = false;
   waitDefending = false;
-  waitAfterCombat = false;
+  waitafterDamage = false;
 
   // Init the timer to automatically release the stack after a few seconds
   initTimer() {
     if (!this.youControl) { return; }
-    if (this.subPhase !== 'attacking' && this.subPhase !== 'defending' && this.subPhase !== 'afterCombat') { return; }
+    if (this.subPhase !== 'attacking' && this.subPhase !== 'beforeDamage' && this.subPhase !== 'afterDamage') { return; }
     if (this.subPhase === 'attacking' && this.waitAttacking) { return; }
-    if (this.subPhase === 'defending' && this.waitDefending) { return; }
-    if (this.subPhase === 'afterCombat' && this.waitAfterCombat) { return; }
+    if (this.subPhase === 'beforeDamage' && this.waitDefending) { return; }
+    if (this.subPhase === 'afterDamage' && this.waitafterDamage) { return; }
     
     
 
     this.showTimer = true;
-    const waitingMs = 5000;
     const ctrlTime = (new Date()).getTime();
     if (this.interval) { clearInterval(this.interval); }
     this.interval = setInterval(() => {
-      this.progressBar = Math.min(100, ((new Date()).getTime() - ctrlTime) * 200 / waitingMs);
+      this.progressBar = Math.min(100, ((new Date()).getTime() - ctrlTime) * 200 / this.TIMER_TIME);
       if (this.progressBar >= 100) { // Max reach
         console.log('AUTO Continue');
         this.releaseStack();
@@ -249,8 +243,8 @@ export class DialogCombatComponent {
     clearInterval(this.interval);
     this.showTimer = false;
     if (this.subPhase === 'attacking')   { this.waitAttacking = true; }
-    if (this.subPhase === 'defending')   { this.waitDefending = true; }
-    if (this.subPhase === 'afterCombat') { this.waitAfterCombat = true; }
+    if (this.subPhase === 'beforeDamage')   { this.waitDefending = true; }
+    if (this.subPhase === 'afterDamage') { this.waitafterDamage = true; }
   }
 
 
@@ -263,6 +257,12 @@ export class DialogCombatComponent {
     clearInterval(this.interval);
     this.showTimer = false;
     this.game.action('release-stack');
+  }
+
+  continueCombat() {
+    clearInterval(this.interval);
+    this.showTimer = false;
+    this.game.action('continue-combat');
   }
 
 

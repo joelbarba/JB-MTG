@@ -16,7 +16,7 @@
      [class.is-selected-attack]="card.combatStatus === 'combat:attacking'"
      [class.is-selected-defense]="card.combatStatus === 'combat:defending'"
      [class.is-summoning]="isSummonOp()"
-     [class.is-dying]="card.type === 'creature' && (card.turnDefense <= card.turnDamage || (shadow && shadow.defense <= shadow.damage))"
+     [class.is-dying]="card.isType('creature') && (card.turnDefense <= card.turnDamage || (shadow && shadow.defense <= shadow.damage))"
      [class.has-targets]="!!card.targets.length"
      [hidden]="isEnchantingCombatCreature"
      [hoverTip]="getHoverTip()" tipId="card"     
@@ -35,9 +35,9 @@
     <span class="icon-cross"></span>
   </span>
 
-  <span class="attack-defense delta" *ngIf="card?.type === 'creature' && shadow?.delta">{{shadow?.delta}}</span>
-  <span class="attack-defense shado" *ngIf="card?.type === 'creature' && shadow?.force">{{shadow?.force}}</span>
-  <span class="attack-defense" [class.turn]="shadow?.delta" *ngIf="card?.type === 'creature'">
+  <span class="attack-defense delta" *ngIf="card?.isType('creature') && shadow?.delta">{{shadow?.delta}}</span>
+  <span class="attack-defense shado" *ngIf="card?.isType('creature') && shadow?.force">{{shadow?.force}}</span>
+  <span class="attack-defense" [class.turn]="shadow?.delta" *ngIf="card?.isType('creature')">
     {{card.turnAttack + '/' + card.turnDefense}}
   </span>
 

@@ -30,11 +30,23 @@ $border-color: #d1d1d1;
       border-right: 1px solid $border-color;
       border-bottom: 1px solid $border-color;
     }
+    &.side-bottom .arrow-rect {
+      left: calc(50% - 6px);
+      top: -7px;
+      border-left: 1px solid $border-color;
+      border-top: 1px solid $border-color;
+    }
     &.side-right .arrow-rect {
       left: -7px;
       top: calc(50% - 6px);
       border-bottom: 1px solid #d1d1d1;
       border-left: 1px solid #d1d1d1;
+    }
+    &.side-left .arrow-rect {
+      right: -7px;
+      top: calc(50% - 6px);
+      border-right: 1px solid #d1d1d1;
+      border-top: 1px solid #d1d1d1;
     }
 
     transition-duration: 300ms;

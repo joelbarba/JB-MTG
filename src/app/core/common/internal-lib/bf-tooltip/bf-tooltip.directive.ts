@@ -37,4 +37,9 @@ export class HoverTipDirective {
     // console.log(new Date(), 'MOUSE LEAVE', 'currHost=', this.tooltip.currHost, 'tipId=', this.tipId);
   }
 
+  @HostListener('click', ['$event']) onClick(event: MouseEvent) {
+    // console.log('Clicking. isOn=', this.tooltip.isOn);
+    if (this.tooltip.isOn) { this.tooltip.flush(); }
+  }
+
 }

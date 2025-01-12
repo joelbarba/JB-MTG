@@ -17,10 +17,10 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   card.onAbility      = (nextState: TGameState) => { getCard(nextState).isTapped = true; }
   card.onDestroy      = (nextState: TGameState) => {};
   card.onDiscard      = (nextState: TGameState) => moveCard(nextState, gId, 'grav');
-  card.afterCombat    = (nextState: TGameState) => {};
+  card.afterDamage    = (nextState: TGameState) => {};
   card.onEffect       = (nextState: TGameState, effectId: string) => {};
-  card.canAttack      = (nextState: TGameState) => true;
-  card.canDefend      = (nextState: TGameState) => true;
+  card.canAttack      = (nextState: TGameState) => !!card.isType('creature');
+  card.canDefend      = (nextState: TGameState) => !!card.isType('creature');
   card.targetBlockers = (nextState: TGameState) => [];  // Returns a list of gId of the attacking creatues that can block
   card.getSummonCost  = (nextState: TGameState) => ({ mana: card.cast });
   card.getAbilityCost = (nextState: TGameState) => null;
@@ -35,7 +35,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     const targetId = card.targets[0]; // code of the first target (playerX, gId, ...)
     const { tableStack, table, stack, deck, hand, play, graveyard } = getCards(nextState, '1'); // Only none A/B groups allowed
     const noProtection = (c: TGameCard) => !c.colorProtection || card.color !== c.colorProtection; 
-    const targetCreatures = () => tableStack.filter(c => c.type === 'creature').filter(noProtection);
+    const targetCreatures = () => tableStack.filter(c => c.isType('creature')).filter(noProtection);
     return { card, targetId, cardPlayer, otherPlayer, noProtection, targetCreatures, table, stack, tableStack, deck, hand, play, graveyard };
   }
 
@@ -256,7 +256,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
 
   // Common Creatures
   function c000052_MonssGoblinRaiders()       { commonCreature(); }
-  function c000053_Ornithopter()              { commonCreature(); }
+  function c000053_Ornithopter()              { commonCreature(); isAlsoType('artifact'); }
   function c000054_SavannahLions()            { commonCreature(); }
   function c000039_CrawWurm()                 { commonCreature(); }
   function c000040_EarthElemental()           { commonCreature(); }
@@ -264,7 +264,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   function c000042_FireElemental()            { commonCreature(); }
   function c000026_BlackKnight()              { commonCreature(); }
   function c000036_GrayOrge()                 { commonCreature(); }
-  function c000037_BrassMan()                 { commonCreature(); }
+  function c000037_BrassMan()                 { commonCreature(); isAlsoType('artifact'); }
   function c000045_GoblinBalloonBrigade()     { commonCreature(); }
   function c000047_GrizzlyBears()             { commonCreature(); }
   function c000048_HillGiant()                { commonCreature(); }
@@ -294,7 +294,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
       if      (targetId === 'player1') { nextState.player1.life -= 3; } // Deals 3 points of damage to player1
       else if (targetId === 'player2') { nextState.player2.life -= 3; } // Deals 3 points of damage to player2
       else if (targetCreature) { targetCreature.turnDamage += 3; } // Deals 3 points of damage to target creature
-      moveCardToGraveyard(nextState, gId);
+      moveCardToGraveyard(nextState, gId); // Destroy itself
     };
   }
 
@@ -611,7 +611,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   function c000069_WrathOfGod() {
     card.onSummon = (nextState: TGameState) => {
       const { tableStack, card } = getShorts(nextState);
-      tableStack.filter(c => c.type === 'creature').forEach(creature => {
+      tableStack.filter(c => c.isType('creature')).forEach(creature => {
         console.log(`Creature ${creature.gId} ${creature.name} is destroyed`);
         killCreature(nextState, creature.gId);
       });
@@ -644,7 +644,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
 
   function c000076_SerraAngel() {
     commonCreature();
-    card.afterCombat = (nextState: TGameState) => {
+    card.afterDamage = (nextState: TGameState) => {
       card.isTapped = false;
     }
   }
@@ -752,6 +752,8 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
         drawCard(nextState, '1'); // Player1
         drawCard(nextState, '2'); // Player2
       }
+      console.log(nextState.cards.filter(c => (c.location === 'hand1' && c.controller === '2') || (c.location === 'hand2' && c.controller === '1')));
+      console.log(nextState.cards.filter(c => (c.location === 'deck1' && c.controller === '2') || (c.location === 'deck2' && c.controller === '1')));
       moveCardToGraveyard(nextState, card.gId); // Destroy itself
     };
   }
@@ -890,7 +892,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     };    
     card.onSummon = (nextState: TGameState) => {
       const { tableStack, card } = getShorts(nextState);      
-      tableStack.filter(c => c.type === 'creature' && !c.isFlying).forEach(creature => {
+      tableStack.filter(c => c.isType('creature') && !c.isFlying).forEach(creature => {
         creature.turnDamage += card.xValue; // Deals X points of damage to each non flying creature
       });
       nextState.player1.life -= card.xValue; // Deals X points of damage to player1
@@ -901,12 +903,45 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
 
 
 
+  function c000077_SwordsToPlowshares() { 
+    card.getSummonCost = (nextState: TGameState) => {
+      const { targetCreatures } = getShorts(nextState);
+      return { mana: card.cast, neededTargets: 1, possibleTargets: targetCreatures().map(c => c.gId) };
+    };
+    card.onSummon = (nextState: TGameState) => {
+      const { targetCreatures, targetId } = getShorts(nextState);
+      const targetCreature = targetCreatures().find(c => c.gId === targetId);
+      if (targetCreature) {        
+        moveCardToGraveyard(nextState, targetCreature.gId, true); // Destroy creature (remove from the game)
+        const player = targetCreature.controller === '1' ? nextState.player1 : nextState.player2;
+        player.life += targetCreature.turnAttack; // Creature's controller gains as many life as the creature's power
+      }
+      moveCardToGraveyard(nextState, gId); // Destroy itself
+    };
+  }
 
-  // 
-  // Weakness + Righteousness
+  function c000065_Terror() {
+    card.getSummonCost = (nextState: TGameState) => {
+      const { targetCreatures } = getShorts(nextState);
+      return { mana: card.cast, neededTargets: 1, possibleTargets: targetCreatures().filter(creature => {
+          if (creature.color === 'black') { return false; } // Cannot target black creatures
+          if (creature.isType('artifact')) { return false; } // Cannot target artifact creatures
+          return true;
+        }).map(c => c.gId) 
+      };
+    };
+    card.onSummon = (nextState: TGameState) => {
+      const { targetCreatures, targetId } = getShorts(nextState);
+      const targetCreature = targetCreatures().find(c => c.gId === targetId);
+      if (targetCreature) { moveCardToGraveyard(nextState, targetCreature.gId); } // Destroy creature
+      moveCardToGraveyard(nextState, gId); // Destroy itself
+    };
+  }
+
   // Swords To Plowshares
-  // Unsummon
   // Terror
+  // Unsummon
+  // Weakness + Righteousness
   // Erg Raiders
   // Royal Assassin
 
@@ -930,10 +965,8 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   function c000062_EyeForAnEye() {}
   function c000063_IvoryTower() {}
   function c000064_ManaFlare() {}
-  function c000065_Terror() {}
   function c000066_WarpArtifact() {}
   function c000074_PhantasmalForces() { }
-  function c000077_SwordsToPlowshares() { }
   function c000079_Unsummon() { }
   function c000080_ErgRaiders() { }
   function c000085_NorthernPaladin() { }

@@ -188,6 +188,7 @@ export class DataService {
       player2: { ...playerOther, num: '2' } as TPlayer,
       cards: [],
       effects: [],
+      spellStackInitiator: null,
       control: '1', // Player1 starts (will shuffle later)
       id: 0,
       deckId1: player1.deckId,
@@ -294,37 +295,40 @@ export class DataService {
       'c000003',  // Swamp
       'c000013',  // Bayou
       'c000070',  // Howl From Beyond
+      'c000023',  // Ancestral Recall
+      'c000027',  // Dark Ritual
+      'c000010',  // Mox Sapphire
+      'c000028',  // Drudge Skeletons
+      'c000037',  // Brass Man
+      'c000026',  // Black Knight
+      'c000081',  // WillOTheWisp
+      'c000053',  // Ornithopter
+      'c000010',  // Mox Sapphire
+      'c000120',  // CarrionAnts
+      'c000069',  // Wrath of God
+      'c000026',  // Black Knight
       'c000093',  // Braingeyser
       'c000100',  // Mind Twist
+      'c000065',  // Terror
       'c000027',  // Dark Ritual
+      'c000076',  // SerraAngel
       'c000027',  // Dark Ritual
-      'c000027',  // Dark Ritual
-      'c000023',  // Ancestral Recall
       'c000021',  // Underground Sea
+      'c000131',  // GhostShip
       'c000010',  // Mox Sapphire
       'c000060',  // Disintegrate
       'c000014',  // Badlands
       'c000067',  // Weakness
       'c000112',  // Timetwister
-      'c000026',  // Black Knight
       'c000111',  // Sinkhole
       'c000038',  // Counterspell
       'c000012',  // Black Lotus
-      'c000081',  // WillOTheWisp
-      'c000131',  // GhostShip
-      'c000120',  // CarrionAnts
-      'c000076',  // SerraAngel
-      'c000028',  // Drudge Skeletons
-      'c000069',  // Wrath of God
-      'c000026',  // Black Knight
-      'c000053',  // Ornithopter
       'c000055',  // Unholy Strength
       'c000028',  // Drudge Skeletons
       'c000028',  // Drudge Skeletons
       'c000017',  // Scrubland
       'c000038',  // Counterspell
       'c000057',  // Disenchantment
-      'c000010',  // Mox Sapphire
       'c000009',  // Mox Ruby
       'c000018',  // Taiga
       'c000015',  // Plateau
@@ -352,6 +356,8 @@ export class DataService {
       'c000108',  // Earthquake
       'c000027',  // Dark Ritual
       'c000051',  // Llanowar Elves
+      'c000077',  // Swords To Plowshares
+      'c000077',  // Swords To Plowshares
       'c000006',  // Mox Emerald
       'c000009',  // Mox Ruby
       'c000035',  // KirdApe

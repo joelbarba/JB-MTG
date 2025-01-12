@@ -16,7 +16,7 @@ export class WindowsService {
   private readonly ZINDEX_OFFSET = 1000;
 
   graveyardPanel = {
-    display: false, zInd: 0, size: 'max', player: this.defaultPayer,
+    display: false, zInd: 0, size: 'max', bottom: 0, player: this.defaultPayer,
     open: (player: 'A' | 'B') => { this.graveyardPanel.player = player; this.open(0); },
     close: () => this.close(0),
     toggle: (player: 'A' | 'B') => {
@@ -27,52 +27,52 @@ export class WindowsService {
   };
 
   damageDialog = {
-    display: false, zInd: 0, size: 'max', title: '', icon: 'icon-fire', buttons: [] as TDialogButton[], text: '',
+    display: false, zInd: 0, size: 'max', bottom: 0, title: '', icon: 'icon-fire', buttons: [] as TDialogButton[], text: '',
     maximize: () => this.maximize(1), open: () => this.open(1),
     minimize: () => this.minimize(1), close: () => this.close(1),
   };
   
   combatDialog = {
-    display: false, zInd: 0, size: 'max', attacker: this.defaultPayer,
+    display: false, zInd: 0, size: 'max', bottom: 0, attacker: this.defaultPayer,
     open: (attacker: 'A' | 'B') => { this.combatDialog.attacker = attacker; this.open(2); },
     close: () => this.close(2),
-    maximize: () => this.maximize(2),
-    minimize: () => this.minimize(2),
+    maximize: (ev?: MouseEvent) => this.maximize(2, ev),
+    minimize: (ev?: MouseEvent) => this.minimize(2, ev),
   };
 
   selectManaDialog = {
-    display: false, zInd: 0, size: 'max',
+    display: false, zInd: 0, size: 'max', bottom: 0,
     maximize: () => this.maximize(3), open: () => this.open(3),
     minimize: () => this.minimize(3), close: () => this.close(3),
   };
 
   spellStackDialog = {
-    display: false, zInd: 0, size: 'max',
+    display: false, zInd: 0, size: 'max', bottom: 0,
     maximize: () => this.maximize(4), open: () => this.open(4),
     minimize: () => this.minimize(4), close: () => this.close(4),
   };
 
   regenerateDialog = {
-    display: false, zInd: 0, size: 'max',
+    display: false, zInd: 0, size: 'max', bottom: 0,
     maximize: () => this.maximize(5), open: () => this.open(5),
     minimize: () => this.minimize(5), close: () => this.close(5),
   };
 
   extraManaDialog = {
-    display: false, zInd: 0, size: 'max',
+    display: false, zInd: 0, size: 'max', bottom: 0,
     maximize: () => this.maximize(6), open: () => this.open(6),
     minimize: () => this.minimize(6), close: () => this.close(6),
   };
 
   effectsPanel = {
-    display: false, zInd: 0, size: 'max', card: this.defaultCard,
+    display: false, zInd: 0, size: 'max', bottom: 0, card: this.defaultCard,
     maximize: () => this.maximize(7),
     minimize: () => this.minimize(7), close: () => this.close(7),
     open: (card: TGameCard) => { this.effectsPanel.card = card; this.open(7); }
   };
 
   customDialog = {
-    display: false, zInd: 0, size: 'max', name: '', card: this.defaultCard,
+    display: false, zInd: 0, size: 'max', bottom: 0, name: '', card: this.defaultCard,
     maximize: () => this.maximize(8), 
     minimize: () => this.minimize(8), 
     close: () => {
@@ -131,19 +131,28 @@ export class WindowsService {
 
 
     // "Combat Dialog" (Open / Close logic) ---> Done in game controller (updateCombatOperation)
-    // if (this.game.state.phase === 'combat') {
-    //   const { tableA, tableB } = getCards(this.game.state, this.game.playerANum);      
+    if (this.game.state.phase === 'combat') {
+      const { tableA, tableB } = getCards(this.game.state, this.game.playerANum);      
       
-    //   // If you have attacking creatures (you are leading an attack)
-    //   const attackingCreatures = tableA.find(c => c.combatStatus === 'combat:attacking');
-    //   if (attackingCreatures) { this.combatDialog.open('A'); }
-  
-    //   // If the opponent is attacking you
-    //   const opponentAttack = tableB.find(c => c.combatStatus === 'combat:attacking');
-    //   const defendingCreatures = tableA.find(c => c.combatStatus === 'combat:defending');
-    //   if (opponentAttack || defendingCreatures) { this.combatDialog.open('B'); }
+      // If you have attacking creatures (you are leading an attack)
+      const attackingCreatures = tableA.find(c => c.combatStatus === 'combat:attacking');
 
-    // } else { this.combatDialog.close(); }
+      if (!this.combatDialog.display) {
+        if (attackingCreatures) { this.combatDialog.open('A'); }
+    
+        // If the opponent is attacking you
+        const opponentAttack = tableB.find(c => c.combatStatus === 'combat:attacking');
+        const defendingCreatures = tableA.find(c => c.combatStatus === 'combat:defending');
+        if (opponentAttack || defendingCreatures) { this.combatDialog.open('B'); }
+
+      } else {
+        // If you unselected all attacking creatures
+        if (this.game.state.subPhase === 'selectAttack' && !attackingCreatures) {this.combatDialog.close(); }
+      }
+
+      if (this.game.state.subPhase === 'regenerate') { this.combatDialog.close(); }
+
+    } else { this.combatDialog.close(); }
     
 
     // "Spell Stack Dialog" (Open / Close logic)
@@ -153,8 +162,8 @@ export class WindowsService {
       
       if (youControl && this.cardOp?.card?.controller === this.game.playerANum) {
         // If summoning a card and waiting for mana, minimize it (so the lands on the table get visible)
-        if (this.cardOp.status === 'waitingMana')   { this.spellStackDialog.minimize(); }
-        if (this.cardOp.status === 'selectingMana') { this.spellStackDialog.minimize(); }
+        if (this.cardOp.status === 'waitingMana')   { this.spellStackDialog.minimize(); this.combatDialog.minimize(); }
+        if (this.cardOp.status === 'selectingMana') { this.spellStackDialog.minimize(); this.combatDialog.minimize(); }
         
         // If summoning a card and selecting a target, maximize it because its' most likely one on the stack
         if (this.cardOp.status === 'selectingTargets') { this.spellStackDialog.maximize(); }
@@ -196,7 +205,11 @@ export class WindowsService {
     this.allWindows[winIndex].display = true;
     this.allWindows[winIndex].zInd = this.ZINDEX_OFFSET;
     this.allWindows[winIndex].zInd = this.nextIndex();
-    if (prevDisplay === false || prevZIndex !== this.allWindows[winIndex].zInd) { this.change$.next(); }
+    if (prevDisplay === false || prevZIndex !== this.allWindows[winIndex].zInd) { 
+      this.allWindows[winIndex].size = 'max';
+      this.change$.next(); 
+    }
+    // console.log('OPEN', winIndex);
   }
   private close(winIndex: number) {
     const prevDisplay = this.allWindows[winIndex].display;
@@ -205,13 +218,22 @@ export class WindowsService {
     if (prevDisplay === true) { this.change$.next(); }
   }
 
-  private minimize(winIndex: number) {
+
+  private minimize(winIndex: number, ev?: MouseEvent) {
+    if (ev) { ev.stopPropagation(); }
     this.allWindows[winIndex].size = 'min';
+    this.allWindows.filter(win => win.display && win.size === 'min').forEach((win, ind) => win.bottom = ind * 50);
     this.change$.next();
+    // console.log('MINIMIZE', winIndex);
   }
-  private maximize(winIndex: number) {
+  private maximize(winIndex: number, ev?: MouseEvent) {
+    if (ev) { ev.stopPropagation(); }
+    this.allWindows[winIndex].zInd = this.ZINDEX_OFFSET;
+    this.allWindows[winIndex].zInd = this.nextIndex();
     this.allWindows[winIndex].size = 'max';
+    this.allWindows.filter(win => win.display && win.size === 'min').forEach((win, ind) => win.bottom = ind * 50);
     this.change$.next();
+    // console.log('MAXIMIZE', winIndex);
   }
 
   private nextIndex() {

@@ -79,11 +79,9 @@ export class GameOptionsService {
     if (playerA.stackCall) { 
       youMaySummon('instant');  // You may summon instant spells (add them to the stack)
       youMayTriggerAbilities(); // You may use cards
-      
+      if (state.cards.find(c => c.location === 'stack')) { youMaySummon('interruption'); } // You may summon interruptions      
+
       state.options.push({ action: 'release-stack', params: {}, text: `Continue` });  // You may finish the spell stack      
-
-      if (state.cards.find(c => c.location === 'stack')) { youMaySummon('interruption'); } // You may summon interruptions
-
       return state; // <--- Exclusive Option: You can't do anything else
     } 
     
@@ -94,31 +92,56 @@ export class GameOptionsService {
 
     // Player 1 starts regenerating creatures. If you are player 2, you can regenerate yours once the opponent is done
     if (yourRegCreatures.length && (playerANum === '1' || !otherRegCreatures.length)) {
-      // yourRegCreatures.forEach(creature => {
-      //   const params = { gId: creature.gId };
-      //   // const option: TGameOption = { action: 'regenerate-creature', params, text: `Regenerate ${creature.name}` };
-      //   const option: TGameOption = { action: 'trigger-ability', params, text: `Regenerate ${creature.name}` };
-      //   creature.selectableAction = option;
-      //   state.options.push(option);
-      // });
       state.options.push({ action: 'cancel-regenerate', params: {}, text: `Cancel Regenerate and let creatures die` });
       youMayTriggerAbilities(); // You may tap lands and use cards too
-
       return state; // <--- Exclusive Option: You can't do anything else
     }
 
 
+    // Combat actions
+    if (isPhase('combat')) {
+
+      // You may play spells during combat non selecting subphases
+      if (isSubPhase('attacking', 'beforeDamage', 'afterDamage', 'regenerate')) {
+        youMayTriggerAbilities();
+        youMaySummon('instant');
+        youMaySummon('interruption');
+        state.options.push({ action: 'continue-combat', params: {}, text: 'Continue' });  // You may skip combat subphase
+      }
 
 
-    if (state.turn !== playerANum) { // If it's not your turn, yet you have control (casting interruptions, defend from atack, ...)
+      if (state.turn === playerANum) {  // You can lead an attack if it's your turn
 
-      // COMBAT: Defending from an atack
-      if (isPhase('combat') && state.subPhase === 'selectDefense') {
+        const isAttackOn = !!tableA.filter(c => c.combatStatus === 'combat:attacking').length; // Are you leading an attack?
+
+        if (state.subPhase === 'selectAttack') {  // You may select a creature to attack
+          tableA.filter(c => c.isType('creature') && c.combatStatus !== 'combat:attacking').forEach(card => {
+            if (card.canAttack(state)) {
+              const option: TGameOption = { action: 'select-attacking-creature', params: { gId: card.gId }, text: `Attack with ${card.name}` };
+              state.options.push(option);
+              card.selectableAction = option;
+            }
+          });
+
+          // If you have selected attacking creatures, you may submit the attack
+          if (isAttackOn) { 
+            state.options.push({ action: 'cancel-attack', params: {}, text: 'Cancel the current attacking selection' });
+            state.options.push({ action: 'submit-attack', params: {}, text: 'Attack with selected creatures' });
+          }
+        }
+
+        // If ongoing combat, you can't skip to the next phase, you need to finish with the combat
+        if (isAttackOn) { canSkipPhase = false; }
+
+
+      } else if (state.turn !== playerANum && isSubPhase('selectDefense')) { // If it's not your turn, you can still select a defense
+
+        // COMBAT: Defending from an atack
         state.options.push({ action: 'cancel-defense', params: {}, text: 'Reset you defending selection' });
         state.options.push({ action: 'submit-defense', params: {}, text: 'Defend with selected creatures' });
 
         // You may select a creature to defend your opponents attack
-        tableA.filter(c => c.type === 'creature' && c.combatStatus !== 'combat:defending').forEach(card => {
+        tableA.filter(c => c.isType('creature') && c.combatStatus !== 'combat:defending').forEach(card => {
           if (card.canDefend(state)) {
             const option: TGameOption = { action: 'select-defending-creature', params: { gId: card.gId }, text: `Defend with ${card.name}` };
             state.options.push(option);
@@ -140,16 +163,17 @@ export class GameOptionsService {
           });
         }
       }
+    }
+    
+    
 
-
-    } else if (state.turn === playerANum) { // Actions that can only be done during your turn
+    if (state.turn === playerANum) { // Actions that can only be done during your turn
 
       // Casting / Summoning:
 
       if (isPhase('pre', 'post') && playerA.summonedLands === 0) { youMaySummonLands(); } // You may summon lands on hand
-      
-      if (isPhase('maintenance', 'draw', 'pre', 'combat', 'post')) { youMaySummon('instant'); }  // You may summon instant spells    
-      
+     
+      if (isPhase('pre', 'post')) { youMaySummon('instant'); }      // You may summon instant spells
       if (isPhase('pre', 'post')) { youMaySummon('creature'); }     // You may summon creatures
       if (isPhase('pre', 'post')) { youMaySummon('artifact'); }     // You may summon artifacts
       if (isPhase('pre', 'post')) { youMaySummon('sorcery'); }      // You may summon sorceries
@@ -158,39 +182,15 @@ export class GameOptionsService {
 
       // Tapping habilities:
 
+      if (isPhase('pre', 'post')) { youMayTriggerAbilities(); } // You may use cards during your turn pre/post
+
       // You may tap lands to produce mana
       // You may trigger abilities on cards (tap to do something, or pay mana to do something)
       const spellsAvailable = handA.filter(c => c.type === 'instant').length > 0;
-      if (isPhase('combat')) { // You may use cards abilities during combat
-        if (isSubPhase('attacking', 'defending', 'afterCombat', 'regenerate')) { youMayTriggerAbilities(); }
-      }
-      else if (isPhase('pre', 'post')) { youMayTriggerAbilities(); } // You may use cards during your turn pre/post
-      else if (spellsAvailable) { youMayTriggerAbilities(); } // You may tap lands if there are instants to summon
+      if (isPhase('maintenance', 'draw') && spellsAvailable) { youMaySummon('instant'); }
 
 
-      // Combat
-      if (isPhase('combat')) {
-        const isAttackOn = !!tableA.filter(c => c.combatStatus === 'combat:attacking').length; // Are you leading an attack?
 
-        if (state.subPhase === 'selectAttack') {
-          tableA.filter(c => c.type === 'creature' && c.combatStatus !== 'combat:attacking').forEach(card => {
-            if (card.canAttack(state)) {
-              const option: TGameOption = { action: 'select-attacking-creature', params: { gId: card.gId }, text: `Attack with ${card.name}` };
-              state.options.push(option);
-              card.selectableAction = option;
-            }
-          });
-
-          // If you have selected attacking creatures, you may submit the attack
-          if (isAttackOn) { 
-            state.options.push({ action: 'cancel-attack', params: {}, text: 'Cancel the current attacking selection' });
-            state.options.push({ action: 'submit-attack', params: {}, text: 'Attack with selected creatures' });
-          }
-        }
-
-        // If ongoing combat, you can't skip to the next phase, you need to finish with the combat
-        if (isAttackOn) { canSkipPhase = false; }
-      }
       
       // You may untap cards
       if (isPhase('untap')) {

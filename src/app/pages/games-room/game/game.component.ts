@@ -334,7 +334,7 @@ export class GameComponent {
       const lastStateTime = this.stateTime;
       this.autoAdvanceTimeout = setTimeout(() => {
         if (lastStateTime === this.stateTime) {
-          // console.log('Auto advancing phase', this.state.phase);
+          console.log('Auto advancing phase', this.state.phase);
           action();
         }
       }, 100);
@@ -363,30 +363,40 @@ export class GameComponent {
     if (this.state.phase === 'draw' && !options.find(o => o.action === 'draw')) { return advancePhase(); }
 
     if (this.state.phase === 'combat') {
-      const selectableAttackingCreatures = !!options.find(o => o.action === 'select-attacking-creature');
       const attackingCreatures = !!this.tableA.find(c => c.combatStatus === 'combat:attacking');
-      const selectableDefendingCreatures = !!options.find(o => o.action === 'select-defending-creature');
       const defendingCreatures = !!this.tableA.find(c => c.combatStatus === 'combat:defending');
+      const selectableAttackingCreatures = !!this.tableA.find(c => c.canAttack(this.game.state));
+      const selectableDefendingCreatures = !!this.tableA.find(c => c.canDefend(this.game.state));
+      const youDefend = !attackingCreatures; // Whether you are defending (true) or atacking (false)
+
 
       // Don't stop at the combat phase if you don't have creatures to attack
-      if (this.state.subPhase === 'selectAttack' && !selectableAttackingCreatures && !attackingCreatures) { return advancePhase(); }
+      if (this.state.subPhase === 'selectAttack' && !selectableAttackingCreatures) { return advancePhase(); }
       
-      // Don't stop at the select defense if there are no creatures to select for the defense
-      if (this.state.subPhase === 'selectDefense' && !selectableDefendingCreatures && !defendingCreatures) { return advancePhase(() => this.game.action('submit-defense')); }
-
-      if (this.state.subPhase === 'attacking' || this.state.subPhase === 'defending') {
-        if (!options.find(o => {
-          if (o.action === 'summon-spell') { return true; }
-          if (o.action === 'trigger-ability') {
-            const card = this.state.cards.find(c => c.gId === o.params.gId);
-            if (card && card.isType('creature')) { return true; }
-          }
-          return false;
-        })) {
-          console.log('You have no instants/interruptions or abilities to play, so autoadvance');
-          // return advancePhase(() => this.game.action('release-stack'));
-        }
+      // If none of your creatures can defend the attack, don't stop at the select defense subphase
+      if (this.state.subPhase === 'selectDefense' && youDefend && !selectableDefendingCreatures) { 
+        return advancePhase(() => this.game.action('submit-defense'));
       }
+
+      // If you defend, and have no defending creatures, don't stop at the defender "defending" spells phase
+      if (this.state.subPhase === 'beforeDamage' && youDefend && !defendingCreatures) {
+        return advancePhase(() => this.game.action('continue-combat'));
+      }
+
+      // If you have no spells to play, or no creatures to trigger abilities, skip the sub-phase
+      // if (this.state.subPhase === 'attacking' || this.state.subPhase === 'beforeDamage') {
+      //   if (!options.find(o => {
+      //     if (o.action === 'summon-spell') { return true; }
+      //     if (o.action === 'trigger-ability') {
+      //       const card = this.state.cards.find(c => c.gId === o.params.gId);
+      //       if (card && card.isType('creature')) { return true; }
+      //     }
+      //     return false;
+      //   })) {
+      //     console.log('You have no instants/interruptions or abilities to play, so autoadvance');
+      //     return advancePhase(() => this.game.action('continue-combat'));
+      //   }
+      // }
 
     } 
 
@@ -529,7 +539,7 @@ export class GameComponent {
       // If you have attacking creatures (you are leading an attack)
       const attackingCreatures = this.tableA.find(c => c.combatStatus === 'combat:attacking');
       if (attackingCreatures) {
-        this.win.combatDialog.open('A');
+        // this.win.combatDialog.open('A');
         if (this.game.state.subPhase === 'selectAttack')  { this.mainInfo = 'Selecting creatures to attack'; }
         if (this.game.state.subPhase === 'selectDefense') { this.mainInfo = 'Waiting for the opponent to select a defense'; }
       }
@@ -538,7 +548,7 @@ export class GameComponent {
       const opponentAttack = this.tableB.find(c => c.combatStatus === 'combat:attacking');
       const defendingCreatures = this.tableA.find(c => c.combatStatus === 'combat:defending');
       if (opponentAttack || defendingCreatures) {
-        this.win.combatDialog.open('B');
+        // this.win.combatDialog.open('B');
         if (this.game.state.subPhase === 'selectAttack')  { this.mainInfo = 'Waiting for the opponent to attack'; }
         if (this.game.state.subPhase === 'selectDefense') { this.mainInfo = 'Selecting creatures to defend'; }
       }

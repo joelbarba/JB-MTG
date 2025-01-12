@@ -9,6 +9,7 @@ import { Subscription } from 'rxjs';
 import { StackCardWithTargetsComponent } from './stack-card-with-targets/stack-card-with-targets.component';
 import { GameCardEventsService } from '../gameLogic/game-card-events.service';
 import { WindowsService } from '../gameLogic/windows.service';
+import { HoverTipDirective } from '../../../../core/common/internal-lib/bf-tooltip/bf-tooltip.directive';
 
 export type TStackTree = {
   card: TGameCard | null,
@@ -29,16 +30,10 @@ export type TStackTree = {
     FormsModule,
     BfUiLibModule,
     StackCardWithTargetsComponent,
+    HoverTipDirective,
   ],
 })
 export class DialogSpellStackComponent {
-  // @Input() panelSize: 'min' | 'max' = 'max';
-  // @Output() selectCard    = new EventEmitter<TGameCard>();
-  // @Output() hoverCard     = new EventEmitter<any>();
-  // @Output() clearHover    = new EventEmitter<any>();
-  // @Output() end           = new EventEmitter<any>();
-  minimized = false;
-
   TIMER_TIME = 500000000;
 
   title = 'Spell Stack';
@@ -137,7 +132,7 @@ export class DialogSpellStackComponent {
      
       // Select cards that are targetting the target
       const cardsTargetting = state.cards.filter(card => {
-        if (card.type === 'creature' && card.combatStatus) { return false; } // Omit defending creatures in combat (target = attacker)
+        if (card.isType('creature') && card.combatStatus) { return false; } // Omit defending creatures in combat (target = attacker)
         return card.targets.indexOf(target) >= 0; 
       }).sort((a, b) => { // Cards that are not in the stack go first (left)
         if (a.location === 'stack' && b.location !== 'stack') { return 1; }
@@ -184,7 +179,7 @@ export class DialogSpellStackComponent {
 
         // If the creature is going to die, but it can be regenerated, add a fake action on the card
         // Clicking won't regenerate it automatically, but it will release the stack so the regeneration will start next
-        if (item.card.type === 'creature' && item.card.canRegenerate && item.shadow.defense <= item.shadow.damage) {
+        if (item.card.isType('creature') && item.card.canRegenerate && item.shadow.defense <= item.shadow.damage) {
           item.card.selectableAction = { action: 'release-stack', params: {}, text: `Regenerate ${item.card.name}` };
         }
       }
@@ -222,9 +217,9 @@ export class DialogSpellStackComponent {
     if (this.rootTargets.length === 1) {
       const mainCard = stack.at(-1);
       if (mainCard) {
-        if (mainCard.type === 'creature')     { this.title = `Summoning ${mainCard.name}`; }
-        if (mainCard.type === 'instant')      { this.title = `Casting ${mainCard.name}`; }
-        if (mainCard.type === 'interruption') { this.title = `Casting ${mainCard.name}`; }        
+        if (mainCard.isType('creature'))     { this.title = `Summoning ${mainCard.name}`; }
+        if (mainCard.isType('instant'))      { this.title = `Casting ${mainCard.name}`; }
+        if (mainCard.isType('interruption')) { this.title = `Casting ${mainCard.name}`; }        
       }      
       if (mainCard?.targets && mainCard.targets.length === 1) {
         const target = mainCard.targets[0];

@@ -19,6 +19,7 @@ export class BfTooltipService {
 
   constructor() {}
 
+  // rect = rectangle of the hovering element that cause the tooltip trigger
   activate(text: string, tipId: string, tipSide: 'top' | 'right' | 'bottom' | 'left', rect: DOMRect) {
     if (text) {
       this.isOn = true;
@@ -28,7 +29,15 @@ export class BfTooltipService {
         this.left = rect.right + this.margin;
         this.top = rect.top + Math.round(rect.height / 2);
       } 
-      else { // top by default
+      else if (tipSide === 'left') {
+        this.left = rect.left - this.margin;
+        this.top = rect.top + Math.round(rect.height / 2);
+      }
+      else if (tipSide === 'bottom') {
+        this.left = rect.left + Math.round(rect.width / 2);
+        this.top = rect.bottom + this.margin;
+      }
+      else { // tipSide === 'top' by default
         this.left = rect.left + Math.round(rect.width / 2);
         this.top = rect.top - this.margin;
       }

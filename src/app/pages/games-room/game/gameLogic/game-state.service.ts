@@ -3,7 +3,7 @@ import { Subject, Subscription } from 'rxjs';
 import { AuthService } from '../../../../core/common/auth.service';
 import { ShellService } from '../../../../shell/shell.service';
 import { Firestore, QuerySnapshot, collection, doc, getDoc, getDocs, onSnapshot, setDoc, DocumentData, Unsubscribe } from '@angular/fire/firestore';
-import { EPhase, TAction, TCard, TCardLocation, TGameState, TGameDBState, TGameCard, TActionParams, TCardType, TCardAnyLocation, ESubPhase, TCast, TActionCost } from '../../../../core/types';
+import { EPhase, TAction, TCard, TCardLocation, TGameState, TGameDBState, TGameCard, TActionParams, TCardType, TCardAnyLocation, ESubPhase, TCast, TActionCost, TPlayer, TEffect } from '../../../../core/types';
 import { calcManaCost, calcManaForUncolored, checkMana, drawCard, endGame, getCards, getPlayers, killDamagedCreatures, moveCard, moveCardToGraveyard, spendMana, validateCost } from './game.utils';
 import { GameOptionsService } from './game.options.service';
 import { extendCardLogic } from './game.card-specifics';
@@ -181,10 +181,27 @@ export class GameStateService {
       'selectableAction', 'effectsFrom', 'targetOf', 'uniqueTargetOf',
 
       // Extended functions (extendCardLogic)
-      'onSummon', 'onAbility', 'onDestroy', 'onDiscard', 'afterCombat', 'onEffect',
+      'onSummon', 'onAbility', 'onDestroy', 'onDiscard', 'afterDamage', 'onEffect',
       'isType', 'isColor', 'canAttack', 'canDefend', 'targetBlockers', 'getSummonCost', 'getAbilityCost',
     ]
     dbState.cards = dbState.cards.map(card => card.keyFilter((v,k) => !extFields.includes(k))) as Array<TGameCard>;
+
+    // Loop dbState properties and find any that is not valid for FireBase (errors)
+    // const checkProp = (path: string, prop: string, v: any) => {
+    //   const vType = typeof v;
+    //   if (v === undefined || (vType !== 'string' && vType !== 'number' && vType !== 'boolean' && v !== null && !Array.isArray(v))) {
+    //     console.error('WRONG dbState property:', path, prop, v, vType);        
+    //   }
+    //   if (Array.isArray(v)) {
+    //     v.filter(vv => vv === undefined).forEach(i => console.error('WRONG dbState property:', path, prop, v, vType));
+    //   }
+    // }
+    // dbState.cards.forEach(c => { let prop: keyof TGameCard; for (prop in c) { checkProp('cards[].', prop, c[prop]); }; });
+    // dbState.effects.forEach(c => { let prop: keyof TEffect; for (prop in c) { checkProp('effects[].', prop, c[prop]); }; });
+    // let prop: keyof TPlayer;
+    // for (prop in dbState.player1) { checkProp('player1.', prop, dbState.player1[prop]); }
+    // for (prop in dbState.player2) { checkProp('player2.', prop, dbState.player2[prop]); }
+
     return dbState;
   }
 
@@ -244,11 +261,12 @@ export class GameStateService {
       case 'untap-card':                this.untapCard(nextState, gId); break;
       case 'untap-all':                 this.untapAll(nextState); break;
       case 'select-attacking-creature': this.selectAttackingCreature(nextState, gId); break;
-      case 'cancel-attack':             this.cancelAttack(nextState); break;
-      case 'submit-attack':             this.submitAttack(nextState); break;
       case 'select-defending-creature': this.selectDefendingCreature(nextState, params); break;
+      case 'cancel-attack':             this.cancelAttack(nextState); break;
       case 'cancel-defense':            this.cancelDefense(nextState); break;
-      case 'submit-defense':            this.submitDefense(nextState); break;
+      case 'submit-attack':             this.continueCombat(nextState); break;
+      case 'submit-defense':            this.continueCombat(nextState); break;
+      case 'continue-combat':           this.continueCombat(nextState); break;
       case 'select-card-to-discard':    this.discardCard(nextState, gId); break;
       case 'burn-mana':                 this.burnMana(nextState); break;
       case 'summon-land':               this.summonLand(nextState, params); break;
@@ -362,8 +380,8 @@ export class GameStateService {
   private payManaCost(nextState: TGameState, params: TActionParams, cost: TActionCost, card: TGameCard) {
     const { playerA } = this.getPlayers(nextState);
     const totalManaCost = cost.mana.reduce((a,v) => a + v, 0);
-    console.log('Paying mana from pool:', cost.mana, params.manaExtra);
-    console.log('Mana pool before paying:', playerA.manaPool)
+    // console.log('Paying mana from pool:', cost.mana, params.manaExtra);
+    // console.log('Mana pool before paying:', playerA.manaPool);
     if (totalManaCost > 0) {
       const manaForUncolor = params.manaForUncolor || calcManaForUncolored(cost.mana, playerA.manaPool);
       spendMana(cost.mana, playerA.manaPool, manaForUncolor);
@@ -372,7 +390,7 @@ export class GameStateService {
       for (let t = 0; t <= 5; t++) { playerA.manaPool[t] -= params.manaExtra[t]; } // Spend X Mana
       card.xValue = params.manaExtra?.reduce((v,a) => v + a, 0) || 0;
     }
-    console.log('Mana pool after paying:', playerA.manaPool)
+    // console.log('Mana pool after paying:', playerA.manaPool);
   }
 
 
@@ -390,6 +408,19 @@ export class GameStateService {
 
   // ---------------------------------------------------- SPELL STACK ----------------------------------------------------
 
+  private addToSpellStack(nextState: TGameState, card: TGameCard) {
+    const { playerA, playerB } = this.getPlayers(nextState);
+    if (!nextState.cards.find(c => c.location === 'stack')) { nextState.spellStackInitiator = this.playerANum; }
+    moveCard(nextState, card.gId, 'stack'); // Move playing card to the stack
+    playerB.stackCall = true; // Activate opponent's stack call, so he gets control later to add more spells to the stack
+    if (!playerA.stackCall) { this.switchPlayerControl(nextState); }  // stack initiator (you are just playing a spell)
+    
+    else if (nextState.phase === 'combat') { // In case of casting spells during combat, run them 1 by 1
+      playerA.stackCall = false;
+      this.switchPlayerControl(nextState, playerB); 
+    }
+  }
+
   // action: release-stack
   private releaseStack(nextState: TGameState) {
     const { playerA, playerB } = this.getPlayers(nextState);
@@ -400,28 +431,21 @@ export class GameStateService {
 
     } else { // If both stackCall are false (you didn't add any new spell), run the spell stack
       console.log('You are both done, RUN THE STACK of SPELLS');
-      this.runSpellStack(nextState);
-      if (nextState.phase === 'combat') { this.continueCombat(nextState); }
-    }
-  }
+      const stack = nextState.cards.filter(c => c.location === 'stack').sort((a,b) => a.order > b.order ? -1 : 1); // inverse order ([max,...,min])
+      stack.forEach(card => {
+        if (card.location === 'stack') { // Leave this condition here (a counterspell may move the location while running the stack)
+          card.onSummon(nextState);
+        }
+      });
+      this.applyEffects(nextState);       // Recalculate the effects
+      killDamagedCreatures(nextState);    // Kill creatures if needed
+      nextState.control = nextState.spellStackInitiator || nextState.turn; // Return control to the initiator
 
-  private addToSpellStack(nextState: TGameState, card: TGameCard) {
-    const { playerA, playerB } = this.getPlayers(nextState);
-    moveCard(nextState, card.gId, 'stack'); // Move playing card to the stack
-    playerB.stackCall = true; // Activate opponent's stack call, so he gets control later to add more spells to the stack
-    if (!playerA.stackCall) { this.switchPlayerControl(nextState); }  // stack initiator (you are just playing a spell)
-  }
-
-  private runSpellStack(nextState: TGameState) {
-    const stack = nextState.cards.filter(c => c.location === 'stack').sort((a,b) => a.order > b.order ? -1 : 1); // inverse order ([max,...,min])
-    stack.forEach(card => {
-      if (card.location === 'stack') { 
-        card.onSummon(nextState);
+      if (nextState.phase === 'combat') { // If all combat creatures died, end it
+        const attackingCreatures = nextState.cards.filter(c => c.combatStatus === 'combat:attacking');
+        if (!attackingCreatures.length) { this.endCombat(nextState); }
       }
-    });
-    this.applyEffects(nextState);       // Recalculate the effects
-    killDamagedCreatures(nextState);    // Kill creatures if needed
-    nextState.control = nextState.turn; // Return control to the turn player
+    }
   }
 
 
@@ -442,15 +466,6 @@ export class GameStateService {
       card.combatStatus = null;
       card.isTapped = false;
     });
-  }
-
-  // action: submit-attack
-  private submitAttack(nextState: TGameState) {
-    const { playerA, playerB, attackingPlayer, defendingPlayer } = this.getPlayers(nextState);
-    nextState.subPhase = ESubPhase.attacking;
-    defendingPlayer.stackCall = true; // Activate opponent's stack call, so he gets control to cast spells
-    // attackingPlayer.stackCall = true; // You may also play spells
-    this.switchPlayerControl(nextState, defendingPlayer);
   }
   
   // action: select-defending-creature
@@ -490,37 +505,40 @@ export class GameStateService {
     defendingCreatures.forEach(card => { card.combatStatus = null; card.blockingTarget = null; });
   }
 
-  // action: submit-defense
-  private submitDefense(nextState: TGameState) {
-    const { attackingPlayer } = this.getPlayers(nextState);
-    nextState.subPhase = ESubPhase.defending;
-    attackingPlayer.stackCall = true; // Activate opponent's stack call, so he gets control to cast spells
-    // defendingPlayer.stackCall = true; // You may also play spells
-    this.switchPlayerControl(nextState, attackingPlayer);
-  }
-
-
-
   // Advance combat subphases after the spell stack is released:
-  // selectAttack --> attacking (spell stack) --> selectDefense
-  // selectDefense --> defending (spell stack) --> afterCombat
-  // afterCombat (spell stack) --> end
+  // selectAttack --> attacking --> selectDefense --> beforeDamage --> afterDamage --> regenerate
   private continueCombat(nextState: TGameState) {
-    const { playerA, playerB, attackingPlayer, defendingPlayer } = this.getPlayers(nextState);
+    const { attackingPlayer, defendingPlayer } = this.getPlayers(nextState);
+
+    attackingPlayer.stackCall = false;
+    defendingPlayer.stackCall = false;
 
     // If for whatever reason, the attacking creatures were killed by spells, end the combat
     const attackingCreatures = nextState.cards.filter(c => c.combatStatus === 'combat:attacking');
     if (!attackingCreatures.length) { this.endCombat(nextState); }
 
-    if (nextState.subPhase === 'attacking') {
-      nextState.subPhase = ESubPhase.selectDefense;
+    if (nextState.subPhase === 'selectAttack') {
+      nextState.subPhase = ESubPhase.attacking;
+
+    } else if (nextState.subPhase === 'attacking' && nextState.control === attackingPlayer.num) {
       this.switchPlayerControl(nextState, defendingPlayer);
 
-    } else if (nextState.subPhase === 'defending') {
-      this.runCombat(nextState);
+    } else if (nextState.subPhase === 'attacking' && nextState.control === defendingPlayer.num) {
+      nextState.subPhase = ESubPhase.selectDefense;
+
+    } else if (nextState.subPhase === 'selectDefense') {
+        nextState.subPhase = ESubPhase.beforeDamage;
+
+    } else if (nextState.subPhase === 'beforeDamage' && nextState.control === defendingPlayer.num) {
       this.switchPlayerControl(nextState, attackingPlayer);
 
-    } else if (nextState.subPhase === 'afterCombat') {
+    } else if (nextState.subPhase === 'beforeDamage' && nextState.control === attackingPlayer.num) {
+      this.runCombat(nextState);
+
+    } else if (nextState.subPhase === 'afterDamage' && nextState.control === attackingPlayer.num) {
+      this.switchPlayerControl(nextState, defendingPlayer);
+
+    } else if (nextState.subPhase === 'afterDamage' && nextState.control === defendingPlayer.num) {
       const regenerateStep = killDamagedCreatures(nextState);
       if (regenerateStep) { nextState.subPhase = ESubPhase.regenerate; }
       else { this.endCombat(nextState); }
@@ -582,9 +600,7 @@ export class GameStateService {
 
     defendingPlayer.life -= totalDamage; // None blocked creatures damage defending player
 
-    nextState.subPhase = ESubPhase.afterCombat;
-    attackingPlayer.stackCall = true;
-    defendingPlayer.stackCall = true;
+    nextState.subPhase = ESubPhase.afterDamage;
   }
 
   private endCombat(nextState: TGameState) {
@@ -592,7 +608,7 @@ export class GameStateService {
     nextState.cards.filter(c => c.combatStatus || c.blockingTarget).forEach(card => {
       card.combatStatus = null;
       card.blockingTarget = null;
-      card.afterCombat(nextState);
+      card.afterDamage(nextState);
     });
     this.switchPlayerControl(nextState, attackingPlayer);
     this.endPhase(nextState);
@@ -722,7 +738,7 @@ export class GameStateService {
       if (card) { card.onEffect(nextState, effect.id); }
     });
 
-    // We can't do this here, because of afterCombat subphase (creatures should stay until the end of combat)
+    // We can't do this here, because of afterDamage subphase (creatures should stay until the end of combat)
     // killDamagedCreatures(nextState); // In case an effect deals damage or changes creatures defense
   }
 

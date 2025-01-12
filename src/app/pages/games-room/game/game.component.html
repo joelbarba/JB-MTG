@@ -266,6 +266,8 @@
     <span>control={{game.state.control}} ====> {{(game.state.control === game.playerANum ? 'YOU' : 'Opponent') + ' (player ' + game.state.control + ') got control'}}</span>
     <br/>phase$={{game.state.phase}}
     <br/>subPhase={{game.state.subPhase}}
+    <br/>player1.stackCall={{game.state.player1.stackCall}}
+    <br/>player2.stackCall={{game.state.player2.stackCall}}
     <br/><bf-btn (bfClick)="game.debugPanel = false"  bfText="Close Panel"></bf-btn>
   </div>  
   <div style="display: flex; margin-top: 30px;">

@@ -72,14 +72,26 @@ export class BfTooltipComponent implements OnChanges {
         const textHalfWidth = Math.round(rect.width / 2);
         const textHalfHeigth = Math.round(rect.height / 2);
         const textHeight = Math.round(rect.height);
+        const textWidth = Math.round(rect.width);
 
-        if (this.tooltip.tipSide === 'top') {
-          this.left = this.tooltip.left - textHalfWidth;
-          this.top = this.tooltip.top - textHeight;
-        }
-        else if (this.tooltip.tipSide === 'right') {
+        // this.tooltip.left = the X absolute coordinate of the hovering element that triggered the tooltip
+        // this.tooltip.top  = the Y absolute coordinate of the hovering element that triggered the tooltip
+
+        if (this.tooltip.tipSide === 'right') {
           this.left = this.tooltip.left;
           this.top = this.tooltip.top - textHalfHeigth;
+        }
+        else if (this.tooltip.tipSide === 'left') {
+          this.left = this.tooltip.left - textWidth;
+          this.top = this.tooltip.top - textHalfHeigth;
+        }
+        else if (this.tooltip.tipSide === 'bottom') {
+          this.left = this.tooltip.left - textHalfWidth;
+          this.top = this.tooltip.top;
+        }
+        else { // if (this.tooltip.tipSide === 'top') {
+          this.left = this.tooltip.left - textHalfWidth;
+          this.top = this.tooltip.top - textHeight;
         }
 
         // console.log('component: rect 1/2 width = ', this.textHalfWidth);

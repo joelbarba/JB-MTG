@@ -93,8 +93,10 @@ export const moveCardToGraveyard = (nextState: TGameState, gId: string, discard 
   moveCard(nextState, gId, discard ? 'discarded' : 'grav');
   card.onDestroy(nextState);
   card.status = null;
+  card.combatStatus = null;
   card.targets = [];
   card.turnDamage = 0;
+  card.xValue = 0;
 
   // Find all enchantments targetting the card, and move them all to the graveyard too
   const tableStackCards = nextState.cards.filter(c => c.location === 'stack' || c.location.slice(0,4) === 'tble');
@@ -116,7 +118,7 @@ export const killDamagedCreatures = (nextState: TGameState, gId?: string): boole
     }
 
   } else { // Check all creatures in the game (table + stack)
-    const table = nextState.cards.filter(c => c.type === 'creature' && c.location.slice(0, 4) === 'tble');
+    const table = nextState.cards.filter(c => c.isType('creature') && c.location.slice(0, 4) === 'tble');
     table.forEach(card => {
       if ((card.turnDefense || 0) <= (card.turnDamage || 0)) {
         console.log(`Creature ${card.gId} ${card.name} (${card.turnAttack}/${card.turnDefense}) has received "${card.turnDamage}" points of damage ---> IT DIES (go to graveyard)`);
