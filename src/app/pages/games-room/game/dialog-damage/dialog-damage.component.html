@@ -1,6 +1,11 @@
-<div class="dialog-container" [class.minimized]="win.damageDialog.size === 'min'" [style.z-index]="win.damageDialog.zInd">
-  <!-- <div [hidden]="win.damageDialog.size === 'min'" class="min-btn" (click)="win.damageDialog.minimize()">-</div> -->
-  <!-- <div [hidden]="win.damageDialog.size === 'max'" class="max-btn" (click)="win.damageDialog.maximize()">{{title}}</div> -->
+<div class="dialog-container"
+  [style.bottom.px]="win.damageDialog.size === 'min' ? win.damageDialog.bottom : undefined"
+  [class.minimized]="win.damageDialog.size === 'min'" [style.z-index]="win.damageDialog.zInd">
+  <div class="window-bg" (click)="win.damageDialog.maximize()"></div>
+  <!-- <div [hidden]="win.damageDialog.size === 'min'" class="min-btn" (click)="win.damageDialog.minimize()" hoverTip="Click to minimize the window" tipSide="right">-</div> -->
+  <!-- <div [hidden]="win.damageDialog.size === 'max'" class="max-btn" (click)="win.damageDialog.maximize()" hoverTip="Click to open the window" tipSide="left">{{title}}</div> -->
+
+
 
   <h2>{{title}}</h2>
 

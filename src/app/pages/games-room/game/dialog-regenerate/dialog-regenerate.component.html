@@ -1,7 +1,9 @@
 <div class="dialog-container"
+     [style.bottom.px]="win.regenerateDialog.size === 'min' ? win.regenerateDialog.bottom : undefined"
      [class.minimized]="win.regenerateDialog.size === 'min'" [style.z-index]="win.regenerateDialog.zInd">
-  <div [hidden]="win.regenerateDialog.size === 'min'" class="min-btn" (click)="win.regenerateDialog.minimize()">-</div>
-  <div [hidden]="win.regenerateDialog.size === 'max'" class="max-btn" (click)="win.regenerateDialog.maximize()">Regenerate</div>
+  <div class="window-bg" (click)="win.regenerateDialog.maximize()"></div>
+  <div [hidden]="win.regenerateDialog.size === 'min'" class="min-btn" (click)="win.regenerateDialog.minimize()" hoverTip="Click to minimize the window" tipSide="right">-</div>
+  <div [hidden]="win.regenerateDialog.size === 'max'" class="max-btn" (click)="win.regenerateDialog.maximize()" hoverTip="Click to open the window" tipSide="left">Regenerate</div>
 
   <h2>Regenerate</h2>
 

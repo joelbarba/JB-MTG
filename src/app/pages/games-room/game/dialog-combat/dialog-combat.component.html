@@ -1,9 +1,9 @@
 <div class="combat h-cards-len-{{hCardsLen}}"
      [style.bottom.px]="win.combatDialog.size === 'min' ? win.combatDialog.bottom : undefined"
      [class.minimized]="win.combatDialog.size === 'min'" [style.z-index]="win.combatDialog.zInd">
-  <div class="window-bg" (click)="win.combatDialog.maximize($event)"></div>
-  <div [hidden]="win.combatDialog.size === 'min'" class="min-btn" (click)="win.combatDialog.minimize($event)" hoverTip="Click to minimize the window" tipSide="right">-</div>
-  <div [hidden]="win.combatDialog.size === 'max'" class="max-btn" (click)="win.combatDialog.maximize($event)" hoverTip="Click to open the window" tipSide="left">{{title}}</div>
+  <div class="window-bg" (click)="win.combatDialog.maximize()"></div>
+  <div [hidden]="win.combatDialog.size === 'min'" class="min-btn" (click)="win.combatDialog.minimize()" hoverTip="Click to minimize the window" tipSide="right">-</div>
+  <div [hidden]="win.combatDialog.size === 'max'" class="max-btn" (click)="win.combatDialog.maximize()" hoverTip="Click to open the window" tipSide="left">{{title}}</div>
 
   <div>
     <h2>{{title}}</h2>

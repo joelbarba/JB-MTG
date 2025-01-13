@@ -527,7 +527,7 @@ export class GameStateService {
       nextState.subPhase = ESubPhase.selectDefense;
 
     } else if (nextState.subPhase === 'selectDefense') {
-        nextState.subPhase = ESubPhase.beforeDamage;
+      nextState.subPhase = ESubPhase.beforeDamage;
 
     } else if (nextState.subPhase === 'beforeDamage' && nextState.control === defendingPlayer.num) {
       this.switchPlayerControl(nextState, attackingPlayer);

@@ -1,7 +1,9 @@
 <div class="selecting-mana" 
+     [style.bottom.px]="win.selectManaDialog.size === 'min' ? win.selectManaDialog.bottom : undefined"
      [class.minimized]="win.selectManaDialog.size === 'min'" [style.z-index]="win.selectManaDialog.zInd">
-  <div [hidden]="win.selectManaDialog.size === 'min'" class="min-btn" (click)="win.selectManaDialog.minimize()">-</div>
-  <div [hidden]="win.selectManaDialog.size === 'max'" class="max-btn" (click)="win.selectManaDialog.maximize()">Mana Selection</div>
+  <div class="window-bg" (click)="win.selectManaDialog.maximize()"></div>
+  <div [hidden]="win.selectManaDialog.size === 'min'" class="min-btn" (click)="win.selectManaDialog.minimize()" hoverTip="Click to minimize the window" tipSide="right">-</div>
+  <div [hidden]="win.selectManaDialog.size === 'max'" class="max-btn" (click)="win.selectManaDialog.maximize()" hoverTip="Click to open the window" tipSide="left">Mana Selection</div>
 
   <h2>Mana Selection</h2>
   <div class="center" *ngIf="cardOp.card">

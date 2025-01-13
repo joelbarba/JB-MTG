@@ -164,7 +164,9 @@
     </div> -->
     <!-- ------------------------------------------------------------------------------------------------------------------------ -->
 
-    <div class="player-A" [class.in-waiting]="state.control !== game.playerANum" [class.in-control]="state.control === game.playerANum">
+    <div class="player-A" #tableADiv
+         [class.in-waiting]="state.control !== game.playerANum" 
+         [class.in-control]="state.control === game.playerANum">
 
 
       <div class="phases-box">

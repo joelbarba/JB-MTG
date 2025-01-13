@@ -74,6 +74,8 @@ export class GameComponent {
   positions: { [key: string]: { posX: number, posY: number, zInd: number } } = {};  // Extended info for the cards (its position on the table)
   stateTime = new Date();
   windowHeight = 0;
+  tableWidth = 0; // Total pixels from left to right where cards are placed
+  tableHeight = 0; // windowHeight / 2
 
   // ----- Game State Snapshots --------
   state!: TGameState;
@@ -107,6 +109,7 @@ export class GameComponent {
   itemInfo = '';  // Info about a specific item (card, button, ...)
 
   @ViewChild('fullCardEl', { read: ElementRef, static: false }) fullCardEl!: ElementRef;
+  @ViewChild('tableADiv', { read: ElementRef, static: false }) tableADiv!: ElementRef;
 
   constructor(
     private route: ActivatedRoute,
@@ -228,10 +231,17 @@ export class GameComponent {
   ngAfterViewChecked() {
     const height = this.hostElement.nativeElement.getBoundingClientRect().height;
     if (height && height !== this.windowHeight) {
-      this.windowHeight = height;
+      this.windowHeight = height;      
       localStorage.setItem('windowHeight', this.windowHeight + '');
     }
     this.calcFullCardSize();
+    if (this.tableADiv) { 
+      const tableWidth = this.tableADiv.nativeElement.getBoundingClientRect().width; 
+      if (tableWidth !== this.tableWidth) { 
+        this.tableWidth = tableWidth;
+        setTimeout(() => this.autoPositionGameCards());        
+      }
+    }
   }
 
   ngAfterViewInit() {
@@ -320,6 +330,7 @@ export class GameComponent {
         if (lastAction.action === 'summon-land')     { toast(`<b>${playerB.name}</b> summoned a ${cardName}`,   'icon-arrow-down16'); }
         if (lastAction.action === 'summon-spell')    { toast(`<b>${playerB.name}</b> is casting a ${cardName}`, 'icon-arrow-down16'); }
         if (lastAction.action === 'submit-attack')   { toast(`<b>${playerB.name}</b> is attacking you`, 'icon-sword'); }
+        if (lastAction.action === 'submit-defense')  { toast(`<b>${playerB.name}</b> is defending`, 'icon-sword'); }
       }
     }
   }
@@ -426,22 +437,27 @@ export class GameComponent {
       const lands     = tableCards.filter(c => c.isType('land')).sort((a,b) => a.order > b.order ? 1: -1);
       const creatures = tableCards.filter(c => c.isType('creature')).sort((a,b) => a.order > b.order ? 1: -1);
       const others    = tableCards.filter(c => !c.isType('land') && !c.isType('creature')).sort((a,b) => a.order > b.order ? 1: -1);
-  
-      const groupLand = tableCards.length > 8;
-      const groupCretures = tableCards.length > 16;
-      const groupOthers = tableCards.length > 20;
+
+      const cardsToGroup = (card1: TGameCard, card2: TGameCard) => {
+        if (tableCards.length < 8) { return false; }
+        if (card1.id !== card2.id) { return false; }
+        const eff1 = (card1.effectsFrom || []).sort((a,b) => a.id > b.id ? 1 : -1).map(e => e.id).join(',');
+        const eff2 = (card2.effectsFrom || []).sort((a,b) => a.id > b.id ? 1 : -1).map(e => e.id).join(',');
+        if (eff1 !== eff2) { return false; } // If they have different effects, don't group them
+        return true; // Same card id, same effects => group them
+      }
   
       lands.forEach(card => {
-        const col = tableGrid.find(col => col.find(c => c.id === card.id));
-        if (groupLand && col) { col.push(card); } else { tableGrid.push([card]); }
+        const col = tableGrid.find(col => col.find(c => cardsToGroup(c, card)));
+        if (col) { col.push(card); } else { tableGrid.push([card]); }
       });
       creatures.forEach(card => {
-        const col = tableGrid.find(col => col.find(c => c.id === card.id));
-        if (groupCretures && col) { col.push(card); } else { tableGrid.push([card]); }
+        const col = tableGrid.find(col => col.find(c => cardsToGroup(c, card)));
+        if (col) { col.push(card); } else { tableGrid.push([card]); }
       });
       others.forEach(card => {
-        const col = tableGrid.find(col => col.find(c => c.id === card.id));
-        if (groupOthers && col) { col.push(card); } else { tableGrid.push([card]); }
+        const col = tableGrid.find(col => col.find(c => cardsToGroup(c, card)));
+        if (col) { col.push(card); } else { tableGrid.push([card]); }
       });
       return tableGrid;
     };
@@ -484,18 +500,25 @@ export class GameComponent {
     if (this.windowHeight <= 1050) { cardWidth = 97; cardHeight = 136; gap = 12; }
     if (this.windowHeight <= 900)  { cardWidth = 81; cardHeight = 113; gap = 10; }
 
+    let maxCardsPerRow = Math.floor((this.tableWidth - 200) / (cardWidth + gap)) + 1;
+    if (!this.tableWidth) { maxCardsPerRow = 10; }
+    console.log('this.tableWidth', this.tableWidth, 'maxCardsPerRow', maxCardsPerRow);
+
     // Once the grid is constructed, give coordinates to every card
     tableGridA.filter(c => !!c.length).forEach((arr, col) => {
       arr.forEach((card, ind) => {
-        card.posX = 20 + (col * (cardWidth + gap));
-        card.posY = 20 + (ind * gap * 2);
+        const row = Math.floor(col / maxCardsPerRow);
+        card.posX = 20 + ((col % maxCardsPerRow) * (cardWidth + gap));
+        card.posY = 20 + (row * (cardHeight + gap)) + (ind * gap * 2);
         card.zInd = 100 + ind;
       })
     });
+    const tableBTop = (cardHeight * 1.6) - (Math.floor(tableGridB.filter(c => !!c.length).length / maxCardsPerRow) * (cardHeight + gap));
     tableGridB.filter(c => !!c.length).forEach((arr, col) => {
       arr.forEach((card, ind) => {
-        card.posX = 20 + (col * (cardWidth + gap));
-        card.posY = (cardHeight * 1.6) + (ind * gap * 2);
+        const row = Math.floor(col / maxCardsPerRow);
+        card.posX = 20 + ((col % maxCardsPerRow) * (cardWidth + gap));
+        card.posY = tableBTop + (row * (cardHeight + gap)) + (ind * gap * 2);
         card.zInd = 100 + (col * 15) + ind;
       })
     });

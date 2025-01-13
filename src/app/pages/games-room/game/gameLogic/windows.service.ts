@@ -17,6 +17,7 @@ export class WindowsService {
 
   graveyardPanel = {
     display: false, zInd: 0, size: 'max', bottom: 0, player: this.defaultPayer,
+    maximize: () => this.maximize(0),
     open: (player: 'A' | 'B') => { this.graveyardPanel.player = player; this.open(0); },
     close: () => this.close(0),
     toggle: (player: 'A' | 'B') => {
@@ -36,8 +37,8 @@ export class WindowsService {
     display: false, zInd: 0, size: 'max', bottom: 0, attacker: this.defaultPayer,
     open: (attacker: 'A' | 'B') => { this.combatDialog.attacker = attacker; this.open(2); },
     close: () => this.close(2),
-    maximize: (ev?: MouseEvent) => this.maximize(2, ev),
-    minimize: (ev?: MouseEvent) => this.minimize(2, ev),
+    maximize: () => this.maximize(2),
+    minimize: () => this.minimize(2),
   };
 
   selectManaDialog = {
@@ -219,15 +220,13 @@ export class WindowsService {
   }
 
 
-  private minimize(winIndex: number, ev?: MouseEvent) {
-    if (ev) { ev.stopPropagation(); }
+  private minimize(winIndex: number) {
     this.allWindows[winIndex].size = 'min';
     this.allWindows.filter(win => win.display && win.size === 'min').forEach((win, ind) => win.bottom = ind * 50);
     this.change$.next();
     // console.log('MINIMIZE', winIndex);
   }
-  private maximize(winIndex: number, ev?: MouseEvent) {
-    if (ev) { ev.stopPropagation(); }
+  private maximize(winIndex: number) {
     this.allWindows[winIndex].zInd = this.ZINDEX_OFFSET;
     this.allWindows[winIndex].zInd = this.nextIndex();
     this.allWindows[winIndex].size = 'max';

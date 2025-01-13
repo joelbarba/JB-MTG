@@ -1,7 +1,9 @@
-<div class="selecting-mana" (click)="win.extraManaDialog.maximize()"
+<div class="selecting-mana"
+     [style.bottom.px]="win.extraManaDialog.size === 'min' ? win.extraManaDialog.bottom : undefined"
      [class.minimized]="win.extraManaDialog.size === 'min'" [style.z-index]="win.extraManaDialog.zInd">
-  <div [hidden]="win.extraManaDialog.size === 'min'" class="min-btn" hoverTip="Click to minimize the window" tipSide="right" (click)="win.extraManaDialog.minimize()">-</div>
-  <div [hidden]="win.extraManaDialog.size === 'max'" class="max-btn" hoverTip="Click to open the window">Extra Mana</div>
+  <div class="window-bg" (click)="win.extraManaDialog.maximize()"></div>
+  <div [hidden]="win.extraManaDialog.size === 'min'" class="min-btn" (click)="win.extraManaDialog.minimize()" hoverTip="Click to minimize the window" tipSide="right">-</div>
+  <div [hidden]="win.extraManaDialog.size === 'max'" class="max-btn" (click)="win.extraManaDialog.maximize()" hoverTip="Click to open the window" tipSide="left">Extra Mana</div>
 
   <h2>Extra Mana</h2>
   <div>Add the extra mana you want to use for {{cardOp.card?.name}}</div>

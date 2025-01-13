@@ -1,5 +1,5 @@
 <div class="effects-panel h-cards-len-{{hCardsLen}} v-cards-len-2" [style.z-index]="win.effectsPanel.zInd">
-
+  <div class="window-bg" (click)="win.effectsPanel.maximize()"></div>
   <div class="close-btn" (click)="win.effectsPanel.close()">x</div>
   <h2>{{title}}</h2>
 
