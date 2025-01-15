@@ -173,7 +173,8 @@ export class DataService {
       manaPool: [0,0,0,0,0,0] as TCast,
       drawnCards: 0,
       summonedLands: 0,
-      stackCall: false,      
+      stackCall: false,
+      upkeepQueue: [],      
     };   
     const playerYou   = { userId: player1.id, name: player1.name, ...defaultPlayerValues };
     const playerOther = { userId: player2Id,  name: player2.name, ...defaultPlayerValues };
@@ -190,7 +191,7 @@ export class DataService {
       effects: [],
       spellStackInitiator: null,
       control: '1', // Player1 starts (will shuffle later)
-      id: 0,
+      seq: 0,
       deckId1: player1.deckId,
       deckId2: '', // Waiting for player 2 to accept the request and add a deck
       // opStack: [],
@@ -260,6 +261,7 @@ export class DataService {
         combatStatus: null,
         isDying: false,
         xValue: 0,
+        waitingUpkeep: false,
         targets: [],
         blockingTarget: null,
         turnDamage: 0,
@@ -294,12 +296,17 @@ export class DataService {
       'c000005',  // Forest
       'c000003',  // Swamp
       'c000013',  // Bayou
+      'c000037',  // Brass Man
       'c000070',  // Howl From Beyond
       'c000023',  // Ancestral Recall
       'c000027',  // Dark Ritual
+      'c000089',  // Juzám Djinn
+      'c000086',  // SerendibEfreet
+      'c000124',  // UnderworldDreams
+      'c000063',  // IvoryTowe
+      'c000074',  // PhantasmalForces
       'c000010',  // Mox Sapphire
       'c000028',  // Drudge Skeletons
-      'c000037',  // Brass Man
       'c000026',  // Black Knight
       'c000081',  // WillOTheWisp
       'c000053',  // Ornithopter
@@ -353,9 +360,13 @@ export class DataService {
       'c000013',  // Bayou
       'c000014',  // Badlands
       'c000018',  // Taiga
+      'c000037',  // Brass Man
       'c000108',  // Earthquake
       'c000027',  // Dark Ritual
       'c000051',  // Llanowar Elves
+      'c000126',  // ErhnamDjinn
+      'c000105',  // TheRack
+      'c000092',  // BlackVise
       'c000077',  // Swords To Plowshares
       'c000077',  // Swords To Plowshares
       'c000006',  // Mox Emerald

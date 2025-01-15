@@ -8,7 +8,7 @@ export type TCardOp = {
   gId: string,
   status: TCardOpStatus, // 'waitingMana' | 'selectingMana' | 'waitingExtraMana' | 'selectingTargets' 
   cost: null | TActionCost,
-  action: 'summon-spell' | 'trigger-ability',
+  action: 'summon-spell' | 'trigger-ability' | 'pay-upkeep',
   params: TActionParams,
 }
 
@@ -29,7 +29,7 @@ export class CardOpServiceNew {
   gId = '';
   status: null | TCardOpStatus = null;
   cost: null | TActionCost = null; // This is not the mana, but full cost object
-  action: 'summon-spell' | 'trigger-ability' = 'summon-spell';
+  action: 'summon-spell' | 'trigger-ability' | 'pay-upkeep' = 'summon-spell';
   params: TActionParams = {
     manaToUse        : [0,0,0,0,0,0], // Total mana to be used for the operation (except extra)
     manaForUncolor   : [0,0,0,0,0,0], // What mana of the manaToUse will be used for uncolored
@@ -196,7 +196,7 @@ export class CardOpServiceNew {
   // When you want to play a card (summon or trigger ability), instead of directly calling game.action()
   // you must call this function to start a new operation that tracks all the parameter gathering
   startNew(gId: string, action: TAction, params: TActionParams) {
-    if (action !== 'summon-spell' && action !== 'trigger-ability') {
+    if (action !== 'summon-spell' && action !== 'trigger-ability' && action !== 'pay-upkeep') {
       return this.game.action(action, params); // Other actions create no operation
     }
 
@@ -208,7 +208,7 @@ export class CardOpServiceNew {
 
     this.removeOpFromStack(gId); // Remove previous operations with the same card (if any)
 
-    const cost = action === 'summon-spell' ? card?.getSummonCost(this.game.state) : card?.getAbilityCost(this.game.state);
+    const cost = card.getCost(this.game.state, action);
     const op: TCardOp = { gId, status: 'waitingMana', action, params: { gId }, cost }; // Create a new operation
 
     console.log('Starting a New Card Operation', op);

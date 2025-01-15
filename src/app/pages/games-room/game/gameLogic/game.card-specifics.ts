@@ -17,15 +17,26 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   card.onAbility      = (nextState: TGameState) => { getCard(nextState).isTapped = true; }
   card.onDestroy      = (nextState: TGameState) => {};
   card.onDiscard      = (nextState: TGameState) => moveCard(nextState, gId, 'grav');
+  card.onUpkeep       = (nextState: TGameState, paid) => {};
   card.afterDamage    = (nextState: TGameState) => {};
   card.onEffect       = (nextState: TGameState, effectId: string) => {};
+  card.canUntap       = (nextState: TGameState) => true;
   card.canAttack      = (nextState: TGameState) => !!card.isType('creature');
   card.canDefend      = (nextState: TGameState) => !!card.isType('creature');
   card.targetBlockers = (nextState: TGameState) => [];  // Returns a list of gId of the attacking creatues that can block
   card.getSummonCost  = (nextState: TGameState) => ({ mana: card.cast });
   card.getAbilityCost = (nextState: TGameState) => null;
+  card.getUpkeepCost  = (nextState: TGameState) => null;
   card.isType         = (type) => card.type === type;
   card.isColor        = (color) => card.color === color;
+
+  card.getCost = (nextState, action) => {
+    if (action === 'summon-spell')    { return card.getSummonCost(nextState); }
+    if (action === 'trigger-ability') { return card.getAbilityCost(nextState); }
+    if (action === 'pay-upkeep')      { return card.getUpkeepCost(nextState); }
+    return null;
+  }
+  
 
   const getCard = (nextState: TGameState) => nextState.cards.find(c => c.gId === gId) || card;
   const getShorts = (nextState: TGameState) => {
@@ -264,7 +275,6 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   function c000042_FireElemental()            { commonCreature(); }
   function c000026_BlackKnight()              { commonCreature(); }
   function c000036_GrayOrge()                 { commonCreature(); }
-  function c000037_BrassMan()                 { commonCreature(); isAlsoType('artifact'); }
   function c000045_GoblinBalloonBrigade()     { commonCreature(); }
   function c000047_GrizzlyBears()             { commonCreature(); }
   function c000048_HillGiant()                { commonCreature(); }
@@ -938,8 +948,131 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     };
   }
 
-  // Swords To Plowshares
-  // Terror
+
+  // Upkeep cards
+
+  // Bras Man does not untap as normal; you must pay 1 during your upkeep to untap it
+  function c000037_BrassMan() {
+    commonCreature();
+    isAlsoType('artifact');
+    card.canUntap = () => false;
+    card.getUpkeepCost = (nextState) => {
+      const { card } = getShorts(nextState);
+      if (!card.isTapped) { return null; }
+      return { // Cost to untap Brass Man
+        mana: [1,0,0,0,0,0], canSkip: true,
+        text: 'Pay 1 uncolored mana to untap Brass Man',
+        skipText: `Leave Brass Man untapped`,
+        opText: 'Opponent is untapping Brass Man'
+      };
+    }
+    card.onUpkeep = (nextState, skip) => {
+      const { card } = getShorts(nextState);
+      if (!skip) { card.isTapped = false; } // Untap it
+    };
+  }
+
+  // During your upkeep phase, gain 1 life for each card in your hand above 4
+  function c000063_IvoryTower() {
+    card.getUpkeepCost = (nextState) => {
+      const { cardPlayer, hand } = getShorts(nextState);
+      const numOfHandCards = hand.filter(c => c.controller === cardPlayer.num).length;
+      let text = `You gain 1 life for each card in your hand above 4.`;
+      text += `<br/><br/>You have ${numOfHandCards} cards, so you gain ${Math.max(0, numOfHandCards - 4)} life.`;
+      let opText = `Player opponent gains 1 life for each card in their hand above 4.`;
+      opText += `<br/><br/>Player has ${numOfHandCards} cards, so +${Math.max(0, numOfHandCards - 4)} life.`;
+      return { mana: [0,0,0,0,0,0], text, opText };
+    }
+    card.onUpkeep = (nextState, skip) => {
+      const { cardPlayer, hand } = getShorts(nextState);
+      const numOfHandCards = hand.filter(c => c.controller === cardPlayer.num).length;
+      if (numOfHandCards > 4) { cardPlayer.life += numOfHandCards - 4; }
+    };
+  }
+
+  // Controller must spend (1blue) during upkeep to maintain or Phantasmal Forces are destroyed
+  function c000074_PhantasmalForces() {
+    commonCreature();
+    card.getUpkeepCost = (nextState) => {
+      const { card } = getShorts(nextState);
+      if (!card.isTapped) { return null; }
+      const text = 'You must pay 1 blue mana to maintain Phantasmal Forces, or they are destroyed';
+      const opText = 'Player opponent is paying Phantasmal Forces upkeep';
+      return { mana: [0,1,0,0,0,0], text, opText };
+    }
+    card.onUpkeep = (nextState, skip) => {
+      const { card } = getShorts(nextState);
+      if (skip) { moveCardToGraveyard(nextState, card.gId) } // If upkeep not paid: Destroy it
+    };
+  }
+
+  function c000086_SerendibEfreet() { 
+    commonCreature();
+    card.getUpkeepCost = () => {
+      const opText = `Serendib Efreet does 1 damage to your opponent`;
+      return { mana: [0,0,0,0,0,0], text: `Serendib Efreet does 1 damage to you`, opText };
+    };
+    card.onUpkeep = (nextState, skip) => {
+      const { cardPlayer } = getShorts(nextState);
+      cardPlayer.life -= 1; // Serendib Efreet does 1 damage to you
+    };
+  }
+  
+  function c000089_JuzamDjinn() {
+    commonCreature();
+    card.getUpkeepCost = () => {
+      const opText = `Juzám Djinn does 1 damage to your opponent`;
+      return { mana: [0,0,0,0,0,0], text: `Juzám Djinn does 1 damage to you`, opText };
+    };
+    card.onUpkeep = (nextState, skip) => {
+      const { cardPlayer } = getShorts(nextState);
+      cardPlayer.life -= 1; // Juzám Djinn does 1 damage to you
+    };
+  }
+
+  // If opponent has > 4 cards in hand during upkeep, does 1 damage for each in excess of 4
+  function c000092_BlackVise() {
+    card.getUpkeepCost = (nextState) => {
+      const { otherPlayer, hand } = getShorts(nextState);
+      const numOfHandCards = hand.filter(c => c.controller === otherPlayer.num).length;
+      let text = `Your opponent's Black Vise does 1 damage to you for for each card in excess of 4 in your hand.`;
+      text += `<br/><br/>You have ${numOfHandCards} cards, so you get ${Math.max(0, numOfHandCards - 4)} damage`;
+      let opText = `Your Black Vise does 1 damage to your opponent for for each card in excess of 4 in their hand.`;
+      opText += `<br/><br/>Player has ${numOfHandCards} cards, so ${Math.max(0, numOfHandCards - 4)} damage`;
+      return { mana: [0,0,0,0,0,0], text, opText };
+    }
+    card.onUpkeep = (nextState, skip) => {
+      const { otherPlayer, hand } = getShorts(nextState);
+      const numOfHandCards = hand.filter(c => c.controller === otherPlayer.num).length;
+      if (numOfHandCards > 4) { otherPlayer.life -= numOfHandCards - 4; }
+    };
+  }
+  
+  // If opponent has < 3 cards in hand during upkeep, does 1 damage for each card fewer than 3
+  function c000105_TheRack() {
+    card.getUpkeepCost = (nextState) => {
+      const { otherPlayer, hand } = getShorts(nextState);
+      const numOfHandCards = hand.filter(c => c.controller === otherPlayer.num).length;
+      let text = `Your opponent's The Rack does 1 damage to you for for each card fewer than 3 in their hand`;
+      text += `<br/><br/>You have ${numOfHandCards} cards, so you get ${Math.max(0, 3 - numOfHandCards)} damage`;
+      let opText = `The Rack does 1 damage to your opponent for for each card fewer than 3 in their hand`;
+      opText += `<br/><br/>Player has ${numOfHandCards} cards, so ${Math.max(0, 3 - numOfHandCards)} damage`;
+      return { mana: [0,0,0,0,0,0], text, opText };
+    }
+    card.onUpkeep = (nextState, skip) => {
+      const { otherPlayer, hand } = getShorts(nextState);
+      const numOfHandCards = hand.filter(c => c.controller === otherPlayer.num).length;
+      if (numOfHandCards < 3) { otherPlayer.life -= (3 - numOfHandCards); }
+    };
+  }
+
+  // During your upkeep, target non-wall creature an opponent control gains forestwalk until your next turn
+  function c000126_ErhnamDjinn() { }
+
+  // One damage to your opponent for each card he/she draws
+  function c000124_UnderworldDreams() { }
+
+
   // Unsummon
   // Weakness + Righteousness
   // Erg Raiders
@@ -963,18 +1096,13 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   function c000031_HypnoticSpecter() {}  
   function c000061_DemonicTutor() {}
   function c000062_EyeForAnEye() {}
-  function c000063_IvoryTower() {}
   function c000064_ManaFlare() {}
   function c000066_WarpArtifact() {}
-  function c000074_PhantasmalForces() { }
   function c000079_Unsummon() { }
   function c000080_ErgRaiders() { }
   function c000085_NorthernPaladin() { }
-  function c000086_SerendibEfreet() { }
   function c000088_RoyalAssassin() { }
-  function c000089_JuzamDjinn() { }
   function c000090_SengirVampire() { }
-  function c000092_BlackVise() { }
   function c000094_Clone() { }
   function c000095_ControlMagic() { }
   function c000096_CopyArtifact() { }
@@ -985,7 +1113,6 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   function c000102_NevinyrralsDisk() { }
   function c000103_Regrowth() { }
   function c000104_SorceressQueen() { }
-  function c000105_TheRack() { }
   function c000106_VesuvanDoppelganger() { }
   function c000107_AnimateDead() { }
   function c000109_GauntletOfMight() { }
@@ -1000,9 +1127,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   function c000121_MishrasFactory() { }
   function c000122_RaiseDead() { }
   function c000123_DrainLife() { }
-  function c000124_UnderworldDreams() { }
   function c000125_DeadlyInsect() { }
-  function c000126_ErhnamDjinn() { }
   function c000127_ConcordantCrossroads() { }
   function c000128_BallLightning() { }
   function c000129_GiantTortoise() { }

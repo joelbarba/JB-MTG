@@ -26,7 +26,7 @@ export class GameOptionsService {
     const playerB = playerBNum === '1' ? state.player1 : state.player2;
 
     // const { hand, table } = this.getCards(state, 'playerA'); // Your cards
-    const { handA, handB, tableA, tableB, tableStack } = getCards(state, playerANum);
+    const { handA, tableA, unresolvedUpkeeps } = getCards(state, playerANum);
 
     // Shortcut to check if the current phase is any of the given
     const isPhase = (...phases: string[]) => phases.includes(state.phase);    
@@ -184,27 +184,33 @@ export class GameOptionsService {
 
       if (isPhase('pre', 'post')) { youMayTriggerAbilities(); } // You may use cards during your turn pre/post
 
-      // You may tap lands to produce mana
-      // You may trigger abilities on cards (tap to do something, or pay mana to do something)
-      const spellsAvailable = handA.filter(c => c.type === 'instant').length > 0;
-      if (isPhase('maintenance', 'draw') && spellsAvailable) { youMaySummon('instant'); }
-
-
 
       
       // You may untap cards
       if (isPhase('untap')) {
-        if (tableA.filter(c => c.isTapped).length) { state.options.push({ action: 'untap-all', params: {}, text: `Untap all your cards` }); }
-        tableA.filter(c => c.isTapped).forEach(card => {
+        const cardsToUntap = tableA.filter(c => c.isTapped && c.canUntap(state));
+        if (cardsToUntap.length) { state.options.push({ action: 'untap-all', params: {}, text: `Untap all your cards` }); }
+        cardsToUntap.forEach(card => {
           const option: TGameOption = { action: 'untap-card', params: { gId: card.gId }, text: `Untap ${card.name}` };
           state.options.push(option);
           card.selectableAction = option;
         });    
       }
 
+      if (isPhase('upkeep')) {
+        if (unresolvedUpkeeps.length) { 
+          const upkeepItem = unresolvedUpkeeps[0];
+          state.options.push({ action: 'pay-upkeep',  params: { gId: upkeepItem.gId }, text: upkeepItem.text });
+          state.options.push({ action: 'skip-upkeep', params: { gId: upkeepItem.gId }, text: upkeepItem.text });
+          youMayTriggerAbilities();
+          youMaySummon('instant');
+          canSkipPhase = false;
+        }
+      }
+
       // You may draw a card
       if (isPhase('draw') && playerA.drawnCards < 1) {
-        state.options.push({ action: 'draw', params: {}, text: `Draw a card from your library` });
+        state.options.push({ action: 'draw', params: {}, text: `Draw a card from your library` });       
         canSkipPhase = false; // Player must draw
       }
 

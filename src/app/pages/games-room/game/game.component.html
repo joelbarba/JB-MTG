@@ -96,14 +96,14 @@
   <div class="board-panel">
     <div class="player-B" [class.in-waiting]="state.control === game.playerANum" [class.in-control]="state.control !== game.playerANum">
       <div class="phases-box">
-        <div class="phase untap"       [class.selected]="phase === 'B.untap'">       <span class="icon-undo2"> </span></div>
-        <div class="phase maintenance" [class.selected]="phase === 'B.maintenance'"> <span class="icon-hammer"></span></div>
-        <div class="phase draw"        [class.selected]="phase === 'B.draw'">        <span class="icon-hand">  </span></div>
-        <div class="phase pre-combat"  [class.selected]="phase === 'B.pre'">         <span class="icon-moon">  </span></div>
-        <div class="phase combat"      [class.selected]="phase === 'B.combat'">      <span class="icon-sword"> </span></div>
-        <div class="phase post-combat" [class.selected]="phase === 'B.post'">        <span class="icon-moon">  </span></div>
-        <div class="phase discard"     [class.selected]="phase === 'B.discard'">     <span class="icon-hand">  </span></div>
-        <div class="phase end"         [class.selected]="phase === 'B.end'">         <span class="icon-fire">  </span></div>
+        <div class="phase untap"       [class.selected]="phase === 'B.untap'">    <span class="icon-undo2"> </span></div>
+        <div class="phase upkeep"      [class.selected]="phase === 'B.upkeep'">   <span class="icon-hammer"></span></div>
+        <div class="phase draw"        [class.selected]="phase === 'B.draw'">     <span class="icon-hand">  </span></div>
+        <div class="phase pre-combat"  [class.selected]="phase === 'B.pre'">      <span class="icon-moon">  </span></div>
+        <div class="phase combat"      [class.selected]="phase === 'B.combat'">   <span class="icon-sword"> </span></div>
+        <div class="phase post-combat" [class.selected]="phase === 'B.post'">     <span class="icon-moon">  </span></div>
+        <div class="phase discard"     [class.selected]="phase === 'B.discard'">  <span class="icon-hand">  </span></div>
+        <div class="phase end"         [class.selected]="phase === 'B.end'">      <span class="icon-fire">  </span></div>
       </div>
 
       <div class="hand-box" [class.expanded]="isHandBExp">
@@ -170,14 +170,14 @@
 
 
       <div class="phases-box">
-        <div class="phase untap"       [class.selected]="phase === 'A.untap'">       <span class="icon-undo2"> </span></div>
-        <div class="phase maintenance" [class.selected]="phase === 'A.maintenance'"> <span class="icon-hammer"></span></div>
-        <div class="phase draw"        [class.selected]="phase === 'A.draw'">        <span class="icon-hand">  </span></div>
-        <div class="phase pre-combat"  [class.selected]="phase === 'A.pre'">         <span class="icon-moon">  </span></div>
-        <div class="phase combat"      [class.selected]="phase === 'A.combat'">      <span class="icon-sword"> </span></div>
-        <div class="phase post-combat" [class.selected]="phase === 'A.post'">        <span class="icon-moon">  </span></div>
-        <div class="phase discard"     [class.selected]="phase === 'A.discard'">     <span class="icon-hand">  </span></div>
-        <div class="phase end"         [class.selected]="phase === 'A.end'">         <span class="icon-fire">  </span></div>
+        <div class="phase untap"       [class.selected]="phase === 'A.untap'">    <span class="icon-undo2"> </span></div>
+        <div class="phase upkeep"      [class.selected]="phase === 'A.upkeep'">   <span class="icon-hammer"></span></div>
+        <div class="phase draw"        [class.selected]="phase === 'A.draw'">     <span class="icon-hand">  </span></div>
+        <div class="phase pre-combat"  [class.selected]="phase === 'A.pre'">      <span class="icon-moon">  </span></div>
+        <div class="phase combat"      [class.selected]="phase === 'A.combat'">   <span class="icon-sword"> </span></div>
+        <div class="phase post-combat" [class.selected]="phase === 'A.post'">     <span class="icon-moon">  </span></div>
+        <div class="phase discard"     [class.selected]="phase === 'A.discard'">  <span class="icon-hand">  </span></div>
+        <div class="phase end"         [class.selected]="phase === 'A.end'">      <span class="icon-fire">  </span></div>
       </div>
 
       <div class="hand-box" [class.expanded]="isHandAExp">
@@ -217,6 +217,7 @@
   
   
   <panel-graveyard        *ngIf="win.graveyardPanel.display"   ></panel-graveyard>
+  <dialog-upkeep          *ngIf="win.upkeepDialog.display"     ></dialog-upkeep>
   <dialog-damage          *ngIf="win.damageDialog.display"     ></dialog-damage>
   <dialog-combat          *ngIf="win.combatDialog.display"     ></dialog-combat>
   <dialog-selecting-mana  *ngIf="win.selectManaDialog.display" ></dialog-selecting-mana>
@@ -282,6 +283,9 @@
   </div>
 
 </div>
+
+<bf-btn id="debug-save-state" (bfClick)="game.saveStateDebug()" bfText="SAVE STATE"></bf-btn>
+<bf-btn id="debug-load-state" (bfClick)="game.loadStateDebug()" bfText="LOAD STATE"></bf-btn>
 
 
 <game-panel></game-panel>

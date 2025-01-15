@@ -90,6 +90,12 @@ export class WindowsService {
     }
   };
 
+  upkeepDialog = {
+    display: false, zInd: 0, size: 'max', bottom: 0, title: '',
+    maximize: () => this.maximize(9), open: () => this.open(9),
+    minimize: () => this.minimize(9), close: () => this.close(9),
+  };
+
 
   allWindows = [
     this.graveyardPanel,    // 0
@@ -101,7 +107,8 @@ export class WindowsService {
     this.extraManaDialog,   // 6
     this.effectsPanel,      // 7
     this.customDialog,      // 8
-  ]
+    this.upkeepDialog,      // 9
+  ];
   
 
 
@@ -130,6 +137,12 @@ export class WindowsService {
       if (this.prevCardOpStatus === 'waitingExtraMana') { this.extraManaDialog.close(); }
     }
 
+    // "Upkeep Dialog" (Open / Close logic) 
+    if (this.game.state.phase === 'upkeep' && this.game.state.cards.filter(c => c.waitingUpkeep).length) {
+      this.upkeepDialog.open();
+    } else {
+      this.upkeepDialog.close();
+    }
 
     // "Combat Dialog" (Open / Close logic) ---> Done in game controller (updateCombatOperation)
     if (this.game.state.phase === 'combat') {

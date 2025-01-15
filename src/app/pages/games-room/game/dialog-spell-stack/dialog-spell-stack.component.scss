@@ -37,7 +37,7 @@
 
 
   .wating-progress-bar {
-    margin-left: 15px;
+    margin: 0 15px;
     width: 100px;
     height: 35px;
     border: 1px solid black;
@@ -49,9 +49,9 @@
     }
   }
 
-  .pause-btn {
-    margin: 10px 0 30px;
-    bf-btn { transform: scale(2); }
-  }
+  // .pause-btn {
+  //   margin: 10px 0 30px;
+  //   bf-btn { transform: scale(2); }
+  // }
 
 }

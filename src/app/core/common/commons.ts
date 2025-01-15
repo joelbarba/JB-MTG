@@ -21,6 +21,12 @@ export const cardTypes = [
   { value: 'enchantment'},
 ];
 
+export const upkeepTypes = [
+  { value: 'A' , text: 'Yours' }, 
+  { value: 'B' , text: `Opponent's` }, 
+  { value: 'AB', text: 'Both' },
+];
+
 export const cardOrderFn = (a: TCard, b: TCard) => {
   if (a.type !== b.type) {
     if (a.type === 'land') { return -1; }

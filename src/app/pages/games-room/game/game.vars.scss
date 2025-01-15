@@ -81,6 +81,7 @@ $card-stack-highlight: #87c96c;     // When a spell with target in the stack
 $dialog-custom-bg: mintcream;
 $dialog-selecting-mana-bg: ghostwhite ;
 $dialog-spell-stack-bg: azure;
+$dialog-upkeep: azure;
 $dialog-combat-bg: ivory;
 $dialog-damage-bg: crimson;
 $panel-graveyard-bg: azure;
@@ -111,7 +112,7 @@ $table-center-left: calc(var(--left-panel-width) + var(--phases-col-width) + $ta
     width: 100%;
     justify-content: end;
     align-items: center;
-    bf-btn { margin-left: 15px; }
+    bf-btn + bf-btn { margin-left: 15px; }
     .main-info {
       margin: 0 15px;
       flex: 1;

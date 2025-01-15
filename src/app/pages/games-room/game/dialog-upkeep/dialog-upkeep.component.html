@@ -1,0 +1,28 @@
+<div class="dialog-container"
+  [style.bottom.px]="win.upkeepDialog.size === 'min' ? win.upkeepDialog.bottom : undefined"
+  [class.minimized]="win.upkeepDialog.size === 'min'" [style.z-index]="win.upkeepDialog.zInd">
+  <div class="window-bg" (click)="win.upkeepDialog.maximize()"></div>
+  <div [hidden]="win.upkeepDialog.size === 'min'" class="min-btn" (click)="win.upkeepDialog.minimize()" hoverTip="Click to minimize the window" tipSide="right">-</div>
+  <div [hidden]="win.upkeepDialog.size === 'max'" class="max-btn" (click)="win.upkeepDialog.maximize()" hoverTip="Click to open the window" tipSide="left">{{title}}</div>
+
+  <h2>{{title}}</h2>
+
+  <!-- <h3 *ngIf="win.upkeepDialog.icon"><span [class]="win.upkeepDialog.icon"></span></h3>
+  <p *ngIf="win.upkeepDialog.text" [innerHtml]="win.upkeepDialog.text"></p> -->
+
+  <div class="center" *ngIf="card">
+    <game-card [card]="card" from="upkeepDialog"></game-card>
+  </div>
+
+  <p [innerHtml]="text"></p>
+
+  <div *ngIf="!showPayBtn && youControl">
+    You need: <mana-array style="margin-left: 5px;" class="md" [mana]="cardOp.manaNeeded"></mana-array>
+  </div>
+
+
+  <div class="btns-box" *ngIf="youControl">
+    <bf-btn *ngIf="showSkipBtn" [bfText]="skipText" class="warning" bfIcon="icon-cross" (bfClick)="cancel()"></bf-btn>
+    <bf-btn bfText="Ok, Go On" [bfDisabled]="!showPayBtn" class="flex-1" bfIcon="icon-arrow-right3" (bfClick)="payUpkeep()"></bf-btn>
+  </div>
+</div>

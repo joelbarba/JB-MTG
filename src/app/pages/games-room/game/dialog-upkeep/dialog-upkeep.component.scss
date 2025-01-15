@@ -1,0 +1,20 @@
+@import '../game.vars.scss';
+
+.dialog-container {
+  background: $dialog-upkeep;
+
+  @include panel-basics();
+  @include fixed-panel(20%, 30%, 19%);
+
+  &:not(.minimized) {
+    min-width: 650px; min-height: 50px;
+    @media screen and (max-height: 1050px) { min-width: 500px; min-height: 400px; }
+    @media screen and (max-height: 900px)  { min-width: 400px; min-height: 300px; }
+  }
+
+  .btns-box {
+    text-align: right;
+    justify-content: space-between;
+  }
+}
+

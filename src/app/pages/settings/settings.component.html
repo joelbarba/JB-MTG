@@ -36,8 +36,26 @@
                 [bfRequired]="true"
                 [bfList]="cardTypes">
           </bf-dropdown>
+
           <bf-input *ngIf="selCard.type === 'creature'" class="col-2" bfLabel="Attack" [(ngModel)]="selCard.attack"></bf-input>
           <bf-input *ngIf="selCard.type === 'creature'" class="col-2" bfLabel="Defense" [(ngModel)]="selCard.defense"></bf-input>
+
+          <bf-dropdown bfLabel="Upkeep" class="col-4"
+                [(ngModel)]="selCard.upkeepPlayer"
+                bfRender="text"
+                bfSelect="value"
+                [bfEmptyValue]="null"
+                bfEmptyLabel="None"
+                [bfList]="upkeepTypes">
+          </bf-dropdown>
+
+          <bf-dropdown bfLabel="Color Protection" class="col-4 flat" *ngIf="selCard.type === 'creature'"
+                [(ngModel)]="selCard.colorProtection"
+                bfRender="value"
+                bfSelect="value"
+                bfEmptyLabel="None"
+                [bfList]="colors">
+          </bf-dropdown>
 
           <div class="col-12" *ngIf="selCard.type === 'creature'" style="margin: 15px 0;">
             <bf-checkbox style="margin-right: 10px;" bfLabel="Flying"       [(ngModel)]="selCard.isFlying"></bf-checkbox>
@@ -52,12 +70,7 @@
 
           <bf-input class="col-4" bfLabel="Price (sats)" [(ngModel)]="selCard.price" (bfOnEnter)="saveCard(selCard)"></bf-input>
 
-          <bf-dropdown bfLabel="Color Protection" class="col-6 flat" *ngIf="selCard.type === 'creature'"
-                [(ngModel)]="selCard.colorProtection"
-                bfRender="value"
-                bfSelect="value"
-                [bfList]="colors">
-          </bf-dropdown>
+
 
           <bf-input class="col-3" bfLabel="Max In Deck" [(ngModel)]="selCard.maxInDeck" (bfOnEnter)="saveCard(selCard)"></bf-input>
 

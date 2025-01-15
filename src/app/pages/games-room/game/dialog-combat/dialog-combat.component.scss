@@ -101,6 +101,7 @@
   }
 
   .wating-progress-bar {
+    margin-right: 15px;
     align-self: flex-end;
     margin-left: 15px;
     width: 100px;
@@ -114,8 +115,8 @@
     }
   }
 
-  .pause-btn {
-    margin: 10px 0 30px;
-    bf-btn { transform: scale(2); }
-  }
+  // .pause-btn {
+  //   margin: 10px 0 30px;
+  //   bf-btn { transform: scale(2); }
+  // }
 }

@@ -19,14 +19,14 @@ export type TDeckRef = {
 }
 
 export enum EPhase {
-  untap       = 'untap',
-  maintenance = 'maintenance',
-  draw        = 'draw',
-  pre         = 'pre',
-  combat      = 'combat',
-  post        = 'post',
-  discard     = 'discard',
-  end         = 'end'
+  untap   = 'untap',
+  upkeep  = 'upkeep',
+  draw    = 'draw',
+  pre     = 'pre',
+  combat  = 'combat',
+  post    = 'post',
+  discard = 'discard',
+  end     = 'end'
 }
 export enum ESubPhase {
   selectAttack   = 'selectAttack', 
@@ -56,6 +56,7 @@ export type TCard = {
   isHaste       : boolean;  // No summoning sickness
   canRegenerate : boolean;  // Whether it has the regenerate ability
   colorProtection: TColor | null; // Cannot be blocked, targeted, enchanted or damage by sources of this color
+  upkeepPlayer: 'A' | 'B' | 'AB' | null;  // Whether the upkeep applies to the card's controller (A), opponent's (B)
   maxInDeck?: number;    // Max number of the same card you can have in a deck (1, 4, undefined=as many as you want)
   readyToPlay: boolean;
   // units: Array<{ ref: string, owner: string }>;
@@ -94,7 +95,7 @@ export type TGameDBState = {
   effects: Array<TEffect>;
   spellStackInitiator: null | '1' | '2'; // Remember the player num that initiated the spell stack (so control is returned after release)
   lastAction?: TGameOption & { time: string, player: '1' | '2' };
-  id: number; // sequential order
+  seq: number; // sequential order
   deckId1: string;
   deckId2: string; // If empty = waiting for player2 to accept request
 }
@@ -119,10 +120,14 @@ export type TDBGameCard = {
 
   xValue: number; // Value of the manaExtra used when actioning the card
 
-  turnDamage: number;
+  waitingUpkeep: boolean;  // Whether the upkeep of the card it's still not processed this turn
+
+  turnDamage: number;  // Amount of damaged received during the current turn (if >= defense it dies)
   turnAttack: number;  // <-- attack + effects
   turnDefense: number; // <-- defense + effects
 }
+
+// New fn: canUntap, onUpkeep, getUpkeepCost, getCost
 
 export type TGameCard = TDBGameCard & TCard & { // Not in DB (fixed properties from TCard + extended props & functions)
   selectableAction?: null | TGameOption;
@@ -135,17 +140,32 @@ export type TGameCard = TDBGameCard & TCard & { // Not in DB (fixed properties f
   onAbility: (state: TGameState) => void;   // What the card does when it's used for its ability (tap...)
   onDestroy: (state: TGameState) => void;   // What the card does when it's destroyed
   onDiscard: (state: TGameState) => void;   // What the card does when it's discarded
+  onUpkeep:  (state: TGameState, skip: boolean) => void;   // What the card does during the upkeep phase
   onEffect:  (state: TGameState, effectId: string) => void;  // What the effect of the card does when it's applied
   afterDamage: (state: TGameState) => void;  // What the card does after combat
   isType:  (type: TCardExtraType) => boolean; // Checks if the card is of a certain type
   isColor: (color: TColor) => boolean; // Checks if the card is of a certain color
+  canUntap: (state: TGameState) => boolean;  // Whether the card can be normally untapped
   canAttack: (state: TGameState) => boolean;  // Whether the creature can be selected to attack
   canDefend: (state: TGameState) => boolean;  // Whether the creature can be selected to defend
   targetBlockers: (state: TGameState) => Array<string>; // List of attackers the creature can block
   getSummonCost:  (state: TGameState) => TActionCost | null; // Cost to summon the card
   getAbilityCost: (state: TGameState) => TActionCost | null; // Cost to trigger a card ability
+  getUpkeepCost:  (state: TGameState) => TActionCost | null; // Cost play the onUpkeep() action
+  getCost: (state: TGameState, action: 'summon-spell' | 'trigger-ability' |'pay-upkeep') => TActionCost | null; // Generic cost getter
 }
-export type TActionCost = { mana: TCast, xMana?: TCast, neededTargets?: number, possibleTargets?: string[], customDialog?: boolean, tap?: boolean, text?: string };
+export type TActionCost = { 
+  mana            : TCast,      // The fixed mana needed
+  xMana           ?: TCast,     // If extra mana, what colors are allowed (0=not allowed, >0 allowed)
+  neededTargets   ?: number,    // Number of targets needed
+  possibleTargets ?: string[],  // Possible ids of the targets (gId / playerNum / custom /...)
+  customDialog    ?: boolean,   // If a custom dialog is needed, the code
+  tap             ?: boolean,   // If the cost requires the card to tap
+  canSkip         ?: boolean,   // (only for upkeep) If true, the cost is optional and can be skipped
+  skipText        ?: string,    // If it can be skipped, the text on the "Cancel" button
+  text            ?: string,    // Description of the cost and action that triggers
+  opText          ?: string,    // Text to show to the opponent while player is performing the cost
+};
 export type TGameCards = Array<TGameCard>;
 export type TExtGameCard = TGameCard & {
   posX: number;
@@ -168,9 +188,16 @@ export type TPlayer = {
   summonedLands: number;  // Only 1 per turn
   stackCall: boolean;  // true if the spell-stack needs to stop on the player
   selectableAction?: null | TGameOption;
+  // upkeepQueue: Array<TUpkeepItem>;
 }
 
 export type TGameOption = { action: TAction, params: TActionParams, text?: string };
+export type TUpkeepItem = {
+  text: string; // Description of what needs to happen
+  gId: string;  // Reference of the card that needs upkeep
+  resolved: boolean;  // Whether the cost has already been paid this turn
+  targets: string[];  // Possible selection
+}
 
 export type TAction = 'start-game' 
 | 'refresh'
@@ -193,6 +220,8 @@ export type TAction = 'start-game'
 | 'release-stack'
 | 'regenerate-creature'
 | 'cancel-regenerate'
+| 'pay-upkeep'
+| 'skip-upkeep'
 ;
 
 export type TActionParams = { 

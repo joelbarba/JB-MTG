@@ -195,6 +195,14 @@
     }
   }
 
+  // Upkeep Dialog specific styles:
+  &.upkeepDialog {
+    // &.is-tapped {
+    //   margin-left: 30px !important;
+    //   transform: rotate(90deg);
+    // }
+  }
+
   
   &.customDialog {  // Larger size for the modal
     width: calc(var(--card-width) * 1.5);    // 

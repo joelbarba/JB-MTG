@@ -9,7 +9,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { BfGrowlService, BfListHandler, BfUiLibModule } from 'bf-ui-lib';
 import { MtgCardComponent } from "../../core/common/internal-lib/mtg-card/mtg-card.component";
 import { TCard, TCast, TUser } from '../../core/types';
-import { cardTypes, colors, randomUnitId } from '../../core/common/commons';
+import { cardTypes, colors, randomUnitId, upkeepTypes } from '../../core/common/commons';
 import { DataService, TFullCard, TFullUnit } from '../../core/dataService';
 import { dbCards } from '../../core/dbCards';
 
@@ -34,6 +34,7 @@ export class SettingsComponent {
 
   colors = colors;
   cardTypes = cardTypes;
+  upkeepTypes = upkeepTypes;
 
   hasBlackBorder = false;
   highlightNoneReady = true;
@@ -104,6 +105,7 @@ export class SettingsComponent {
   selectCard(card: TFullCard) {
     this.selCard = card;
     this.hasBlackBorder = card.border === 'black';
+    this.selCard.upkeepPlayer = this.selCard.upkeepPlayer || null;
     console.log(this.selCard);
   }
 
@@ -182,6 +184,7 @@ export class SettingsComponent {
       colorProtection : null,
       maxInDeck       : 4,
       readyToPlay     : false,
+      upkeepPlayer    : null,
     };
     // console.log('New Card:', card);
     await setDoc(doc(this.firestore, 'cards', id), card);
@@ -215,7 +218,8 @@ export class SettingsComponent {
 
       this.dataService.cards.forEach(card => {
 
-        const colorProtection = card.colorProtection ? `'${card.colorProtection}'` : 'null'
+        const colorProtection = card.colorProtection ? `'${card.colorProtection}'` : 'null';
+        const upkeepPlayer = card.upkeepPlayer ? `'${card.upkeepPlayer}'` : 'null';
         
         this.cardsDBCode += `\n  {`;
         this.cardsDBCode += `\n    id:              '${card.id}', `;
@@ -235,6 +239,7 @@ export class SettingsComponent {
         this.cardsDBCode += `\n    isHaste:         ${!!card.isHaste}, `;
         this.cardsDBCode += `\n    canRegenerate:   ${!!card.canRegenerate}, `;
         this.cardsDBCode += `\n    colorProtection: ${colorProtection}, `;
+        this.cardsDBCode += `\n    upkeepPlayer:    ${upkeepPlayer}, `;
         this.cardsDBCode += `\n    readyToPlay:     ${!!card.readyToPlay}, `;
         if (card.border) { this.cardsDBCode += `\n    border:          '${card.border || 'white'}', `; }
         if (card.maxInDeck) { this.cardsDBCode += `\n    maxInDeck:       ${card.maxInDeck || 'null'}, `; }

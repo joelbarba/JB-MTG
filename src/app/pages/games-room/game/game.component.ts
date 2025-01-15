@@ -27,6 +27,7 @@ import { CardOpServiceNew } from './gameLogic/cardOp.service';
 import { WindowsService } from './gameLogic/windows.service';
 import { GameCardEventsService } from './gameLogic/game-card-events.service';
 import { DialogDamageComponent } from "./dialog-damage/dialog-damage.component";
+import { DialogUpkeepComponent } from './dialog-upkeep/dialog-upkeep.component';
 
 
 
@@ -53,7 +54,8 @@ import { DialogDamageComponent } from "./dialog-damage/dialog-damage.component";
     DualLandDialogComponent,
     DialogRegenerateComponent,
     DialogExtraManaComponent,
-    DialogDamageComponent
+    DialogDamageComponent,
+    DialogUpkeepComponent,
 ],
   templateUrl: './game.component.html',
   styleUrls: ['./game.component.scss'],
@@ -208,8 +210,11 @@ export class GameComponent {
       // If an ongoing operation, show its status info
       if (this.cardOp.status) {
         const cardName = this.cardOp.card?.name || '';
-        const isSummon = this.cardOp.action === 'summon-spell';
-        if (this.cardOp.status === 'waitingMana')      { this.opInfo = `To ${isSummon ? 'summon' : 'use'} ${cardName} you still need:`; }
+        if (this.cardOp.status === 'waitingMana')      { 
+          if (this.cardOp.action === 'summon-spell')    { this.opInfo = `To summon ${cardName} you still need:`; }
+          if (this.cardOp.action === 'trigger-ability') { this.opInfo = `To use ${cardName} you still need:`; }
+          if (this.cardOp.action === 'pay-upkeep')      { this.opInfo = `To pay ${cardName}'s upkeep you still need:`; }
+        }
         if (this.cardOp.status === 'waitingExtraMana') { this.opInfo = `Add extra mana for ${cardName}`; }
         if (this.cardOp.status === 'selectingMana')    { this.opInfo = `Select the mana from your mana pool you want to use for ${cardName}`; }
         if (this.cardOp.status === 'selectingTargets') { this.opInfo = `Select target for ${cardName}`; }
@@ -288,7 +293,8 @@ export class GameComponent {
 
 
   setVarsFromStateChange() {
-    const yourOptions = this.game.doYouHaveControl() ? this.state.options : [];
+    const youControl = this.game.doYouHaveControl();
+    const yourOptions = youControl ? this.state.options : [];
 
     this.skipPhase.enabled = !!yourOptions.find(op => op.action === 'skip-phase');
     this.canIDraw = !!yourOptions.find(op => op.action === 'draw');
@@ -300,8 +306,12 @@ export class GameComponent {
       this.skipPhase.whyNot = `You must draw a card from your deck`;
     }
 
-    if (this.game.doYouHaveControl() && this.state.phase === 'discard' && this.handA.length > 7) {
+    if (youControl && this.state.phase === 'discard' && this.handA.length > 7) {
       this.mainInfo = `You cannot have more than 7 cards on your hand. Please discard`;
+    }
+    
+    if (youControl && this.state.phase === 'upkeep' && this.game.state.cards.filter(c => c.waitingUpkeep).length) {
+      this.mainInfo = `You must pay your cards upkeep`;
     }
 
     // If untap phase, show the global button to untapp all tapped
@@ -363,9 +373,6 @@ export class GameComponent {
 
     // Don't stop at the untap pahse if there are no cards to untap
     if (this.state.phase === 'untap' && !options.find(o => o.action === 'untap-card')) { return advancePhase(); }
-
-    // Always skip maintenance (for now)
-    if (this.state.phase === 'maintenance') { return advancePhase(); }
 
     // Automatically draw if you can only draw 1 card
     if (this.state.phase === 'draw' && options.filter(o => o.action === 'draw').length === 1) { return advancePhase(() => this.game.action('draw')); }
@@ -502,7 +509,6 @@ export class GameComponent {
 
     let maxCardsPerRow = Math.floor((this.tableWidth - 200) / (cardWidth + gap)) + 1;
     if (!this.tableWidth) { maxCardsPerRow = 10; }
-    console.log('this.tableWidth', this.tableWidth, 'maxCardsPerRow', maxCardsPerRow);
 
     // Once the grid is constructed, give coordinates to every card
     tableGridA.filter(c => !!c.length).forEach((arr, col) => {

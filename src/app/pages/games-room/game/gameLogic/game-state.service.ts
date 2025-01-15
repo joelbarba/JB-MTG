@@ -99,29 +99,29 @@ export class GameStateService {
       if (source === 'server') {
         console.log('DB onSnapshot(): New State from -->', source);
         
-        if (!this.firstStateDef.status || this.state.id === dbState.id - 1) {
+        if (!this.firstStateDef.status || this.state.seq === dbState.seq - 1) {
           // console.log('DB onSnapshot() --> New state from remote ACTION: ', dbState.lastAction);
           this.dbState$.next(dbState);
 
           // Find if there are future updates that came before this one
-          let nextId = dbState.id + 1;
+          let nextSeq = dbState.seq + 1;
           for (let t = 0; t < this.dbFutureStates.length; t++) {
             const futureState = this.dbFutureStates[t];
-            if (futureState.id === nextId) {
+            if (futureState.seq === nextSeq) {
               console.warn('DB onSnapshot() --> New state from (stacked) ACTION: ', dbState.lastAction);
-              this.dbState$.next(futureState); nextId++;
+              this.dbState$.next(futureState); nextSeq++;
               delete this.dbFutureStates[t];
             }            
           }
           this.dbFutureStates = this.dbFutureStates.filter(v => !!v);
         }
-        else if (this.state.id < dbState.id - 1) { // If there's more than 1 new state / action
+        else if (this.state.seq < dbState.seq - 1) { // If there's more than 1 new state / action
           this.dbFutureStates.push(dbState); // This is a future update, we are missing previous updates (stack it and wait)
-          this.dbFutureStates.sort((a, b) => a.id < b.id ? 1: -1);
+          this.dbFutureStates.sort((a, b) => a.seq < b.seq ? 1: -1);
           console.warn('DB onSnapshot() --> Disordered (not executed, stacked) ACTION:: ', dbState.lastAction);
 
         } else {
-          console.error('THAT SHOULD NOT HAPPEN. state.id=', this.state.id, 'dbState.id=', dbState.id);
+          console.error('THAT SHOULD NOT HAPPEN. state.seq=', this.state.seq, 'dbState.seq=', dbState.seq);
         }
       }
     });
@@ -181,8 +181,9 @@ export class GameStateService {
       'selectableAction', 'effectsFrom', 'targetOf', 'uniqueTargetOf',
 
       // Extended functions (extendCardLogic)
-      'onSummon', 'onAbility', 'onDestroy', 'onDiscard', 'afterDamage', 'onEffect',
-      'isType', 'isColor', 'canAttack', 'canDefend', 'targetBlockers', 'getSummonCost', 'getAbilityCost',
+      'onSummon', 'onAbility', 'onDestroy', 'onDiscard', 'afterDamage', 'onEffect', 'onUpkeep',
+      'isType', 'isColor', 'canUntap', 'canAttack', 'canDefend', 'targetBlockers', 
+      'getSummonCost', 'getAbilityCost', 'getUpkeepCost', 'getCost',
     ]
     dbState.cards = dbState.cards.map(card => card.keyFilter((v,k) => !extFields.includes(k))) as Array<TGameCard>;
 
@@ -275,6 +276,8 @@ export class GameStateService {
       case 'release-stack':             this.releaseStack(nextState); break;
       case 'regenerate-creature':       this.triggerAbility(nextState, params); break;
       case 'cancel-regenerate':         this.cancelRegenerate(nextState); break;
+      case 'pay-upkeep':                this.payUpkeep(nextState, params); break;
+      case 'skip-upkeep':               this.skipUpkeep(nextState, params); break;
     }
 
     this.applyEffects(nextState); // Recalculate state based on current effects
@@ -282,7 +285,7 @@ export class GameStateService {
 
 
 
-    nextState.id += 1;
+    nextState.seq += 1;
     nextState.lastAction = { action, params, player: this.playerANum, time: getTime() };
 
     // Update the state
@@ -291,7 +294,7 @@ export class GameStateService {
     setDoc(doc(this.firestore, 'games', this.gameId), dbState).then(_ => {});
 
     // Save history
-    const hActionId = 'action-' + (nextState.id + '').padStart(4, '0');
+    const hActionId = 'action-' + (nextState.seq + '').padStart(4, '0');
     setDoc(doc(this.firestore, 'gamesHistory', this.gameId, 'history', hActionId), nextState.lastAction).then(_ => {});
   }
 
@@ -308,12 +311,12 @@ export class GameStateService {
 
   private untapCard(nextState: TGameState, gId: string) {
     const card = this.checkCard(nextState, gId, { location: 'tble' });
-    if (card) { card.isTapped = false; }
+    if (card && card.canUntap(nextState)) { card.isTapped = false; }
   }
 
   private untapAll(nextState: TGameState) {
     const { tableA } = this.getCards(nextState);
-    tableA.filter(card => card.isTapped).forEach(card => card.isTapped = false);
+    tableA.filter(c => c.isTapped && c.canUntap(nextState)).forEach(card => card.isTapped = false);
   }
 
   private draw(nextState: TGameState) {
@@ -627,7 +630,71 @@ export class GameStateService {
   }
 
 
+  // ------------------------ UpKeep --------------------------------
 
+
+  // Once we change to upkeep, build the player's upkeepQueue[] 
+  private generateUpkeep(nextState: TGameState) {
+    const { table, tableA, tableB } = this.getCards(nextState);
+    const { playerA, playerB } = this.getPlayers(nextState);
+
+    table.forEach(card => card.waitingUpkeep = false); // Clear all first
+
+    // Select those card with upkeep that applies to you (yours, opponents + both)
+    tableA.filter(c => c.upkeepPlayer === 'A' || c.upkeepPlayer === 'AB').forEach(card => {
+      const cost = card.getUpkeepCost(nextState);
+      if (cost) {
+        console.log('Activating upkeep for', card.gId, card.name, '<-- your card');
+        card.waitingUpkeep = true;
+      }
+    });
+    tableB.filter(c => c.upkeepPlayer === 'B' || c.upkeepPlayer === 'AB').forEach(card => {
+      const cost = card.getUpkeepCost(nextState);
+      if (cost) {
+        console.log('Activating upkeep for', card.gId, card.name, '<-- opponents card');
+        card.waitingUpkeep = true;
+      }
+    });
+    // playerA.upkeepQueue = []; // Clear previous queue
+    // tableA.sort((a,b) => a.order > b.order ? -1 : 1).forEach(card => {
+    //   const cost = card.getUpkeepCost(nextState);
+    //   if (cost) {
+    //     playerA.upkeepQueue.push({
+    //       text: cost.text || `Pay ${card.name} upkeep`,
+    //       gId: card.gId,
+    //       resolved: false,
+    //       targets: [],
+    //     })
+    //   }
+    // });
+  }
+
+
+  private payUpkeep(nextState: TGameState, params: TActionParams) {
+    const { playerA } = this.getPlayers(nextState);
+    const { unresolvedUpkeeps } = this.getCards(nextState);
+
+    const card = unresolvedUpkeeps.find(q => q.gId === params?.gId);
+    const cost = card?.getUpkeepCost(nextState);
+    if (card && cost) { 
+      const opStatus = validateCost(card, params, cost, playerA.manaPool);
+      if (opStatus === 'ready') { 
+        console.log(`Paying ${card.name} upkeep with params =`, params);
+        this.payManaCost(nextState, params, cost, card); // Spend Cost   
+        card.onUpkeep(nextState, false);
+        card.waitingUpkeep = false;
+      }  
+    }
+  }
+
+  private skipUpkeep(nextState: TGameState, params: TActionParams) {
+    const { unresolvedUpkeeps } = this.getCards(nextState);
+    const card = unresolvedUpkeeps.find(q => q.gId === params?.gId);
+    if (card) {
+      card.onUpkeep(nextState, true);
+      card.waitingUpkeep = false;
+    }
+  }
 
 
   // ----------------------------------------------------------------------------------
@@ -637,14 +704,14 @@ export class GameStateService {
     // nextState.opStack = []; // Cancel all ongoing card operations
 
     switch (nextState.phase) {
-      case EPhase.untap:        nextState.phase = EPhase.maintenance; break;
-      case EPhase.maintenance:  nextState.phase = EPhase.draw; break;
-      case EPhase.draw:         nextState.phase = EPhase.pre; break;
-      case EPhase.pre:          nextState.phase = EPhase.combat; break;
-      case EPhase.combat:       nextState.phase = EPhase.post; break;
-      case EPhase.post:         nextState.phase = EPhase.discard; break;
-      case EPhase.discard:      nextState.phase = EPhase.end; break;
-      case EPhase.end:          this.endTurn(nextState); break;
+      case EPhase.untap:    nextState.phase = EPhase.upkeep; this.generateUpkeep(nextState); break;
+      case EPhase.upkeep:   nextState.phase = EPhase.draw; break;
+      case EPhase.draw:     nextState.phase = EPhase.pre; break;
+      case EPhase.pre:      nextState.phase = EPhase.combat; break;
+      case EPhase.combat:   nextState.phase = EPhase.post; break;
+      case EPhase.post:     nextState.phase = EPhase.discard; break;
+      case EPhase.discard:  nextState.phase = EPhase.end; break;
+      case EPhase.end:      this.endTurn(nextState); break;
     }
 
     // That shouldn't happen, but in case there are creatures not regenerater or dead, destroy them
