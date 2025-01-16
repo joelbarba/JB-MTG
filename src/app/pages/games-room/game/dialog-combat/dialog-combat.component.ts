@@ -35,7 +35,7 @@ type TCol = {
 ],
 })
 export class DialogCombatComponent {
-  TIMER_TIME = 500000000;
+  TIMER_TIME = 5000;
 
   attacker!: 'A' | 'B';
   stateSub!: Subscription;
@@ -68,6 +68,9 @@ export class DialogCombatComponent {
   ) {}
 
   ngOnInit() {
+    const testingMode = localStorage.getItem('testingMode');
+    if (testingMode) { this.TIMER_TIME = 500000000; }
+
     const youControl = (this.game.state.control === this.game.playerANum);
     this.attacker = this.win.combatDialog.attacker;
     if (this.attacker === 'A') {

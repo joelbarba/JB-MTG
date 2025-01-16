@@ -34,7 +34,7 @@ export type TStackTree = {
   ],
 })
 export class DialogSpellStackComponent {
-  TIMER_TIME = 500000000;
+  TIMER_TIME = 5000;
 
   title = 'Spell Stack';
   youControl: boolean = false;
@@ -67,6 +67,9 @@ export class DialogSpellStackComponent {
   ) {}
 
   ngOnInit() {
+    const testingMode = localStorage.getItem('testingMode');
+    if (testingMode) { this.TIMER_TIME = 500000000; }
+
     this.stateSub = this.game.state$.subscribe(state => this.onStateChanges(state));
     this.onStateChanges(this.game.state);
   }
