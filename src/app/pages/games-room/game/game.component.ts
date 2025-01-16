@@ -28,6 +28,7 @@ import { WindowsService } from './gameLogic/windows.service';
 import { GameCardEventsService } from './gameLogic/game-card-events.service';
 import { DialogDamageComponent } from "./dialog-damage/dialog-damage.component";
 import { DialogUpkeepComponent } from './dialog-upkeep/dialog-upkeep.component';
+import { ErhnamDjinnDialogComponent } from './custom-dialogs/erhnam-djinn/erhnam-djinn-dialog.component';
 
 
 
@@ -56,6 +57,7 @@ import { DialogUpkeepComponent } from './dialog-upkeep/dialog-upkeep.component';
     DialogExtraManaComponent,
     DialogDamageComponent,
     DialogUpkeepComponent,
+    ErhnamDjinnDialogComponent,
 ],
   templateUrl: './game.component.html',
   styleUrls: ['./game.component.scss'],

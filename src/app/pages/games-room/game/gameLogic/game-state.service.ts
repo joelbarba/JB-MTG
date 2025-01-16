@@ -655,18 +655,6 @@ export class GameStateService {
         card.waitingUpkeep = true;
       }
     });
-    // playerA.upkeepQueue = []; // Clear previous queue
-    // tableA.sort((a,b) => a.order > b.order ? -1 : 1).forEach(card => {
-    //   const cost = card.getUpkeepCost(nextState);
-    //   if (cost) {
-    //     playerA.upkeepQueue.push({
-    //       text: cost.text || `Pay ${card.name} upkeep`,
-    //       gId: card.gId,
-    //       resolved: false,
-    //       targets: [],
-    //     })
-    //   }
-    // });
   }
 
 
@@ -680,8 +668,8 @@ export class GameStateService {
       const opStatus = validateCost(card, params, cost, playerA.manaPool);
       if (opStatus === 'ready') { 
         console.log(`Paying ${card.name} upkeep with params =`, params);
-        this.payManaCost(nextState, params, cost, card); // Spend Cost   
-        card.onUpkeep(nextState, false);
+        this.payManaCost(nextState, params, cost, card); // Spend Cost
+        card.onUpkeep(nextState, false, params.targets);
         card.waitingUpkeep = false;
       }  
     }
@@ -788,6 +776,7 @@ export class GameStateService {
     nextState.cards.filter(c => c.isType('creature')).forEach(creature => {
       creature.turnAttack  = creature.attack || 0;
       creature.turnDefense = creature.defense || 0;
+      creature.turnLandWalk = creature.landWalk;
     });
 
     // Remove permanent effects from cards that no longer exist (on the table)

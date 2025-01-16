@@ -2953,7 +2953,7 @@ export const dbCards: TCard[] = [
     isHaste:         false, 
     canRegenerate:   false, 
     colorProtection: null, 
-    upkeepPlayer:    null, 
+    upkeepPlayer:    'A', 
     landWalk:        null, 
     readyToPlay:     false, 
     border:          'white', 

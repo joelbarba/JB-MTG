@@ -1,0 +1,29 @@
+<div class="dialog-container"
+     [style.bottom.px]="win.customDialog.size === 'min' ? win.customDialog.bottom : undefined"
+     [class.minimized]="win.customDialog.size === 'min'" [style.z-index]="win.customDialog.zInd">
+  <div class="window-bg" (click)="win.customDialog.maximize()"></div>
+  <div [hidden]="win.customDialog.size === 'min'" class="min-btn" (click)="win.customDialog.minimize()" hoverTip="Click to minimize the window" tipSide="right">-</div>
+  <div [hidden]="win.customDialog.size === 'max'" class="max-btn" (click)="win.customDialog.maximize()" hoverTip="Click to open the window" tipSide="left">{{card?.name}}</div>
+
+  <h2>{{card?.name}} Upkeep</h2>
+  <div class="inner-dialog">
+    <div class="center">
+      <game-card [card]="card" from="targetSelection"></game-card>
+    </div>
+  
+    <p style="margin-top: 15px;">
+      Target non-wall creature an opponent control gains forestwalk until your next turn
+      <br/>Select 1 opponent's creature:
+    </p>
+  
+    <div class="select-box">
+      <game-card *ngFor="let targetCreature of selectableCreatures"
+                  [card]="targetCreature" from="targetSelection" (click)="selectCreature(targetCreature.gId)">
+      </game-card>
+    </div>
+  </div>
+
+  <!-- <div class="btns-box">
+    <bf-btn bfText="Cancel" bfIcon="icon-cross" (bfClick)="cardOp.cancel()"></bf-btn>
+  </div> -->
+</div>

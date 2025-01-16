@@ -126,6 +126,7 @@ export type TDBGameCard = {
   turnDamage: number;  // Amount of damaged received during the current turn (if >= defense it dies)
   turnAttack: number;  // <-- attack + effects
   turnDefense: number; // <-- defense + effects
+  turnLandWalk: 'island' | 'plains' | 'swamp' | 'mountain' | 'forest' | null; // Copied from card.landWalk every turn ini
 }
 
 // New fn: canUntap, onUpkeep, getUpkeepCost, getCost
@@ -141,7 +142,7 @@ export type TGameCard = TDBGameCard & TCard & { // Not in DB (fixed properties f
   onAbility: (state: TGameState) => void;   // What the card does when it's used for its ability (tap...)
   onDestroy: (state: TGameState) => void;   // What the card does when it's destroyed
   onDiscard: (state: TGameState) => void;   // What the card does when it's discarded
-  onUpkeep:  (state: TGameState, skip: boolean) => void;   // What the card does during the upkeep phase
+  onUpkeep:  (state: TGameState, skip: boolean, targets?: string[]) => void;   // What the card does during the upkeep phase
   onEffect:  (state: TGameState, effectId: string) => void;  // What the effect of the card does when it's applied
   afterDamage: (state: TGameState) => void;  // What the card does after combat
   isType:  (type: TCardExtraType) => boolean; // Checks if the card is of a certain type
@@ -160,7 +161,7 @@ export type TActionCost = {
   xMana           ?: TCast,     // If extra mana, what colors are allowed (0=not allowed, >0 allowed)
   neededTargets   ?: number,    // Number of targets needed
   possibleTargets ?: string[],  // Possible ids of the targets (gId / playerNum / custom /...)
-  customDialog    ?: boolean,   // If a custom dialog is needed, the code
+  customDialog    ?: boolean,   // If a custom dialog is needed (dialog code = card name)
   tap             ?: boolean,   // If the cost requires the card to tap
   canSkip         ?: boolean,   // (only for upkeep) If true, the cost is optional and can be skipped
   skipText        ?: string,    // If it can be skipped, the text on the "Cancel" button

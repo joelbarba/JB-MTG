@@ -97,10 +97,10 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
         .filter(attackingCard => !attackingCard.isFlying || defendingCard.isFlying)
         .filter(attackingCard => { // Check land-walk blocking
           return !nextState.cards.find(c => c.controller === cardPlayer.num
-            && attackingCard.landWalk
+            && attackingCard.turnLandWalk
             && c.location.slice(0,4) === 'tble' 
             && c.isType('land')
-            && c.isType(attackingCard.landWalk));
+            && c.isType(attackingCard.turnLandWalk));
         })
         .map(c => c.gId);
     };
@@ -1077,7 +1077,31 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   
 
   // During your upkeep, target non-wall creature an opponent control gains forestwalk until your next turn
-  function c000126_ErhnamDjinn() { }
+  function c000126_ErhnamDjinn() {
+    commonCreature();
+    card.getUpkeepCost = (nextState) => {
+      const { table, otherPlayer } = getShorts(nextState);
+      const possibleTargets = table.filter(c => c.controller === otherPlayer.num && c.isType('creature') && !c.isWall).map(c => c.gId);
+      return {
+        mana: [0,0,0,0,0,0],
+        text: 'Target non-wall creature an opponent control gains forestwalk until your next turn',
+        opText: 'Target non-wall creature you control gains forestwalk until opponent next turn',
+        customDialog: true,
+        neededTargets: 1, possibleTargets
+      };
+    }
+    card.onUpkeep = (nextState, skip, targets = []) => {
+      const { card } = getShorts(nextState);
+      nextState.effects.push({ scope: 'turn', gId, targets, id: randomId('e') });
+    };
+    card.onEffect = (nextState: TGameState, effectId: string) => { // Add forestwalk to target creature
+      const { targetCreatures } = getShorts(nextState);
+      const effect = nextState.effects.find(e => e.id === effectId);
+      const effectTargetId = effect?.targets[0]; // The creature that Erhnam's effect is targetting
+      const targetCreature = targetCreatures().find(c => c.gId === effectTargetId);
+      if (targetCreature) { targetCreature.turnLandWalk = 'forest'; }
+    }
+  }
 
 
 
