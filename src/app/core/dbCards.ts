@@ -1649,8 +1649,9 @@ export const dbCards: TCard[] = [
     isHaste:         false, 
     canRegenerate:   false, 
     colorProtection: null, 
-    upkeepPlayer:    null, 
-    readyToPlay:     false, 
+    upkeepPlayer:    'A', 
+    readyToPlay:     true, 
+    border:          'white', 
     maxInDeck:       4, 
   },
   {

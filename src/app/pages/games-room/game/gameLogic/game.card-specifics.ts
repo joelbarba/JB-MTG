@@ -994,11 +994,10 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   function c000074_PhantasmalForces() {
     commonCreature();
     card.getUpkeepCost = (nextState) => {
-      const { card } = getShorts(nextState);
-      if (!card.isTapped) { return null; }
       const text = 'You must pay 1 blue mana to maintain Phantasmal Forces, or they are destroyed';
       const opText = 'Player opponent is paying Phantasmal Forces upkeep';
-      return { mana: [0,1,0,0,0,0], text, opText };
+      const skipText = `Don't pay let it be destroyed`;
+      return { mana: [0,1,0,0,0,0], text, opText, canSkip: true, skipText };
     }
     card.onUpkeep = (nextState, skip) => {
       const { card } = getShorts(nextState);
