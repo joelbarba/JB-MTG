@@ -293,7 +293,8 @@ export class DataService {
 
   private testDecks() {
     const cardsDeck1 = [
-      'c000005',  // Forest
+      'c000001',  // Island
+      'c000003',  // Swamp
       'c000003',  // Swamp
       'c000013',  // Bayou
       'c000037',  // Brass Man
@@ -363,6 +364,8 @@ export class DataService {
       'c000037',  // Brass Man
       'c000108',  // Earthquake
       'c000027',  // Dark Ritual
+      'c000136',  // Bog Wraith
+      'c000137',  // Shanodin Dryads
       'c000051',  // Llanowar Elves
       'c000126',  // ErhnamDjinn
       'c000105',  // TheRack

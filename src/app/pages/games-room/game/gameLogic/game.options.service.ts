@@ -61,7 +61,7 @@ export class GameOptionsService {
     // Cards that need to tap can only be tapped to use the ability if they are not
     // Creatures with regenerate can only be regenerated (use the ability) if they are dying
     const youMayTriggerAbilities = () => {
-      tableA.filter(c => c.controller === playerANum).forEach(card => {        
+      tableA.filter(c => c.controller === playerANum && c.status !== 'sickness').forEach(card => {        
         const abilityCost = card.getAbilityCost(state);
         if (abilityCost && (!abilityCost.tap || !card.isTapped) && (!card.canRegenerate || card.isDying)) {
           const option: TGameOption = { action: 'trigger-ability', params: { gId: card.gId }, text: abilityCost.text };
@@ -142,7 +142,7 @@ export class GameOptionsService {
 
         // You may select a creature to defend your opponents attack
         tableA.filter(c => c.isType('creature') && c.combatStatus !== 'combat:defending').forEach(card => {
-          if (card.canDefend(state)) {
+          if (card.canDefend(state) && card.targetBlockers(state).length) {
             const option: TGameOption = { action: 'select-defending-creature', params: { gId: card.gId }, text: `Defend with ${card.name}` };
             state.options.push(option);
             card.selectableAction = option;

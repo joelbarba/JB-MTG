@@ -57,6 +57,14 @@
                 [bfList]="colors">
           </bf-dropdown>
 
+          <bf-dropdown bfLabel="Land Walk" class="col-4 flat" *ngIf="selCard.type === 'creature'"
+                [(ngModel)]="selCard.landWalk"
+                bfRender="text"
+                bfSelect="value"
+                bfEmptyLabel="None"
+                [bfList]="landWalkTypes">
+          </bf-dropdown>
+
           <div class="col-12" *ngIf="selCard.type === 'creature'" style="margin: 15px 0;">
             <bf-checkbox style="margin-right: 10px;" bfLabel="Flying"       [(ngModel)]="selCard.isFlying"></bf-checkbox>
             <bf-checkbox style="margin-right: 10px;" bfLabel="Trample"      [(ngModel)]="selCard.isTrample"></bf-checkbox>

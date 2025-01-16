@@ -27,6 +27,14 @@ export const upkeepTypes = [
   { value: 'AB', text: 'Both' },
 ];
 
+export const landTypes = [
+  { value: 'island',   text: 'Island'   },
+  { value: 'plains',   text: 'Plains'   },
+  { value: 'swamp',    text: 'Swamp'    },
+  { value: 'mountain', text: 'Mountain' },
+  { value: 'forest',   text: 'Forest'   },
+];
+
 export const cardOrderFn = (a: TCard, b: TCard) => {
   if (a.type !== b.type) {
     if (a.type === 'land') { return -1; }

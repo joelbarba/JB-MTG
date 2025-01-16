@@ -89,12 +89,19 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
       return card && !card.isTapped;
     };
     card.targetBlockers = (nextState: TGameState) => {
-      const { card, table } = getShorts(nextState);
+      const { card, table, cardPlayer, otherPlayer } = getShorts(nextState);
       if (!card || card.isTapped) { return []; };
       const defendingCard = card;
       return table.filter(c => c.combatStatus === 'combat:attacking')
         .filter(attackingCard => !attackingCard.colorProtection || attackingCard.colorProtection !== defendingCard.color)
         .filter(attackingCard => !attackingCard.isFlying || defendingCard.isFlying)
+        .filter(attackingCard => { // Check land-walk blocking
+          return !nextState.cards.find(c => c.controller === cardPlayer.num
+            && attackingCard.landWalk
+            && c.location.slice(0,4) === 'tble' 
+            && c.isType('land')
+            && c.isType(attackingCard.landWalk));
+        })
         .map(c => c.gId);
     };
   }
@@ -249,6 +256,8 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     case 'c000133':  c000133_FeldonsCane();               break;
     case 'c000134':  c000134_ColossusOfSardia();          break;
     case 'c000135':  c000135_KillerBees();                break; // ok
+    case 'c000136':  c000136_Bog_Wraith();                break;
+    case 'c000137':  c000137_Shanodin_Dryads();           break;
     default: console.warn('Card ID not found', card.id); 
   }
 
@@ -289,6 +298,8 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   function c000083_WallOfSwords()             { commonCreature(); }
   function c000087_RocOfKherRidges()          { commonCreature(); }
   function c000082_WhiteKnight()              { commonCreature(); }
+  function c000136_Bog_Wraith()               { commonCreature(); }
+  function c000137_Shanodin_Dryads()          { commonCreature(); }
 
 
 
@@ -680,9 +691,6 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
       if (hasForest) {
         card.turnAttack += 1;
         card.turnDefense += 2;
-        console.log('HAS FORESTS');
-      } else {
-        console.log('NO FORESTS');
       }
     }
   }
@@ -1065,8 +1073,13 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     };
   }
 
+
+  
+
   // During your upkeep, target non-wall creature an opponent control gains forestwalk until your next turn
   function c000126_ErhnamDjinn() { }
+
+
 
   // One damage to your opponent for each card he/she draws
   function c000124_UnderworldDreams() { }

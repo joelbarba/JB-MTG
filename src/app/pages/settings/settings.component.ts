@@ -9,7 +9,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { BfGrowlService, BfListHandler, BfUiLibModule } from 'bf-ui-lib';
 import { MtgCardComponent } from "../../core/common/internal-lib/mtg-card/mtg-card.component";
 import { TCard, TCast, TUser } from '../../core/types';
-import { cardTypes, colors, randomUnitId, upkeepTypes } from '../../core/common/commons';
+import { cardTypes, colors, landTypes, randomUnitId, upkeepTypes } from '../../core/common/commons';
 import { DataService, TFullCard, TFullUnit } from '../../core/dataService';
 import { dbCards } from '../../core/dbCards';
 
@@ -35,6 +35,7 @@ export class SettingsComponent {
   colors = colors;
   cardTypes = cardTypes;
   upkeepTypes = upkeepTypes;
+  landWalkTypes = landTypes.map(i => ({ value: i.value, text: i.text + '-Walk' }));
 
   hasBlackBorder = false;
   highlightNoneReady = true;
@@ -182,6 +183,7 @@ export class SettingsComponent {
       isHaste         : false,
       canRegenerate   : false,
       colorProtection : null,
+      landWalk        : null,
       maxInDeck       : 4,
       readyToPlay     : false,
       upkeepPlayer    : null,
@@ -220,6 +222,7 @@ export class SettingsComponent {
 
         const colorProtection = card.colorProtection ? `'${card.colorProtection}'` : 'null';
         const upkeepPlayer = card.upkeepPlayer ? `'${card.upkeepPlayer}'` : 'null';
+        const landWalk = card.landWalk ? `'${card.landWalk}'` : 'null';
         
         this.cardsDBCode += `\n  {`;
         this.cardsDBCode += `\n    id:              '${card.id}', `;
@@ -240,6 +243,7 @@ export class SettingsComponent {
         this.cardsDBCode += `\n    canRegenerate:   ${!!card.canRegenerate}, `;
         this.cardsDBCode += `\n    colorProtection: ${colorProtection}, `;
         this.cardsDBCode += `\n    upkeepPlayer:    ${upkeepPlayer}, `;
+        this.cardsDBCode += `\n    landWalk:        ${landWalk}, `;
         this.cardsDBCode += `\n    readyToPlay:     ${!!card.readyToPlay}, `;
         if (card.border) { this.cardsDBCode += `\n    border:          '${card.border || 'white'}', `; }
         if (card.maxInDeck) { this.cardsDBCode += `\n    maxInDeck:       ${card.maxInDeck || 'null'}, `; }

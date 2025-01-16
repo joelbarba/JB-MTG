@@ -57,6 +57,7 @@ export type TCard = {
   canRegenerate : boolean;  // Whether it has the regenerate ability
   colorProtection: TColor | null; // Cannot be blocked, targeted, enchanted or damage by sources of this color
   upkeepPlayer: 'A' | 'B' | 'AB' | null;  // Whether the upkeep applies to the card's controller (A), opponent's (B)
+  landWalk: 'island' | 'plains' | 'swamp' | 'mountain' | 'forest' | null; // Islandwalk, Plainswalk, Swampwalk, Mountainwalk, Forestwalk
   maxInDeck?: number;    // Max number of the same card you can have in a deck (1, 4, undefined=as many as you want)
   readyToPlay: boolean;
   // units: Array<{ ref: string, owner: string }>;

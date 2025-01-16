@@ -384,7 +384,7 @@ export class GameComponent {
       const attackingCreatures = !!this.tableA.find(c => c.combatStatus === 'combat:attacking');
       const defendingCreatures = !!this.tableA.find(c => c.combatStatus === 'combat:defending');
       const selectableAttackingCreatures = !!this.tableA.find(c => c.canAttack(this.game.state));
-      const selectableDefendingCreatures = !!this.tableA.find(c => c.canDefend(this.game.state));
+      const selectableDefendingCreatures = !!this.tableA.find(c => c.canDefend(this.game.state) && c.targetBlockers(this.game.state).length);
       const youDefend = !attackingCreatures; // Whether you are defending (true) or atacking (false)
 
 
@@ -528,6 +528,9 @@ export class GameComponent {
         card.zInd = 100 + (col * 15) + ind;
       })
     });
+
+    const totalBCols = tableGridB.filter(c => !!c.length).length;
+    if (totalBCols > maxCardsPerRow) { this.isHandBExp = false; } // Collapse Opponent's hand to give more space
   }
 
   extendTableCard(card: TGameCard, grid: 'A'| 'B'): TExtGameCard {
