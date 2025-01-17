@@ -1090,9 +1090,10 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
         neededTargets: 1, possibleTargets
       };
     }
-    card.onUpkeep = (nextState, skip, targets = []) => {
-      const { card } = getShorts(nextState);
-      nextState.effects.push({ scope: 'turn', gId, targets, id: randomId('e') });
+    card.onUpkeep = (nextState, skip) => {
+      const { card, otherPlayer } = getShorts(nextState);
+      const scope = 'turn' + otherPlayer.num as 'turn1' | 'turn2'; // The effect lasts until your opponent's turn ends
+      nextState.effects.push({ scope, gId, targets: card.targets, id: randomId('e') });
     };
     card.onEffect = (nextState: TGameState, effectId: string) => { // Add forestwalk to target creature
       const { targetCreatures } = getShorts(nextState);

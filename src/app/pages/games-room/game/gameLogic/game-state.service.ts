@@ -669,8 +669,9 @@ export class GameStateService {
       if (opStatus === 'ready') { 
         console.log(`Paying ${card.name} upkeep with params =`, params);
         this.payManaCost(nextState, params, cost, card); // Spend Cost
-        card.onUpkeep(nextState, false, params.targets);
+        card.targets = params.targets || [];
         card.waitingUpkeep = false;
+        card.onUpkeep(nextState, false, params.targets);
       }  
     }
   }
@@ -723,7 +724,7 @@ export class GameStateService {
     if (turnPlayer.life <= 0) { endGame(nextState, turnPlayer.num); return; }
     
     // Remove effects that last until the end of the turn
-    nextState.effects = nextState.effects.filter(e => e.scope !== 'turn');
+    nextState.effects = nextState.effects.filter(e => e.scope !== 'turn' && e.scope !== 'turn' + turnPlayer.num);    
 
     // Set new turn values
     turnPlayer.drawnCards = 0;
@@ -736,12 +737,7 @@ export class GameStateService {
 
     const newTurnPlayer = this.getPlayers(nextState).turnPlayer;
 
-    // Apply end turn effects, and then remove them
-    nextState.effects.filter(e => e.scope === 'endTurn').forEach(effect => {
-      const card = nextState.cards.find(c => c.gId === effect.gId); 
-      if (card) { card.onEffect(nextState, effect.id); }
-    });
-    nextState.effects = nextState.effects.filter(e => e.scope !== 'endTurn');
+    this.applyEndTurnEffects(nextState); // Apply end turn effects, and then remove them
   }
 
 
@@ -786,8 +782,8 @@ export class GameStateService {
       return refCard && (refCard.location.slice(0,4) === 'tble' || refCard.location === 'stack');
     });
 
-    // Apply permenent and turn effects
-    nextState.effects.filter(e => e.scope === 'permanent' || e.scope === 'turn').forEach(effect => {
+    // Apply permenent + turn effects
+    nextState.effects.filter(e => e.scope !== 'endTurn').forEach(effect => {
       // runEvent(nextState, effect.gId, 'onEffect', { effectId: effect.id });
       // Find the logic on the card that generated the effect
       const card = nextState.cards.find(c => c.gId === effect.gId); 
@@ -799,6 +795,15 @@ export class GameStateService {
   }
 
 
+  // This happens at the end of every turn
+  // It runs those efects that should be applied only once at the end of the turn. It then remove them
+  applyEndTurnEffects(nextState: TGameState) {
+    nextState.effects.filter(e => e.scope === 'endTurn').forEach(effect => {
+      const card = nextState.cards.find(c => c.gId === effect.gId); 
+      if (card) { card.onEffect(nextState, effect.id); }
+    });
+    nextState.effects = nextState.effects.filter(e => e.scope !== 'endTurn');
+  }
 
 
 }

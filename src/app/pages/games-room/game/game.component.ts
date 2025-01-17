@@ -471,10 +471,10 @@ export class GameComponent {
       return tableGrid;
     };
 
-    // Those cards that have only 1 target should be placed right before that target
+    // Enchantments that have only 1 target should be placed right before that target
     // If the target belongs to the opponent, move it to the opponent's grid
     const repositionCardsWithOneTarget = (tableCards: Array<TExtGameCard>, tableGrid: Array<Array<TExtGameCard>>) => {
-      const oneTarget = tableCards.filter(c => c.targets.length === 1).sort((a,b) => a.order > b.order ? 1: -1);
+      const oneTarget = tableCards.filter(c => c.isType('enchantment') && c.targets.length === 1).sort((a,b) => a.order > b.order ? 1: -1);
   
       oneTarget.forEach(card => { // Find cards with 1 target, and reposition them right before their target
         const targetId = card.targets[0];

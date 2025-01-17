@@ -10,7 +10,7 @@ type TDialogButton = { text: string, class: string, action: () => void };
 
 @Injectable({ providedIn: 'root' })
 export class WindowsService {
-  change$ = new Subject<void>;
+  change$ = new Subject<string>;
   defaultPayer: 'A' | 'B' = 'A';
   defaultCard: TGameCard | null = null;
   private readonly ZINDEX_OFFSET = 1000;
@@ -109,6 +109,18 @@ export class WindowsService {
     this.customDialog,      // 8
     this.upkeepDialog,      // 9
   ];
+  windowNames = [
+    'graveyardPanel',    // 0
+    'damageDialog',      // 1
+    'combatDialog',      // 2
+    'selectManaDialog',  // 3
+    'spellStackDialog',  // 4
+    'regenerateDialog',  // 5
+    'extraManaDialog',   // 6
+    'effectsPanel',      // 7
+    'customDialog',      // 8
+    'upkeepDialog',      // 9
+  ];
   
 
 
@@ -139,8 +151,10 @@ export class WindowsService {
 
     // "Upkeep Dialog" (Open / Close logic) 
     if (this.game.state.phase === 'upkeep' && this.game.state.cards.filter(c => c.waitingUpkeep).length) {
+      // if (!this.upkeepDialog.display) { console.log('WINDOW: opening upkeep dialog'); }
       this.upkeepDialog.open();
     } else {
+      // if (this.upkeepDialog.display) { console.log('WINDOW: closing upkeep dialog'); }
       this.upkeepDialog.close();
     }
 
@@ -202,9 +216,7 @@ export class WindowsService {
     else { this.regenerateDialog.close(); }
 
     // "Custom Dialogs" (Open / Close logic)
-    if (youControl && this.cardOp.customDialog) {
-      this.customDialog.open();
-    }
+    if (youControl && this.cardOp.customDialog) { this.customDialog.open(); }
     else { this.customDialog.close(); }
 
 
@@ -221,7 +233,7 @@ export class WindowsService {
     this.allWindows[winIndex].zInd = this.nextIndex();
     if (prevDisplay === false || prevZIndex !== this.allWindows[winIndex].zInd) { 
       this.allWindows[winIndex].size = 'max';
-      this.change$.next(); 
+      this.change$.next(this.windowNames[winIndex]); 
     }
     // console.log('OPEN', winIndex);
   }
@@ -229,14 +241,14 @@ export class WindowsService {
     const prevDisplay = this.allWindows[winIndex].display;
     this.allWindows[winIndex].display = false;
     this.allWindows[winIndex].zInd = this.ZINDEX_OFFSET;
-    if (prevDisplay === true) { this.change$.next(); }
+    if (prevDisplay === true) { this.change$.next(this.windowNames[winIndex]); }
   }
 
 
   private minimize(winIndex: number) {
     this.allWindows[winIndex].size = 'min';
     this.allWindows.filter(win => win.display && win.size === 'min').forEach((win, ind) => win.bottom = ind * 50);
-    this.change$.next();
+    this.change$.next(this.windowNames[winIndex]);
     // console.log('MINIMIZE', winIndex);
   }
   private maximize(winIndex: number) {
@@ -244,7 +256,7 @@ export class WindowsService {
     this.allWindows[winIndex].zInd = this.nextIndex();
     this.allWindows[winIndex].size = 'max';
     this.allWindows.filter(win => win.display && win.size === 'min').forEach((win, ind) => win.bottom = ind * 50);
-    this.change$.next();
+    this.change$.next(this.windowNames[winIndex]);
     // console.log('MAXIMIZE', winIndex);
   }
 

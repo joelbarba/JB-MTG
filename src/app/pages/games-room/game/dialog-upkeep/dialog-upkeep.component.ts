@@ -52,8 +52,9 @@ export class DialogUpkeepComponent {
   ) {}
 
   ngOnInit() {
-    this.stateSub = this.game.state$.subscribe(state => this.onUpdate());
-    this.winSub = this.win.change$.subscribe(() => this.onUpdate());
+    this.stateSub = this.game.state$.subscribe(() => this.onUpdate());
+    // this.winSub = this.win.change$.subscribe(winName => { console.log(`UPKEEP Dialog: Windows Change (${winName}) -> onUpdate()`); this.onUpdate(); });
+    // console.log('UPKEEP Dialog: ngOnInit -> onUpdate()');
     this.onUpdate();
   }
 
