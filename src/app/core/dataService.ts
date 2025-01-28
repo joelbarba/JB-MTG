@@ -301,6 +301,7 @@ export class DataService {
       'c000003',  // Swamp
       'c000003',  // Swamp
       'c000013',  // Bayou
+      'c000079',  // Unsummon
       'c000078',  // Wall Of Air
       'c000080',  // Erg Raiders
       'c000037',  // Brass Man

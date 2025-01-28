@@ -1209,21 +1209,49 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     }
   }
 
-  // Unsummon
-  // Weakness + Righteousness
-  // Royal Assassin
+  
+  function c000079_Unsummon() { // Return target creature to owner's hand
+    card.getSummonCost = (nextState: TGameState) => {
+      const { targetCreatures } = getShorts(nextState);
+      return { mana: card.cast, neededTargets: 1, possibleTargets: targetCreatures().map(c => c.gId) };
+    };
+    card.onSummon = (nextState: TGameState) => {
+      const { targetCreatures, targetId, tableStack } = getShorts(nextState);
+      const targetCreature = targetCreatures().find(c => c.gId === targetId);
+      if (targetCreature) {
+        tableStack.filter(c => c.isType('enchantment') && c.targets.length === 1 && c.targets[0] === targetCreature.gId).forEach(enchantment => {
+          moveCardToGraveyard(nextState, enchantment.gId); // Destroy all enchantments on target
+        });
+        moveCard(nextState, targetCreature.gId, 'hand'); // Return it to owner's hand
+      }
+      moveCardToGraveyard(nextState, gId); // Destroy itself
+    };
+  }
 
 
-  // - Require dialog:
-  // Hypnotic Specter
-  // Demonic Tutor
   function c000091_BirdsOfParadise() { 
     commonCreature();
     card.getAbilityCost = () => ({ mana: [0,0,0,0,0,0], tap: true, text: `Tap to add 1 mana`, });
     card.onAbility = (nextState: TGameState) => { };
   }
 
-
+  // Crusade
+  // Inferno
+  // Demonic Tutor (dialog)
+  // Warp Artifact
+  // Regrowth (dialog)
+  // Raise Dead (dialog)
+  // Jokulhaups
+  // Nevinyrrals Disk
+  // Library Of Alexandria (dialog)
+  // Incinerate
+  // Drain Life
+  // Ball Lightning
+  // Feldons Cane
+  // Colossus Of Sardia
+  // Sengir Vampire
+  // 
+  // 
 
   // // Pending to be coded......
   function c000029_Fork() {}
@@ -1233,7 +1261,6 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   function c000062_EyeForAnEye() {}
   function c000064_ManaFlare() {}
   function c000066_WarpArtifact() {}
-  function c000079_Unsummon() { }
   function c000085_NorthernPaladin() { }
   function c000088_RoyalAssassin() { }
   function c000090_SengirVampire() { }
