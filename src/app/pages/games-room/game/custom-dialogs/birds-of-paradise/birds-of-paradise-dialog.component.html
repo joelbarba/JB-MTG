@@ -1,0 +1,33 @@
+<div class="dialog-container"
+     [style.bottom.px]="win.customDialog.size === 'min' ? win.customDialog.bottom : undefined"
+     [class.minimized]="win.customDialog.size === 'min'" [style.z-index]="win.customDialog.zInd">
+  <div class="window-bg" (click)="win.customDialog.maximize()"></div>
+  <div [hidden]="win.customDialog.size === 'min'" class="min-btn" (click)="win.customDialog.minimize()" hoverTip="Click to minimize the window" tipSide="right">-</div>
+  <div [hidden]="win.customDialog.size === 'max'" class="max-btn" (click)="win.customDialog.maximize()" hoverTip="Click to open the window" tipSide="left">{{title}}</div>
+
+  <h2>{{title}}</h2>
+  <!-- <div>Using Black Lotus</div> -->
+  <div class="center">
+    <game-card [card]="card" from="customDialog"></game-card>
+  </div>
+
+  <div>
+    <p>Select 1 mana of any color:</p>
+
+    <div class="mana-options">
+      <mana-icon [mana]="1" (click)="select('custom-color-1')"></mana-icon>
+      <mana-icon [mana]="2" (click)="select('custom-color-2')"></mana-icon>
+      <mana-icon [mana]="3" (click)="select('custom-color-3')"></mana-icon>
+      <mana-icon [mana]="4" (click)="select('custom-color-4')"></mana-icon>
+      <mana-icon [mana]="5" (click)="select('custom-color-5')"></mana-icon>
+    </div>
+
+  </div>
+
+  <div class="btns-box">
+    <bf-btn bfText="Cancel" bfIcon="icon-cross" (bfClick)="cancel()"></bf-btn>
+    <!-- <bf-btn bfText="Get Mana" bfIcon="icon-arrow-right3"
+            [bfDisabled]="!mana1" (bfClick)="select()">
+    </bf-btn> -->
+  </div>
+</div>

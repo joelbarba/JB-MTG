@@ -14,7 +14,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
 
   // Functions to exted: common values
   card.onSummon       = (nextState: TGameState) => { moveCard(nextState, gId, 'tble'); getCard(nextState).status = null; }
-  card.onAbility      = (nextState: TGameState) => { getCard(nextState).isTapped = true; }
+  card.onAbility      = (nextState: TGameState) => {}
   card.onDestroy      = (nextState: TGameState) => {};
   card.onDiscard      = (nextState: TGameState) => moveCard(nextState, gId, 'grav');
   card.onUpkeep       = (nextState: TGameState, paid) => {};
@@ -66,10 +66,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     };
     card.onAbility = (nextState: TGameState) => {
       const { card, cardPlayer } = getShorts(nextState);
-      if (!card.isTapped && card.location.slice(0,4) === 'tble') {
-        cardPlayer.manaPool[manaNum] += 1;
-        card.isTapped = true;
-      }
+      cardPlayer.manaPool[manaNum] += 1;
     };    
   }
 
@@ -259,6 +256,36 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     case 'c000135':  c000135_KillerBees();                break; // ok
     case 'c000136':  c000136_Bog_Wraith();                break;
     case 'c000137':  c000137_Shanodin_Dryads();           break;
+    // balance.jpg
+    // dancing_scimitar.jpg
+    // desert_twister.jpg
+    // dingus_egg.jpg
+    // disrupting_scepter.jpg
+    // flashfires.jpg
+    // force_of_nature.jpg
+    // frozen_shade.jpg
+    // healing_salve.jpg
+    // holy_strength.jpg
+    // hurricane.jpg
+    // jayemdae_tome.jpg
+    // karma.jpg
+    // nether_shadow.jpg
+    // obsianus_golem.jpg
+    // onulet.jpg
+    // pearled_unicorn.jpg
+    // reconstruction.jpg
+    // reverse_damage.jpg
+    // scathe_zombies.jpg
+    // stream_of_life.jpg
+    // tranquility.jpg
+    // tsunami.jpg
+    // wall_of_bone.jpg
+    // wall_of_brambles.jpg
+    // wall_of_stone.jpg
+    // wall_of_wood.jpg
+    // war_mammoth.jpg
+    // water_elemental.jpg
+    // winter_orb.jpg
     default: console.warn('Card ID not found', card.id); 
   }
 
@@ -440,7 +467,6 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     card.onAbility = (nextState: TGameState) => {
       const { card, cardPlayer } = getShorts(nextState);
       cardPlayer.manaPool[0] += 2;
-      card.isTapped = true;
     };
   }
 
@@ -455,7 +481,6 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     card.onAbility = (nextState: TGameState) => {
       const { card, cardPlayer } = getShorts(nextState);
       cardPlayer.manaPool[colorNum] += 1;
-      card.isTapped = true;
     };
   }
   function c000010_MoxSapphire() { moxCommon(1, 'blue');  }
@@ -604,12 +629,9 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     };
     card.onAbility = (nextState: TGameState) => {
       const { card, cardPlayer } = getShorts(nextState);
-      if (!card.isTapped && card.location.slice(0,4) === 'tble') {
-        const mana = Number.parseInt(card.targets[0].split('custom-color-')[1]);
-        cardPlayer.manaPool[mana] += 1;
-        card.isTapped = true;
-        card.targets = [];
-      } 
+      const mana = Number.parseInt(card.targets[0].split('custom-color-')[1]);
+      cardPlayer.manaPool[mana] += 1;
+      card.targets = [];
     };
   }
   // 0=uncolored, 1=blue, 2=white, 3=black, 4=red, 5=green
@@ -744,7 +766,6 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     card.onAbility = (nextState: TGameState) => { 
       const { card, cardPlayer } = getShorts(nextState);
       cardPlayer.manaPool[5] += 1; // add 1 green mana
-      card.isTapped = true;
     };    
   }
 
@@ -1230,9 +1251,22 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
 
 
   function c000091_BirdsOfParadise() { 
-    commonCreature();
-    card.getAbilityCost = () => ({ mana: [0,0,0,0,0,0], tap: true, text: `Tap to add 1 mana`, });
-    card.onAbility = (nextState: TGameState) => { };
+    commonCreature();    
+    card.getAbilityCost = () => {
+      const possibleTargets = [1, 2, 3, 4, 5].map(v => 'custom-color-' + v);
+      return {
+        mana: [0,0,0,0,0,0], tap: true,
+        neededTargets: 1, possibleTargets, customDialog: true, // Targets will be the colors (1,2,3,4,5)
+        text: `Tap to add 1 mana of any single color`
+      }
+    };
+    card.onAbility = (nextState: TGameState) => { // Adds 1 color mana (targets = selected colors)
+      const { card, cardPlayer, targetId } = getShorts(nextState);
+      const mana = Number.parseInt(targetId.split('custom-color-')[1]);
+      cardPlayer.manaPool[mana] += 1;
+      card.targets = [];
+    };
+
   }
 
   // Crusade

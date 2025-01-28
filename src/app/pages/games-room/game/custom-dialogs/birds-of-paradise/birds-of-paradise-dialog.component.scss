@@ -1,0 +1,52 @@
+@import '../../game.vars.scss';
+
+.dialog-container {
+  background: $dialog-custom-bg;
+  // background: snow;
+  // background: seashell;
+  // background: oldlace;
+  // background: papayawhip;
+  // background: mintcream;
+  // background: lightyellow;
+
+  @include panel-basics();
+  @include fixed-panel(17%, 25%, 15%);
+
+  &:not(.minimized) {
+    min-width: 650px; min-height: 700px;
+    @media screen and (max-height: 1050px) { min-width: 600px; min-height: 600px; }
+    @media screen and (max-height: 900px)  { min-width: 560px; min-height: 540px; }
+  }
+
+
+  .mana-options {
+    display: flex;
+    justify-content: space-between;
+    margin: 5px 0 15px;
+    mana-icon {
+      padding: 8px 15px;
+      border: 3px solid #bbc9c8;
+      border-radius: 4px;
+      margin: 0 8px;
+      background: #cbd9d8;
+      cursor: pointer;
+      box-shadow: 4px 4px 4px 0px #676767;
+      &:hover { 
+        background: #ebebeb;
+      }
+      &.sel { 
+        background: #ebebeb;
+        box-shadow: inset 2px 2px 4px 1px #67676785;
+      }
+    }
+  }
+
+  .btns-box {
+    .your-selection {
+      flex: 1;
+      text-align: left;
+      margin-left: 30px;
+      mana-icon { margin-left: 10px; }
+    }
+  }
+}

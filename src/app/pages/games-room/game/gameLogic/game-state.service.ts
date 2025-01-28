@@ -389,6 +389,7 @@ export class GameStateService {
       for (let t = 0; t <= 5; t++) { playerA.manaPool[t] -= params.manaExtra[t]; } // Spend X Mana
       card.xValue = params.manaExtra?.reduce((v,a) => v + a, 0) || 0;
     }
+    if (cost.tap) { card.isTapped = true; }
     // console.log('Mana pool after paying:', playerA.manaPool);
   }
 
