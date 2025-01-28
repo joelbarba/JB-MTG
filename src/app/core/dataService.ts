@@ -301,7 +301,7 @@ export class DataService {
       'c000003',  // Swamp
       'c000003',  // Swamp
       'c000013',  // Bayou
-      'c000079',  // Unsummon
+      'c000066',  // Warp Artifact
       'c000078',  // Wall Of Air
       'c000080',  // Erg Raiders
       'c000037',  // Brass Man
@@ -323,6 +323,7 @@ export class DataService {
       'c000069',  // Wrath of God
       'c000026',  // Black Knight
       'c000093',  // Braingeyser
+      'c000079',  // Unsummon
       'c000100',  // Mind Twist
       'c000065',  // Terror
       'c000027',  // Dark Ritual
@@ -369,6 +370,10 @@ export class DataService {
       'c000014',  // Badlands
       'c000018',  // Taiga
       'c000099',  // Juggernaut
+      'c000054',  // Savannah Lions
+      'c000119',  // Crusade
+      'c000008',  // Mox Pearl
+      'c000116',  // Inferno
       'c000037',  // Brass Man
       'c000108',  // Earthquake
       'c000027',  // Dark Ritual
@@ -383,7 +388,6 @@ export class DataService {
       'c000006',  // Mox Emerald
       'c000009',  // Mox Ruby
       'c000035',  // KirdApe
-      'c000008',  // Mox Pearl
       'c000008',  // Mox Pearl
       'c000135',  // KillerBees
       'c000091',  // BirdsOfParadise

@@ -402,7 +402,24 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
         creature.turnAttack  += 1;
         creature.turnDefense += 1;
       });
+    }
+  }
 
+  // Crusade
+  function c000119_Crusade() {
+    card.onSummon = (nextState: TGameState) => {
+      nextState.effects.push({ scope: 'permanent', trigger: 'constantly', gId, targets: [], id: randomId('e') });
+      moveCard(nextState, gId, 'tble');
+    }
+    card.onEffect = (nextState: TGameState, effectId: string) => { // Add +1/+1 to all white creatures
+      const { targetCreatures } = getShorts(nextState);
+      const whiteCreatures = targetCreatures().filter(c => c.color === 'white');
+      const effect = nextState.effects.find(e => e.id === effectId);
+      if (effect) { effect.targets = whiteCreatures.map(c => c.gId); } // Update the effect with all the current black creatures
+      whiteCreatures.forEach(creature => {
+        creature.turnAttack  += 1;
+        creature.turnDefense += 1;
+      });
     }
   }
 
@@ -1266,13 +1283,20 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
       cardPlayer.manaPool[mana] += 1;
       card.targets = [];
     };
+  }
+
+
+  // Inferno
+  function c000116_Inferno() {
 
   }
 
-  // Crusade
-  // Inferno
-  // Demonic Tutor (dialog)
   // Warp Artifact
+  function c000066_WarpArtifact() {
+
+  }
+
+  // Demonic Tutor (dialog)
   // Regrowth (dialog)
   // Raise Dead (dialog)
   // Jokulhaups
@@ -1294,7 +1318,6 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   function c000061_DemonicTutor() {}
   function c000062_EyeForAnEye() {}
   function c000064_ManaFlare() {}
-  function c000066_WarpArtifact() {}
   function c000085_NorthernPaladin() { }
   function c000088_RoyalAssassin() { }
   function c000090_SengirVampire() { }
@@ -1314,10 +1337,8 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   function c000113_TheAbyss() { }
   function c000114_LibraryOfAlexandria() { }
   function c000115_Jokulhaups() { }
-  function c000116_Inferno() { }
   function c000117_BalduvianHorde() { }
   function c000118_Incinerate() { }
-  function c000119_Crusade() { }
   function c000121_MishrasFactory() { }
   function c000122_RaiseDead() { }
   function c000123_DrainLife() { }
