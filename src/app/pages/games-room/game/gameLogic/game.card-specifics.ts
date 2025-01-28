@@ -88,13 +88,14 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
       const { card } = getShorts(nextState);
       return card && !card.isTapped;
     };
-    card.targetBlockers = (nextState: TGameState) => {
+    card.targetBlockers = (nextState: TGameState) => { // List of attackers the creature can block
       const { card, table, cardPlayer, otherPlayer } = getShorts(nextState);
       if (!card || card.isTapped) { return []; };
       const defendingCard = card;
       return table.filter(c => c.combatStatus === 'combat:attacking')
         .filter(attackingCard => !attackingCard.colorProtection || attackingCard.colorProtection !== defendingCard.color)
         .filter(attackingCard => !attackingCard.isFlying || defendingCard.isFlying)
+        .filter(attackingCard => !attackingCard.notBlockByWalls || !defendingCard.isWall)
         .filter(attackingCard => { // Check land-walk blocking
           return !nextState.cards.find(c => c.controller === cardPlayer.num
             && attackingCard.turnLandWalk
@@ -1188,7 +1189,25 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
       }
     }
   }
-  // c000099_Juggernaut
+
+
+  function c000099_Juggernaut() { 
+    commonCreature();
+    card.onSummon = (nextState: TGameState) => {
+      const { card, cardPlayer } = getShorts(nextState);
+      nextState.effects.push({ scope: 'permanent', trigger: 'duringSelAttack', playerNum: cardPlayer.num, gId, targets: [], id: randomId('e') });
+      moveCard(nextState, card.gId, 'tble');
+      card.status = 'sickness';
+      card.combatStatus = null;
+    };
+    card.onEffect = (nextState: TGameState, effectId: string) => {
+      const { card } = getShorts(nextState);
+      if (card.canAttack(nextState)) { // Force Juggernaut to attack (must attack if possible)
+        card.combatStatus = 'combat:attacking';
+        card.isTapped = true;
+      }
+    }
+  }
 
   // Unsummon
   // Weakness + Righteousness
@@ -1223,7 +1242,6 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   function c000096_CopyArtifact() { }
   function c000097_Fastbond() { }
   function c000098_Fireball() { }
-  function c000099_Juggernaut() { }
   function c000101_Millstone() { }
   function c000102_NevinyrralsDisk() { }
   function c000103_Regrowth() { }

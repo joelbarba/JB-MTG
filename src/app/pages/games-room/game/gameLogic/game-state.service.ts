@@ -841,6 +841,7 @@ export class GameStateService {
 
   // This happens every time the state is modified (at the end of the reducer)
   refreshEffects(nextState: TGameState) {
+    const { playerA } = this.getPlayers(nextState);
     // console.log('Applying EFFECTS');
 
     // Reset all turnAttack / turnDefense
@@ -861,9 +862,15 @@ export class GameStateService {
 
     // Apply constant effects
     nextState.effects.filter(e => e.trigger === 'constantly').forEach(effect => {
-      const card = nextState.cards.find(c => c.gId === effect.gId); 
-      if (card) { card.onEffect(nextState, effect.id); }
+      nextState.cards.find(c => c.gId === effect.gId)?.onEffect(nextState, effect.id);
     });
+
+    // Apply during effects
+    if (nextState.phase === EPhase.combat && nextState.subPhase === 'selectAttack') {
+      nextState.effects.filter(e => e.trigger === 'duringSelAttack' && (!e.playerNum || e.playerNum === playerA.num)).forEach(effect => {
+        nextState.cards.find(c => c.gId === effect.gId)?.onEffect(nextState, effect.id);
+      });
+    }
 
     // We can't do this here, because of afterDamage subphase (creatures should stay until the end of combat)
     // killDamagedCreatures(nextState); // In case an effect deals damage or changes creatures defense

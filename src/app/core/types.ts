@@ -49,12 +49,13 @@ export type TCard = {
   attack  : number;
   defense : number;
   border? : 'white' | 'black';  // The color of the border (undefined = white)
-  isWall        : boolean;  // They cannot attack, only defend
-  isFlying      : boolean;  // Cannot be blocked by a non flying creatures
-  isTrample     : boolean;  // Deals the excess damage (over defenders toughness) to the player
-  isFirstStrike : boolean;  // When dealing combat damage, if that kills the other attacking/defender, they don't receive any damage
-  isHaste       : boolean;  // No summoning sickness
-  canRegenerate : boolean;  // Whether it has the regenerate ability
+  isWall         : boolean;  // They cannot attack, only defend
+  isFlying       : boolean;  // Cannot be blocked by a non flying creatures
+  isTrample      : boolean;  // Deals the excess damage (over defenders toughness) to the player
+  isFirstStrike  : boolean;  // When dealing combat damage, if that kills the other attacking/defender, they don't receive any damage
+  isHaste        : boolean;  // No summoning sickness
+  canRegenerate  : boolean;  // Whether it has the regenerate ability
+  notBlockByWalls?: boolean;  // true=It cannot be blocked by walls
   colorProtection: TColor | null; // Cannot be blocked, targeted, enchanted or damage by sources of this color
   upkeepPlayer: 'A' | 'B' | 'AB' | null;  // Whether the upkeep applies to the card's controller (A), opponent's (B)
   landWalk: 'island' | 'plains' | 'swamp' | 'mountain' | 'forest' | null; // Islandwalk, Plainswalk, Swampwalk, Mountainwalk, Forestwalk
@@ -79,7 +80,7 @@ export type TEffect = {
   id: string; // Id of the effect
   gId: string; // gId of the card that generated the effect
   scope: 'permanent' | 'turn'; // The lifespan of the effect
-  trigger: 'constantly' | 'onEndTurn' | 'onDraw' | 'dugingSelAttack' | // When is the onEffect() called
+  trigger: 'constantly' | 'onEndTurn' | 'onDraw' | 'duringSelAttack' | // When is the onEffect() called
            'onEndUntap' | 'onEndUpkeep' | 'onEndDraw' | 'onEndPre' | 'onEndCombat' | 'onEndPost' | 'onEndDiscard' | // phases end
            'onEndSelectAttack' | 'onEndAttacking' | 'onEndSelectDefense' | 'onEndBeforeDamage' | 'onEndAfterDamage' // subphases end
   targets: Array<string>; // Array of gIds or player1 or player2

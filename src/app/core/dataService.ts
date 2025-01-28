@@ -301,7 +301,7 @@ export class DataService {
       'c000003',  // Swamp
       'c000003',  // Swamp
       'c000013',  // Bayou
-      'c000080',  // Erg Raiders
+      'c000078',  // Wall Of Air
       'c000080',  // Erg Raiders
       'c000037',  // Brass Man
       'c000070',  // Howl From Beyond
@@ -367,6 +367,7 @@ export class DataService {
       'c000013',  // Bayou
       'c000014',  // Badlands
       'c000018',  // Taiga
+      'c000099',  // Juggernaut
       'c000037',  // Brass Man
       'c000108',  // Earthquake
       'c000027',  // Dark Ritual
