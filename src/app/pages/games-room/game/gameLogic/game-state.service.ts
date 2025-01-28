@@ -181,7 +181,7 @@ export class GameStateService {
       'selectableAction', 'effectsFrom', 'targetOf', 'uniqueTargetOf',
 
       // Extended functions (extendCardLogic)
-      'onSummon', 'onAbility', 'onDestroy', 'onDiscard', 'afterDamage', 'onEffect', 'onUpkeep',
+      'onSummon', 'onAbility', 'onDestroy', 'onDiscard', 'afterCombat', 'onEffect', 'onUpkeep',
       'isType', 'isColor', 'canUntap', 'canAttack', 'canDefend', 'targetBlockers', 
       'getSummonCost', 'getAbilityCost', 'getUpkeepCost', 'getCost',
     ]
@@ -516,28 +516,40 @@ export class GameStateService {
     const attackingCreatures = nextState.cards.filter(c => c.combatStatus === 'combat:attacking');
     if (!attackingCreatures.length) { this.endCombat(nextState); }
 
+    const endSubphaseEffects = (trigger: 'onEndSelectAttack' | 'onEndAttacking' | 'onEndSelectDefense' | 'onEndBeforeDamage' | 'onEndAfterDamage') => {
+      nextState.effects.filter(e => e.trigger === trigger && (!e.playerNum || e.playerNum === attackingPlayer.num)).forEach(effect => {
+        nextState.cards.find(c => c.gId === effect.gId)?.onEffect(nextState, effect.id);
+      });
+    }
+
     if (nextState.subPhase === 'selectAttack') {
+      endSubphaseEffects('onEndSelectAttack');
       nextState.subPhase = ESubPhase.attacking;
 
     } else if (nextState.subPhase === 'attacking' && nextState.control === attackingPlayer.num) {
       this.switchPlayerControl(nextState, defendingPlayer);
 
     } else if (nextState.subPhase === 'attacking' && nextState.control === defendingPlayer.num) {
+      endSubphaseEffects('onEndAttacking');
       nextState.subPhase = ESubPhase.selectDefense;
 
     } else if (nextState.subPhase === 'selectDefense') {
+      endSubphaseEffects('onEndSelectDefense');
       nextState.subPhase = ESubPhase.beforeDamage;
 
     } else if (nextState.subPhase === 'beforeDamage' && nextState.control === defendingPlayer.num) {
       this.switchPlayerControl(nextState, attackingPlayer);
 
     } else if (nextState.subPhase === 'beforeDamage' && nextState.control === attackingPlayer.num) {
+      endSubphaseEffects('onEndBeforeDamage');
       this.runCombat(nextState);
+      nextState.subPhase = ESubPhase.afterDamage;
 
     } else if (nextState.subPhase === 'afterDamage' && nextState.control === attackingPlayer.num) {
       this.switchPlayerControl(nextState, defendingPlayer);
 
     } else if (nextState.subPhase === 'afterDamage' && nextState.control === defendingPlayer.num) {
+      endSubphaseEffects('onEndAfterDamage');
       const regenerateStep = killDamagedCreatures(nextState);
       if (regenerateStep) { nextState.subPhase = ESubPhase.regenerate; }
       else { this.endCombat(nextState); }
@@ -597,18 +609,29 @@ export class GameStateService {
       }
     });
 
-    defendingPlayer.life -= totalDamage; // None blocked creatures damage defending player
-
-    nextState.subPhase = ESubPhase.afterDamage;
+    if (totalDamage > 0) {
+      defendingPlayer.life -= totalDamage; // None blocked creatures damage defending player
+      nextState.lifeChanges.push({
+        player : defendingPlayer.num,
+        damage : totalDamage,
+        timer  : 0,
+        title  : 'Combat Damage',
+        text   : `You received ${totalDamage} damage from unblocked creatures`,
+        opText : `Your opponent received ${totalDamage} damage from unblocked creatures`,
+      })
+    }
   }
 
   private endCombat(nextState: TGameState) {
     const { attackingPlayer } = this.getPlayers(nextState);
+    
+    // Unset all combat properties
     nextState.cards.filter(c => c.combatStatus || c.blockingTarget).forEach(card => {
+      card.afterCombat(nextState);
       card.combatStatus = null;
       card.blockingTarget = null;
-      card.afterDamage(nextState);
     });
+
     this.switchPlayerControl(nextState, attackingPlayer);
     this.endPhase(nextState);
   }
@@ -731,8 +754,16 @@ export class GameStateService {
 
   // Advances the phase for the given state, or ends the turn
   private endPhase(nextState: TGameState) {
+    const { playerA, playerB, turnPlayer } = this.getPlayers(nextState);
     nextState.lifeChanges = []; // Remove any life notifications
 
+    // End phase effects: onEndUntap, onEndUpkeep, onEndDraw, onEndPre, onEndCombat, onEndPost, onEndDiscard
+    nextState.effects.filter(e => !e.playerNum || e.playerNum === playerA.num).forEach(effect => {
+      const triggerName = 'onEnd' + (nextState.phase.slice(0, 1).toUpperCase() + nextState.phase.slice(1));
+      if (effect.trigger === triggerName) { nextState.cards.find(c => c.gId === effect.gId)?.onEffect(nextState, effect.id); }
+    });
+
+    // Jump to the next phase
     switch (nextState.phase) {
       case EPhase.untap:    nextState.phase = EPhase.upkeep; this.generateUpkeep(nextState); break;
       case EPhase.upkeep:   nextState.phase = EPhase.draw; break;
@@ -756,6 +787,7 @@ export class GameStateService {
     if (nextState.phase === EPhase.end) { this.manaBurn(nextState); }
     killDamagedCreatures(nextState); // In case something dealt damage or changed creatures defense
   }
+
 
   // End the turn and reset all turn counters and values
   private endTurn(nextState: TGameState) {

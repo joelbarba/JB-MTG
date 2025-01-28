@@ -143,11 +143,13 @@ export class WindowsService {
       if (this.prevCardOpStatus === 'selectingMana') { this.selectManaDialog.close(); }
     }
 
+
     // "Select Extra Mana Dialog" (Open / Close logic)
     if (this.prevCardOpStatus !== this.cardOp.status) {
       if (this.cardOp.status    === 'waitingExtraMana') { this.extraManaDialog.open(); }
       if (this.prevCardOpStatus === 'waitingExtraMana') { this.extraManaDialog.close(); }
     }
+
 
     // "Upkeep Dialog" (Open / Close logic) 
     if (this.game.state.phase === 'upkeep' && this.game.state.cards.filter(c => c.waitingUpkeep).length) {
@@ -157,6 +159,7 @@ export class WindowsService {
       // if (this.upkeepDialog.display) { console.log('WINDOW: closing upkeep dialog'); }
       this.upkeepDialog.close();
     }
+
 
     // "Combat Dialog" (Open / Close logic) ---> Done in game controller (updateCombatOperation)
     if (this.game.state.phase === 'combat') {
@@ -187,6 +190,10 @@ export class WindowsService {
     const anySpellsInTheStack = !!this.game.state.cards.find(c => c.location === 'stack');
     if (anySpellsInTheStack && (this.game.state.player1.stackCall || this.game.state.player2.stackCall)) {
       this.spellStackDialog.open();
+
+      if (anySpellsInTheStack && !this.game.state.player1.stackCall && !this.game.state.player2.stackCall) { // This shouldn't happen
+        console.warn('The stack was released, but there is still cards on it:', this.game.state.cards.find(c => c.location === 'stack'));
+      }
       
       if (youControl && this.cardOp?.card?.controller === this.game.playerANum) {
         // If summoning a card and waiting for mana, minimize it (so the lands on the table get visible)
@@ -196,16 +203,19 @@ export class WindowsService {
         // If summoning a card and selecting a target, maximize it because its' most likely one on the stack
         if (this.cardOp.status === 'selectingTargets') { this.spellStackDialog.maximize(); }
       }
-    }
+    } else { this.spellStackDialog.close(); }
+
 
     // "Damage Dialog" if any life changes to be notified
     if (this.game.state.lifeChanges.length) { this.damageDialog.open(); }
     else { this.damageDialog.close(); }
     
+
     // "Regenerate Dialog" (Open / Close logic)
     // If a creature that can be regenerated is dying, open the regenerate dialog
     if (this.game.state.cards.find(c => c.canRegenerate && c.isDying)) { this.regenerateDialog.open(); } 
     else { this.regenerateDialog.close(); }
+
 
     // "Custom Dialogs" (Open / Close logic)
     if (youControl && this.cardOp.customDialog) { this.customDialog.open(); }

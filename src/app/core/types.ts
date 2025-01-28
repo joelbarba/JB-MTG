@@ -79,7 +79,9 @@ export type TEffect = {
   id: string; // Id of the effect
   gId: string; // gId of the card that generated the effect
   scope: 'permanent' | 'turn'; // The lifespan of the effect
-  trigger: 'constantly' | 'onEndTurn' | 'onDraw'; // When is the onEffect() called
+  trigger: 'constantly' | 'onEndTurn' | 'onDraw' | 'dugingSelAttack' | // When is the onEffect() called
+           'onEndUntap' | 'onEndUpkeep' | 'onEndDraw' | 'onEndPre' | 'onEndCombat' | 'onEndPost' | 'onEndDiscard' | // phases end
+           'onEndSelectAttack' | 'onEndAttacking' | 'onEndSelectDefense' | 'onEndBeforeDamage' | 'onEndAfterDamage' // subphases end
   targets: Array<string>; // Array of gIds or player1 or player2
   xValue?: number;        // In case of effects that add X attack/defense
   playerNum?: '1' | '2';  // In case it applies only to 1 player (turn player 1/2, onDraw player 1/2)
@@ -152,15 +154,15 @@ export type TDBGameCard = {
   blockingTarget: string | null;  // For combat: When defending, the gId of the attacking creature this one is blocking
 
   xValue: number; // Value of the manaExtra used when actioning the card
-
   waitingUpkeep: boolean;  // Whether the upkeep of the card it's still not processed this turn
+  tokens: Array<string>;
 
   turnDamage: number;  // Amount of damaged received during the current turn (if >= defense it dies)
   turnAttack: number;  // <-- attack + effects
   turnDefense: number; // <-- defense + effects
   turnLandWalk: 'island' | 'plains' | 'swamp' | 'mountain' | 'forest' | null; // Copied from card.landWalk every turn ini
 }
-
+// export type TCardToken = { id: string; text?: string; };
 
 export type TGameCard = TDBGameCard & TCard & { // Not in DB (fixed properties from TCard + extended props & functions)
   selectableAction?: null | TGameOption;
@@ -175,7 +177,7 @@ export type TGameCard = TDBGameCard & TCard & { // Not in DB (fixed properties f
   onDiscard: (state: TGameState) => void;   // What the card does when it's discarded
   onUpkeep:  (state: TGameState, skip: boolean, targets?: string[]) => void;   // What the card does during the upkeep phase
   onEffect:  (state: TGameState, effectId: string) => void;  // What the effect of the card does when it's applied
-  afterDamage: (state: TGameState) => void;  // What the card does after combat
+  afterCombat: (state: TGameState) => void;  // What the card does after combat
   isType:  (type: TCardExtraType) => boolean; // Checks if the card is of a certain type
   isColor: (color: TColor) => boolean; // Checks if the card is of a certain color
   canUntap: (state: TGameState) => boolean;  // Whether the card can be normally untapped

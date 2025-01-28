@@ -18,7 +18,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   card.onDestroy      = (nextState: TGameState) => {};
   card.onDiscard      = (nextState: TGameState) => moveCard(nextState, gId, 'grav');
   card.onUpkeep       = (nextState: TGameState, paid) => {};
-  card.afterDamage    = (nextState: TGameState) => {};
+  card.afterCombat    = (nextState: TGameState) => {};
   card.onEffect       = (nextState: TGameState, effectId: string) => {};
   card.canUntap       = (nextState: TGameState) => true;
   card.canAttack      = (nextState: TGameState) => !!card.isType('creature');
@@ -670,7 +670,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
 
   function c000076_SerraAngel() {
     commonCreature();
-    card.afterDamage = (nextState: TGameState) => {
+    card.afterCombat = (nextState: TGameState) => {
       card.isTapped = false;
     }
   }
@@ -1163,7 +1163,31 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     }
   }
 
-  // c000080_ErgRaiders
+  function c000080_ErgRaiders() { 
+    commonCreature();
+    card.onSummon = (nextState: TGameState) => {
+      const { card, cardPlayer } = getShorts(nextState);
+      nextState.effects.push({ scope: 'permanent', trigger: 'onEndTurn',         playerNum: cardPlayer.num, gId, targets: [], id: randomId('e') });
+      nextState.effects.push({ scope: 'permanent', trigger: 'onEndSelectAttack', playerNum: cardPlayer.num, gId, targets: [], id: randomId('e') });
+      moveCard(nextState, card.gId, 'tble');
+      card.status = 'sickness';
+      card.combatStatus = null;
+    };
+    card.onEffect = (nextState: TGameState, effectId: string) => {
+      const { card, cardPlayer } = getShorts(nextState);
+      const effect = nextState.effects.find(e => e.id === effectId);
+      if (effect?.trigger === 'onEndSelectAttack') {
+        if (card.combatStatus === 'combat:attacking') { card.tokens = ['attackOk']; } // Remember it attacked
+
+      } else if (effect?.trigger === 'onEndTurn') {
+        if (card.status !== 'sickness' && !card.tokens.length) {
+          cardPlayer.life -= 2;
+          addLifeChange(nextState, cardPlayer.num, 2, card, 0);
+        }
+        card.tokens = []; // Refresh for next turn
+      }
+    }
+  }
   // c000099_Juggernaut
 
   // Unsummon
@@ -1191,7 +1215,6 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   function c000064_ManaFlare() {}
   function c000066_WarpArtifact() {}
   function c000079_Unsummon() { }
-  function c000080_ErgRaiders() { }
   function c000085_NorthernPaladin() { }
   function c000088_RoyalAssassin() { }
   function c000090_SengirVampire() { }

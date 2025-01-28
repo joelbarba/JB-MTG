@@ -266,6 +266,7 @@ export class DataService {
         waitingUpkeep: false,
         targets: [],
         blockingTarget: null,
+        tokens: [],
         turnDamage: 0,
         turnAttack: 0,
         turnDefense: 0,
@@ -300,6 +301,8 @@ export class DataService {
       'c000003',  // Swamp
       'c000003',  // Swamp
       'c000013',  // Bayou
+      'c000080',  // Erg Raiders
+      'c000080',  // Erg Raiders
       'c000037',  // Brass Man
       'c000070',  // Howl From Beyond
       'c000023',  // Ancestral Recall
