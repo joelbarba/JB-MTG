@@ -5,14 +5,40 @@
   background: $dialog-damage-bg;
 
   @include panel-basics();
-  @include fixed-panel(20%, 30%, 19%);
-
-  h3 { font-size: 60px; } // icon
+  @include fixed-panel(24%, 30%, 20%);
 
   &:not(.minimized) {
-    min-width: 650px; min-height: 50px;
-    @media screen and (max-height: 1050px) { min-width: 500px; min-height: 400px; }
-    @media screen and (max-height: 900px)  { min-width: 400px; min-height: 300px; }
+    min-width: 650px; min-height: 580px;
+    @media screen and (max-height: 1050px) { min-width: 540px; min-height: 470px; }
+    @media screen and (max-height: 900px)  { min-width: 520px; min-height: 430px; }
+  }
+
+
+  h3 { font-size: calc(var(--size-ref) * 0.70); } // icon
+
+  .player {
+    position: relative;
+    padding-top: calc(var(--size-ref) * 0.60);
+    .icon-user3 { font-size: calc(var(--size-ref) * 1.20); }
+    .damage-points, .life-points {
+      position: absolute;
+      line-height: calc(var(--size-ref) * 0.60);
+      font-size  : calc(var(--size-ref) * 0.60);
+      left: calc(50% - (var(--size-ref) * 0.30));
+      top: 0;      
+      font-weight: 600;
+      -webkit-text-stroke: 2px #fff;
+      color: red;
+      .icon-power, .icon-plus { font-size: calc(var(--size-ref) * 0.30); }
+    }
+
+  }
+
+  &.life-gain {
+    background: #60dd66;
+    .player .life-points {
+      color: green;
+    }
   }
 
 

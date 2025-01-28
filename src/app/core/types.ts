@@ -78,10 +78,28 @@ export type TTargetType = {
 export type TEffect = {
   id: string; // Id of the effect
   gId: string; // gId of the card that generated the effect
-  scope: 'permanent' | 'turn' | 'turn1' | 'turn2' | 'endTurn';
+  scope: 'permanent' | 'turn'; // The lifespan of the effect
+  trigger: 'constantly' | 'onEndTurn' | 'onDraw'; // When is the onEffect() called
   targets: Array<string>; // Array of gIds or player1 or player2
-  xValue?: number; // In case of effects that add X attack/defense
+  xValue?: number;        // In case of effects that add X attack/defense
+  playerNum?: '1' | '2';  // In case it applies only to 1 player (turn player 1/2, onDraw player 1/2)
 }
+
+
+
+export type TPlayer = {
+  userId: string;
+  name: string;
+  num: '1' | '2';
+  life: number;
+  manaPool: TCast;
+  extraTurns: number;     // If > 0, the player plays again
+  turnDrawnCards: number; // Only 1 per turn
+  summonedLands: number;  // Only 1 per turn
+  stackCall: boolean;  // true if the spell-stack needs to stop on the player
+  selectableAction?: null | TGameOption;
+}
+
 
 export type TGameDBState = {
   created: string;
@@ -94,7 +112,9 @@ export type TGameDBState = {
   player2: TPlayer;
   cards: Array<TGameCard>;
   effects: Array<TEffect>;
-  spellStackInitiator: null | '1' | '2'; // Remember the player num that initiated the spell stack (so control is returned after release)
+  lifeChanges: Array<TLifeChange>;    // Popup to show when a player loses/gains life
+  lifeChangesInitiator: null | '1' | '2'; // Remember the player num that initiated the lifChange (so control is returned after acknowledgment)
+  spellStackInitiator: null | '1' | '2';  // Remember the player num that initiated the spell stack (so control is returned after release)
   lastAction?: TGameOption & { time: string, player: '1' | '2' };
   seq: number; // sequential order
   deckId1: string;
@@ -102,6 +122,18 @@ export type TGameDBState = {
 }
 export type TGameState = TGameDBState & { options: Array<TGameOption> };
 export type TGameHistory = TGameState & { history: Array<TGameOption & { time: string, player: '1' | '2' }>; }
+export type TLifeChange = {
+  player : '1' | '2',
+  damage : number;  // Damage (X = damage / -X = life)
+  timer  : number;  // Number of milliseconds the panel is shown (0=no timer)
+  gId   ?: string;  // Card (gId) that caused the damage
+  title ?: string;
+  icon  ?: string;
+  text  ?: string;  // Text to display when it's your damage/life
+  opText?: string;  // Text to display when it's the opponent's damage/life
+}
+
+
 
 export type TDBGameCard = {
   name        : string;
@@ -129,7 +161,6 @@ export type TDBGameCard = {
   turnLandWalk: 'island' | 'plains' | 'swamp' | 'mountain' | 'forest' | null; // Copied from card.landWalk every turn ini
 }
 
-// New fn: canUntap, onUpkeep, getUpkeepCost, getCost
 
 export type TGameCard = TDBGameCard & TCard & { // Not in DB (fixed properties from TCard + extended props & functions)
   selectableAction?: null | TGameOption;
@@ -156,6 +187,7 @@ export type TGameCard = TDBGameCard & TCard & { // Not in DB (fixed properties f
   getUpkeepCost:  (state: TGameState) => TActionCost | null; // Cost play the onUpkeep() action
   getCost: (state: TGameState, action: 'summon-spell' | 'trigger-ability' |'pay-upkeep') => TActionCost | null; // Generic cost getter
 }
+export type TGameOption = { action: TAction, params: TActionParams, text?: string };
 export type TActionCost = { 
   mana            : TCast,      // The fixed mana needed
   xMana           ?: TCast,     // If extra mana, what colors are allowed (0=not allowed, >0 allowed)
@@ -180,29 +212,11 @@ export type TExtGameCard = TGameCard & {
 
 
 
-export type TPlayer = {
-  userId: string;
-  name: string;
-  num: '1' | '2';
-  life: number;
-  manaPool: TCast;
-  drawnCards: number;  // Only 1 per turn
-  summonedLands: number;  // Only 1 per turn
-  stackCall: boolean;  // true if the spell-stack needs to stop on the player
-  selectableAction?: null | TGameOption;
-  // upkeepQueue: Array<TUpkeepItem>;
-}
 
-export type TGameOption = { action: TAction, params: TActionParams, text?: string };
-export type TUpkeepItem = {
-  text: string; // Description of what needs to happen
-  gId: string;  // Reference of the card that needs upkeep
-  resolved: boolean;  // Whether the cost has already been paid this turn
-  targets: string[];  // Possible selection
-}
 
 export type TAction = 'start-game' 
 | 'refresh'
+| 'debug-card-to-hand'
 | 'skip-phase'
 | 'untap-card'
 | 'untap-all'
@@ -211,7 +225,6 @@ export type TAction = 'start-game'
 | 'summon-spell'
 | 'trigger-ability'
 | 'select-card-to-discard'
-| 'burn-mana'
 | 'select-attacking-creature'
 | 'cancel-attack'
 | 'submit-attack'
@@ -224,6 +237,7 @@ export type TAction = 'start-game'
 | 'cancel-regenerate'
 | 'pay-upkeep'
 | 'skip-upkeep'
+| 'acknowledge-life-change'
 ;
 
 export type TActionParams = { 

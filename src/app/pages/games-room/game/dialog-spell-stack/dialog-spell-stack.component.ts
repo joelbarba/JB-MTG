@@ -164,7 +164,7 @@ export class DialogSpellStackComponent {
 
     const fakeStack = fakeState.cards.filter(c => c.location === 'stack').sort((a, b) => a.order > b.order ? -1 : 1); // reverse order
     fakeStack.forEach(card => card.location === 'stack' && card.onSummon(fakeState));
-    this.game.applyEffects(fakeState);
+    this.game.refreshEffects(fakeState);
     this.rootTargets.filter(i => !!i.card).forEach(item => {
       const fakeMatch = fakeState.cards.find(c => c.gId === item.card?.gId);
       if (fakeMatch && item.card) {

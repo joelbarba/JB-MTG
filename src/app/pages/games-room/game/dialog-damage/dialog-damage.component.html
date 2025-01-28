@@ -1,27 +1,36 @@
-<div class="dialog-container"
+<div class="dialog-container" [class.life-gain]="damage < 0"
   [style.bottom.px]="win.damageDialog.size === 'min' ? win.damageDialog.bottom : undefined"
   [class.minimized]="win.damageDialog.size === 'min'" [style.z-index]="win.damageDialog.zInd">
   <div class="window-bg" (click)="win.damageDialog.maximize()"></div>
   <!-- <div [hidden]="win.damageDialog.size === 'min'" class="min-btn" (click)="win.damageDialog.minimize()" hoverTip="Click to minimize the window" tipSide="right">-</div> -->
   <!-- <div [hidden]="win.damageDialog.size === 'max'" class="max-btn" (click)="win.damageDialog.maximize()" hoverTip="Click to open the window" tipSide="left">{{title}}</div> -->
 
-
-
   <h2>{{title}}</h2>
 
-  <h3 *ngIf="win.damageDialog.icon"><span [class]="win.damageDialog.icon"></span></h3>
-  <p *ngIf="win.damageDialog.text" [innerHtml]="win.damageDialog.text"></p>
+  <h3 *ngIf="icon"><span [class]="icon"></span></h3>
 
-  <div class="center">
-      <!-- <game-card [card]="card"></game-card> -->
+  <div class="center" style="margin: 7px 0;" *ngIf="!!card">
+    <game-card [card]="card" from="damageDialog"></game-card>
   </div>
 
+  <div class="player">
+    <span class="damage-points" *ngIf="damage > 0">
+      <span>{{damage}}</span>
+      <span class="icon-power"></span>
+    </span>
+
+    <span class="life-points" *ngIf="damage < 0">
+      <span class="icon-plus"></span>
+      <span>{{-damage}}</span>
+    </span>
+
+    <span class="icon-user3"></span>
+    <h2>{{yourChange ? 'You' : 'Opponent'}}</h2>
+  </div>
+
+  <p *ngIf="text" [innerHtml]="text"></p>
 
   <div class="btns-box" *ngIf="youControl">
-    <!-- <bf-btn bfText="Cancel" bfIcon="icon-cross" (bfClick)="cardOp.cancel()"></bf-btn> -->
-    <bf-btn *ngFor="let button of win.damageDialog.buttons"
-            [bfText]="button.text" [class]="button.class" bfIcon="icon-arrow-right3" 
-            (click)="button.action()">
-    </bf-btn>
+    <bf-btn bfText="Ok, go on" class="quaternary" bfIcon="icon-arrow-right3" (bfClick)="acknowledge()"></bf-btn>
   </div>
 </div>

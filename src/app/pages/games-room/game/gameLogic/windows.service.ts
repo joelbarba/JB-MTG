@@ -198,17 +198,9 @@ export class WindowsService {
       }
     }
 
-
-    // "Damage Dialog: Mana Burn" (Open / Close logic)
-    this.damageDialog.close();
-    if (this.game.state.phase === 'end' && this.game.state.options.find(op => op.action === 'burn-mana')) {
-      const totalMana = this.game.playerA().manaPool.reduce((a, v) => a + v, 0);
-      this.damageDialog.title = 'Mana Burn';
-      this.damageDialog.icon = 'icon-fire';
-      this.damageDialog.text = `There is ${totalMana} unspent mana into your mana pool.<br/> It deals ${totalMana} damage to you`;
-      this.damageDialog.buttons = [{ text: 'Ok, burn it', class: 'quaternary', action: () => this.game.action('burn-mana') }];
-      this.damageDialog.open();
-    }
+    // "Damage Dialog" if any life changes to be notified
+    if (this.game.state.lifeChanges.length) { this.damageDialog.open(); }
+    else { this.damageDialog.close(); }
     
     // "Regenerate Dialog" (Open / Close logic)
     // If a creature that can be regenerated is dying, open the regenerate dialog

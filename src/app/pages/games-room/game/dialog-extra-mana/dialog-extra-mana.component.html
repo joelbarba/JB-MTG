@@ -35,7 +35,7 @@
             [bfDisabled]="isAllSelected()" (bfClick)="cardOp.reserveAllPoolForExtra()">
     </bf-btn>
     <bf-btn bfText="Cancel" bfIcon="icon-cross" (bfClick)="cardOp.cancel()"></bf-btn>
-    <bf-btn [bfText]="'Go On With X=' + totalMana(cardOp.params.manaExtra)" bfIcon="icon-arrow-right3"
+    <bf-btn [bfText]="'Go on with X=' + totalMana(cardOp.params.manaExtra)" bfIcon="icon-arrow-right3"
             (bfClick)="cardOp.completeExtraMana()">
     </bf-btn>
   </div>

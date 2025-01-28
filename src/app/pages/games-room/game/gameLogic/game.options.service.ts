@@ -72,8 +72,16 @@ export class GameOptionsService {
     };
 
  
+
+    // ------------------------------------------------------------------------------------------------------------------
+
     // Actions that you can do during both your turn or opponents turn:
 
+    // You might acknowledge life changes done (if any)
+    if (state.lifeChanges.length && state.lifeChanges[0].player === playerANum ) {
+      state.options.push({ action: 'acknowledge-life-change', params: {}, text: `Ok` });
+      return state; // <--- Exclusive Option: You can't do anything else
+    }
 
     // SPELL STACK: You may summon instant/interrupt as a counter mesure from your opponent's action
     if (playerA.stackCall) { 
@@ -209,7 +217,7 @@ export class GameOptionsService {
       }
 
       // You may draw a card
-      if (isPhase('draw') && playerA.drawnCards < 1) {
+      if (isPhase('draw') && playerA.turnDrawnCards < 1) {
         state.options.push({ action: 'draw', params: {}, text: `Draw a card from your library` });       
         canSkipPhase = false; // Player must draw
       }
@@ -222,12 +230,6 @@ export class GameOptionsService {
           state.options.push(option);
           card.selectableAction = option;
         });
-      }
-
-      // You may burn unspent mana
-      if (isPhase('end') && playerA.manaPool.some(m => m > 0)) {
-        canSkipPhase = false;  // Player must burn unspent mana
-        state.options.push({ action: 'burn-mana', params: {} });
       }
 
       // You may do nothing (skip phase)

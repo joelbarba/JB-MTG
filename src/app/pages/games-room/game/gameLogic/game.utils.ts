@@ -1,4 +1,4 @@
-import { TActionCost, TActionParams, TCardAnyLocation, TCardLocation, TCardOpStatus, TCast, TGameCard, TGameState, TPlayer } from "../../../../core/types";
+import { TActionCost, TActionParams, TCardAnyLocation, TCardLocation, TCardOpStatus, TCast, TEffect, TGameCard, TGameState, TPlayer } from "../../../../core/types";
 
 
 // Shortcut for state objects (cards split on locations)
@@ -86,7 +86,6 @@ export const compareLocations = (locationA: TCardLocation, locationB: TCardAnyLo
 
 
 
-
 // Destroy a card: Move it to its graveyard, and trigger all needed events
 export const moveCardToGraveyard = (nextState: TGameState, gId: string, discard = false) => {
   const card = nextState.cards.find(c => c.gId === gId);
@@ -142,10 +141,17 @@ export const killCreature = (nextState: TGameState, gId: string) => {
   }
 };
 
+
 export const drawCard = (nextState: TGameState, playerNum: '1' | '2') => {
   const deck = nextState.cards.filter(c => c.location === 'deck' + playerNum).sort((a, b) => a.order > b.order ? 1 : -1);
   if (deck.length > 1) {
     moveCard(nextState, deck[0].gId, 'hand');
+
+    // Apply effects that take action when drawing a card (eg. Underworld Dreams)
+    nextState.effects.filter(e => e.trigger === 'onDraw' && (!e.playerNum || e.playerNum === playerNum)).forEach(effect => {
+      const card = nextState.cards.find(c => c.gId === effect.gId); 
+      if (card) { card.onEffect(nextState, effect.id); }
+    });
   } else {
     endGame(nextState, playerNum); // No cards in the deck = you lose
   }
@@ -164,7 +170,22 @@ export const endGame = (nextState: TGameState, winner: '1' | '2') => {
 }
 
 
-
+  // Registers a new life change to state.lifeChanges[]
+export const addLifeChange = (nextState: TGameState, playerNum: '1' | '2', damage: number, card: TGameCard, timer: number) => {
+  if (damage > 0) {
+    nextState.lifeChanges.push({
+      player: playerNum, damage, timer, title : card.name, gId: card.gId, 
+      text  : `${card.name} does ${damage} damage to you.`,
+      opText: `${card.name} does ${damage} damage to your opponent.`,
+    });
+  } else {
+    nextState.lifeChanges.push({
+      player: playerNum, damage, timer, title : card.name, gId: card.gId, 
+      text  : `${card.name} gives you ${-damage} life.`,
+      opText: `${card.name} gives ${-damage} life to your opponent.`,
+    });
+  }
+};
 
 // Validates the mana in the mana pool to cast a card
 // - 'not enough' = There not enough mana

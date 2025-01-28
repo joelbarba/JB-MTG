@@ -203,6 +203,19 @@
     // }
   }
 
+  &.damageDialog {
+    width: calc(var(--card-width) * 0.75);    // 
+    height: calc(var(--card-height) * 0.75);  // 
+    border-radius: calc((var(--card-border) + 2px) * 0.75);
+    img {
+      top    : calc(var(--card-border) * 0.75);
+      left   : calc(var(--card-border) * 0.75);
+      right  : calc(var(--card-border) * 0.75);
+      bottom : calc(var(--card-border) * 0.75);
+      height : calc(100% - calc(var(--card-border) * 0.75 * 2));
+      width  : calc(100% - calc(var(--card-border) * 0.75 * 2));
+    }
+  }
   
   &.customDialog {  // Larger size for the modal
     width: calc(var(--card-width) * 1.5);    // 

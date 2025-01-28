@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { BfDnDModule, BfUiLibModule } from 'bf-ui-lib';
 import { GameStateService } from '../gameLogic/game-state.service';
-import { TActionCost, TGameCard, TGameState, TUpkeepItem } from '../../../../core/types';
+import { TActionCost, TGameCard } from '../../../../core/types';
 import { GameCardComponent } from '../game-card/game-card.component';
 import { ManaArrayComponent } from "../mana-array/mana-array.component";
 import { Subscription } from 'rxjs';

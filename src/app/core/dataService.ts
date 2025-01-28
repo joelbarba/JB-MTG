@@ -171,10 +171,10 @@ export class DataService {
       help: '',
       life: 20,
       manaPool: [0,0,0,0,0,0] as TCast,
-      drawnCards: 0,
+      turnDrawnCards: 0,
       summonedLands: 0,
       stackCall: false,
-      upkeepQueue: [],      
+      extraTurns: 0,
     };   
     const playerYou   = { userId: player1.id, name: player1.name, ...defaultPlayerValues };
     const playerOther = { userId: player2Id,  name: player2.name, ...defaultPlayerValues };
@@ -189,6 +189,8 @@ export class DataService {
       player2: { ...playerOther, num: '2' } as TPlayer,
       cards: [],
       effects: [],
+      lifeChanges: [],
+      lifeChangesInitiator: null,
       spellStackInitiator: null,
       control: '1', // Player1 starts (will shuffle later)
       seq: 0,

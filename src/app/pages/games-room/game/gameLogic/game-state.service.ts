@@ -248,7 +248,7 @@ export class GameStateService {
   // -- Every state change goes through an action that calls this function -- //
   // ------------------------------------------------------------------------ //
   action(action: TAction, params: TActionParams = {}) {
-    if (action !== 'refresh' && !this.verifyAction(action, params)) { console.error('Wrong action', action); return; }
+    if (!this.verifyAction(action, params)) { console.error('Wrong action', action); return; }
     this.prevState  = JSON.parse(JSON.stringify(this.state)) as TGameState;
     // const nextState = JSON.parse(JSON.stringify(this.state)) as TGameState;
     const nextState = this.convertfromDBState(this.convertToDBState(this.prevState)); // Extend specific logic functions on cards
@@ -269,7 +269,6 @@ export class GameStateService {
       case 'submit-defense':            this.continueCombat(nextState); break;
       case 'continue-combat':           this.continueCombat(nextState); break;
       case 'select-card-to-discard':    this.discardCard(nextState, gId); break;
-      case 'burn-mana':                 this.burnMana(nextState); break;
       case 'summon-land':               this.summonLand(nextState, params); break;
       case 'summon-spell':              this.summonSpell(nextState, params); break;
       case 'trigger-ability':           this.triggerAbility(nextState, params); break;
@@ -278,10 +277,13 @@ export class GameStateService {
       case 'cancel-regenerate':         this.cancelRegenerate(nextState); break;
       case 'pay-upkeep':                this.payUpkeep(nextState, params); break;
       case 'skip-upkeep':               this.skipUpkeep(nextState, params); break;
+      case 'acknowledge-life-change':   this.acknowledgeLifeChange(nextState); break;
+      case 'debug-card-to-hand':        this.debugCardToHand(nextState, params); break;
     }
 
-    this.applyEffects(nextState); // Recalculate state based on current effects
-    this.checkCreaturesThatRegenerate(nextState);
+    this.refreshEffects(nextState); // Recalculate state based on current effects
+    this.checkCreaturesThatRegenerate(nextState); // Give control to the creature's player (if dying)
+    this.checkLifeChanges(nextState); // Give control to the life changing player (if needed)
 
 
 
@@ -300,6 +302,7 @@ export class GameStateService {
 
   // Verifies that the given action is possible, being into the options[] array
   private verifyAction(action: TAction, params: TActionParams = {}): boolean {
+    if (action === 'refresh' || action === 'debug-card-to-hand') { return true; }
     const ops = this.state.options.filter(o => o.action === action);
     if (!ops.length) { return false; }
     const checkGId = () => !!ops.find(o => o.params?.gId === params.gId);
@@ -321,7 +324,7 @@ export class GameStateService {
 
   private draw(nextState: TGameState) {
     drawCard(nextState, this.playerANum);
-    this.getPlayers(nextState).playerA.drawnCards += 1;
+    this.getPlayers(nextState).playerA.turnDrawnCards += 1;
   }
 
 
@@ -330,13 +333,6 @@ export class GameStateService {
     if (card) { card.onDiscard(nextState); }
   }
 
-  private burnMana(nextState: TGameState) {
-    const { playerA } = this.getPlayers(nextState);
-    for (let t = 0; t < playerA.manaPool.length; t++) {
-      playerA.life -= playerA.manaPool[t];
-      playerA.manaPool[t] = 0;
-    }
-  }
 
 
 
@@ -440,7 +436,7 @@ export class GameStateService {
           card.onSummon(nextState);
         }
       });
-      this.applyEffects(nextState);       // Recalculate the effects
+      this.refreshEffects(nextState);       // Recalculate the effects
       killDamagedCreatures(nextState);    // Kill creatures if needed
       nextState.control = nextState.spellStackInitiator || nextState.turn; // Return control to the initiator
 
@@ -618,7 +614,7 @@ export class GameStateService {
   }
 
   // In case a creature is killed and can be regenerate, give control to the creature's player
-  // In case there are creatures to regenerate from both players, start with those of player1
+  // In case there are creatures to regenerate from both players, start with player1's
   private checkCreaturesThatRegenerate(nextState: TGameState) {    
     const regenerateCreature2 = nextState.cards.filter(c => c.controller === '2').find(c => c.canRegenerate && c.isDying);
     const regenerateCreature1 = nextState.cards.filter(c => c.controller === '1').find(c => c.canRegenerate && c.isDying);
@@ -628,6 +624,7 @@ export class GameStateService {
       this.endCombat(nextState);
     }
   }
+
 
 
   // ------------------------ UpKeep --------------------------------
@@ -686,11 +683,55 @@ export class GameStateService {
   }
 
 
+
+
+  // ------------------------ Life Changes --------------------------------
+
+
+  // In case a player received damage / gained life, give control to the player to acknowledge it
+  private checkLifeChanges(nextState: TGameState) {    
+    if (nextState.lifeChanges.length > 0) {
+      if (!nextState.lifeChangesInitiator) { nextState.lifeChangesInitiator = nextState.control; } // Save who's playing
+      nextState.control = nextState.lifeChanges[0].player;
+    }
+  }
+  
+  private acknowledgeLifeChange(nextState: TGameState) {
+    if (nextState.lifeChanges.length && nextState.lifeChanges[0].player === this.playerANum) {
+      nextState.lifeChanges.shift(); // Removes the first life change item
+    
+      // Once all done, return control to origin
+      if (!nextState.lifeChanges.length && nextState.lifeChangesInitiator) {
+        nextState.control = nextState.lifeChangesInitiator;
+        nextState.lifeChangesInitiator = null;
+      }
+    }
+  }
+  
+  private manaBurn(nextState: TGameState) {
+    const { playerA } = this.getPlayers(nextState);
+    const unspentMana = playerA.manaPool.reduce((a,v) => a + v, 0);
+    if (unspentMana > 0) {
+      playerA.life -= unspentMana;
+      playerA.manaPool = [0,0,0,0,0,0];
+      nextState.lifeChanges.push({
+        damage: unspentMana,
+        player: playerA.num,
+        title : `${playerA.name}'s Mana Burn`,
+        timer : 0,
+        icon  : 'icon-fire',
+        text  : `There ${unspentMana > 1 ? 'are' : 'is'} ${unspentMana} unspent mana into your mana pool.<br/> It deals ${unspentMana} damage to you`,
+        opText: `Your opponent has ${unspentMana} unspent mana into their mana pool.<br/> It deals ${unspentMana} damage to him/her.`,
+      });
+    }
+  }
+
+
   // ----------------------------------------------------------------------------------
 
   // Advances the phase for the given state, or ends the turn
   private endPhase(nextState: TGameState) {
-    // nextState.opStack = []; // Cancel all ongoing card operations
+    nextState.lifeChanges = []; // Remove any life notifications
 
     switch (nextState.phase) {
       case EPhase.untap:    nextState.phase = EPhase.upkeep; this.generateUpkeep(nextState); break;
@@ -712,6 +753,7 @@ export class GameStateService {
     // If starting combat phase, init sub-phase
     nextState.subPhase = null;
     if (nextState.phase === EPhase.combat) { nextState.subPhase = ESubPhase.selectAttack; }
+    if (nextState.phase === EPhase.end) { this.manaBurn(nextState); }
     killDamagedCreatures(nextState); // In case something dealt damage or changed creatures defense
   }
 
@@ -720,24 +762,25 @@ export class GameStateService {
     const { playerA, playerB, turnPlayer } = this.getPlayers(nextState);
     const { table, tableA } = this.getCards(nextState);
 
-    // Check if a player is dead
-    if (turnPlayer.life <= 0) { endGame(nextState, turnPlayer.num); return; }
-    
-    // Remove effects that last until the end of the turn
-    nextState.effects = nextState.effects.filter(e => e.scope !== 'turn' && e.scope !== 'turn' + turnPlayer.num);    
+    this.endTurnEffects(nextState); // Apply end turn effects, and remove scope = turn ones
 
+    // Check if a player is dead
+    if (turnPlayer.life <= 0) { endGame(nextState, turnPlayer.num); return; }    
+
+    if (turnPlayer.extraTurns > 0) { // In case of an extra turn
+      turnPlayer.extraTurns -= 1;
+
+    } else { // switch turn player
+      nextState.turn = nextState.turn === '1' ? '2' : '1'; 
+    }    
+    
     // Set new turn values
-    turnPlayer.drawnCards = 0;
+    turnPlayer.turnDrawnCards = 0;
     turnPlayer.summonedLands = 0;
-    nextState.turn = nextState.turn === '1' ? '2' : '1';  // change current player
-    nextState.control = nextState.turn; // give control to the other player
+    nextState.control = nextState.turn;
     nextState.phase = EPhase.untap;
     tableA.filter(c => c.status === 'sickness').forEach(c => c.status = null); // Summon sickness ends
     table.filter(c => c.isType('creature')).forEach(c => c.turnDamage = 0); // Damage on creatures is reset
-
-    const newTurnPlayer = this.getPlayers(nextState).turnPlayer;
-
-    this.applyEndTurnEffects(nextState); // Apply end turn effects, and then remove them
   }
 
 
@@ -765,7 +808,7 @@ export class GameStateService {
   // ---------- EFFECTS ----------
 
   // This happens every time the state is modified (at the end of the reducer)
-  applyEffects(nextState: TGameState) {
+  refreshEffects(nextState: TGameState) {
     // console.log('Applying EFFECTS');
 
     // Reset all turnAttack / turnDefense
@@ -777,15 +820,15 @@ export class GameStateService {
 
     // Remove permanent effects from cards that no longer exist (on the table)
     nextState.effects = nextState.effects.filter(effect => {
-      if (effect.scope !== 'permanent') { return true; }
+      if (effect.scope !== 'permanent') { return true; } // Keep it
       const refCard = nextState.cards.find(ref => ref.gId === effect.gId); // <- card that generated the effect
-      return refCard && (refCard.location.slice(0,4) === 'tble' || refCard.location === 'stack');
+      if (refCard && (refCard.location.slice(0,4) === 'tble' || refCard.location === 'stack')) { return true; } // keep it
+      console.log('Removing permanent effect', effect, 'Card that originated it:', refCard);
+      return false; // remove it
     });
 
-    // Apply permenent + turn effects
-    nextState.effects.filter(e => e.scope !== 'endTurn').forEach(effect => {
-      // runEvent(nextState, effect.gId, 'onEffect', { effectId: effect.id });
-      // Find the logic on the card that generated the effect
+    // Apply constant effects
+    nextState.effects.filter(e => e.trigger === 'constantly').forEach(effect => {
       const card = nextState.cards.find(c => c.gId === effect.gId); 
       if (card) { card.onEffect(nextState, effect.id); }
     });
@@ -796,15 +839,32 @@ export class GameStateService {
 
 
   // This happens at the end of every turn
-  // It runs those efects that should be applied only once at the end of the turn. It then remove them
-  applyEndTurnEffects(nextState: TGameState) {
-    nextState.effects.filter(e => e.scope === 'endTurn').forEach(effect => {
+  endTurnEffects(nextState: TGameState) {
+    const { turnPlayer } = this.getPlayers(nextState);
+    
+    // Run those efects that should be applied only once at the end of the turn
+    nextState.effects.filter(e => e.trigger === 'onEndTurn' && (!e.playerNum || e.playerNum === turnPlayer.num)).forEach(effect => {
       const card = nextState.cards.find(c => c.gId === effect.gId); 
       if (card) { card.onEffect(nextState, effect.id); }
     });
-    nextState.effects = nextState.effects.filter(e => e.scope !== 'endTurn');
+
+    // Remove effects that last until the end of the turn
+    nextState.effects = nextState.effects.filter(effect => {
+      if (effect.scope !== 'turn') { return true; } // Keep it
+      if (effect.playerNum && effect.playerNum !== turnPlayer.num) { return true; } // Keep it (should be removed after the other player's turn)
+      console.log('Removing turn effect', effect, 'It is player turn:', turnPlayer.num, turnPlayer.name);
+      return false; // Remove it
+    });
   }
 
+
+
+
+  // DEBUG ONLY: Move a given card to the hand
+  private debugCardToHand(nextState: TGameState, params: TActionParams) {
+    const card = nextState.cards.find(c => c.gId === params.gId);
+    if (card) { moveCard(nextState, card.gId, 'hand'); }
+  }
 
 }
 

@@ -1,6 +1,6 @@
 import { randomId } from "../../../../core/common/commons";
 import { TCast, TColor, TEffect, TGameCard, TGameState } from "../../../../core/types";
-import { drawCard, endGame, getCards, killCreature, killDamagedCreatures, moveCard, moveCardToGraveyard, shuffleDeck } from "./game.utils";
+import { addLifeChange, drawCard, endGame, getCards, killCreature, killDamagedCreatures, moveCard, moveCardToGraveyard, shuffleDeck } from "./game.utils";
 
 
 // ------------------------ SPECIFIC EVENTS for every CARD ------------------------
@@ -315,6 +315,10 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
       if      (targetId === 'player1') { nextState.player1.life -= 3; } // Deals 3 points of damage to player1
       else if (targetId === 'player2') { nextState.player2.life -= 3; } // Deals 3 points of damage to player2
       else if (targetCreature) { targetCreature.turnDamage += 3; } // Deals 3 points of damage to target creature
+
+      const playerNum = targetId === 'player1' ? '1' : targetId === 'player2' ? '2' : null;
+      if (playerNum) { addLifeChange(nextState, playerNum, 3, card, 500); }
+
       moveCardToGraveyard(nextState, gId); // Destroy itself
     };
   }
@@ -327,7 +331,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     };    
     card.onSummon = (nextState: TGameState) => {
       const { tableStack, targetId } = getShorts(nextState);
-      nextState.effects.push({ scope: 'turn', gId, targets: [targetId], id: randomId('e') });
+      nextState.effects.push({ scope: 'turn', trigger: 'constantly', gId, targets: [targetId], id: randomId('e') });
       moveCardToGraveyard(nextState, gId);
     }
     card.onEffect = (nextState: TGameState, effectId: string) => { // Add +3/+3 to target creature
@@ -358,7 +362,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
 
   function c000025_BadMoon() {
     card.onSummon = (nextState: TGameState) => {
-      nextState.effects.push({ scope: 'permanent', gId, targets: [], id: randomId('e') });
+      nextState.effects.push({ scope: 'permanent', trigger: 'constantly', gId, targets: [], id: randomId('e') });
       moveCard(nextState, gId, 'tble');
     }
     card.onEffect = (nextState: TGameState, effectId: string) => { // Add +1/+1 to all black creatures
@@ -382,7 +386,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     };        
     card.onSummon = (nextState: TGameState) => {
       const { targetId } = getShorts(nextState);
-      nextState.effects.push({ scope: 'permanent', gId, targets: [targetId], id: randomId('e') });
+      nextState.effects.push({ scope: 'permanent', trigger: 'constantly', gId, targets: [targetId], id: randomId('e') });
       moveCard(nextState, gId, 'tble');
     }
     card.onEffect = (nextState: TGameState, effectId: string) => { // Add +2/+1 to target creature
@@ -463,7 +467,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     commonCreature();
     card.getAbilityCost = () => ({ mana: [0,0,0,0,0,0], xMana: [0,0,0,0,1,0], tap: false, text: `Pay 1 red mana to add +0/+1` });
     card.onAbility = (nextState: TGameState) => {
-      nextState.effects.push({ scope: 'turn', gId, targets: [], id: randomId('e'), xValue: card.xValue });
+      nextState.effects.push({ scope: 'turn', trigger: 'constantly', gId, targets: [], id: randomId('e'), xValue: card.xValue });
       card.xValue = 0;
     };
     card.onEffect = (nextState: TGameState, effectId: string) => { // Add +0/+1
@@ -477,7 +481,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     commonCreature();
     card.getAbilityCost = () => ({ mana: [0,0,0,0,0,0], xMana: [0,0,0,0,1,0], tap: false, text: `Pay 1 red mana to add +1/+0` });
     card.onAbility = (nextState: TGameState) => {
-      nextState.effects.push({ scope: 'turn', gId, targets: [], id: randomId('e'), xValue: card.xValue });
+      nextState.effects.push({ scope: 'turn', trigger: 'constantly', gId, targets: [], id: randomId('e'), xValue: card.xValue });
       card.xValue = 0;
     };
     card.onEffect = (nextState: TGameState, effectId: string) => { // Add +1/+0
@@ -491,7 +495,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     commonCreature();
     card.getAbilityCost = () => ({ mana: [0,0,0,0,0,0], xMana: [1,1,1,1,1,1], tap: false, text: `Pay 1 mana to add +1/+1`, });
     card.onAbility = (nextState: TGameState) => {
-      nextState.effects.push({ scope: 'turn', gId, targets: [], id: randomId('e'), xValue: card.xValue });
+      nextState.effects.push({ scope: 'turn', trigger: 'constantly', gId, targets: [], id: randomId('e'), xValue: card.xValue });
       card.xValue = 0;
     };
     card.onEffect = (nextState: TGameState, effectId: string) => { // Add +1/+1 to creature
@@ -507,7 +511,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     card.getAbilityCost = () => ({ mana: [0,0,0,0,0,0], xMana: [0,0,0,0,0,1], tap: false, text: `Pay 1 green mana to add +1/+1`, });
     card.getAbilityCost = () => ({ mana: [0,0,0,0,0,0], xMana: [0,0,0,0,0, 1], tap: false, text: `Pay 1 green mana to add +1/+1` });
     card.onAbility = (nextState: TGameState) => {
-      nextState.effects.push({ scope: 'turn', gId, targets: [], id: randomId('e'), xValue: card.xValue });
+      nextState.effects.push({ scope: 'turn', trigger: 'constantly', gId, targets: [], id: randomId('e'), xValue: card.xValue });
       card.xValue = 0;
     };
     card.onEffect = (nextState: TGameState, effectId: string) => { // Add +0/+1
@@ -544,15 +548,16 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   function c000034_TimeWalk() {
     card.onSummon = (nextState: TGameState) => {
       const { cardPlayer } = getShorts(nextState);
-      const target = 'player' + cardPlayer.num;
-      nextState.effects.push({ scope: 'endTurn', gId, targets: [target], id: randomId('e') });
+      // const target = 'player' + cardPlayer.num;      
+      // nextState.effects.push({ scope: 'turn', trigger: 'onEndTurn', playerNum: cardPlayer.num, gId, targets: [target], id: randomId('e') });
+      cardPlayer.extraTurns += 1;
       moveCardToGraveyard(nextState, gId);
     };
-    card.onEffect = (nextState: TGameState, effectId: string) => { // Add +3/+3 to target creature
-      const { cardPlayer } = getShorts(nextState);
-      nextState.turn = cardPlayer.num;
-      nextState.control = cardPlayer.num;
-    }
+    // card.onEffect = (nextState: TGameState, effectId: string) => { // Add +3/+3 to target creature
+    //   const { cardPlayer } = getShorts(nextState);
+    //   nextState.turn = cardPlayer.num;
+    //   nextState.control = cardPlayer.num;
+    // }
   }
 
   function c000012_BlackLotus() {
@@ -677,7 +682,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
       moveCard(nextState, card.gId, 'tble');
       card.status = 'sickness';
       card.combatStatus = null;
-      nextState.effects.push({ scope: 'permanent', gId, targets: [], id: randomId('e') });
+      nextState.effects.push({ scope: 'permanent', trigger: 'constantly', gId, targets: [], id: randomId('e') });
     };
     card.onEffect = (nextState: TGameState, effectId: string) => { // Add +1/+1 to target creature
       const { card, otherPlayer } = getShorts(nextState);
@@ -786,7 +791,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     };        
     card.onSummon = (nextState: TGameState) => {
       const { targetId } = getShorts(nextState);
-      nextState.effects.push({ scope: 'permanent', gId, targets: [targetId], id: randomId('e') });
+      nextState.effects.push({ scope: 'permanent', trigger: 'constantly', gId, targets: [targetId], id: randomId('e') });
       moveCard(nextState, gId, 'tble');
     }
     card.onEffect = (nextState: TGameState, effectId: string) => { // Add -2/-1 to target creature
@@ -812,7 +817,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     };    
     card.onSummon = (nextState: TGameState) => {
       const { targetId } = getShorts(nextState);
-      nextState.effects.push({ scope: 'turn', gId, targets: [targetId], id: randomId('e') });
+      nextState.effects.push({ scope: 'turn', trigger: 'constantly', gId, targets: [targetId], id: randomId('e') });
       moveCardToGraveyard(nextState, card.gId); // Destroy itself
     }
     card.onEffect = (nextState: TGameState, effectId: string) => { // Add +7/+7 to target creature
@@ -843,7 +848,10 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
       const targetCreature = targetCreatures().find(c => c.gId === targetId);
       if      (targetId === 'player1') { nextState.player1.life -= card.xValue; } // Deals X points of damage to player1
       else if (targetId === 'player2') { nextState.player2.life -= card.xValue; } // Deals X points of damage to player2
-      else if (targetCreature) { targetCreature.turnDamage += card.xValue; } // Deals X points of damage to target creature    
+      else if (targetCreature) { targetCreature.turnDamage += card.xValue; } // Deals X points of damage to target creature
+
+      const playerNum = targetId === 'player1' ? '1' : targetId === 'player2' ? '2' : null;
+      if (playerNum) { addLifeChange(nextState, playerNum, card.xValue, card, 500); }
       moveCardToGraveyard(nextState, card.gId); // Destroy itself
     }
   }
@@ -856,7 +864,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     };    
     card.onSummon = (nextState: TGameState) => {
       const { card, targetId } = getShorts(nextState);
-      nextState.effects.push({ scope: 'turn', gId, targets: [targetId], id: randomId('e'), xValue: card.xValue });
+      nextState.effects.push({ scope: 'turn', trigger: 'constantly', gId, targets: [targetId], id: randomId('e'), xValue: card.xValue });
       moveCardToGraveyard(nextState, gId); // Destroy itself (instant)
     }
     card.onEffect = (nextState: TGameState, effectId: string) => { // Add +X/+0 to target creature
@@ -909,16 +917,17 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
       return { mana: card.cast, xMana: [1,1,1,1,1,1], neededTargets: 0, possibleTargets: [] };
     };    
     card.onSummon = (nextState: TGameState) => {
-      const { tableStack, card } = getShorts(nextState);      
+      const { tableStack, card, cardPlayer, otherPlayer } = getShorts(nextState);      
       tableStack.filter(c => c.isType('creature') && !c.isFlying).forEach(creature => {
         creature.turnDamage += card.xValue; // Deals X points of damage to each non flying creature
       });
       nextState.player1.life -= card.xValue; // Deals X points of damage to player1
       nextState.player2.life -= card.xValue; // Deals X points of damage to player2
+      addLifeChange(nextState, otherPlayer.num, card.xValue, card, 0);
+      addLifeChange(nextState, cardPlayer.num,  card.xValue, card, 0);
       moveCardToGraveyard(nextState, card.gId); // Destroy itself
     }
   }
-
 
 
   function c000077_SwordsToPlowshares() { 
@@ -932,7 +941,12 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
       if (targetCreature) {        
         moveCardToGraveyard(nextState, targetCreature.gId, true); // Destroy creature (remove from the game)
         const player = targetCreature.controller === '1' ? nextState.player1 : nextState.player2;
-        player.life += targetCreature.turnAttack; // Creature's controller gains as many life as the creature's power
+        const lifeGain = targetCreature.turnAttack;
+        player.life += lifeGain; // Creature's controller gains as many life as the creature's power
+        nextState.lifeChanges.push({ player: player.num, title: card.name, damage: -lifeGain, gId: card.gId, timer: 0,
+          text  : `Your ${targetCreature.name} was destroyed. You get ${lifeGain} life.`,
+          opText: `Your opponent's ${targetCreature.name} was destroyed. He/she gets ${lifeGain} life.`,
+        });
       }
       moveCardToGraveyard(nextState, gId); // Destroy itself
     };
@@ -994,7 +1008,11 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     card.onUpkeep = (nextState, skip) => {
       const { cardPlayer, hand } = getShorts(nextState);
       const numOfHandCards = hand.filter(c => c.controller === cardPlayer.num).length;
-      if (numOfHandCards > 4) { cardPlayer.life += numOfHandCards - 4; }
+      const lifeGain = numOfHandCards - 4;
+      if (lifeGain > 0) {
+        cardPlayer.life += lifeGain;
+        addLifeChange(nextState, cardPlayer.num, -lifeGain, card, 500);
+      }
     };
   }
 
@@ -1020,8 +1038,9 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
       return { mana: [0,0,0,0,0,0], text: `Serendib Efreet does 1 damage to you`, opText };
     };
     card.onUpkeep = (nextState, skip) => {
-      const { cardPlayer } = getShorts(nextState);
+      const { card, cardPlayer } = getShorts(nextState);
       cardPlayer.life -= 1; // Serendib Efreet does 1 damage to you
+      addLifeChange(nextState, cardPlayer.num, 1, card, 200);
     };
   }
   
@@ -1032,8 +1051,9 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
       return { mana: [0,0,0,0,0,0], text: `Juzám Djinn does 1 damage to you`, opText };
     };
     card.onUpkeep = (nextState, skip) => {
-      const { cardPlayer } = getShorts(nextState);
+      const { card, cardPlayer } = getShorts(nextState);
       cardPlayer.life -= 1; // Juzám Djinn does 1 damage to you
+      addLifeChange(nextState, cardPlayer.num, 1, card, 200);
     };
   }
 
@@ -1051,7 +1071,11 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     card.onUpkeep = (nextState, skip) => {
       const { otherPlayer, hand } = getShorts(nextState);
       const numOfHandCards = hand.filter(c => c.controller === otherPlayer.num).length;
-      if (numOfHandCards > 4) { otherPlayer.life -= numOfHandCards - 4; }
+      if (numOfHandCards > 4) {
+        const damage = numOfHandCards - 4;
+        otherPlayer.life -= damage;
+        addLifeChange(nextState, otherPlayer.num, damage, card, 200);
+      }
     };
   }
   
@@ -1069,7 +1093,11 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     card.onUpkeep = (nextState, skip) => {
       const { otherPlayer, hand } = getShorts(nextState);
       const numOfHandCards = hand.filter(c => c.controller === otherPlayer.num).length;
-      if (numOfHandCards < 3) { otherPlayer.life -= (3 - numOfHandCards); }
+      if (numOfHandCards < 3) {
+        const damage = 3 - numOfHandCards;
+        otherPlayer.life -= damage;
+        addLifeChange(nextState, otherPlayer.num, damage, card, 200);
+      }
     };
   }
 
@@ -1092,8 +1120,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     }
     card.onUpkeep = (nextState, skip) => {
       const { card, otherPlayer } = getShorts(nextState);
-      const scope = 'turn' + otherPlayer.num as 'turn1' | 'turn2'; // The effect lasts until your opponent's turn ends
-      nextState.effects.push({ scope, gId, targets: card.targets, id: randomId('e') });
+      nextState.effects.push({ scope: 'turn', trigger: 'constantly', gId, targets: card.targets, playerNum: otherPlayer.num, id: randomId('e') });
     };
     card.onEffect = (nextState: TGameState, effectId: string) => { // Add forestwalk to target creature
       const { targetCreatures } = getShorts(nextState);
@@ -1107,12 +1134,40 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
 
 
   // One damage to your opponent for each card he/she draws
-  function c000124_UnderworldDreams() { }
+  function c000124_UnderworldDreams() { 
+    card.onSummon = (nextState) => {
+      const { card, otherPlayer } = getShorts(nextState);
+      moveCard(nextState, gId, 'tble');
+      nextState.effects.push({ scope: 'permanent', trigger: 'onDraw', gId, targets: [], playerNum: otherPlayer.num,  id: randomId('e') });
+    };
+    card.onEffect = (nextState: TGameState, effectId: string) => { // Does 1 damage for each drawn card
+      const { card, otherPlayer } = getShorts(nextState);
+      otherPlayer.life -= 1;
 
+      if (!nextState.lifeChanges.length) {
+        nextState.lifeChanges.push({ player: otherPlayer.num, title: card.name, damage: 1, gId: card.gId, timer: 0,
+          text  : `You draw 1 card. Underworld Dreams does 1 damage to you.`,
+          opText: `Your opponent draw 1 card. Underworld Dreams does 1 damage to him/her.`,
+        });
+
+      } else { // If drawing multiple cards in the same action
+        const lifeChange = nextState.lifeChanges[0];
+        if (lifeChange.player === otherPlayer.num && lifeChange.gId === card.gId) {
+          const damage = lifeChange.damage + 1;
+          lifeChange.damage = damage;
+          lifeChange.text   = `You draw ${damage} cards. Underworld Dreams does ${damage} damage to you.`;
+          lifeChange.opText = `Your opponent draw ${damage} cards. Underworld Dreams does ${damage} damage to him/her.`;
+        }
+      }
+      
+    }
+  }
+
+  // c000080_ErgRaiders
+  // c000099_Juggernaut
 
   // Unsummon
   // Weakness + Righteousness
-  // Erg Raiders
   // Royal Assassin
 
 

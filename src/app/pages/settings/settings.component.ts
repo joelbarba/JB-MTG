@@ -40,6 +40,9 @@ export class SettingsComponent {
   hasBlackBorder = false;
   highlightNoneReady = true;
 
+  totalCards = 0;
+  totalCardsReady = 0;
+
   constructor(
     private shell: ShellService,
     private auth: AuthService,
@@ -64,12 +67,13 @@ export class SettingsComponent {
 
   async ngOnInit() {
     await this.dataService.loadPromise;
-    this.cardsList.load(this.dataService.cards);
+    this.cardsList.load(this.dataService.cards);    
 
     this.users = this.dataService.users;
     this.users.sort((a,b) => a.name > b.name ? 1 : -1);
 
     this.selectCard(this.cardsList.loadedList[0]);
+    this.updateTotals();
     // this.showCode();
   }
 
@@ -86,6 +90,11 @@ export class SettingsComponent {
       this.selCard.name = this.selCard.image.split('.jpg')[0].replace(/_/g, ' ');
       this.selCard.name = this.selCard.name.split(' ').map(v => v.charAt(0).toUpperCase() + v.slice(1)).join(' ');
     }
+  }
+
+  updateTotals() {
+    this.totalCards = this.cardsList.loadedList.length
+    this.totalCardsReady = this.cardsList.loadedList.filter(c => c.readyToPlay).length;
   }
 
 
@@ -157,6 +166,7 @@ export class SettingsComponent {
 
     const list = this.cardsList.loadedList;
     this.selectCard(list[Math.min(list.indexOf(card) + 1, list.length - 1)]); // Select the next card
+    this.updateTotals();
   }
 
 
@@ -195,6 +205,7 @@ export class SettingsComponent {
     // this.selectCard(fullCard);
     this.cardsList.load(this.dataService.cards);
     this.selectCard(this.dataService.cards[this.dataService.cards.length - 1]);
+    this.updateTotals();
   }
 
   numArr(num: number): Array<number> { return Array.from(Array(num).keys()) }

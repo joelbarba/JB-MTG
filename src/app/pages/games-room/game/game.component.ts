@@ -380,7 +380,7 @@ export class GameComponent {
     if (this.state.phase === 'draw' && options.filter(o => o.action === 'draw').length === 1) { return advancePhase(() => this.game.action('draw')); }
 
     // Automatically skip draw if you can't draw more cards
-    if (this.state.phase === 'draw' && !options.find(o => o.action === 'draw')) { return advancePhase(); }
+    // if (this.state.phase === 'draw' && !options.find(o => o.action === 'draw')) { return advancePhase(); }
 
     if (this.state.phase === 'combat') {
       const attackingCreatures = !!this.tableA.find(c => c.combatStatus === 'combat:attacking');
@@ -423,8 +423,6 @@ export class GameComponent {
     // Don't stop at the discard phase, if you don't have to discard
     if (this.state.phase === 'discard' && !options.find(o => o.action === 'select-card-to-discard')) { return advancePhase(); }
 
-    // Don't stop at the end phase if you don't have mana to burn
-    if (this.state.phase === 'end' && !options.find(o => o.action === 'burn-mana')) { return advancePhase(); }
     return;    
   }
 
