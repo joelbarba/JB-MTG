@@ -1288,7 +1288,15 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
 
   // Inferno
   function c000116_Inferno() {
-
+    card.onSummon = (nextState: TGameState) => {
+      const { tableStack, card, cardPlayer, otherPlayer } = getShorts(nextState);      
+      tableStack.filter(c => c.isType('creature')).forEach(creature => creature.turnDamage += 6); // Deals 6 points of damage to all creatures
+      nextState.player1.life -= 6; // Deals 6 points of damage to player1
+      nextState.player2.life -= 6; // Deals 6 points of damage to player2
+      addLifeChange(nextState, otherPlayer.num, 6, card, 0);
+      addLifeChange(nextState, cardPlayer.num,  6, card, 0);
+      moveCardToGraveyard(nextState, card.gId); // Destroy itself
+    }
   }
 
   // Warp Artifact

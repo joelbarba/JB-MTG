@@ -21,9 +21,9 @@ export class WindowsService {
     open: (player: 'A' | 'B') => { this.graveyardPanel.player = player; this.open(0); },
     close: () => this.close(0),
     toggle: (player: 'A' | 'B') => {
-      (this.graveyardPanel.display && this.graveyardPanel.player === player)
-      ? this.graveyardPanel.close()
-      : this.graveyardPanel.open(player);
+      const shouldOpen = !this.graveyardPanel.display || this.graveyardPanel.player !== player;
+      this.graveyardPanel.close();
+      if (shouldOpen) { this.graveyardPanel.open(player); }
     },
   };
 
