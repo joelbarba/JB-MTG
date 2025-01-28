@@ -428,7 +428,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
       const { targetCreatures } = getShorts(nextState);
       const possibleTargets = targetCreatures().map(c => c.gId); // Target must be any playing creature
       return { mana: card.cast, neededTargets: 1, possibleTargets };
-    };        
+    };
     card.onSummon = (nextState: TGameState) => {
       const { targetId } = getShorts(nextState);
       nextState.effects.push({ scope: 'permanent', trigger: 'constantly', gId, targets: [targetId], id: randomId('e') });
@@ -1301,7 +1301,32 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
 
   // Warp Artifact
   function c000066_WarpArtifact() {
-
+    card.getSummonCost = (nextState: TGameState) => {
+      const { tableStack } = getShorts(nextState);
+      const possibleTargets = tableStack.filter(c => c.isType('artifact')).map(c => c.gId); // Target = any artifact
+      return { mana: card.cast, neededTargets: 1, possibleTargets };
+    };
+    card.onSummon = (nextState: TGameState) => {
+      const { targetId, tableStack } = getShorts(nextState);
+      const targetArtifact = tableStack.find(c => c.gId === targetId);
+      if (targetArtifact) {
+        nextState.effects.push({ scope: 'permanent', trigger: 'onEndUpkeep', gId, targets: [targetId], id: randomId('e'), playerNum: targetArtifact.controller });
+      }
+      moveCard(nextState, gId, 'tble');
+    }
+    card.onEffect = (nextState: TGameState, effectId: string) => { // Does 1 damage to target's controller
+      const { tableStack } = getShorts(nextState);
+      const effect = nextState.effects.find(e => e.id === effectId);
+      const effectTargetId = effect?.targets[0]; // The card that the card's effect is targetting
+      const targetArtifact = tableStack.find(c => c.gId === effectTargetId);
+      const player = targetArtifact?.controller === '1' ? nextState.player1 : nextState.player2;
+      if (targetArtifact) {
+        player.life -= 1;
+        const text = `Wrap Artifact does 1 damage to you (${targetArtifact.name}'s controller).`;
+        const opText = `Wrap Artifact does 1 damage to your opponent (${targetArtifact.name}'s controller).`;
+        addLifeChange(nextState, player.num, 1, card, 0, text, opText);
+      }
+    };
   }
 
   // Demonic Tutor (dialog)
