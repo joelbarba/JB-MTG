@@ -1,7 +1,6 @@
 @import 'variables';
 @import '../game.vars.scss';
 
-
 .game-card {
   position: relative;
   padding: calc(var(--card-border) - 1px);

@@ -281,6 +281,10 @@
   }
 }
 
+// This is to avoid hiding cards on the back when tapped
+game-card[from="tbleA"] { width: 0; height: 0; }
+game-card[from="tbleB"] { width: 0; height: 0; }
+
 
 
 // ---------------- Dragging Styles ---------------

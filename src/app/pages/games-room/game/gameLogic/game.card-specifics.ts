@@ -1331,7 +1331,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
 
 
   function c000061_DemonicTutor() {
-    card.hideTargetsOnStack = true;
+    card.hideTargetsOnStack = true; // Hides selected card to opponent
     card.getSummonCost = (nextState: TGameState) => {
       const { card, cardPlayer, deck } = getShorts(nextState);
       const possibleTargets = deck.filter(c => c.controller === cardPlayer.num).map(c => c.gId); // One card from your deck
@@ -1347,7 +1347,19 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
 
   function c000103_Regrowth() { }
 
-  function c000122_RaiseDead() { }
+  function c000122_RaiseDead() {
+    card.hideTargetsOnStack = true; // Hides selected card to opponent
+    card.getSummonCost = (nextState: TGameState) => {
+      const { card, cardPlayer, graveyard } = getShorts(nextState);
+      const possibleTargets = graveyard.filter(c => c.controller === cardPlayer.num).map(c => c.gId); // Creatures from your grav
+      return { mana: card.cast, customDialog: true, neededTargets: 1, possibleTargets };
+    };
+    card.onSummon = (nextState: TGameState) => {
+      const { targetId } = getShorts(nextState);
+      moveCard(nextState, targetId, 'hand'); // Move selected card to your hand
+      moveCardToGraveyard(nextState, gId); // Destroy itself
+    };
+  }
 
 
 
