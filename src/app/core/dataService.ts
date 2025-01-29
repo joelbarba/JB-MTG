@@ -301,9 +301,11 @@ export class DataService {
       'c000003',  // Swamp
       'c000003',  // Swamp
       'c000013',  // Bayou
-      'c000061',  // Demonic Tutor
-      'c000107',  // AnimateDead
-      'c000080',  // Erg Raiders
+      'c000101',  // Millstone
+      'c000110',  // IcyManipulator
+      'c000114',  // LibraryOfAlexandria
+      'c000123',  // DrainLife
+      'c000090',  // SengirVampire
       'c000037',  // Brass Man
       'c000023',  // Ancestral Recall
       'c000027',  // Dark Ritual
@@ -318,6 +320,7 @@ export class DataService {
       'c000081',  // WillOTheWisp
       'c000070',  // Howl From Beyond
       'c000078',  // Wall Of Air
+      'c000061',  // Demonic Tutor
       'c000053',  // Ornithopter
       'c000066',  // Warp Artifact
       'c000010',  // Mox Sapphire
@@ -327,6 +330,9 @@ export class DataService {
       'c000026',  // Black Knight
       'c000093',  // Braingeyser
       'c000079',  // Unsummon
+      'c000102',  // NevinyrralsDisk
+      'c000107',  // AnimateDead
+      'c000080',  // Erg Raiders
       'c000100',  // Mind Twist
       'c000065',  // Terror
       'c000027',  // Dark Ritual
@@ -372,7 +378,9 @@ export class DataService {
       'c000013',  // Bayou
       'c000014',  // Badlands
       'c000018',  // Taiga
-      'c000099',  // Juggernaut
+      'c000133',  // FeldonsCane
+      'c000134',  // ColossusOfSardia
+      'c000118',  // Incinerate
       'c000103',  // Regrowth
       'c000054',  // Savannah Lions
       'c000119',  // Crusade
@@ -382,11 +390,13 @@ export class DataService {
       'c000108',  // Earthquake
       'c000027',  // Dark Ritual
       'c000136',  // Bog Wraith
+      'c000115',  // Jokulhaups
       'c000137',  // Shanodin Dryads
       'c000051',  // Llanowar Elves
       'c000126',  // ErhnamDjinn
       'c000105',  // TheRack
       'c000092',  // BlackVise
+      'c000128',  // BallLightning
       'c000077',  // Swords To Plowshares
       'c000077',  // Swords To Plowshares
       'c000006',  // Mox Emerald
@@ -396,6 +406,7 @@ export class DataService {
       'c000135',  // KillerBees
       'c000091',  // BirdsOfParadise
       'c000041',  // Elvis Archers
+      'c000099',  // Juggernaut
       'c000058',  // Shatter
       'c000060',  // Disintegrate
       'c000032',  // Lighting Bolt

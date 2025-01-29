@@ -274,10 +274,10 @@ export class CardOpServiceNew {
   
       if (isManaAvailable && op.cost?.mana) {
         const colorLeft = op.cost.mana[pool] - this.params.manaToUse[pool];
-        if (colorLeft > 0) {
+        if (pool > 0 && colorLeft > 0) {
           this.params.manaToUse[pool] += 1;
-        } else {
-  
+
+        } else {  
           const uncolorUsed = this.params.manaForUncolor.reduce((a,v) => a + v, 0);
           const uncolorLeft = op.cost.mana[0] - uncolorUsed;
           if (uncolorLeft > 0) {

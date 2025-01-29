@@ -37,7 +37,7 @@
 
   <span class="attack-defense delta" *ngIf="card?.isType('creature') && shadow?.delta">{{shadow?.delta}}</span>
   <span class="attack-defense shado" *ngIf="card?.isType('creature') && shadow?.force">{{shadow?.force}}</span>
-  <span class="attack-defense" [class.turn]="shadow?.delta" *ngIf="card?.isType('creature') && from !== 'deckSelection'">
+  <span class="attack-defense" [class.turn]="shadow?.delta" *ngIf="card?.isType('creature') && !back && from !== 'deckSelection'">
     {{card.turnAttack + '/' + card.turnDefense}}
   </span>
 
@@ -45,7 +45,7 @@
     {{card.owner === game.playerANum ? 'Yours' : "Opponent's"}}
   </div>
 
-  <span class="effects-badge" *ngIf="from !== 'panelEffects' && card.effectsFrom?.length"
+  <span class="effects-badge" *ngIf="from !== 'panelEffects' && card.effectsFrom?.length && !back"
         (click)="openEffectBadge(card, $event)"
         [hoverTip]="'There are ' + card.effectsFrom?.length + ' effects applied on this card'" tipId="badge">
     <span>{{card.effectsFrom?.length}}</span>

@@ -34,6 +34,7 @@ import { DemonicTutorDialogComponent } from './custom-dialogs/demonic-tutor/demo
 import { RaiseDeadDialogComponent } from './custom-dialogs/raise-dead/raise-dead-dialog.component';
 import { RegrowthDialogComponent } from './custom-dialogs/regrowth/regrowth-dialog.component';
 import { AnimateDeadDialogComponent } from './custom-dialogs/animate-dead/animate-dead-dialog.component';
+import { LibraryOfAlexandriaDialogComponent } from './custom-dialogs/library-of-alexandria/library-of-alexandria-dialog.component';
 
 
 
@@ -68,6 +69,7 @@ import { AnimateDeadDialogComponent } from './custom-dialogs/animate-dead/animat
     RaiseDeadDialogComponent,
     RegrowthDialogComponent,
     AnimateDeadDialogComponent,
+    LibraryOfAlexandriaDialogComponent,
 ],
   templateUrl: './game.component.html',
   styleUrls: ['./game.component.scss'],

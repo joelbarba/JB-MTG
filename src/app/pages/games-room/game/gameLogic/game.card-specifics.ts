@@ -1408,53 +1408,123 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
 
 
 
-  // Jokulhaups
-  // Nevinyrrals Disk
-  // Library Of Alexandria (dialog)
-  // Ball Lightning
-  // Incinerate
-  // Drain Life
-  // Feldons Cane
-  // Colossus Of Sardia
-  // Sengir Vampire
+  function c000115_Jokulhaups() { // Bury all artifacts, creatures and lands
+    card.onSummon = (nextState: TGameState) => {
+      const { tableStack, card } = getShorts(nextState);
+      tableStack.filter(c => c.isType('creature')).forEach(creature => killCreature(nextState, creature.gId));
+      tableStack.filter(c => c.isType('artifact') || c.isType('land')).forEach(card => moveCardToGraveyard(nextState, card.gId));
+      moveCardToGraveyard(nextState, card.gId);
+    };
+  }
+
+  function c000102_NevinyrralsDisk() { 
+    card.onSummon = (nextState: TGameState) => {
+      const { card } = getShorts(nextState);
+      card.status = null; card.isTapped = true; // Disk begins tapped
+      moveCard(nextState, gId, 'tble'); 
+    }
+    card.getAbilityCost = () => ({ mana: [1,0,0,0,0,0], tap: true, text: `Tap ${card.name} to destroy all creatures, enchantments and artifacts` });
+    card.onAbility = (nextState: TGameState) => {
+      const { tableStack } = getShorts(nextState);
+      tableStack.filter(c => c.isType('creature')).forEach(creature => killCreature(nextState, creature.gId));
+      tableStack.filter(c => c.isType('artifact') || c.isType('enchantment')).forEach(card => moveCardToGraveyard(nextState, card.gId));
+      moveCardToGraveyard(nextState, gId);
+    };
+  }
+
+  function c000128_BallLightning() {
+    commonCreature();
+    card.onSummon = (nextState) => {
+      const { card, cardPlayer } = getShorts(nextState);
+      card.status = null;
+      card.combatStatus = null;
+      nextState.effects.push({ scope: 'permanent', trigger: 'onEndTurn', gId, targets: [], id: randomId('e'), playerNum: cardPlayer.num });
+      moveCard(nextState, card.gId, 'tble');
+    };
+    card.onEffect = (nextState, effectId: string) => {
+      killCreature(nextState, gId); // Is buried at the end of the turn
+    };
+  }
+
+
+  function c000101_Millstone() { // Take 2 cards from top of target players library and put them into player's graveyard
+    card.getAbilityCost = () => {
+      const text = `Use ${card.name} to take 2 cards from player's deck to its graveyard`;
+      const possibleTargets = ['player1', 'player2'];
+      return { mana: [2,0,0,0,0,0], tap: true, neededTargets: 1, possibleTargets, text };
+    };
+    card.onAbility = (nextState) => {
+      const { deck, targetId } = getShorts(nextState);
+      const playerNum = targetId.split('player')[1];
+      const playerDeck = deck.filter(c => c.controller === playerNum).sort((a, b) => a.order > b.order ? 1 : -1);
+      if (playerDeck.length >= 1) { moveCardToGraveyard(nextState, playerDeck[0].gId); }
+      if (playerDeck.length >= 2) { moveCardToGraveyard(nextState, playerDeck[1].gId); }
+    };
+  }
+
+  function c000110_IcyManipulator() {
+    card.getAbilityCost = (nextState) => {
+      const { tableStack } = getShorts(nextState);
+      const text = `Use ${card.name} to tap target artifact, creature or land`;
+      const possibleTargets = tableStack.filter(c => !c.isTapped && (c.isType('artifact') || c.isType('creature') || c.isType('land'))).map(c => c.gId);
+      return { mana: [1,0,0,0,0,0], tap: true, neededTargets: 1, possibleTargets, text };
+    };
+    card.onAbility = (nextState) => {
+      const { targetId } = getShorts(nextState);
+      const target = nextState.cards.find(c => c.gId === targetId);
+      if (target) { target.isTapped = true; }
+    };
+  }
+
+  function c000114_LibraryOfAlexandria() {
+    commonLand(0);
+    card.getAbilityCost = () => {
+      const possibleTargets = ['mana', 'draw'];
+      return { mana: [0,0,0,0,0,0], tap: true, customDialog: true, neededTargets: 1, possibleTargets, text: `Use ${card.name}` };
+    };
+    card.onAbility = (nextState: TGameState) => {
+      const { targetId, cardPlayer } = getShorts(nextState);
+      if (targetId === 'mana') { cardPlayer.manaPool[0] += 1; }
+      if (targetId === 'draw') { drawCard(nextState, cardPlayer.num); }
+    };   
+  }
+
+  function c000133_FeldonsCane() { }
+  function c000134_ColossusOfSardia() { }
+
+  function c000090_SengirVampire() { }
+  function c000031_HypnoticSpecter() {}
+
+  function c000118_Incinerate() { }
+  function c000123_DrainLife() { }
+
+  //
   // 
   // 
 
   // // Pending to be coded......
   function c000029_Fork() {}
   function c000030_HowlingMine() {}
-  function c000031_HypnoticSpecter() {}  
   function c000062_EyeForAnEye() {}
   function c000064_ManaFlare() {}
   function c000085_NorthernPaladin() { }
   function c000088_RoyalAssassin() { }
-  function c000090_SengirVampire() { }
   function c000094_Clone() { }
   function c000095_ControlMagic() { }
   function c000096_CopyArtifact() { }
   function c000097_Fastbond() { }
   function c000098_Fireball() { }
-  function c000101_Millstone() { }
-  function c000102_NevinyrralsDisk() { }
   function c000104_SorceressQueen() { }
   function c000106_VesuvanDoppelganger() { }
   function c000109_GauntletOfMight() { }
-  function c000110_IcyManipulator() { }
   function c000113_TheAbyss() { }
-  function c000114_LibraryOfAlexandria() { }
-  function c000115_Jokulhaups() { }
   function c000117_BalduvianHorde() { }
-  function c000118_Incinerate() { }
   function c000121_MishrasFactory() { }
-  function c000123_DrainLife() { }
   function c000125_DeadlyInsect() { }
   function c000127_ConcordantCrossroads() { }
-  function c000128_BallLightning() { }
   function c000129_GiantTortoise() { }
   function c000130_TimeElemental() { }
   function c000132_PsychicVenom() { }
-  function c000133_FeldonsCane() { }
-  function c000134_ColossusOfSardia() { }
 
   return card;
 }
