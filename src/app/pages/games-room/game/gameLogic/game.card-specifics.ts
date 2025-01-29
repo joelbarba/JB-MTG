@@ -286,6 +286,14 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     // war_mammoth.jpg
     // water_elemental.jpg
     // winter_orb.jpg
+    // copper_tablet.jpg
+    // ice_storm.jpg
+    // moat.jpg
+    // cleanse.jpg
+    // divine_offering.jpg
+    // divine_transformation.jpg
+    // mightstone.jpg
+    // strip_mine.jpg
     default: console.warn('Card ID not found', card.id); 
   }
 
@@ -1489,8 +1497,34 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     };   
   }
 
-  function c000133_FeldonsCane() { }
-  function c000134_ColossusOfSardia() { }
+  function c000133_FeldonsCane() {
+    card.getAbilityCost = () => ({ mana: [1,0,0,0,0,0], text: `Use ${card.name} to reshuffle your graveyard into your deck` });
+    card.onAbility = (nextState) => {
+      const { cardPlayer, graveyard } = getShorts(nextState);
+      graveyard.filter(c => c.controller === cardPlayer.num).forEach(c => moveCard(nextState, c.gId, 'deck')); // Move grav to deck
+      shuffleDeck(nextState, cardPlayer.num);
+      moveCardToGraveyard(nextState, gId, true); // Feldons Cane is removed from the game
+    };
+  }
+
+  function c000134_ColossusOfSardia() {
+    commonCreature();
+    isAlsoType('artifact');
+    card.canUntap = () => false;
+    card.getUpkeepCost = (nextState) => {
+      const { card } = getShorts(nextState);
+      if (!card.isTapped) { return null; }
+      return { // Cost to untap Colossus of Sardia
+        mana: [9,0,0,0,0,0], canSkip: true,
+        text: `Pay 9 uncolored mana to untap ${card.name}`,
+        skipText: `Leave ${card.name} untapped`,
+        opText: `Opponent is untapping ${card.name}`
+      };
+    }
+    card.onUpkeep = (nextState, skip) => {
+      if (!skip) { getShorts(nextState).card.isTapped = false; } // Untap it
+    };
+  }
 
   function c000090_SengirVampire() { }
   function c000031_HypnoticSpecter() {}
