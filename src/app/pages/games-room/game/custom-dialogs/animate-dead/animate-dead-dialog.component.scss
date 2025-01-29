@@ -1,0 +1,55 @@
+@import '../../game.vars.scss';
+
+.dialog-container {
+  background: $dialog-custom-bg;
+  // background: snow;
+  // background: seashell;
+  // background: oldlace;
+  // background: papayawhip;
+  // background: mintcream;
+  // background: lightyellow;
+
+  @include panel-basics();
+  @include fixed-panel(5%, 10%, 5%);
+
+  &:not(.minimized) {
+    min-width: 450px; min-height: 600px;  // XL
+    @media screen and (max-height: 1050px) { min-width: 450px; min-height: 500px; } // LG
+    @media screen and (max-height: 900px)  { min-width: 300px; min-height: 450px; } // MD
+  }
+
+  justify-content: flex-start;
+  .inner-dialog {
+    margin-top: 15px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    max-height: 90%; // XL
+    @media screen and (max-height: 1050px) { max-height: 87%; } // LG
+    @media screen and (max-height: 900px)  { max-height: 85%; } // MD
+  }
+
+  .select-box {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    overflow: auto;
+    margin-bottom: 15px;
+    game-card { 
+      margin: 7px;
+    }
+  }
+
+
+  .btns-box {
+    height: 100%;
+    align-items: flex-end;
+    .your-selection {
+      flex: 1;
+      text-align: left;
+      margin-left: 30px;
+      mana-icon { margin-left: 10px; }
+    }
+  }
+}

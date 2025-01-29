@@ -7,15 +7,18 @@
   
   <div class="card-list">
     <div *ngFor="let effect of effectCards">
-      <!-- Effect {{effect.id}} ({{effect.scope}}) -->
+      <!-- Effect {{effect.id}} ({{effect.card?.name}}) -->
+       <!-- {{effect.card | json}} -->
       <span class="owner-text">{{effect.card?.owner === game.playerANum ? 'Yours' : "Opponent's"}}</span>
-      <game-card *ngIf="effect.card" 
+      <!-- <game-card *ngIf="effect.card" 
                  [card]="effect.card" 
                  from="panelEffects"
                  (mouseenter)="cardEv.hoverCard$.next(effect.card)"
                  (mouseleave)="cardEv.hoverCard$.next(null)"
                  (click)="selectCard(effect.card)">
-      </game-card>
+      </game-card> -->
+
+      <game-card *ngIf="effect.card" [card]="effect.card" from="targetSelection"></game-card>
     </div>
 
 

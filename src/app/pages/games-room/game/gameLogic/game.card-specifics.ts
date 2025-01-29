@@ -725,15 +725,9 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
       nextState.effects.push({ scope: 'permanent', trigger: 'constantly', gId, targets: [], id: randomId('e') });
     };
     card.onEffect = (nextState: TGameState, effectId: string) => { // Add +1/+1 to target creature
-      const { card, otherPlayer } = getShorts(nextState);
-      const lands = nextState.cards.filter(c => c.controller === otherPlayer.num && c.location.slice(0,4) === 'tble' && c.type === 'land');
-      let hasForest = false;
-      lands.forEach(land => {
-        if (land.isType('forest')) {
-          hasForest = true;
-        }
-      });
-      if (hasForest) {
+      const { card, cardPlayer } = getShorts(nextState);
+      const lands = nextState.cards.filter(c => c.controller === cardPlayer.num && c.location.slice(0,4) === 'tble' && c.type === 'land');
+      if (lands.filter(land => land.isType('forest')).length) {
         card.turnAttack += 1;
         card.turnDefense += 2;
       }
@@ -1376,6 +1370,42 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     };
   }
 
+  function c000107_AnimateDead() {
+    card.getSummonCost = (nextState: TGameState) => {
+      const { card, graveyard } = getShorts(nextState);
+      const possibleTargets = graveyard.filter(c => c.isType('creature')).map(c => c.gId); // Creatures from any grav
+      return { mana: card.cast, customDialog: true, neededTargets: 1, possibleTargets };
+    };
+    card.onSummon = (nextState: TGameState) => {
+      const { card, targetId } = getShorts(nextState);
+      const targetCreature = nextState.cards.find(c => c.gId === targetId);
+      if (targetCreature) {
+        targetCreature.controller = card.controller; // Take control of the creature
+        moveCard(nextState, targetId, 'hand' + card.controller); // Move selected card to your hand
+        targetCreature.onSummon(nextState); // Immediately summon it like if you play it
+        targetCreature.status = null; // it has no 'sickness'
+        nextState.effects.push({ scope: 'permanent', trigger: 'constantly', gId, targets: [targetId], id: randomId('e'), playerNum: card.controller });
+      }
+      moveCard(nextState, gId, 'tble');
+    };
+    card.onEffect = (nextState: TGameState, effectId: string) => { // Adds -1/-0 to target creature
+      const { tableStack } = getShorts(nextState);
+      const effect = nextState.effects.find(e => e.id === effectId);
+      const effectTargetId = effect?.targets[0]; // The card that the card's effect is targetting
+      const targetCreature = tableStack.find(c => c.gId === effectTargetId);
+      if (targetCreature) { targetCreature.turnAttack -= 1; }
+    };
+    card.onDestroy = (nextState: TGameState) => {
+      const targetCreature = nextState.cards.find(c => c.gId === card.targets[0]);
+      if (targetCreature) {
+        targetCreature.controller = targetCreature.owner; // Return the creature to its owner
+        moveCard(nextState, targetCreature.gId, 'tble' + targetCreature.owner);
+        moveCardToGraveyard(nextState, targetCreature.gId); // Return creature to its graveyard
+      }
+    }
+
+  }
+
 
 
   // Jokulhaups
@@ -1408,7 +1438,6 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   function c000102_NevinyrralsDisk() { }
   function c000104_SorceressQueen() { }
   function c000106_VesuvanDoppelganger() { }
-  function c000107_AnimateDead() { }
   function c000109_GauntletOfMight() { }
   function c000110_IcyManipulator() { }
   function c000113_TheAbyss() { }

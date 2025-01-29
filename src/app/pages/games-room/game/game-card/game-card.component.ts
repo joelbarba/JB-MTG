@@ -59,7 +59,7 @@ export class GameCardComponent {
   isEnchantingCombatCreature = false;
   ngOnChanges() {
     this.isEnchantingCombatCreature = false;
-    if (this.card?.isType('enchantment')) {
+    if (this.card?.isType('enchantment') && ['combatAttackerUp', 'combatAttackerDown', 'combatDefenderUp', 'combatDefenderDown'].indexOf(this.from) >= 0) {
       this.isEnchantingCombatCreature = !!this.game.state.cards
         .filter(c => this.card && this.card.targets.indexOf(c.gId) >= 0)
         .filter(c => c.combatStatus === 'combat:attacking' || c.combatStatus === 'combat:defending').length;

@@ -302,7 +302,7 @@ export class DataService {
       'c000003',  // Swamp
       'c000013',  // Bayou
       'c000061',  // Demonic Tutor
-      'c000122',  // Raise Dead
+      'c000107',  // AnimateDead
       'c000080',  // Erg Raiders
       'c000037',  // Brass Man
       'c000023',  // Ancestral Recall
@@ -323,6 +323,7 @@ export class DataService {
       'c000010',  // Mox Sapphire
       'c000120',  // CarrionAnts
       'c000069',  // Wrath of God
+      'c000080',  // Erg Raiders
       'c000026',  // Black Knight
       'c000093',  // Braingeyser
       'c000079',  // Unsummon
