@@ -183,7 +183,7 @@ export class GameStateService {
       // Extended functions (extendCardLogic)
       'onSummon', 'onAbility', 'onDestroy', 'onDiscard', 'afterCombat', 'onEffect', 'onUpkeep',
       'isType', 'isColor', 'canUntap', 'canAttack', 'canDefend', 'targetBlockers', 
-      'getSummonCost', 'getAbilityCost', 'getUpkeepCost', 'getCost',
+      'getSummonCost', 'getAbilityCost', 'getUpkeepCost', 'getCost', 'onPlayerDamage'
     ]
     dbState.cards = dbState.cards.map(card => card.keyFilter((v,k) => !extFields.includes(k))) as Array<TGameCard>;
 
@@ -597,6 +597,7 @@ export class GameStateService {
           console.log(`${attackerTxt} -----> also deals the remaining ${excessDamage} points of damage to player ${defendingPlayer.name} (because of TRAMPLE)`);
           damageToDefender -= excessDamage;
           totalDamage += excessDamage;
+          attackingCard.onPlayerDamage(nextState, excessDamage);
         }
 
         defendingCard.turnDamage += damageToDefender;
@@ -605,8 +606,11 @@ export class GameStateService {
         console.log(`${defenserTxt} -----> deals ${damageToAttacker} points of damage to ${attackerTxt}`);
         
       } else { // If the creature is not blocked
-        console.log(`${attackerTxt} -----> deals ${attackingCard.turnAttack} points of damage to player ${defendingPlayer.name}`);
-        totalDamage += (attackingCard.turnAttack || 0);
+        if (attackingCard.turnAttack > 0) {
+          console.log(`${attackerTxt} -----> deals ${attackingCard.turnAttack} points of damage to player ${defendingPlayer.name}`);
+          totalDamage += attackingCard.turnAttack;
+          attackingCard.onPlayerDamage(nextState, attackingCard.turnAttack);
+        }
       }
     });
 

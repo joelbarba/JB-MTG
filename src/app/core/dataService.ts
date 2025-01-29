@@ -301,14 +301,14 @@ export class DataService {
       'c000003',  // Swamp
       'c000003',  // Swamp
       'c000013',  // Bayou
-      'c000101',  // Millstone
-      'c000110',  // IcyManipulator
+      'c000027',  // Dark Ritual
+      'c000031',  // Hypnotic Specter
+      'c000031',  // Hypnotic Specter
+      'c000090',  // Sengir Vampire      
       'c000114',  // LibraryOfAlexandria
       'c000123',  // DrainLife
-      'c000090',  // SengirVampire
       'c000037',  // Brass Man
       'c000023',  // Ancestral Recall
-      'c000027',  // Dark Ritual
       'c000089',  // Juzám Djinn
       'c000086',  // SerendibEfreet
       'c000124',  // UnderworldDreams
@@ -318,6 +318,8 @@ export class DataService {
       'c000028',  // Drudge Skeletons
       'c000026',  // Black Knight
       'c000081',  // WillOTheWisp
+      'c000101',  // Millstone
+      'c000110',  // IcyManipulator
       'c000070',  // Howl From Beyond
       'c000078',  // Wall Of Air
       'c000061',  // Demonic Tutor
@@ -372,8 +374,35 @@ export class DataService {
       'c000055',  // Unholy Strength
       'c000053',  // Ornithopter
       'c000027',  // Dark Ritual
+      'c000031',  // Hypnotic Specter
+      'c000090',  // Sengir Vampire
+      'c000123',  // Drain Life
+      'c000088',  // Royal Assassin
+      'c000104',  // Sorceress Queen
+      'c000095',  // Control Magic
+      'c000094',  // Clone
+      'c000096',  // Copy Artifact
+      'c000106',  // Vesuvan Doppelganger
+      'c000113',  // The Abyss
+      'c000129',  // Giant Tortoise
+      'c000130',  // Time Elemental
+      'c000132',  // Psychic Venom
+      'c000145',  // Frozen Shade
+      'c000149',  // Jayemdae Tome
+      'c000151',  // Nether Shadow
+      'c000152',  // Obsianus Golem
+      'c000153',  // Onulet
+      'c000155',  // Reconstruction
+      'c000157',  // Scathe Zombies
+      'c000161',  // Wall Of Bone
+      'c000166',  // Water Elemental
+      'c000167',  // Winter Orb
+      'c000168',  // Copper Tablet
+      'c000174',  // Mightstone
+      'c000175',  // Strip Mine
       // 'c000000',  // 
     ];
+
     const cardsDeck2 = [
       'c000013',  // Bayou
       'c000014',  // Badlands
@@ -435,6 +464,44 @@ export class DataService {
       'c000032',  // Ligthning Bolt
       'c000032',  // Ligthning Bolt
       'c000032',  // Ligthning Bolt
+      'c000118',  // Incinerate
+      'c000030',  // Howling Mine
+      'c000064',  // Mana Flare
+      'c000085',  // Northern Paladin
+      'c000097',  // Fastbond
+      'c000109',  // Gauntlet Of Might
+      'c000125',  // Deadly Insect
+      'c000127',  // Concordant Crossroads
+      'c000029',  // Fork
+      'c000062',  // Eye For AnEye
+      'c000156',  // Reverse Damage
+      'c000098',  // Fireball
+      'c000117',  // Balduvian Horde
+      'c000121',  // Mishras Factory
+      'c000138',  // Balance
+      'c000139',  // Dancing Scimitar
+      'c000140',  // Desert Twister
+      'c000141',  // Dingus Egg
+      'c000142',  // Disrupting Scepter
+      'c000143',  // Flashfires
+      'c000144',  // Force Of Nature
+      'c000146',  // Healing Salve
+      'c000147',  // Holy Strength
+      'c000148',  // Hurricane
+      'c000150',  // Karma
+      'c000154',  // Pearled Unicorn
+      'c000158',  // Stream Of Life
+      'c000159',  // Tranquility
+      'c000160',  // Tsunami
+      'c000162',  // Wall Of Brambles
+      'c000163',  // Wall Of Stone
+      'c000164',  // Wall Of Wood
+      'c000165',  // War Mammoth
+      'c000169',  // Ice Storm
+      'c000170',  // Moat
+      'c000171',  // Cleanse
+      'c000172',  // Divine Offering
+      'c000173',  // Divine Transformation
       // 'c000000',  // 
     ];
     return [cardsDeck1, cardsDeck2];

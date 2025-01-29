@@ -13,20 +13,21 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   // But to be 100% pure, we should filter the object from the given nextState in every function --> const card = getCard(nextState);
 
   // Functions to exted: common values
-  card.onSummon       = (nextState: TGameState) => { moveCard(nextState, gId, 'tble'); getCard(nextState).status = null; }
-  card.onAbility      = (nextState: TGameState) => {}
-  card.onDestroy      = (nextState: TGameState) => {};
-  card.onDiscard      = (nextState: TGameState) => moveCard(nextState, gId, 'grav');
-  card.onUpkeep       = (nextState: TGameState, paid) => {};
-  card.afterCombat    = (nextState: TGameState) => {};
-  card.onEffect       = (nextState: TGameState, effectId: string) => {};
-  card.canUntap       = (nextState: TGameState) => true;
-  card.canAttack      = (nextState: TGameState) => !!card.isType('creature');
-  card.canDefend      = (nextState: TGameState) => !!card.isType('creature');
-  card.targetBlockers = (nextState: TGameState) => [];  // Returns a list of gId of the attacking creatues that can block
-  card.getSummonCost  = (nextState: TGameState) => ({ mana: card.cast });
-  card.getAbilityCost = (nextState: TGameState) => null;
-  card.getUpkeepCost  = (nextState: TGameState) => null;
+  card.onSummon       = (nextState) => { moveCard(nextState, gId, 'tble'); getCard(nextState).status = null; }
+  card.onAbility      = (nextState) => {}
+  card.onDestroy      = (nextState) => {};
+  card.onDiscard      = (nextState) => moveCard(nextState, gId, 'grav');
+  card.onUpkeep       = (nextState, paid) => {};
+  card.onPlayerDamage = (nextState, damage) => {};
+  card.afterCombat    = (nextState) => {};
+  card.onEffect       = (nextState, effectId: string) => {};
+  card.canUntap       = (nextState) => true;
+  card.canAttack      = (nextState) => !!card.isType('creature');
+  card.canDefend      = (nextState) => !!card.isType('creature');
+  card.targetBlockers = (nextState) => [];  // Returns a list of gId of the attacking creatues that can block
+  card.getSummonCost  = (nextState) => ({ mana: card.cast });
+  card.getAbilityCost = (nextState) => null;
+  card.getUpkeepCost  = (nextState) => null;
   card.isType         = (type) => card.type === type;
   card.isColor        = (color) => card.color === color;
 
@@ -256,44 +257,44 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     case 'c000135':  c000135_KillerBees();                break; // ok
     case 'c000136':  c000136_Bog_Wraith();                break;
     case 'c000137':  c000137_Shanodin_Dryads();           break;
-    // balance.jpg
-    // dancing_scimitar.jpg
-    // desert_twister.jpg
-    // dingus_egg.jpg
-    // disrupting_scepter.jpg
-    // flashfires.jpg
-    // force_of_nature.jpg
-    // frozen_shade.jpg
-    // healing_salve.jpg
-    // holy_strength.jpg
-    // hurricane.jpg
-    // jayemdae_tome.jpg
-    // karma.jpg
-    // nether_shadow.jpg
-    // obsianus_golem.jpg
-    // onulet.jpg
-    // pearled_unicorn.jpg
-    // reconstruction.jpg
-    // reverse_damage.jpg
-    // scathe_zombies.jpg
-    // stream_of_life.jpg
-    // tranquility.jpg
-    // tsunami.jpg
-    // wall_of_bone.jpg
-    // wall_of_brambles.jpg
-    // wall_of_stone.jpg
-    // wall_of_wood.jpg
-    // war_mammoth.jpg
-    // water_elemental.jpg
-    // winter_orb.jpg
-    // copper_tablet.jpg
-    // ice_storm.jpg
-    // moat.jpg
-    // cleanse.jpg
-    // divine_offering.jpg
-    // divine_transformation.jpg
-    // mightstone.jpg
-    // strip_mine.jpg
+    case 'c000138':  c000138_Balance();                   break;
+    case 'c000139':  c000139_DancingScimitar();           break;
+    case 'c000140':  c000140_DesertTwister();             break;
+    case 'c000141':  c000141_DingusEgg();                 break;
+    case 'c000142':  c000142_DisruptingScepter();         break;
+    case 'c000143':  c000143_Flashfires();                break;
+    case 'c000144':  c000144_ForceOfNature();             break;
+    case 'c000145':  c000145_FrozenShade();               break;
+    case 'c000146':  c000146_HealingSalve();              break;
+    case 'c000147':  c000147_HolyStrength();              break;
+    case 'c000148':  c000148_Hurricane();                 break;
+    case 'c000149':  c000149_JayemdaeTome();              break;
+    case 'c000150':  c000150_Karma();                     break;
+    case 'c000151':  c000151_NetherShadow();              break;
+    case 'c000152':  c000152_ObsianusGolem();             break;
+    case 'c000153':  c000153_Onulet();                    break;
+    case 'c000154':  c000154_PearledUnicorn();            break;
+    case 'c000155':  c000155_Reconstruction();            break;
+    case 'c000156':  c000156_ReverseDamage();             break;
+    case 'c000157':  c000157_ScatheZombies();             break;
+    case 'c000158':  c000158_StreamOfLife();              break;
+    case 'c000159':  c000159_Tranquility();               break;
+    case 'c000160':  c000160_Tsunami();                   break;
+    case 'c000161':  c000161_WallOfBone();                break;
+    case 'c000162':  c000162_WallOfBrambles();            break;
+    case 'c000163':  c000163_WallOfStone();               break;
+    case 'c000164':  c000164_WallOfWood();                break;
+    case 'c000165':  c000165_WarMammoth();                break;
+    case 'c000166':  c000166_WaterWlemental();            break;
+    case 'c000167':  c000167_WinterOrb();                 break;
+    case 'c000168':  c000168_CopperTablet();              break;
+    case 'c000169':  c000169_IceStorm();                  break;
+    case 'c000170':  c000170_Moat();                      break;
+    case 'c000171':  c000171_Cleanse();                   break;
+    case 'c000172':  c000172_DivineOffering();            break;
+    case 'c000173':  c000173_DivineTransformation();      break;
+    case 'c000174':  c000174_Mightstone();                break;
+    case 'c000175':  c000175_StripMine();                 break;
     default: console.warn('Card ID not found', card.id); 
   }
 
@@ -1526,8 +1527,21 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     };
   }
 
+  function c000031_HypnoticSpecter() {
+    commonCreature();
+    card.onPlayerDamage = (nextState, damage) => { // discard a card at random from hand
+      const { otherPlayer, hand } = getShorts(nextState);      
+      const handB = hand.filter(c => c.controller === otherPlayer.num);
+      if (handB.length) {
+        const randInd = Math.floor(Math.random() * handB.length);
+        const cardToDiscard = handB[randInd];
+        moveCardToGraveyard(nextState, cardToDiscard.gId);
+      }
+    };
+  }
+
+
   function c000090_SengirVampire() { }
-  function c000031_HypnoticSpecter() {}
 
   function c000118_Incinerate() { }
   function c000123_DrainLife() { }
@@ -1536,29 +1550,72 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   // 
   // 
 
-  // // Pending to be coded......
-  function c000029_Fork() {}
+  // Pending to be coded .....
   function c000030_HowlingMine() {}
-  function c000062_EyeForAnEye() {}
   function c000064_ManaFlare() {}
-  function c000085_NorthernPaladin() { }
   function c000088_RoyalAssassin() { }
-  function c000094_Clone() { }
-  function c000095_ControlMagic() { }
-  function c000096_CopyArtifact() { }
-  function c000097_Fastbond() { }
-  function c000098_Fireball() { }
   function c000104_SorceressQueen() { }
-  function c000106_VesuvanDoppelganger() { }
+  function c000095_ControlMagic() { }
+  function c000085_NorthernPaladin() { }
+  function c000097_Fastbond() { }
   function c000109_GauntletOfMight() { }
+  function c000125_DeadlyInsect() { }
+
+  function c000156_ReverseDamage() {}
+  function c000062_EyeForAnEye() {}
+  function c000029_Fork() {}
+  function c000127_ConcordantCrossroads() { }
+  function c000096_CopyArtifact() { }
+  function c000094_Clone() { }
+  function c000106_VesuvanDoppelganger() { }
+
+
+
+
+  function c000098_Fireball() { }
   function c000113_TheAbyss() { }
   function c000117_BalduvianHorde() { }
   function c000121_MishrasFactory() { }
-  function c000125_DeadlyInsect() { }
-  function c000127_ConcordantCrossroads() { }
   function c000129_GiantTortoise() { }
   function c000130_TimeElemental() { }
   function c000132_PsychicVenom() { }
+  function c000138_Balance() {}
+  function c000139_DancingScimitar() {}
+  function c000140_DesertTwister() {}
+  function c000141_DingusEgg() {}
+  function c000142_DisruptingScepter() {}
+  function c000143_Flashfires() {}
+  function c000144_ForceOfNature() {}
+  function c000145_FrozenShade() {}
+  function c000146_HealingSalve() {}
+  function c000147_HolyStrength() {}  
+  function c000148_Hurricane() {}
+  function c000149_JayemdaeTome() {}
+  function c000150_Karma() {}
+  function c000151_NetherShadow() {}
+  function c000152_ObsianusGolem() {}
+  function c000153_Onulet() {}
+  function c000154_PearledUnicorn() {}
+  function c000155_Reconstruction() {}
+  function c000157_ScatheZombies() {}
+  function c000158_StreamOfLife() {}
+  function c000159_Tranquility() {}
+  function c000160_Tsunami() {}
+  function c000161_WallOfBone() {}
+  function c000162_WallOfBrambles() {}
+  function c000163_WallOfStone() {}
+  function c000164_WallOfWood() {}
+  function c000165_WarMammoth() {}
+  function c000166_WaterWlemental() {}
+  function c000167_WinterOrb() {}
+  function c000168_CopperTablet() {}
+  function c000169_IceStorm() {}
+  function c000170_Moat() {}
+  function c000171_Cleanse() {}
+  function c000172_DivineOffering() {}
+  function c000173_DivineTransformation() {}
+  function c000174_Mightstone() {}
+  function c000175_StripMine() {}
 
   return card;
 }

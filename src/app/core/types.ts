@@ -180,6 +180,7 @@ export type TGameCard = TDBGameCard & TCard & { // Not in DB (fixed properties f
   onDiscard: (state: TGameState) => void;   // What the card does when it's discarded
   onUpkeep:  (state: TGameState, skip: boolean, targets?: string[]) => void;   // What the card does during the upkeep phase
   onEffect:  (state: TGameState, effectId: string) => void;  // What the effect of the card does when it's applied
+  onPlayerDamage: (state: TGameState, damage: number) => void; // when the card damages a player on combat
   afterCombat: (state: TGameState) => void;  // What the card does after combat
   isType:  (type: TCardExtraType) => boolean; // Checks if the card is of a certain type
   isColor: (color: TColor) => boolean; // Checks if the card is of a certain color
