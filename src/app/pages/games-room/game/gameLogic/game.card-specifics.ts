@@ -1541,7 +1541,35 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   }
 
 
-  function c000090_SengirVampire() { }
+  function c000090_SengirVampire() {
+    commonCreature();
+    card.onCreatureDamage = (nextState, damagedCreaturegId, damage) => {
+      nextState.effects.push({ scope: 'turn', trigger: 'constantly', gId, targets: [damagedCreaturegId], id: 'watch-' + randomId('e') });
+    };
+    card.onEffect = (nextState: TGameState, effectId: string) => {
+      const { card } = getShorts(nextState);
+      const effect = nextState.effects.find(e => e.id === effectId);
+
+      if (effectId.slice(0,5) === 'watch') { // Watching effect (waiting for the creature to die)
+        const damagedCreatureId = effect?.targets[0];
+        if (damagedCreatureId && card.tokens.indexOf(damagedCreatureId) < 0) { // If not counted yet (no token with its gId)
+          const damagedCreature = nextState.cards.find(c => c.gId === damagedCreatureId);
+          if (damagedCreature && damagedCreature.location.slice(0,4) === 'grav') { // If creature died during the current turn
+            console.log('A creature has died the same turn Sengir Vampire damaged it. Adding a +1/+1 counter');
+            card.tokens.push(damagedCreatureId); // Save the gId of the creature that died
+            nextState.effects.push({ scope: 'permanent', trigger: 'constantly', gId, targets: [], id: 'token-' + randomId('e') });
+            card.turnAttack  += card.tokens.length; // Do it immediately too (because the effect won't run until next state change)
+            card.turnDefense += card.tokens.length;
+          }
+        } 
+
+      } else { // +1/+1 token effect
+        card.turnAttack  += card.tokens.length;
+        card.turnDefense += card.tokens.length;
+      }
+
+    }
+  }
 
   function c000118_Incinerate() { }
   function c000123_DrainLife() { }

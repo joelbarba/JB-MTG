@@ -275,7 +275,7 @@
 
 
 <!-- Debug Panel -->
-<div *ngIf="game.state && game.debugPanel" style="position: fixed; top: 0px; left: 500px; background: lightgray; padding: 10px; z-index: 2000; right: 10px; bottom: 10px;">
+<div *ngIf="game.state && game.debugPanel" style="position: fixed; top: 0px; left: 500px; background: lightgray; padding: 10px; z-index: 2000; right: 10px; bottom: 10px; overflow-y: scroll;">
   <div>
     <br/>You are player={{game.playerANum}}    
     <span>, --- control={{game.state.control}} ====> {{(game.state.control === game.playerANum ? 'YOU' : 'Opponent') + ' (player ' + game.state.control + ') got control'}}</span>
