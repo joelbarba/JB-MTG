@@ -1167,7 +1167,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
       const effectTargetId = effect?.targets[0]; // The creature that Erhnam's effect is targetting
       const targetCreature = targetCreatures().find(c => c.gId === effectTargetId);
       if (targetCreature) { targetCreature.turnLandWalk = 'forest'; }
-    }
+    };
   }
 
 
@@ -1329,15 +1329,34 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     };
   }
 
-  // Demonic Tutor (dialog)
-  // Regrowth (dialog)
-  // Raise Dead (dialog)
+
+  function c000061_DemonicTutor() {
+    card.hideTargetsOnStack = true;
+    card.getSummonCost = (nextState: TGameState) => {
+      const { card, cardPlayer, deck } = getShorts(nextState);
+      const possibleTargets = deck.filter(c => c.controller === cardPlayer.num).map(c => c.gId); // One card from your deck
+      return { mana: card.cast, customDialog: true, neededTargets: 1, possibleTargets };
+    };
+    card.onSummon = (nextState: TGameState) => {
+      const { targetId, cardPlayer } = getShorts(nextState);
+      moveCard(nextState, targetId, 'hand'); // Move selected card to your hand
+      shuffleDeck(nextState, cardPlayer.num);
+      moveCardToGraveyard(nextState, gId); // Destroy itself
+    };
+  }
+
+  function c000103_Regrowth() { }
+
+  function c000122_RaiseDead() { }
+
+
+
   // Jokulhaups
   // Nevinyrrals Disk
   // Library Of Alexandria (dialog)
+  // Ball Lightning
   // Incinerate
   // Drain Life
-  // Ball Lightning
   // Feldons Cane
   // Colossus Of Sardia
   // Sengir Vampire
@@ -1348,7 +1367,6 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   function c000029_Fork() {}
   function c000030_HowlingMine() {}
   function c000031_HypnoticSpecter() {}  
-  function c000061_DemonicTutor() {}
   function c000062_EyeForAnEye() {}
   function c000064_ManaFlare() {}
   function c000085_NorthernPaladin() { }
@@ -1361,7 +1379,6 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   function c000098_Fireball() { }
   function c000101_Millstone() { }
   function c000102_NevinyrralsDisk() { }
-  function c000103_Regrowth() { }
   function c000104_SorceressQueen() { }
   function c000106_VesuvanDoppelganger() { }
   function c000107_AnimateDead() { }
@@ -1373,7 +1390,6 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   function c000117_BalduvianHorde() { }
   function c000118_Incinerate() { }
   function c000121_MishrasFactory() { }
-  function c000122_RaiseDead() { }
   function c000123_DrainLife() { }
   function c000125_DeadlyInsect() { }
   function c000127_ConcordantCrossroads() { }

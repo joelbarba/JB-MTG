@@ -37,7 +37,7 @@
 
   <span class="attack-defense delta" *ngIf="card?.isType('creature') && shadow?.delta">{{shadow?.delta}}</span>
   <span class="attack-defense shado" *ngIf="card?.isType('creature') && shadow?.force">{{shadow?.force}}</span>
-  <span class="attack-defense" [class.turn]="shadow?.delta" *ngIf="card?.isType('creature')">
+  <span class="attack-defense" [class.turn]="shadow?.delta" *ngIf="card?.isType('creature') && from !== 'deckSelection'">
     {{card.turnAttack + '/' + card.turnDefense}}
   </span>
 

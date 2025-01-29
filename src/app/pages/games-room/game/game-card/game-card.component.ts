@@ -33,7 +33,7 @@ export class GameCardComponent {
     'deckA' | 'deckB' | 'handA' | 'handB' | 'tbleA' | 'tbleB' | 'gravA' | 'gravB' | 'stack' |
     'panelSelMana' | 'panelEffects' | 'panelGrav' | 'customDialog' | 'regenerateDialog' |
     'combatAttackerUp' | 'combatAttackerDown' | 'combatDefenderUp' | 'combatDefenderDown' |
-    'upkeepDialog' | 'targetSelection' | 'damageDialog' |
+    'upkeepDialog' | 'targetSelection' | 'damageDialog' | 'deckSelection' |
     '' = '';
   @Input() back = false;
   @Input() count: number | null = null;

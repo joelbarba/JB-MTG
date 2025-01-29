@@ -171,6 +171,8 @@ export type TGameCard = TDBGameCard & TCard & { // Not in DB (fixed properties f
   effectsFrom?: Array<TEffect>;
   targetOf?: Array<TGameCard>;
   uniqueTargetOf?: Array<TGameCard>;
+  hideOnStack?: boolean; // To not reveal the card when dislpayed on the stack
+  hideTargetsOnStack?: boolean; // To not reveal the targets of the card when dislpayed on the stack
 
   onSummon:  (state: TGameState) => void;   // What the card does when it's summoned
   onAbility: (state: TGameState) => void;   // What the card does when it's used for its ability (tap...)

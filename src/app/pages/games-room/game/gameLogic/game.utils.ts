@@ -158,7 +158,7 @@ export const drawCard = (nextState: TGameState, playerNum: '1' | '2') => {
 }
 
 export const shuffleDeck = (nextState: TGameState, playerNum: '1' | '2') => {
-  const deck = nextState.cards.filter(c => c.location === 'deck' + playerNum).sort((a, b) => a.order > b.order ? 1 : -1);
+  const deck = nextState.cards.filter(c => c.location === 'deck' + playerNum);
   deck.forEach(card => card.order = Math.round(Math.random() * 9999));
   deck.sort((a, b) => a.order > b.order ? 1 : -1).forEach((c, ind) => c.order = ind);
 }

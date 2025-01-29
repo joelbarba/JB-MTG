@@ -7,11 +7,15 @@
           <game-card [card]="null" from="deckB"
                      [back]="true"
                      [selectable]="false"
+                     [hoverTip]="playerB.name + '\'s Deck (' + deckBCount + ' cards)'"
+                     tipSide="bottom"
                      [count]="deckBCount">
           </game-card>
           <game-card [card]="topGravB" from="gravB"
                     [class.empty]="!topGravB"
                     [selectable]="false"
+                    [hoverTip]="playerB.name + '\'s Graveyard'"
+                    tipSide="bottom"
                     (click)="win.graveyardPanel.toggle('B')">
           </game-card>
         </div>
@@ -62,6 +66,7 @@
         <div class="deck">
           <game-card [card]="null" from="deckA"
                      [back]="true"
+                     [hoverTip]="'Your Deck (' + deckACount + ' cards)'"
                      [count]="deckACount"
                      [selectable]="canIDraw"
                      (click)="drawCard()">
@@ -69,6 +74,7 @@
           <game-card [card]="topGravA" from="gravA"
                      [class.empty]="!topGravA"
                      [selectable]="false"
+                     hoverTip="Your Graveyard"
                      (click)="win.graveyardPanel.toggle('A')">
           </game-card>
         </div>
@@ -238,8 +244,9 @@
   <dual-land-dialog    *ngIf="win.customDialog.name === 'Tundra'"         ></dual-land-dialog>
   <dual-land-dialog    *ngIf="win.customDialog.name === 'UndergroundSea'" ></dual-land-dialog>
   <dual-land-dialog    *ngIf="win.customDialog.name === 'VolcanicIsland'" ></dual-land-dialog>
-  <erhnam-djinn-dialog *ngIf="win.customDialog.name === 'ErhnamDjinn'"    ></erhnam-djinn-dialog>
-  <birds-of-paradise-dialog *ngIf="win.customDialog.name === 'BirdsOfParadise'"></birds-of-paradise-dialog>
+  <erhnam-djinn-dialog      *ngIf="win.customDialog.name === 'ErhnamDjinn'"     ></erhnam-djinn-dialog>
+  <birds-of-paradise-dialog *ngIf="win.customDialog.name === 'BirdsOfParadise'" ></birds-of-paradise-dialog>
+  <demonic-tutor-dialog     *ngIf="win.customDialog.name === 'DemonicTutor'"    ></demonic-tutor-dialog>
 </div>
 
 

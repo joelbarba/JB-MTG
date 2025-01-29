@@ -301,11 +301,10 @@ export class DataService {
       'c000003',  // Swamp
       'c000003',  // Swamp
       'c000013',  // Bayou
-      'c000066',  // Warp Artifact
-      'c000078',  // Wall Of Air
+      'c000061',  // Demonic Tutor
+      'c000122',  // Raise Dead
       'c000080',  // Erg Raiders
       'c000037',  // Brass Man
-      'c000070',  // Howl From Beyond
       'c000023',  // Ancestral Recall
       'c000027',  // Dark Ritual
       'c000089',  // Juzám Djinn
@@ -317,7 +316,10 @@ export class DataService {
       'c000028',  // Drudge Skeletons
       'c000026',  // Black Knight
       'c000081',  // WillOTheWisp
+      'c000070',  // Howl From Beyond
+      'c000078',  // Wall Of Air
       'c000053',  // Ornithopter
+      'c000066',  // Warp Artifact
       'c000010',  // Mox Sapphire
       'c000120',  // CarrionAnts
       'c000069',  // Wrath of God
@@ -370,6 +372,7 @@ export class DataService {
       'c000014',  // Badlands
       'c000018',  // Taiga
       'c000099',  // Juggernaut
+      'c000103',  // Regrowth
       'c000054',  // Savannah Lions
       'c000119',  // Crusade
       'c000008',  // Mox Pearl

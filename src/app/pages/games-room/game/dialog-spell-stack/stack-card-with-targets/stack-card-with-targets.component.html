@@ -14,6 +14,7 @@
     <!-- Target Card -->
     <game-card [card]="item.card" *ngIf="item.card"
       from="stack"
+      [back]="!!item.card.hideOnStack"
       [shadow]="item.shadow"
       (click)="cardEv.selectCard(item.card)"
       (mouseover)="cardEv.hoverCard$.next(item.card)" (mouseleave)="cardEv.hoverCard$.next(null)">

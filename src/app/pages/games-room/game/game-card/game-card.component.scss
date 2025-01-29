@@ -203,7 +203,7 @@
     // }
   }
 
-  &.damageDialog {
+  &.damageDialog, &.deckSelection {
     width: calc(var(--card-width) * 0.75);    // 
     height: calc(var(--card-height) * 0.75);  // 
     border-radius: calc((var(--card-border) + 2px) * 0.75);

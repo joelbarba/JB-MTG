@@ -114,7 +114,6 @@ export class DialogSpellStackComponent {
         else { // target = gId
           const card = state.cards.find(c => c.gId === target);
           if (card) {
-            // if (card.location === 'stack' && card.targets.length) { findEmptyTargets(card.targets); }
             if (card.targets.length) { findEmptyTargets(card.targets); }
             else { rootTargets.add(target); }
           }
@@ -136,7 +135,7 @@ export class DialogSpellStackComponent {
       // Select cards that are targetting the target
       const cardsTargetting = state.cards.filter(card => {
         if (card.isType('creature') && card.combatStatus) { return false; } // Omit defending creatures in combat (target = attacker)
-        return card.targets.indexOf(target) >= 0; 
+        return card.targets.indexOf(target) >= 0;
       }).sort((a, b) => { // Cards that are not in the stack go first (left)
         if (a.location === 'stack' && b.location !== 'stack') { return 1; }
         if (a.location !== 'stack' && b.location === 'stack') { return -1; }
@@ -153,6 +152,7 @@ export class DialogSpellStackComponent {
 
       } else {
         const card = state.cards.find(c => c.gId === target) || null;
+        if (card && card.controller !== this.game.playerANum) { card.hideOnStack = !!cardsTargetting.find(c => c.hideTargetsOnStack); }
         return { card, player: null, targetOf, shadow: { damage: 0, defense: 0, force: '', delta: '' }};
       }
     }

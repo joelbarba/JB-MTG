@@ -30,6 +30,7 @@ import { DialogDamageComponent } from "./dialog-damage/dialog-damage.component";
 import { DialogUpkeepComponent } from './dialog-upkeep/dialog-upkeep.component';
 import { ErhnamDjinnDialogComponent } from './custom-dialogs/erhnam-djinn/erhnam-djinn-dialog.component';
 import { BirdsOfParadiseDialogComponent } from './custom-dialogs/birds-of-paradise/birds-of-paradise-dialog.component';
+import { DemonicTutorDialogComponent } from './custom-dialogs/demonic-tutor/demonic-tutor-dialog.component';
 
 
 
@@ -60,6 +61,7 @@ import { BirdsOfParadiseDialogComponent } from './custom-dialogs/birds-of-paradi
     DialogUpkeepComponent,
     ErhnamDjinnDialogComponent,
     BirdsOfParadiseDialogComponent,
+    DemonicTutorDialogComponent,
 ],
   templateUrl: './game.component.html',
   styleUrls: ['./game.component.scss'],
@@ -629,6 +631,6 @@ export class GameComponent {
 
   // Debugging tools
   debugLocations: Array<TCardLocation> = ['stack', 'deck1', 'deck2', 'hand1', 'hand2', 'tble1', 'tble2', 'grav1', 'grav2', 'discarded'];
-  cardFilter(location: TCardLocation) { return this.state.cards.filter(c => c.location === location); }
+  cardFilter(location: TCardLocation) { return this.state.cards.filter(c => c.location === location).sort((a, b) => a.order > b.order ? 1 : -1); }
   debugCard(card: TGameCard) { console.log(card.name, card); }
 }
