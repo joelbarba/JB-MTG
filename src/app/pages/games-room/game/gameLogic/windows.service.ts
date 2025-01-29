@@ -206,11 +206,6 @@ export class WindowsService {
     } else { this.spellStackDialog.close(); }
 
 
-    // "Damage Dialog" if any life changes to be notified
-    if (this.game.state.lifeChanges.length) { this.damageDialog.open(); }
-    else { this.damageDialog.close(); }
-    
-
     // "Regenerate Dialog" (Open / Close logic)
     // If a creature that can be regenerated is dying, open the regenerate dialog
     if (this.game.state.cards.find(c => c.canRegenerate && c.isDying)) { this.regenerateDialog.open(); } 
@@ -221,6 +216,10 @@ export class WindowsService {
     if (youControl && this.cardOp.customDialog) { this.customDialog.open(); }
     else { this.customDialog.close(); }
 
+
+    // "Damage Dialog" if any life changes to be notified
+    if (this.game.state.lifeChanges.length) { this.damageDialog.open(); }
+    else { this.damageDialog.close(); }
 
     // this.prevState = JSON.parse(JSON.stringify(this.game.state));
     this.prevCardOpStatus = this.cardOp.status;

@@ -40,6 +40,8 @@ export class DialogRegenerateComponent {
 
   stateSub!: Subscription;
 
+  disableBtn = false;
+
   constructor(
     private game: GameStateService,
     public cardOp: CardOpServiceNew,
@@ -49,9 +51,6 @@ export class DialogRegenerateComponent {
 
   ngOnInit() {
     this.opponentName = this.game.playerB().name;
-
-
-
     this.stateSub = this.game.state$.subscribe(state => this.onStateChange(state));
     this.onStateChange(this.game.state);
   }
@@ -69,6 +68,8 @@ export class DialogRegenerateComponent {
     //     }    
     //   });
     // }
+
+    this.disableBtn = !this.game.state.options.find(o => o.action === 'cancel-regenerate');
   }
 
   ngOnDestroy() {

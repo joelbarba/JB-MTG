@@ -1338,25 +1338,40 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
       return { mana: card.cast, customDialog: true, neededTargets: 1, possibleTargets };
     };
     card.onSummon = (nextState: TGameState) => {
-      const { targetId, cardPlayer } = getShorts(nextState);
+      const { card, targetId, cardPlayer } = getShorts(nextState);
       moveCard(nextState, targetId, 'hand'); // Move selected card to your hand
       shuffleDeck(nextState, cardPlayer.num);
+      card.targets = [];
       moveCardToGraveyard(nextState, gId); // Destroy itself
     };
   }
 
-  function c000103_Regrowth() { }
+  function c000103_Regrowth() {
+    card.hideTargetsOnStack = true; // Hides selected card to opponent
+    card.getSummonCost = (nextState: TGameState) => {
+      const { card, cardPlayer, graveyard } = getShorts(nextState);
+      const possibleTargets = graveyard.filter(c => c.controller === cardPlayer.num).map(c => c.gId); // Any card from your grav
+      return { mana: card.cast, customDialog: true, neededTargets: 1, possibleTargets };
+    };
+    card.onSummon = (nextState: TGameState) => {
+      const { card, targetId } = getShorts(nextState);
+      moveCard(nextState, targetId, 'hand'); // Move selected card to your hand
+      card.targets = [];
+      moveCardToGraveyard(nextState, gId); // Destroy itself
+    };
+  }
 
   function c000122_RaiseDead() {
     card.hideTargetsOnStack = true; // Hides selected card to opponent
     card.getSummonCost = (nextState: TGameState) => {
       const { card, cardPlayer, graveyard } = getShorts(nextState);
-      const possibleTargets = graveyard.filter(c => c.controller === cardPlayer.num).map(c => c.gId); // Creatures from your grav
+      const possibleTargets = graveyard.filter(c => c.controller === cardPlayer.num && c.isType('creature')).map(c => c.gId); // Creatures from your grav
       return { mana: card.cast, customDialog: true, neededTargets: 1, possibleTargets };
     };
     card.onSummon = (nextState: TGameState) => {
-      const { targetId } = getShorts(nextState);
+      const { card, targetId } = getShorts(nextState);
       moveCard(nextState, targetId, 'hand'); // Move selected card to your hand
+      card.targets = [];
       moveCardToGraveyard(nextState, gId); // Destroy itself
     };
   }

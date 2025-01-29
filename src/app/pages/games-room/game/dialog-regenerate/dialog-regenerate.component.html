@@ -30,7 +30,7 @@
   </div>
 
   <div class="btns-box" *ngIf="youControl">
-    <bf-btn *ngIf="card"  bfText="Let it Die"   bfIcon="icon-cross" class="warning" (bfClick)="letThemDie()"></bf-btn>
-    <bf-btn *ngIf="!card" bfText="Let them Die" bfIcon="icon-cross" class="warning" (bfClick)="letThemDie()"></bf-btn>
+    <bf-btn *ngIf="card"  bfText="Let it Die"   bfIcon="icon-cross" class="warning" [bfDisabled]="disableBtn" (bfClick)="letThemDie()"></bf-btn>
+    <bf-btn *ngIf="!card" bfText="Let them Die" bfIcon="icon-cross" class="warning" [bfDisabled]="disableBtn" (bfClick)="letThemDie()"></bf-btn>
   </div>
 </div>

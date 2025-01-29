@@ -152,7 +152,7 @@ export class DialogSpellStackComponent {
 
       } else {
         const card = state.cards.find(c => c.gId === target) || null;
-        if (card && card.controller !== this.game.playerANum) { card.hideOnStack = !!cardsTargetting.find(c => c.hideTargetsOnStack); }
+        if (card) { card.hideOnStack = card.controller !== this.game.playerANum && !!cardsTargetting.find(c => c.hideTargetsOnStack); }
         return { card, player: null, targetOf, shadow: { damage: 0, defense: 0, force: '', delta: '' }};
       }
     }

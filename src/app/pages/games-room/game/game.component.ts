@@ -32,6 +32,7 @@ import { ErhnamDjinnDialogComponent } from './custom-dialogs/erhnam-djinn/erhnam
 import { BirdsOfParadiseDialogComponent } from './custom-dialogs/birds-of-paradise/birds-of-paradise-dialog.component';
 import { DemonicTutorDialogComponent } from './custom-dialogs/demonic-tutor/demonic-tutor-dialog.component';
 import { RaiseDeadDialogComponent } from './custom-dialogs/raise-dead/raise-dead-dialog.component';
+import { RegrowthDialogComponent } from './custom-dialogs/regrowth/regrowth-dialog.component';
 
 
 
@@ -64,6 +65,7 @@ import { RaiseDeadDialogComponent } from './custom-dialogs/raise-dead/raise-dead
     BirdsOfParadiseDialogComponent,
     DemonicTutorDialogComponent,
     RaiseDeadDialogComponent,
+    RegrowthDialogComponent,
 ],
   templateUrl: './game.component.html',
   styleUrls: ['./game.component.scss'],
