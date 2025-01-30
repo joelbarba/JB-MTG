@@ -80,9 +80,10 @@ export type TEffect = {
   id: string; // Id of the effect
   gId: string; // gId of the card that generated the effect
   scope: 'permanent' | 'turn'; // The lifespan of the effect
-  trigger: 'constantly' | 'onEndTurn' | 'onDraw' | 'duringSelAttack' | // When is the onEffect() called
-           'onEndUntap' | 'onEndUpkeep' | 'onEndDraw' | 'onEndPre' | 'onEndCombat' | 'onEndPost' | 'onEndDiscard' | // phases end
-           'onEndSelectAttack' | 'onEndAttacking' | 'onEndSelectDefense' | 'onEndBeforeDamage' | 'onEndAfterDamage' // subphases end
+  trigger: 'constantly' | 'onDraw' | 'onTapLand' | // When is the onEffect() called
+           'onEndTurn'  | 'duringSelAttack' |
+           'onEndUntap' | 'onEndUpkeep' | 'onEndDraw' | 'onEndPre' | 'onEndCombat' | 'onEndPost' | 'onEndDiscard' | // when phases end
+           'onEndSelectAttack' | 'onEndAttacking' | 'onEndSelectDefense' | 'onEndBeforeDamage' | 'onEndAfterDamage' // when subphases end
   targets: Array<string>; // Array of gIds or player1 or player2
   xValue?: number;        // In case of effects that add X attack/defense
   playerNum?: '1' | '2';  // In case it applies only to 1 player (turn player 1/2, onDraw player 1/2)
@@ -207,6 +208,7 @@ export type TActionCost = {
   skipText        ?: string,    // If it can be skipped, the text on the "Cancel" button
   text            ?: string,    // Description of the cost and action that triggers
   opText          ?: string,    // Text to show to the opponent while player is performing the cost
+  effect          ?: 'onTapLand'; // Effects to trigger when the ability is used
 };
 export type TGameCards = Array<TGameCard>;
 export type TExtGameCard = TGameCard & {

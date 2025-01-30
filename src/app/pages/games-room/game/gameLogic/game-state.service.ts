@@ -97,7 +97,7 @@ export class GameStateService {
       
       // Propagate changes from DB
       if (source === 'server') {
-        console.log('DB onSnapshot(): New State from -->', source);
+        // console.log('DB onSnapshot(): New State from -->', source);
         
         if (!this.firstStateDef.status || this.state.seq === dbState.seq - 1) {
           // console.log('DB onSnapshot() --> New state from remote ACTION: ', dbState.lastAction);
@@ -129,7 +129,7 @@ export class GameStateService {
     // Extend the raw DB state:  dbState$ ---> state$
     if (this.gameStateSub) { this.gameStateSub.unsubscribe(); }
     this.gameStateSub = this.dbState$.subscribe((dbState: TGameDBState) => {
-      console.log('New State. Last action =', `${dbState.lastAction?.action}`, 'dbState:', dbState);
+      // console.log('New State. Last action =', `${dbState.lastAction?.action}`, 'dbState:', dbState);
       this.state = this.options.calculate(this.convertfromDBState(dbState), this.playerANum);
       this.options.calculateEffectsFrom(this.state);
       this.options.calculateTargetsFrom(this.state);
@@ -372,6 +372,13 @@ export class GameStateService {
         card.status = null;
         card.targets = params.targets || [];
         card.onAbility(nextState);
+        
+        if (cost.effect) {  // Run those efects that should be applied when an ability is used
+          nextState.effects.filter(e => e.trigger === cost.effect).forEach(effect => {
+            effect.targets = [card.gId, ...(params.targets || [])]; // Add card that triggered the effect + targets
+            nextState.cards.find(c => c.gId === effect.gId)?.onEffect(nextState, effect.id);
+          });
+        }
       }  
     }
   }

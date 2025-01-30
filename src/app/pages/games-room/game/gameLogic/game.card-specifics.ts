@@ -54,8 +54,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
 
   const commonLand = (manaNum: 0|1|2|3|4|5) => {
     card.getAbilityCost = () => ({ 
-      mana: [0,0,0,0,0,0], tap: true,
-      neededTargets: 0, possibleTargets: [], 
+      mana: [0,0,0,0,0,0], tap: true, effect: 'onTapLand',
       text: `Tap ${card.name} to get 1 mana`,
     });
     card.onSummon = (nextState: TGameState) => {
@@ -641,7 +640,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     card.getAbilityCost = () => {
       const possibleTargets = ['custom-color-' + color1, 'custom-color-' + color2];
       return {
-        mana: [0,0,0,0,0,0], tap: true,
+        mana: [0,0,0,0,0,0], tap: true, effect: 'onTapLand',
         neededTargets: 1, possibleTargets, customDialog: true, // Target will be the color
         text: `Tap ${card.name} to get 1 mana`
       }
@@ -1489,7 +1488,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     commonLand(0);
     card.getAbilityCost = () => {
       const possibleTargets = ['mana', 'draw'];
-      return { mana: [0,0,0,0,0,0], tap: true, customDialog: true, neededTargets: 1, possibleTargets, text: `Use ${card.name}` };
+      return { mana: [0,0,0,0,0,0], tap: true, customDialog: true, neededTargets: 1, possibleTargets, text: `Use ${card.name}`, effect: 'onTapLand' };
     };
     card.onAbility = (nextState: TGameState) => {
       const { targetId, cardPlayer } = getShorts(nextState);
@@ -1631,9 +1630,37 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   }
 
   function c000064_ManaFlare() {
+    card.onSummon = (nextState) => { // When a player taps a land for mana, it produces 1 extra mana of the same type
+      nextState.effects.push({ scope: 'permanent', trigger: 'onTapLand', gId, targets: [], id: randomId('e') });
+      moveCard(nextState, gId, 'tble');
+    };
+    card.onEffect = (nextState, effectId) => {
+      console.log('Mana Flare: Tapping land for mana');
+      const effect = nextState.effects.find(e => e.id === effectId);
+      const land = nextState.cards.find(c => c.gId === effect?.targets[0]);
+      if (effect && land) {
+        console.log(land.isType('island'));
+        const player = land?.controller === '1' ? nextState.player1 : nextState.player2;
+        if (land.color === 'blue')      { player.manaPool[1] += 1; }
+        if (land.color === 'white')     { player.manaPool[2] += 1; }
+        if (land.color === 'black')     { player.manaPool[3] += 1; }
+        if (land.color === 'red')       { player.manaPool[4] += 1; }
+        if (land.color === 'green')     { player.manaPool[5] += 1; }
+        if (land.color === 'special') { // Dual lands (check target)
+          const dualLandTarget = effect?.targets[1] || '';
+          const mana = Number.parseInt(dualLandTarget.split('custom-color-')[1]);
+          player.manaPool[mana] += 1;          
+        }
+        if (land.id === 'c000114') { // Special selection for Library of Alexandry
+          const libraryOfAlexandriaTarget = effect?.targets[1] || '';
+          if (libraryOfAlexandriaTarget === 'mana') { player.manaPool[0] += 1; }
+        }
 
+        effect.targets = []; // Immediately remove the effect on the land
+      }
+    };
   }
-
+  
 
   // Pending to be coded .....
   function c000088_RoyalAssassin() { }
