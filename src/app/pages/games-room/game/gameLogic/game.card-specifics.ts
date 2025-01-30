@@ -1703,8 +1703,39 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   }
   
 
-  // Pending to be coded .....
-  function c000104_SorceressQueen() { }
+  function c000104_SorceressQueen() {
+    commonCreature();
+    card.getAbilityCost = (nextState) => {
+      const { targetCreatures } = getShorts(nextState);
+      const possibleTargets = targetCreatures().map(c => c.gId); // Target = tapped creature
+      return { 
+        mana: [0,0,0,0,0,0], tap: true, neededTargets: 1, possibleTargets, 
+        text: `Tap ${card.name} to make another creature 0/2`,
+      };
+    };
+    card.onAbility = (nextState) => {
+      const { card, targetId } = getShorts(nextState);
+      nextState.effects.push({ scope: 'turn', trigger: 'constantly',  gId, targets: [targetId], id: randomId('e') });
+    };
+    card.onEffect = (nextState, effectId, abilityCardId, params) => {
+      // Tap to make another creature 0/2 until the end of turn.
+      // Treat this exactly as if the numbers in the lower right of the target card were 0/2.
+      // All special characteristics and enchantments on the creature are unaffected.
+      // (it just changes the original attack/defense, and other effects apply on that after)
+      const effect = nextState.effects.find(e => e.id === effectId);
+      const targetCreature = nextState.cards.find(c => c.gId === effect?.targets[0]);
+      if (targetCreature) { // Check deltas in case other effects already changed them
+        const attackDelta  = targetCreature.turnAttack  - targetCreature.attack; 
+        const defenseDelta = targetCreature.turnDefense - targetCreature.defense;
+        targetCreature.turnAttack  = 0 + attackDelta;
+        targetCreature.turnDefense = 2 + defenseDelta;
+      }
+    };
+  }
+  
+  
+  // Pending to be coded ..... 
+  
   function c000095_ControlMagic() { }
   function c000085_NorthernPaladin() { }
   function c000097_Fastbond() { }
