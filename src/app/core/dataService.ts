@@ -271,7 +271,7 @@ export class DataService {
         turnAttack: 0,
         turnDefense: 0,
         turnLandWalk: null,
-        turnCanRegenerate: false,
+        turnCanRegenerate: null,
       } as TDBGameCard;
     }
 
@@ -378,6 +378,26 @@ export class DataService {
       'c000031',  // Hypnotic Specter
       'c000090',  // Sengir Vampire
       'c000123',  // Drain Life
+      'c000001',  // Island
+      'c000001',  // Island
+      'c000001',  // Island
+      'c000001',  // Island
+      'c000002',  // Plains
+      'c000002',  // Plains
+      'c000002',  // Plains
+      'c000002',  // Plains
+      'c000003',  // Swamp
+      'c000003',  // Swamp
+      'c000003',  // Swamp
+      'c000003',  // Swamp
+      'c000004',  // Mountain
+      'c000004',  // Mountain
+      'c000004',  // Mountain
+      'c000004',  // Mountain
+      'c000005',  // Forest
+      'c000005',  // Forest
+      'c000005',  // Forest
+      'c000005',  // Forest      
       'c000088',  // Royal Assassin
       'c000104',  // Sorceress Queen
       'c000095',  // Control Magic
@@ -468,6 +488,26 @@ export class DataService {
       'c000118',  // Incinerate
       'c000030',  // Howling Mine
       'c000064',  // Mana Flare
+      'c000001',  // Island
+      'c000001',  // Island
+      'c000001',  // Island
+      'c000001',  // Island
+      'c000002',  // Plains
+      'c000002',  // Plains
+      'c000002',  // Plains
+      'c000002',  // Plains
+      'c000003',  // Swamp
+      'c000003',  // Swamp
+      'c000003',  // Swamp
+      'c000003',  // Swamp
+      'c000004',  // Mountain
+      'c000004',  // Mountain
+      'c000004',  // Mountain
+      'c000004',  // Mountain
+      'c000005',  // Forest
+      'c000005',  // Forest
+      'c000005',  // Forest
+      'c000005',  // Forest      
       'c000085',  // Northern Paladin
       'c000097',  // Fastbond
       'c000109',  // Gauntlet Of Might

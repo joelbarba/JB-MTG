@@ -1634,32 +1634,57 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
       nextState.effects.push({ scope: 'permanent', trigger: 'onTapLand', gId, targets: [], id: randomId('e') });
       moveCard(nextState, gId, 'tble');
     };
-    card.onEffect = (nextState, effectId) => {
-      console.log('Mana Flare: Tapping land for mana');
+    card.onEffect = (nextState, effectId, abilityGId, params) => { // Produce extra mana
       const effect = nextState.effects.find(e => e.id === effectId);
       const land = nextState.cards.find(c => c.gId === effect?.targets[0]);
       if (effect && land) {
-        console.log(land.isType('island'));
         const player = land?.controller === '1' ? nextState.player1 : nextState.player2;
         if (land.color === 'blue')      { player.manaPool[1] += 1; }
         if (land.color === 'white')     { player.manaPool[2] += 1; }
         if (land.color === 'black')     { player.manaPool[3] += 1; }
         if (land.color === 'red')       { player.manaPool[4] += 1; }
         if (land.color === 'green')     { player.manaPool[5] += 1; }
-        if (land.color === 'special') { // Dual lands (check target)
-          const dualLandTarget = effect?.targets[1] || '';
+        if (land.color === 'special' && params?.targets) { // Dual lands (check target it was triggered by)
+          const dualLandTarget = params.targets[1] || '';
           const mana = Number.parseInt(dualLandTarget.split('custom-color-')[1]);
           player.manaPool[mana] += 1;          
         }
-        if (land.id === 'c000114') { // Special selection for Library of Alexandry
-          const libraryOfAlexandriaTarget = effect?.targets[1] || '';
+        if (land.id === 'c000114' && params?.targets) { // Special selection for Library of Alexandry
+          const libraryOfAlexandriaTarget = params.targets[1] || '';
           if (libraryOfAlexandriaTarget === 'mana') { player.manaPool[0] += 1; }
         }
-
         effect.targets = []; // Immediately remove the effect on the land
       }
     };
   }
+
+  function c000109_GauntletOfMight() {
+    card.onSummon = (nextState) => { // All red creatures gain +1/+1, all mountains provide an extra red mana
+      nextState.effects.push({ scope: 'permanent', trigger: 'constantly', gId, targets: [], id: randomId('e') });
+      nextState.effects.push({ scope: 'permanent', trigger: 'onTapLand',  gId, targets: [], id: randomId('e') });
+      moveCard(nextState, gId, 'tble');
+    };
+    card.onEffect = (nextState, effectId) => {
+      const { tableStack } = getShorts(nextState);
+      const effect = nextState.effects.find(e => e.id === effectId);
+
+      if (effect?.trigger === 'constantly') { // +1/+1 to all red creatures
+        const redCreatures = tableStack.filter(c => c.isType('creature') && c.color === 'red');
+        effect.targets = redCreatures.map(c => c.gId);
+        redCreatures.forEach(creature => {
+          creature.turnAttack += 1;
+          creature.turnDefense += 1;
+        });
+      }
+      else if (effect?.trigger === 'onTapLand') { // Extra red mana for mountains
+        const land = nextState.cards.find(c => c.gId === effect?.targets[0]);
+        const player = land?.controller === '1' ? nextState.player1 : nextState.player2;
+        if (land?.id === 'c000004') { player.manaPool[4] += 1; }
+        effect.targets = tableStack.filter(c => c.id === 'c000004').map(c => c.gId);
+      }
+    };
+  }
+  
   
 
   // Pending to be coded .....
@@ -1668,7 +1693,6 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   function c000095_ControlMagic() { }
   function c000085_NorthernPaladin() { }
   function c000097_Fastbond() { }
-  function c000109_GauntletOfMight() { }
   function c000125_DeadlyInsect() { }
 
   function c000156_ReverseDamage() {}

@@ -375,8 +375,7 @@ export class GameStateService {
         
         if (cost.effect) {  // Run those efects that should be applied when an ability is used
           nextState.effects.filter(e => e.trigger === cost.effect).forEach(effect => {
-            effect.targets = [card.gId, ...(params.targets || [])]; // Add card that triggered the effect + targets
-            nextState.cards.find(c => c.gId === effect.gId)?.onEffect(nextState, effect.id);
+            nextState.cards.find(c => c.gId === effect.gId)?.onEffect(nextState, effect.id, card.gId, params);
           });
         }
       }  
