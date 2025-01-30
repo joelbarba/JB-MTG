@@ -1598,7 +1598,28 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     };
   }
 
-  function c000123_DrainLife() { }
+  function c000123_DrainLife() {
+    card.getSummonCost = (nextState: TGameState) => {
+      const { targetCreatures, card } = getShorts(nextState);
+      const possibleTargets = [ ...targetCreatures().map(c => c.gId), 'playerA', 'playerB'];
+      return { mana: card.cast, xMana: [0,0,0,1,0,0], neededTargets: 1, possibleTargets };
+    };    
+    card.onSummon = (nextState: TGameState) => {
+      const { targetCreatures, targetId, card, cardPlayer } = getShorts(nextState);
+      let lifeToGain = -card.xValue;
+      const targetCreature = targetCreatures().find(c => c.gId === targetId);  // Deals X points of damage to player1
+      if      (targetId === 'player1') { nextState.player1.life -= card.xValue; addLifeChange(nextState, '1', card.xValue, card, 0); }
+      else if (targetId === 'player2') { nextState.player2.life -= card.xValue; addLifeChange(nextState, '2', card.xValue, card, 0); }
+      else if (targetCreature) {
+        const maxDamage = targetCreature.turnDefense - targetCreature.turnDamage;
+        if (maxDamage < card.xValue) { lifeToGain = -maxDamage; } // You cannot gain more life than the creature's current toughness
+        targetCreature.turnDamage += card.xValue; // Deals X points of damage to target creature
+      }
+      addLifeChange(nextState, cardPlayer.num, lifeToGain, card, 0); // Gain life
+
+      moveCardToGraveyard(nextState, card.gId); // Destroy itself
+    }
+  }
 
   //
   // 

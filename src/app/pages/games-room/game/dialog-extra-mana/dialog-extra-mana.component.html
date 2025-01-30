@@ -36,7 +36,7 @@
     </bf-btn>
     <bf-btn bfText="Cancel" bfIcon="icon-cross" (bfClick)="cardOp.cancel()"></bf-btn>
     <bf-btn [bfText]="'Go on with X=' + totalMana(cardOp.params.manaExtra)" bfIcon="icon-arrow-right3"
-            (bfClick)="cardOp.completeExtraMana()">
+            [bfDisabled]="!game.doYouHaveControl()" (bfClick)="cardOp.completeExtraMana()">
     </bf-btn>
   </div>
 </div>

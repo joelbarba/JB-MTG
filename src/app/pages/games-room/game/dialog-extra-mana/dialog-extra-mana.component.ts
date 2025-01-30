@@ -8,6 +8,7 @@ import { ManaArrayComponent } from "../mana-array/mana-array.component";
 import { CardOpServiceNew } from '../gameLogic/cardOp.service';
 import { TCast } from '../../../../core/types';
 import { WindowsService } from '../gameLogic/windows.service';
+import { GameStateService } from '../gameLogic/game-state.service';
 
 @Component({
   selector    : 'dialog-extra-mana',
@@ -29,6 +30,7 @@ export class DialogExtraManaComponent {
   constructor(
     public cardOp: CardOpServiceNew,
     public win: WindowsService,
+    public game: GameStateService,
   ) {}
 
   numArr(num: number): Array<number> { return Array.from(Array(num).keys()) }
