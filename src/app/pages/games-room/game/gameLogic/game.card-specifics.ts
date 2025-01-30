@@ -19,6 +19,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   card.onDiscard      = (nextState) => moveCard(nextState, gId, 'grav');
   card.onUpkeep       = (nextState, paid) => {};
   card.onPlayerDamage = (nextState, damage) => {};
+  card.onCreatureDamage = (nextState, damage) => {};
   card.afterCombat    = (nextState) => {};
   card.onEffect       = (nextState, effectId: string) => {};
   card.canUntap       = (nextState) => true;
@@ -1634,9 +1635,9 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
       nextState.effects.push({ scope: 'permanent', trigger: 'onTapLand', gId, targets: [], id: randomId('e') });
       moveCard(nextState, gId, 'tble');
     };
-    card.onEffect = (nextState, effectId, abilityGId, params) => { // Produce extra mana
+    card.onEffect = (nextState, effectId, abilityCardId, params) => { // Produce extra mana
       const effect = nextState.effects.find(e => e.id === effectId);
-      const land = nextState.cards.find(c => c.gId === effect?.targets[0]);
+      const land = nextState.cards.find(c => c.gId === abilityCardId);
       if (effect && land) {
         const player = land?.controller === '1' ? nextState.player1 : nextState.player2;
         if (land.color === 'blue')      { player.manaPool[1] += 1; }
@@ -1645,12 +1646,12 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
         if (land.color === 'red')       { player.manaPool[4] += 1; }
         if (land.color === 'green')     { player.manaPool[5] += 1; }
         if (land.color === 'special' && params?.targets) { // Dual lands (check target it was triggered by)
-          const dualLandTarget = params.targets[1] || '';
+          const dualLandTarget = params.targets[0] || '';
           const mana = Number.parseInt(dualLandTarget.split('custom-color-')[1]);
           player.manaPool[mana] += 1;          
         }
         if (land.id === 'c000114' && params?.targets) { // Special selection for Library of Alexandry
-          const libraryOfAlexandriaTarget = params.targets[1] || '';
+          const libraryOfAlexandriaTarget = params.targets[0] || '';
           if (libraryOfAlexandriaTarget === 'mana') { player.manaPool[0] += 1; }
         }
         effect.targets = []; // Immediately remove the effect on the land
@@ -1664,7 +1665,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
       nextState.effects.push({ scope: 'permanent', trigger: 'onTapLand',  gId, targets: [], id: randomId('e') });
       moveCard(nextState, gId, 'tble');
     };
-    card.onEffect = (nextState, effectId) => {
+    card.onEffect = (nextState, effectId, abilityCardId, params) => {
       const { tableStack } = getShorts(nextState);
       const effect = nextState.effects.find(e => e.id === effectId);
 
@@ -1677,7 +1678,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
         });
       }
       else if (effect?.trigger === 'onTapLand') { // Extra red mana for mountains
-        const land = nextState.cards.find(c => c.gId === effect?.targets[0]);
+        const land = nextState.cards.find(c => c.gId === abilityCardId);
         const player = land?.controller === '1' ? nextState.player1 : nextState.player2;
         if (land?.id === 'c000004') { player.manaPool[4] += 1; }
         effect.targets = tableStack.filter(c => c.id === 'c000004').map(c => c.gId);
@@ -1685,10 +1686,24 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     };
   }
   
+  function c000088_RoyalAssassin() {
+    commonCreature();
+    card.getAbilityCost = (nextState) => {
+      const { targetCreatures } = getShorts(nextState);
+      const possibleTargets = targetCreatures().filter(c => c.isTapped).map(c => c.gId); // Target = tapped creature
+      return { 
+        mana: [0,0,0,0,0,0], tap: true, neededTargets: 1, possibleTargets, 
+        text: `Tap ${card.name} to destroy a tapped creature`,
+      };
+    };
+    card.onAbility = (nextState) => {
+      const { targetId } = getShorts(nextState);
+      killCreature(nextState, targetId); // Destroy target creature
+    };    
+  }
   
 
   // Pending to be coded .....
-  function c000088_RoyalAssassin() { }
   function c000104_SorceressQueen() { }
   function c000095_ControlMagic() { }
   function c000085_NorthernPaladin() { }
