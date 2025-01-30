@@ -63,7 +63,14 @@ export class GameOptionsService {
     const youMayTriggerAbilities = () => {
       tableA.filter(c => c.controller === playerANum && c.status !== 'sickness').forEach(card => {        
         const abilityCost = card.getAbilityCost(state);
-        if (abilityCost && (!abilityCost.tap || !card.isTapped) && (!card.canRegenerate || card.isDying)) {
+        let canUseAbility = !!abilityCost; // If there is ability cost, the card has an ability that can be used
+
+        if (abilityCost?.tap && card.isTapped) { canUseAbility = false; } // If it requires tap, and it's already tapped
+
+        if (card.turnCanRegenerate === false) { canUseAbility = false; } // If you can't regenerate this turn
+        if (card.turnCanRegenerate === true && !card.isDying) { canUseAbility = false; } // Can only use the regenerate abilty if dying
+
+        if (abilityCost && canUseAbility) {
           const option: TGameOption = { action: 'trigger-ability', params: { gId: card.gId }, text: abilityCost.text };
           card.selectableAction = option;
           state.options.push(option);
@@ -95,8 +102,8 @@ export class GameOptionsService {
     
     
     // You may regenerate a dying creatures
-    const yourRegCreatures = state.cards.filter(c => c.controller === playerANum && c.canRegenerate && c.isDying);
-    const otherRegCreatures = state.cards.filter(c => c.controller !== playerANum && c.canRegenerate && c.isDying);
+    const yourRegCreatures = state.cards.filter(c => c.controller === playerANum && c.turnCanRegenerate && c.isDying);
+    const otherRegCreatures = state.cards.filter(c => c.controller !== playerANum && c.turnCanRegenerate && c.isDying);
 
     // Player 1 starts regenerating creatures. If you are player 2, you can regenerate yours once the opponent is done
     if (yourRegCreatures.length && (playerANum === '1' || !otherRegCreatures.length)) {

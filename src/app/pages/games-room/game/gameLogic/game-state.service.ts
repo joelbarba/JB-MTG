@@ -645,8 +645,8 @@ export class GameStateService {
   // In case a creature is killed and can be regenerate, give control to the creature's player
   // In case there are creatures to regenerate from both players, start with player1's
   private checkCreaturesThatRegenerate(nextState: TGameState) {    
-    const regenerateCreature2 = nextState.cards.filter(c => c.controller === '2').find(c => c.canRegenerate && c.isDying);
-    const regenerateCreature1 = nextState.cards.filter(c => c.controller === '1').find(c => c.canRegenerate && c.isDying);
+    const regenerateCreature2 = nextState.cards.filter(c => c.controller === '2').find(c => c.turnCanRegenerate && c.isDying);
+    const regenerateCreature1 = nextState.cards.filter(c => c.controller === '1').find(c => c.turnCanRegenerate && c.isDying);
     if (regenerateCreature2) { nextState.control = regenerateCreature2.controller; }
     if (regenerateCreature1) { nextState.control = regenerateCreature1.controller; }
     if (nextState.phase === 'combat' && nextState.subPhase === 'regenerate' && !regenerateCreature1 && !regenerateCreature2) {
@@ -782,7 +782,7 @@ export class GameStateService {
     }
 
     // That shouldn't happen, but in case there are creatures not regenerater or dead, destroy them
-    nextState.cards.filter(c => c.canRegenerate && c.isDying).forEach(creature => {
+    nextState.cards.filter(c => c.turnCanRegenerate && c.isDying).forEach(creature => {
       creature.isDying = false;
       moveCardToGraveyard(nextState, creature.gId);
     });
@@ -855,6 +855,7 @@ export class GameStateService {
       creature.turnAttack  = creature.attack || 0;
       creature.turnDefense = creature.defense || 0;
       creature.turnLandWalk = creature.landWalk;
+      creature.turnCanRegenerate = creature.canRegenerate;
     });
 
     // Remove permanent effects from cards that no longer exist (on the table)

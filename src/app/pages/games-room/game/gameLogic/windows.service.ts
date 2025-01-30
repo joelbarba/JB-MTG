@@ -208,7 +208,7 @@ export class WindowsService {
 
     // "Regenerate Dialog" (Open / Close logic)
     // If a creature that can be regenerated is dying, open the regenerate dialog
-    if (this.game.state.cards.find(c => c.canRegenerate && c.isDying)) { this.regenerateDialog.open(); } 
+    if (this.game.state.cards.find(c => c.turnCanRegenerate && c.isDying)) { this.regenerateDialog.open(); } 
     else { this.regenerateDialog.close(); }
 
 

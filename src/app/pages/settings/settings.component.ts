@@ -252,7 +252,7 @@ export class SettingsComponent {
         this.cardsDBCode += `\n    isTrample:       ${!!card.isTrample}, `;
         this.cardsDBCode += `\n    isFirstStrike:   ${!!card.isFirstStrike}, `;
         this.cardsDBCode += `\n    isHaste:         ${!!card.isHaste}, `;
-        this.cardsDBCode += `\n    canRegenerate:   ${!!card.canRegenerate}, `;
+        this.cardsDBCode += `\n    canRegenerate:   ${!!card.canRegenerate ? 'true' : 'null'}, `;
         this.cardsDBCode += `\n    notBlockByWalls: ${!!card.notBlockByWalls}, `;
         this.cardsDBCode += `\n    colorProtection: ${colorProtection}, `;
         this.cardsDBCode += `\n    upkeepPlayer:    ${upkeepPlayer}, `;

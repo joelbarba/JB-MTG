@@ -271,6 +271,7 @@ export class DataService {
         turnAttack: 0,
         turnDefense: 0,
         turnLandWalk: null,
+        turnCanRegenerate: false,
       } as TDBGameCard;
     }
 

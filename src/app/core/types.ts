@@ -54,7 +54,7 @@ export type TCard = {
   isTrample      : boolean;  // Deals the excess damage (over defenders toughness) to the player
   isFirstStrike  : boolean;  // When dealing combat damage, if that kills the other attacking/defender, they don't receive any damage
   isHaste        : boolean;  // No summoning sickness
-  canRegenerate  : boolean;  // Whether it has the regenerate ability
+  canRegenerate  : null | boolean; // Whether it has the regenerate ability (false = it has the ability but not at the moment)
   notBlockByWalls?: boolean;  // true=It cannot be blocked by walls
   colorProtection: TColor | null; // Cannot be blocked, targeted, enchanted or damage by sources of this color
   upkeepPlayer: 'A' | 'B' | 'AB' | null;  // Whether the upkeep applies to the card's controller (A), opponent's (B)
@@ -162,6 +162,7 @@ export type TDBGameCard = {
   turnAttack: number;  // <-- attack + effects
   turnDefense: number; // <-- defense + effects
   turnLandWalk: 'island' | 'plains' | 'swamp' | 'mountain' | 'forest' | null; // Copied from card.landWalk every turn ini
+  turnCanRegenerate: null | boolean; // Copied from card.canRegenerate every turn ini
 }
 // export type TCardToken = { id: string; text?: string; };
 

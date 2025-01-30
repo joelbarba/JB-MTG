@@ -126,13 +126,13 @@ export const killDamagedCreatures = (nextState: TGameState, gId?: string): boole
       }
     });
   }
-  return !!nextState.cards.find(c => c.canRegenerate && c.isDying);
+  return !!nextState.cards.find(c => c.turnCanRegenerate && c.isDying);
 }
 
 export const killCreature = (nextState: TGameState, gId: string) => {
   const card = nextState.cards.find(c => c.gId === gId);
   if (card) {
-    if (card.canRegenerate) {
+    if (card.turnCanRegenerate) {
       console.log(`Creature ${card.gId} ${card.name} is killed ---> But it can be regenerated`);
       card.isDying = true;
     } else {

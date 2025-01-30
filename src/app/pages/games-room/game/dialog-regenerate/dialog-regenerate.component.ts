@@ -57,7 +57,7 @@ export class DialogRegenerateComponent {
 
   onStateChange(state: TGameState) {
     this.youControl = state.control === this.game.playerANum;
-    this.creatures = state.cards.filter(c => c.controller === state.control && c.canRegenerate && c.isDying);
+    this.creatures = state.cards.filter(c => c.controller === state.control && c.turnCanRegenerate && c.isDying);
     this.card = this.creatures.length === 1 ? this.creatures[0] : undefined;
     
     // if (this.card) { // Immediately trigger the 'regenerate-creature' action

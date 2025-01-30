@@ -1546,7 +1546,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     card.onCreatureDamage = (nextState, damagedCreaturegId, damage) => {
       nextState.effects.push({ scope: 'turn', trigger: 'constantly', gId, targets: [damagedCreaturegId], id: 'watch-' + randomId('e') });
     };
-    card.onEffect = (nextState: TGameState, effectId: string) => {
+    card.onEffect = (nextState, effectId) => {
       const { card } = getShorts(nextState);
       const effect = nextState.effects.find(e => e.id === effectId);
 
@@ -1571,7 +1571,33 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     }
   }
 
-  function c000118_Incinerate() { }
+  function c000118_Incinerate() {
+    card.getSummonCost = (nextState: TGameState) => {
+      const { targetCreatures } = getShorts(nextState);
+      const possibleTargets = [ ...targetCreatures().map(c => c.gId), 'playerA', 'playerB'];
+      return { mana: card.cast, neededTargets: 1, possibleTargets };
+    };
+    card.onSummon = (nextState: TGameState) => {
+      const { targetCreatures, targetId } = getShorts(nextState);
+      const targetCreature = targetCreatures().find(c => c.gId === targetId);  // Deals 3 points of damage to player1/2
+      if      (targetId === 'player1') { nextState.player1.life -= 3; addLifeChange(nextState, '1', 3, card, 500); }
+      else if (targetId === 'player2') { nextState.player2.life -= 3; addLifeChange(nextState, '1', 3, card, 500); }
+      else if (targetCreature) {
+        targetCreature.turnDamage += 3; // Deals 3 points of damage to target creature
+        if (targetCreature.turnCanRegenerate) {
+          targetCreature.turnCanRegenerate = false;
+          nextState.effects.push({ scope: 'turn', trigger: 'constantly', gId, targets: [targetCreature.gId], id: randomId('e') });
+        }
+      }
+      moveCardToGraveyard(nextState, gId); // Destroy itself
+    };
+    card.onEffect = (nextState, effectId) => { // Damaged creature loses regenerate until the end of turn
+      const effect = nextState.effects.find(e => e.id === effectId);
+      const targetCreature = nextState.cards.find(c => c.gId === effect?.targets[0]);
+      if (targetCreature) { targetCreature.turnCanRegenerate = false; }
+    };
+  }
+
   function c000123_DrainLife() { }
 
   //
