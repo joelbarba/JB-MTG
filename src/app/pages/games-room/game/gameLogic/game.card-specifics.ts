@@ -1411,8 +1411,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
         moveCard(nextState, targetCreature.gId, 'tble' + targetCreature.owner);
         moveCardToGraveyard(nextState, targetCreature.gId); // Return creature to its graveyard
       }
-    }
-
+    };
   }
 
 
@@ -1733,18 +1732,46 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     };
   }
   
+  // You control target creature until enchantment is discarded or game ends.
+  // If target creature is already tapped it stays tapped until you can untap it.
+  // If destroyed, target creature is put in its owner's graveyard
+  function c000095_ControlMagic() { 
+    card.getSummonCost = (nextState) => {
+      const { card, tableStack } = getShorts(nextState);
+      const possibleTargets = tableStack.filter(c => c.isType('creature')).map(c => c.gId);
+      return { mana: card.cast, neededTargets: 1, possibleTargets };
+    };
+    card.onSummon = (nextState) => {
+      const { card, targetId } = getShorts(nextState);
+      const targetCreature = nextState.cards.find(c => c.gId === targetId);
+      if (targetCreature) {
+        targetCreature.controller = card.controller; // Take control of the creature
+        const switchLocation = targetCreature.location.slice(0,4) + targetCreature.controller;
+        moveCard(nextState, targetCreature.gId, switchLocation);
+      } 
+      
+      moveCard(nextState, gId, 'tble');
+    };
+    card.onDestroy = (nextState) => {
+      const targetCreature = nextState.cards.find(c => c.gId === card.targets[0]);
+      if (targetCreature) {
+        targetCreature.controller = targetCreature.owner; // Return the creature to its owner
+        moveCard(nextState, targetCreature.gId, 'tble' + targetCreature.owner);
+        moveCardToGraveyard(nextState, targetCreature.gId); // Put creature to its graveyard
+      }
+    };
+  }
   
   // Pending to be coded ..... 
   
-  function c000095_ControlMagic() { }
   function c000085_NorthernPaladin() { }
   function c000097_Fastbond() { }
   function c000125_DeadlyInsect() { }
 
+  function c000127_ConcordantCrossroads() { }
+  function c000029_Fork() {}
   function c000156_ReverseDamage() {}
   function c000062_EyeForAnEye() {}
-  function c000029_Fork() {}
-  function c000127_ConcordantCrossroads() { }
   function c000096_CopyArtifact() { }
   function c000094_Clone() { }
   function c000106_VesuvanDoppelganger() { }
