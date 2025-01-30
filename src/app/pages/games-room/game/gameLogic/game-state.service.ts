@@ -763,6 +763,9 @@ export class GameStateService {
     const { playerA, playerB, turnPlayer } = this.getPlayers(nextState);
     nextState.lifeChanges = []; // Remove any life notifications
 
+    const stackCards = nextState.cards.filter(c => c.location === 'stack');
+    if (stackCards.length) { console.error('There should not be cards in the stack at the end of the phase!', stackCards); }
+
     // End phase effects: onEndUntap, onEndUpkeep, onEndDraw, onEndPre, onEndCombat, onEndPost, onEndDiscard
     nextState.effects.filter(e => !e.playerNum || e.playerNum === playerA.num).forEach(effect => {
       const triggerName = 'onEnd' + (nextState.phase.slice(0, 1).toUpperCase() + nextState.phase.slice(1));

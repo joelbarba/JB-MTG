@@ -1599,12 +1599,12 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   }
 
   function c000123_DrainLife() {
-    card.getSummonCost = (nextState: TGameState) => {
+    card.getSummonCost = (nextState) => {
       const { targetCreatures, card } = getShorts(nextState);
       const possibleTargets = [ ...targetCreatures().map(c => c.gId), 'playerA', 'playerB'];
       return { mana: card.cast, xMana: [0,0,0,1,0,0], neededTargets: 1, possibleTargets };
     };    
-    card.onSummon = (nextState: TGameState) => {
+    card.onSummon = (nextState) => {
       const { targetCreatures, targetId, card, cardPlayer } = getShorts(nextState);
       let lifeToGain = -card.xValue;
       const targetCreature = targetCreatures().find(c => c.gId === targetId);  // Deals X points of damage to player1
@@ -1616,18 +1616,26 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
         targetCreature.turnDamage += card.xValue; // Deals X points of damage to target creature
       }
       addLifeChange(nextState, cardPlayer.num, lifeToGain, card, 0); // Gain life
-
       moveCardToGraveyard(nextState, card.gId); // Destroy itself
     }
   }
 
-  //
-  // 
-  // 
+  function c000030_HowlingMine() {
+    card.onSummon = (nextState) => { // Each player draws 1 extra card during his/her draw phase
+      nextState.effects.push({ scope: 'permanent', trigger: 'onEndDraw', gId, targets: [], id: randomId('e') });
+      moveCard(nextState, gId, 'tble');
+    };
+    card.onEffect = (nextState, effectId) => {
+      drawCard(nextState, nextState.turn); // Turn player extra draw
+    };
+  }
+
+  function c000064_ManaFlare() {
+
+  }
+
 
   // Pending to be coded .....
-  function c000030_HowlingMine() {}
-  function c000064_ManaFlare() {}
   function c000088_RoyalAssassin() { }
   function c000104_SorceressQueen() { }
   function c000095_ControlMagic() { }
