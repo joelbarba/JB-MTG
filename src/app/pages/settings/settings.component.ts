@@ -193,6 +193,7 @@ export class SettingsComponent {
       isHaste         : false,
       canRegenerate   : false,
       notBlockByWalls : false,
+      noTargetSpells  : false,
       colorProtection : null,
       landWalk        : null,
       maxInDeck       : 4,
@@ -254,6 +255,7 @@ export class SettingsComponent {
         this.cardsDBCode += `\n    isHaste:         ${!!card.isHaste}, `;
         this.cardsDBCode += `\n    canRegenerate:   ${!!card.canRegenerate ? 'true' : 'null'}, `;
         this.cardsDBCode += `\n    notBlockByWalls: ${!!card.notBlockByWalls}, `;
+        this.cardsDBCode += `\n    noTargetSpells:  ${!!card.noTargetSpells}, `;
         this.cardsDBCode += `\n    colorProtection: ${colorProtection}, `;
         this.cardsDBCode += `\n    upkeepPlayer:    ${upkeepPlayer}, `;
         this.cardsDBCode += `\n    landWalk:        ${landWalk}, `;

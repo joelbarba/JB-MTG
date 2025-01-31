@@ -48,7 +48,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     const targetId = card.targets[0]; // code of the first target (playerX, gId, ...)
     const { tableStack, table, stack, deck, hand, play, graveyard } = getCards(nextState, '1'); // Only none A/B groups allowed
     const noProtection = (c: TGameCard) => !c.colorProtection || card.color !== c.colorProtection; 
-    const targetCreatures = () => tableStack.filter(c => c.isType('creature')).filter(noProtection);
+    const targetCreatures = () => tableStack.filter(c => c.isType('creature') && !c.noTargetSpells).filter(noProtection);
     return { card, targetId, cardPlayer, otherPlayer, noProtection, targetCreatures, table, stack, tableStack, deck, hand, play, graveyard };
   }
 
@@ -1779,10 +1779,11 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     };
     // Destroys a black card in play. Cannot be used to cancel a black spell as it is being cast.
     card.onAbility = (nextState) => {
-      const { targetId } = getShorts(nextState);
+      const { card, targetId } = getShorts(nextState);
       const target = nextState.cards.find(c => c.gId === targetId);
       if (target?.isType('creature')) { killCreature(nextState, targetId); }
       else { moveCardToGraveyard(nextState, targetId); }
+      card.targets = []; // Clean up the target once destroyed
     };
   }
   
@@ -1803,10 +1804,12 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     };
   }
 
+  function c000125_DeadlyInsect() {
+    commonCreature();
+  }
 
   // Pending to be coded ..... 
   
-  function c000125_DeadlyInsect() { }
   function c000097_Fastbond() { }
   function c000156_ReverseDamage() {}
   function c000062_EyeForAnEye() {}

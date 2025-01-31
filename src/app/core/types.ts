@@ -55,7 +55,8 @@ export type TCard = {
   isFirstStrike  : boolean;  // When dealing combat damage, if that kills the other attacking/defender, they don't receive any damage
   isHaste        : boolean;  // No summoning sickness
   canRegenerate  : null | boolean; // Whether it has the regenerate ability (false = it has the ability but not at the moment)
-  notBlockByWalls?: boolean;  // true=It cannot be blocked by walls
+  notBlockByWalls: boolean;  // true=It cannot be blocked by walls
+  noTargetSpells ?: boolean; // true=It cannot be target of spells or effects
   colorProtection: TColor | null; // Cannot be blocked, targeted, enchanted or damage by sources of this color
   upkeepPlayer: 'A' | 'B' | 'AB' | null;  // Whether the upkeep applies to the card's controller (A), opponent's (B)
   landWalk: 'island' | 'plains' | 'swamp' | 'mountain' | 'forest' | null; // Islandwalk, Plainswalk, Swampwalk, Mountainwalk, Forestwalk
