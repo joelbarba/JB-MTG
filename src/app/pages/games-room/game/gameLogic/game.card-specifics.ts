@@ -59,11 +59,9 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
       text: `Tap ${card.name} to get 1 mana`,
     });
     card.onSummon = (nextState: TGameState) => {
-      const { card, cardPlayer } = getShorts(nextState);
-      if (card.location.slice(0,4) === 'hand' && cardPlayer.summonedLands < 1) {
-        moveCard(nextState, gId, 'tble');
-        cardPlayer.summonedLands += 1;
-      }
+      const { cardPlayer } = getShorts(nextState);
+      cardPlayer.summonedLands += 1;
+      moveCard(nextState, gId, 'tble');
     };
     card.onAbility = (nextState: TGameState) => {
       const { card, cardPlayer } = getShorts(nextState);
@@ -342,6 +340,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   function c000082_WhiteKnight()              { commonCreature(); }
   function c000136_Bog_Wraith()               { commonCreature(); }
   function c000137_Shanodin_Dryads()          { commonCreature(); }
+  function c000125_DeadlyInsect()             { commonCreature(); }
 
 
 
@@ -1804,13 +1803,51 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     };
   }
 
-  function c000125_DeadlyInsect() {
-    commonCreature();
+
+  // You may put as many lands into play as you want each turn.
+  // Fastbond does 1 damage to you for every land beyond the first that you play in a single turn
+  function c000097_Fastbond() {
+    card.onSummon = (nextState) => {
+      const { card, cardPlayer, otherPlayer } = getShorts(nextState);      
+      card.tokens = []; // Every token represents the first land put into play during the current turn for the player
+      if (cardPlayer.summonedLands  > 0) { card.tokens.push(cardPlayer.num);  cardPlayer.summonedLands  = 0; }
+      if (otherPlayer.summonedLands > 0) { card.tokens.push(otherPlayer.num); otherPlayer.summonedLands = 0; }
+      nextState.effects.push({ scope: 'permanent', trigger: 'constantly', gId, targets: [], id: randomId('e') });
+      nextState.effects.push({ scope: 'permanent', trigger: 'onEndTurn', gId, targets: [], id: randomId('e') });
+      moveCard(nextState, gId, 'tble');
+    };
+    card.onEffect = (nextState, effectId) => {
+      const { cardPlayer, otherPlayer } = getShorts(nextState);
+      const effect = nextState.effects.find(e => e.id === effectId);
+      if (effect?.trigger === 'constantly') { 
+
+        if (cardPlayer.summonedLands > 0) { // Detecting a new land summoned
+          if (card.tokens.indexOf(cardPlayer.num) >= 0) { // If token present = it's an extra land
+            cardPlayer.life -= 1;
+            addLifeChange(nextState, cardPlayer.num, 1, card, 700, 'Fastbond does 1 damage for every land beyond the first that you play in a single turn');
+          } else { card.tokens.push(cardPlayer.num); } // Mark first land of this turn
+          cardPlayer.summonedLands = 0;
+        }
+
+        if (otherPlayer.summonedLands > 0) { // Detecting a new land summoned
+          if (card.tokens.indexOf(otherPlayer.num) >= 0) { // If token present = it's an extra land
+            otherPlayer.life -= 1;
+            addLifeChange(nextState, otherPlayer.num, 1, card, 700, 'Fastbond does 1 damage for every land beyond the first that you play in a single turn');
+          } else { card.tokens.push(otherPlayer.num); } // Mark first land of this turn
+          otherPlayer.summonedLands = 0;
+        }
+
+        
+      }
+      else if (effect?.trigger === 'onEndTurn') { 
+        card.tokens = []; // Remove 1st lands marks
+      }
+    };
   }
+
 
   // Pending to be coded ..... 
   
-  function c000097_Fastbond() { }
   function c000156_ReverseDamage() {}
   function c000062_EyeForAnEye() {}
   function c000029_Fork() {}

@@ -78,8 +78,7 @@ export class DialogDamageComponent {
         this.text = lifeChange.text || (lifeChange.damage > 0 ?
           `You get ${lifeChange.damage} damage` : 
           `You gain ${lifeChange.damage} life`);
-
-        } else {
+      } else {
         this.playerName = this.game.playerB().name;
         this.text = lifeChange.opText || (lifeChange.damage > 0 ?
           `Your opponent gets ${lifeChange.damage} damage` : 
@@ -88,7 +87,7 @@ export class DialogDamageComponent {
 
       // If the item has "timer", auto acknowledge it after "timer" milliseconds
       if (this.timeout) { clearTimeout(this.timeout); }
-      if (lifeChange.timer) { this.timeout = setTimeout(() => this.acknowledge(), lifeChange.timer); }
+      if (lifeChange.timer && this.yourChange) { this.timeout = setTimeout(() => this.acknowledge(), lifeChange.timer); }
 
     }
 
