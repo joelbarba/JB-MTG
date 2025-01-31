@@ -1205,9 +1205,8 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
           lifeChange.text   = `You draw ${damage} cards. Underworld Dreams does ${damage} damage to you.`;
           lifeChange.opText = `Your opponent draw ${damage} cards. Underworld Dreams does ${damage} damage to him/her.`;
         }
-      }
-      
-    }
+      }      
+    };
   }
 
   function c000080_ErgRaiders() { 
@@ -1787,17 +1786,31 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     };
   }
   
+  function c000127_ConcordantCrossroads() { 
+    card.onSummon = (nextState) => {
+      nextState.effects.push({ scope: 'permanent', trigger: 'constantly', gId, targets: [], id: randomId('e') });
+      moveCard(nextState, gId, 'tble');
+    };
+    // Creatures can attack or use the abilities that include tap in the activation cost as soon as they come into play
+    card.onEffect = (nextState, effectId) => {
+      const { tableStack } = getShorts(nextState);
+      const effect = nextState.effects.find(e => e.id === effectId);
+      if (effect) {
+        const sickCreatures = tableStack.filter(c => c.isType('creature') && c.status === 'sickness');
+        effect.targets = sickCreatures.map(c => c.gId); // It affects all creatures with sickness
+        sickCreatures.forEach(c => c.status = null); // Remove sickness immediately
+      }
+    };
+  }
 
 
-  // Pending to be coded .....
+  // Pending to be coded ..... 
   
-  function c000097_Fastbond() { }
   function c000125_DeadlyInsect() { }
-
-  function c000127_ConcordantCrossroads() { }
-  function c000029_Fork() {}
+  function c000097_Fastbond() { }
   function c000156_ReverseDamage() {}
   function c000062_EyeForAnEye() {}
+  function c000029_Fork() {}
   function c000096_CopyArtifact() { }
   function c000094_Clone() { }
   function c000106_VesuvanDoppelganger() { }
