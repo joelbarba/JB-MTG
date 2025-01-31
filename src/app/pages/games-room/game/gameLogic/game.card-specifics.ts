@@ -1,6 +1,7 @@
 import { randomId } from "../../../../core/common/commons";
-import { TCardExtraType, TCast, TColor, TEffect, TGameCard, TGameState } from "../../../../core/types";
-import { addLifeChange, drawCard, endGame, getCards, killCreature, killDamagedCreatures, moveCard, moveCardToGraveyard, shuffleDeck } from "./game.utils";
+import { dbCards } from "../../../../core/dbCards";
+import { TCardExtraType, TColor, TGameCard, TGameState } from "../../../../core/types";
+import { addLifeChange, drawCard, getCards, killCreature, moveCard, moveCardToGraveyard, shuffleDeck } from "./game.utils";
 
 
 // ------------------------ SPECIFIC EVENTS for every CARD ------------------------
@@ -13,25 +14,25 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   // But to be 100% pure, we should filter the object from the given nextState in every function --> const card = getCard(nextState);
 
   // Functions to exted: common values
-  card.onStack        = (nextState) => {}
-  card.onSummon       = (nextState) => { moveCard(nextState, gId, 'tble'); getCard(nextState).status = null; }
-  card.onAbility      = (nextState) => {}
-  card.onDestroy      = (nextState) => {};
-  card.onDiscard      = (nextState) => moveCard(nextState, gId, 'grav');
-  card.onUpkeep       = (nextState, paid) => {};
-  card.onPlayerDamage = (nextState, damage) => {};
+  card.onStack          = (nextState) => {}
+  card.onSummon         = (nextState) => { moveCard(nextState, gId, 'tble'); getCard(nextState).status = null; }
+  card.onAbility        = (nextState) => {}
+  card.onDestroy        = (nextState) => {};
+  card.onDiscard        = (nextState) => moveCard(nextState, gId, 'grav');
+  card.onUpkeep         = (nextState, paid) => {};
+  card.onPlayerDamage   = (nextState, damage) => {};
   card.onCreatureDamage = (nextState, damage) => {};
-  card.afterCombat    = (nextState) => {};
-  card.onEffect       = (nextState, effectId: string) => {};
-  card.canUntap       = (nextState) => true;
-  card.canAttack      = (nextState) => !!card.isType('creature');
-  card.canDefend      = (nextState) => !!card.isType('creature');
-  card.targetBlockers = (nextState) => [];  // Returns a list of gId of the attacking creatues that can block
-  card.getSummonCost  = (nextState) => ({ mana: card.cast });
-  card.getAbilityCost = (nextState) => null;
-  card.getUpkeepCost  = (nextState) => null;
-  card.isType         = (...types) => types.indexOf(card.type) >= 0;
-  card.isColor        = (color) => card.color === color;
+  card.afterCombat      = (nextState) => {};
+  card.onEffect         = (nextState, effectId: string) => {};
+  card.canUntap         = (nextState) => true;
+  card.canAttack        = (nextState) => !!card.isType('creature');
+  card.canDefend        = (nextState) => !!card.isType('creature');
+  card.targetBlockers   = (nextState) => [];  // Returns a list of gId of the attacking creatues that can block
+  card.getSummonCost    = (nextState) => ({ mana: card.cast });
+  card.getAbilityCost   = (nextState) => null;
+  card.getUpkeepCost    = (nextState) => null;
+  card.isType           = (...types) => types.indexOf(card.type) >= 0;
+  card.isColor          = (color) => card.color === color;
 
   card.getCost = (nextState, action) => {
     if (action === 'summon-spell')    { return card.getSummonCost(nextState); }
@@ -303,8 +304,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     card.isType = (...types) => {
       if (types.indexOf(card.type) >= 0) { return true; }
       return !!extraTypes.find(type => types.indexOf(type) >= 0);
-    }
-
+    };
   }
 
   // Common Lands
@@ -1892,13 +1892,53 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     };
   }
 
+  // function c000011_SolRing() {
+  //   card.getAbilityCost = () => ({ 
+  //     mana: [0,0,0,0,0,0], tap: true,
+  //     neededTargets: 0, possibleTargets: [], 
+  //     text: `Tap ${card.name} to add 2 colorless mana`,
+  //   });
+  //   card.onAbility = (nextState: TGameState) => {
+  //     const { card, cardPlayer } = getShorts(nextState);
+  //     cardPlayer.manaPool[0] += 2;
+  //   };
+  // }
+
+
+  // Select any artifact in play. This enchantment acts as a duplicate of that artifact; 
+  // it is afected by cards that affect either enchantments or artifacts.
+  // The copy remains even if the original artifact is destroyed.
+  // Enchantments on the original artifact are not copied
+  function c000096_CopyArtifact() { 
+    card.getSummonCost = (nextState) => {
+      const { table } = getShorts(nextState);
+      const possibleTargets = table.filter(c => c.isType('artifact')).map(c => c.gId); // Target = artifact in play
+      return { mana: card.cast, neededTargets: 1, possibleTargets };
+    };
+    card.onSummon = (nextState) => {
+      const { targetId } = getShorts(nextState);
+      const targetArtifact = nextState.cards.find(c => c.gId === targetId);
+      if (targetArtifact) {
+      
+        // Replace the "Copy Artifact" object into cards[] with it's new extended version
+        nextState.cards = nextState.cards.map(card => {
+          if (card.gId !== gId) { return card; } // Other cards untouched
+          const dbTargetCard = dbCards.find(c => c.id === targetArtifact.id) || {}; // Add the target DB properties (ID included)
+          return extendCardLogic({ ...card, ...dbTargetCard, ...{
+            name : 'Copy of ' + targetArtifact.name,
+          }});
+        });
+
+        nextState.cards.find(c => c.gId === gId)?.onSummon(nextState);
+      }
+    };
+  }
 
 
 
   // Pending to be coded ..... 
   
   function c000029_Fork() {}
-  function c000096_CopyArtifact() { }
   function c000094_Clone() { }
   function c000106_VesuvanDoppelganger() { }
 
