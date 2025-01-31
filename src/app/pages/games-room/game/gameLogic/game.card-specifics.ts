@@ -1,5 +1,5 @@
 import { randomId } from "../../../../core/common/commons";
-import { TCast, TColor, TEffect, TGameCard, TGameState } from "../../../../core/types";
+import { TCardExtraType, TCast, TColor, TEffect, TGameCard, TGameState } from "../../../../core/types";
 import { addLifeChange, drawCard, endGame, getCards, killCreature, killDamagedCreatures, moveCard, moveCardToGraveyard, shuffleDeck } from "./game.utils";
 
 
@@ -29,7 +29,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   card.getSummonCost  = (nextState) => ({ mana: card.cast });
   card.getAbilityCost = (nextState) => null;
   card.getUpkeepCost  = (nextState) => null;
-  card.isType         = (type) => card.type === type;
+  card.isType         = (...types) => types.indexOf(card.type) >= 0;
   card.isColor        = (color) => card.color === color;
 
   card.getCost = (nextState, action) => {
@@ -298,9 +298,14 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     default: console.warn('Card ID not found', card.id); 
   }
 
-  function isAlsoType(extraTypes: string[] | string) {
+  function isAlsoType(extraTypes: TCardExtraType[] | TCardExtraType) {
     if (typeof extraTypes === 'string') { extraTypes = [extraTypes]; }
-    card.isType = (type) => (extraTypes.indexOf(type) >= 0 || type === card.type);
+    // card.isType = (type) => (extraTypes.indexOf(type) >= 0 || type === card.type);
+    card.isType = (...types) => {
+      if (types.indexOf(card.type) >= 0) { return true; }
+      return !!extraTypes.find(type => types.indexOf(type) >= 0);
+    }
+
   }
 
   // Common Lands
@@ -458,12 +463,12 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   function c000057_Disenchant() {
     card.getSummonCost = (nextState: TGameState) => {
       const { tableStack, noProtection } = getShorts(nextState);
-      const possibleTargets = tableStack.filter(c => (c.type === 'enchantment' || c.type === 'artifact') && noProtection(c)).map(c => c.gId);
+      const possibleTargets = tableStack.filter(c => c.isType('enchantment', 'artifact') && noProtection(c)).map(c => c.gId);
       return { mana: card.cast, neededTargets: 1, possibleTargets }; // Target must be any playing enchantment or artifact
     };       
     card.onSummon = (nextState: TGameState) => {
       const { tableStack, targetId, noProtection } = getShorts(nextState);
-      const targetCard = tableStack.filter(c => (c.type === 'enchantment' || c.type === 'artifact') && noProtection(c)).find(c => c.gId === targetId);
+      const targetCard = tableStack.filter(c => c.isType('enchantment', 'artifact') && noProtection(c)).find(c => c.gId === targetId);
       if (targetCard) {
         moveCardToGraveyard(nextState, targetCard.gId); // Destroy the enchantment or artifact
         moveCardToGraveyard(nextState, gId); // Destroy Disenchantment too
@@ -635,7 +640,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
 
   
   function dualLand(color1: number, color2: number) {
-    const landTypes = ['', 'island', 'plains', 'swamp', 'mountain', 'forest'];
+    const landTypes = ['island', 'island', 'plains', 'swamp', 'mountain', 'forest'] as TCardExtraType[];
     isAlsoType([landTypes[color1], landTypes[color2]]);
     
     card.getAbilityCost = () => {
@@ -676,7 +681,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   function c000024_Armageddon() {
     card.onSummon = (nextState: TGameState) => {
       const { tableStack } = getShorts(nextState);
-      tableStack.filter(c => c.type === 'land').forEach(land => {
+      tableStack.filter(c => c.isType('land')).forEach(land => {
         console.log(`Land ${land.gId} ${land.name} is destroyed`);
         moveCardToGraveyard(nextState, land.gId);
       });
@@ -735,7 +740,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     };
     card.onEffect = (nextState: TGameState, effectId: string) => { // Add +1/+1 to target creature
       const { card, cardPlayer } = getShorts(nextState);
-      const lands = nextState.cards.filter(c => c.controller === cardPlayer.num && c.location.slice(0,4) === 'tble' && c.type === 'land');
+      const lands = nextState.cards.filter(c => c.controller === cardPlayer.num && c.location.slice(0,4) === 'tble' && c.isType('land'));
       if (lands.filter(land => land.isType('forest')).length) {
         card.turnAttack += 1;
         card.turnDefense += 2;
@@ -1234,6 +1239,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
 
   function c000099_Juggernaut() { 
     commonCreature();
+    isAlsoType('artifact');
     card.onSummon = (nextState: TGameState) => {
       const { card, cardPlayer } = getShorts(nextState);
       nextState.effects.push({ scope: 'permanent', trigger: 'duringSelAttack', playerNum: cardPlayer.num, gId, targets: [], id: randomId('e') });
@@ -1508,7 +1514,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   }
 
   function c000134_ColossusOfSardia() {
-    commonCreature();
+    commonCreature();    
     isAlsoType('artifact');
     card.canUntap = () => false;
     card.getUpkeepCost = (nextState) => {
@@ -1761,10 +1767,30 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
       }
     };
   }
+
+  function c000085_NorthernPaladin() {
+    commonCreature();
+    card.getAbilityCost = (nextState) => {
+      const { table } = getShorts(nextState);
+      const possibleTargets = table.filter(c => c.color === 'black').map(c => c.gId); // Target = black card on the table
+      return { 
+        mana: [0,0,2,0,0,0], tap: true, neededTargets: 1, possibleTargets, 
+        text: `Tap ${card.name} to destroy a black card`,
+      };
+    };
+    // Destroys a black card in play. Cannot be used to cancel a black spell as it is being cast.
+    card.onAbility = (nextState) => {
+      const { targetId } = getShorts(nextState);
+      const target = nextState.cards.find(c => c.gId === targetId);
+      if (target?.isType('creature')) { killCreature(nextState, targetId); }
+      else { moveCardToGraveyard(nextState, targetId); }
+    };
+  }
   
-  // Pending to be coded ..... 
+
+
+  // Pending to be coded .....
   
-  function c000085_NorthernPaladin() { }
   function c000097_Fastbond() { }
   function c000125_DeadlyInsect() { }
 
