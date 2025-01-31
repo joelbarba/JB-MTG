@@ -49,15 +49,16 @@ export type TCard = {
   attack  : number;
   defense : number;
   border? : 'white' | 'black';  // The color of the border (undefined = white)
-  isWall         : boolean;  // They cannot attack, only defend
-  isFlying       : boolean;  // Cannot be blocked by a non flying creatures
-  isTrample      : boolean;  // Deals the excess damage (over defenders toughness) to the player
-  isFirstStrike  : boolean;  // When dealing combat damage, if that kills the other attacking/defender, they don't receive any damage
-  isHaste        : boolean;  // No summoning sickness
-  canRegenerate  : null | boolean; // Whether it has the regenerate ability (false = it has the ability but not at the moment)
-  notBlockByWalls: boolean;  // true=It cannot be blocked by walls
-  noTargetSpells ?: boolean; // true=It cannot be target of spells or effects
-  colorProtection: TColor | null; // Cannot be blocked, targeted, enchanted or damage by sources of this color
+  isWall           : boolean;  // They cannot attack, only defend
+  isFlying         : boolean;  // Cannot be blocked by a non flying creatures
+  isTrample        : boolean;  // Deals the excess damage (over defenders toughness) to the player
+  isFirstStrike    : boolean;  // When dealing combat damage, if that kills the other attacking/defender, they don't receive any damage
+  isHaste          : boolean;  // No summoning sickness
+  canRegenerate    : null | boolean; // Whether it has the regenerate ability (false = it has the ability but not at the moment)
+  notBlockByWalls  : boolean;  // true=It cannot be blocked by walls
+  noTargetSpells   : boolean;  // true=It cannot be target of spells or effects
+  canPreventDamage : boolean;  // true=A spell that can be triggered when damage is received
+  colorProtection  : TColor | null; // Cannot be blocked, targeted, enchanted or damage by sources of this color
   upkeepPlayer: 'A' | 'B' | 'AB' | null;  // Whether the upkeep applies to the card's controller (A), opponent's (B)
   landWalk: 'island' | 'plains' | 'swamp' | 'mountain' | 'forest' | null; // Islandwalk, Plainswalk, Swampwalk, Mountainwalk, Forestwalk
   maxInDeck?: number;    // Max number of the same card you can have in a deck (1, 4, undefined=as many as you want)
@@ -130,6 +131,7 @@ export type TGameHistory = TGameState & { history: Array<TGameOption & { time: s
 export type TLifeChange = {
   player : '1' | '2',
   damage : number;  // Damage (X = damage / -X = life)
+  originalDamage : number; // If reverted (reverse damage), this stays always as the original
   timer  : number;  // Number of milliseconds the panel is shown (0=no timer)
   gId   ?: string;  // Card (gId) that caused the damage
   title ?: string;
@@ -177,6 +179,7 @@ export type TGameCard = TDBGameCard & TCard & { // Not in DB (fixed properties f
   hideOnStack?: boolean; // To not reveal the card when dislpayed on the stack
   hideTargetsOnStack?: boolean; // To not reveal the targets of the card when dislpayed on the stack
 
+  onStack:   (state: TGameState) => void;   // What the card does when it's added to the stack
   onSummon:  (state: TGameState) => void;   // What the card does when it's summoned
   onAbility: (state: TGameState) => void;   // What the card does when it's used for its ability (tap...)
   onDestroy: (state: TGameState) => void;   // What the card does when it's destroyed

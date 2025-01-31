@@ -174,13 +174,13 @@ export const endGame = (nextState: TGameState, winner: '1' | '2') => {
 export const addLifeChange = (nextState: TGameState, playerNum: '1' | '2', damage: number, card: TGameCard, timer: number, text?: string, opText?: string) => {
   if (damage > 0) {
     nextState.lifeChanges.push({
-      player: playerNum, damage, timer, title : card.name, gId: card.gId, 
+      player: playerNum, damage, originalDamage: damage, timer, title : card.name, gId: card.gId, 
       text  : text   || `${card.name} does ${damage} damage to you.`,
       opText: opText || `${card.name} does ${damage} damage to your opponent.`,
     });
   } else {
     nextState.lifeChanges.push({
-      player: playerNum, damage, timer, title : card.name, gId: card.gId, 
+      player: playerNum, damage, originalDamage: damage, timer, title : card.name, gId: card.gId, 
       text  : text   || `${card.name} gives you ${-damage} life.`,
       opText: opText || `${card.name} gives ${-damage} life to your opponent.`,
     });

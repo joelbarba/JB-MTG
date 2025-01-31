@@ -181,7 +181,7 @@ export class GameStateService {
       'selectableAction', 'effectsFrom', 'targetOf', 'uniqueTargetOf',
 
       // Extended functions (extendCardLogic)
-      'onSummon', 'onAbility', 'onDestroy', 'onDiscard', 'afterCombat', 'onEffect', 'onUpkeep',
+      'onStack', 'onSummon', 'onAbility', 'onDestroy', 'onDiscard', 'afterCombat', 'onEffect', 'onUpkeep',
       'isType', 'isColor', 'canUntap', 'canAttack', 'canDefend', 'targetBlockers', 
       'getSummonCost', 'getAbilityCost', 'getUpkeepCost', 'getCost', 'onPlayerDamage', 'onCreatureDamage'
     ]
@@ -354,7 +354,8 @@ export class GameStateService {
         console.log(`SUMMONING ${card.name} with params =`, params);
         this.payManaCost(nextState, params, cost, card); // Spend Cost    
         card.targets = params.targets || [];
-        this.addToSpellStack(nextState, card);        
+        this.addToSpellStack(nextState, card);
+        card.onStack(nextState);
       }  
     }
   }
@@ -443,7 +444,7 @@ export class GameStateService {
           card.onSummon(nextState);
         }
       });
-      this.refreshEffects(nextState);       // Recalculate the effects
+      this.refreshEffects(nextState);     // Recalculate the effects
       killDamagedCreatures(nextState);    // Kill creatures if needed
       nextState.control = nextState.spellStackInitiator || nextState.turn; // Return control to the initiator
 
@@ -571,7 +572,23 @@ export class GameStateService {
     const attackingCreatures = nextState.cards.filter(c => c.combatStatus === 'combat:attacking');
     const defendingCreatures = nextState.cards.filter(c => c.combatStatus === 'combat:defending');
 
-    let totalDamage = 0;
+    const damagePlayer = (attackingCard: TGameCard, damage: number) => {
+      if (damage > 0) {
+        defendingPlayer.life -= damage; // None blocked creature damages defending player
+        nextState.lifeChanges.push({
+          damage : damage, originalDamage: damage,
+          player : defendingPlayer.num,
+          gId    : attackingCard.gId,
+          timer  : 200,
+          title  : 'Combat Damage',
+          text   : `You received ${damage} damage from unblocked ${attackingCard.name}`,
+          opText : `Your opponent received ${damage} damage from unblocked ${attackingCard.name}`,
+        });
+        attackingCard.onPlayerDamage(nextState, damage);
+      }
+    }
+
+    // let totalDamage = 0;
     attackingCreatures.forEach(attackingCard => {
       const defendingCard = defendingCreatures.find(c => c.blockingTarget === attackingCard.gId);
       const attackerTxt = `Attacking ${attackingCard.gId} ${attackingCard.name} (${attackingCard.turnAttack}/${attackingCard.turnDefense})`;
@@ -602,8 +619,9 @@ export class GameStateService {
         if (attackingCard.isTrample && excessDamage > 0) { 
           console.log(`${attackerTxt} -----> also deals the remaining ${excessDamage} points of damage to player ${defendingPlayer.name} (because of TRAMPLE)`);
           damageToDefender -= excessDamage;
-          totalDamage += excessDamage;
-          attackingCard.onPlayerDamage(nextState, excessDamage);
+          // totalDamage += excessDamage;
+          // attackingCard.onPlayerDamage(nextState, excessDamage);
+          damagePlayer(attackingCard, excessDamage);
         }
 
         defendingCard.turnDamage += damageToDefender;
@@ -615,23 +633,12 @@ export class GameStateService {
       } else { // If the creature is not blocked
         if (attackingCard.turnAttack > 0) {
           console.log(`${attackerTxt} -----> deals ${attackingCard.turnAttack} points of damage to player ${defendingPlayer.name}`);
-          totalDamage += attackingCard.turnAttack;
-          attackingCard.onPlayerDamage(nextState, attackingCard.turnAttack);
+          damagePlayer(attackingCard, attackingCard.turnAttack);
         }
       }
     });
 
-    if (totalDamage > 0) {
-      defendingPlayer.life -= totalDamage; // None blocked creatures damage defending player
-      nextState.lifeChanges.push({
-        player : defendingPlayer.num,
-        damage : totalDamage,
-        timer  : 0,
-        title  : 'Combat Damage',
-        text   : `You received ${totalDamage} damage from unblocked creatures`,
-        opText : `Your opponent received ${totalDamage} damage from unblocked creatures`,
-      })
-    }
+
   }
 
   private endCombat(nextState: TGameState) {
@@ -724,8 +731,9 @@ export class GameStateService {
 
 
   // In case a player received damage / gained life, give control to the player to acknowledge it
-  private checkLifeChanges(nextState: TGameState) {    
-    if (nextState.lifeChanges.length > 0) {
+  private checkLifeChanges(nextState: TGameState) {
+    const isStackOn = !!nextState.cards.find(c => c.location === 'stack');
+    if (!isStackOn && nextState.lifeChanges.length > 0) {
       if (!nextState.lifeChangesInitiator) { nextState.lifeChangesInitiator = nextState.control; } // Save who's playing
       nextState.control = nextState.lifeChanges[0].player;
     }
@@ -750,7 +758,7 @@ export class GameStateService {
       playerA.life -= unspentMana;
       playerA.manaPool = [0,0,0,0,0,0];
       nextState.lifeChanges.push({
-        damage: unspentMana,
+        damage: unspentMana, originalDamage: unspentMana,
         player: playerA.num,
         title : `${playerA.name}'s Mana Burn`,
         timer : 0,

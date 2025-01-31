@@ -194,6 +194,7 @@ export class SettingsComponent {
       canRegenerate   : false,
       notBlockByWalls : false,
       noTargetSpells  : false,
+      canPreventDamage: false,
       colorProtection : null,
       landWalk        : null,
       maxInDeck       : 4,
@@ -238,28 +239,29 @@ export class SettingsComponent {
         const landWalk = card.landWalk ? `'${card.landWalk}'` : 'null';
         
         this.cardsDBCode += `\n  {`;
-        this.cardsDBCode += `\n    id:              '${card.id}', `;
-        this.cardsDBCode += `\n    name:            \`${card.name}\`, `;
-        this.cardsDBCode += `\n    image:           '${card.image}', `;
-        this.cardsDBCode += `\n    cast:            [${card.cast}], `;
-        this.cardsDBCode += `\n    color:           '${card.color}', `;
-        this.cardsDBCode += `\n    text:            '${card.text}', `;
-        this.cardsDBCode += `\n    type:            '${card.type}', `;
-        this.cardsDBCode += `\n    price:           ${card.price}, `;
-        this.cardsDBCode += `\n    attack:          ${card.attack || '0'}, `;
-        this.cardsDBCode += `\n    defense:         ${card.defense || '0'}, `;
-        this.cardsDBCode += `\n    isWall:          ${!!card.isWall}, `;
-        this.cardsDBCode += `\n    isFlying:        ${!!card.isFlying}, `;
-        this.cardsDBCode += `\n    isTrample:       ${!!card.isTrample}, `;
-        this.cardsDBCode += `\n    isFirstStrike:   ${!!card.isFirstStrike}, `;
-        this.cardsDBCode += `\n    isHaste:         ${!!card.isHaste}, `;
-        this.cardsDBCode += `\n    canRegenerate:   ${!!card.canRegenerate ? 'true' : 'null'}, `;
-        this.cardsDBCode += `\n    notBlockByWalls: ${!!card.notBlockByWalls}, `;
-        this.cardsDBCode += `\n    noTargetSpells:  ${!!card.noTargetSpells}, `;
-        this.cardsDBCode += `\n    colorProtection: ${colorProtection}, `;
-        this.cardsDBCode += `\n    upkeepPlayer:    ${upkeepPlayer}, `;
-        this.cardsDBCode += `\n    landWalk:        ${landWalk}, `;
-        this.cardsDBCode += `\n    readyToPlay:     ${!!card.readyToPlay}, `;
+        this.cardsDBCode += `\n    id:               '${card.id}', `;
+        this.cardsDBCode += `\n    name:             \`${card.name}\`, `;
+        this.cardsDBCode += `\n    image:            '${card.image}', `;
+        this.cardsDBCode += `\n    cast:             [${card.cast}], `;
+        this.cardsDBCode += `\n    color:            '${card.color}', `;
+        this.cardsDBCode += `\n    text:             '${card.text}', `;
+        this.cardsDBCode += `\n    type:             '${card.type}', `;
+        this.cardsDBCode += `\n    price:            ${card.price}, `;
+        this.cardsDBCode += `\n    attack:           ${card.attack || '0'}, `;
+        this.cardsDBCode += `\n    defense:          ${card.defense || '0'}, `;
+        this.cardsDBCode += `\n    isWall:           ${!!card.isWall}, `;
+        this.cardsDBCode += `\n    isFlying:         ${!!card.isFlying}, `;
+        this.cardsDBCode += `\n    isTrample:        ${!!card.isTrample}, `;
+        this.cardsDBCode += `\n    isFirstStrike:    ${!!card.isFirstStrike}, `;
+        this.cardsDBCode += `\n    isHaste:          ${!!card.isHaste}, `;
+        this.cardsDBCode += `\n    canRegenerate:    ${!!card.canRegenerate ? 'true' : 'null'}, `;
+        this.cardsDBCode += `\n    notBlockByWalls:  ${!!card.notBlockByWalls}, `;
+        this.cardsDBCode += `\n    noTargetSpells:   ${!!card.noTargetSpells}, `;
+        this.cardsDBCode += `\n    canPreventDamage: ${!!card.canPreventDamage}, `;
+        this.cardsDBCode += `\n    colorProtection:  ${colorProtection}, `;
+        this.cardsDBCode += `\n    upkeepPlayer:     ${upkeepPlayer}, `;
+        this.cardsDBCode += `\n    landWalk:         ${landWalk}, `;
+        this.cardsDBCode += `\n    readyToPlay:      ${!!card.readyToPlay}, `;
         if (card.border) { this.cardsDBCode += `\n    border:          '${card.border || 'white'}', `; }
         if (card.maxInDeck) { this.cardsDBCode += `\n    maxInDeck:       ${card.maxInDeck || 'null'}, `; }
         this.cardsDBCode += `\n  },`;

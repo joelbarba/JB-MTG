@@ -303,6 +303,9 @@ export class DataService {
       'c000003',  // Swamp
       'c000013',  // Bayou
       'c000027',  // Dark Ritual
+      'c000118',  // Incinerate
+      'c000032',  // Ligthning Bolt
+      'c000032',  // Ligthning Bolt
       'c000031',  // Hypnotic Specter
       'c000031',  // Hypnotic Specter
       'c000090',  // Sengir Vampire      
@@ -378,6 +381,8 @@ export class DataService {
       'c000031',  // Hypnotic Specter
       'c000090',  // Sengir Vampire
       'c000123',  // Drain Life
+      'c000118',  // Incinerate
+      'c000032',  // Ligthning Bolt
       'c000001',  // Island
       'c000001',  // Island
       'c000001',  // Island
@@ -428,9 +433,10 @@ export class DataService {
       'c000013',  // Bayou
       'c000014',  // Badlands
       'c000018',  // Taiga
-      'c000133',  // FeldonsCane
-      'c000134',  // ColossusOfSardia
-      'c000118',  // Incinerate
+      'c000002',  // Plains
+      'c000002',  // Plains
+      'c000062',  // Eye For AnEye
+      'c000156',  // Reverse Damage
       'c000103',  // Regrowth
       'c000054',  // Savannah Lions
       'c000119',  // Crusade
@@ -446,11 +452,15 @@ export class DataService {
       'c000126',  // ErhnamDjinn
       'c000105',  // TheRack
       'c000092',  // BlackVise
+      'c000133',  // FeldonsCane
+      'c000134',  // ColossusOfSardia
       'c000128',  // BallLightning
+      'c000032',  // Ligthning Bolt
       'c000077',  // Swords To Plowshares
       'c000077',  // Swords To Plowshares
       'c000006',  // Mox Emerald
       'c000009',  // Mox Ruby
+      'c000118',  // Incinerate
       'c000035',  // KirdApe
       'c000008',  // Mox Pearl
       'c000135',  // KillerBees

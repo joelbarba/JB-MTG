@@ -13,6 +13,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   // But to be 100% pure, we should filter the object from the given nextState in every function --> const card = getCard(nextState);
 
   // Functions to exted: common values
+  card.onStack        = (nextState) => {}
   card.onSummon       = (nextState) => { moveCard(nextState, gId, 'tble'); getCard(nextState).status = null; }
   card.onAbility      = (nextState) => {}
   card.onDestroy      = (nextState) => {};
@@ -989,7 +990,8 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
         const player = targetCreature.controller === '1' ? nextState.player1 : nextState.player2;
         const lifeGain = targetCreature.turnAttack;
         player.life += lifeGain; // Creature's controller gains as many life as the creature's power
-        nextState.lifeChanges.push({ player: player.num, title: card.name, damage: -lifeGain, gId: card.gId, timer: 0,
+        nextState.lifeChanges.push({ player: player.num, title: card.name, 
+          damage: -lifeGain, originalDamage: -lifeGain, gId: card.gId, timer: 0,
           text  : `Your ${targetCreature.name} was destroyed. You get ${lifeGain} life.`,
           opText: `Your opponent's ${targetCreature.name} was destroyed. He/she gets ${lifeGain} life.`,
         });
@@ -1191,7 +1193,8 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
       otherPlayer.life -= 1;
 
       if (!nextState.lifeChanges.length) {
-        nextState.lifeChanges.push({ player: otherPlayer.num, title: card.name, damage: 1, gId: card.gId, timer: 0,
+        nextState.lifeChanges.push({ player: otherPlayer.num, title: card.name, 
+          damage: 1, originalDamage: 1, gId: card.gId, timer: 0,
           text  : `You draw 1 card. Underworld Dreams does 1 damage to you.`,
           opText: `Your opponent draw 1 card. Underworld Dreams does 1 damage to him/her.`,
         });
@@ -1584,7 +1587,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
       const { targetCreatures, targetId } = getShorts(nextState);
       const targetCreature = targetCreatures().find(c => c.gId === targetId);  // Deals 3 points of damage to player1/2
       if      (targetId === 'player1') { nextState.player1.life -= 3; addLifeChange(nextState, '1', 3, card, 500); }
-      else if (targetId === 'player2') { nextState.player2.life -= 3; addLifeChange(nextState, '1', 3, card, 500); }
+      else if (targetId === 'player2') { nextState.player2.life -= 3; addLifeChange(nextState, '2', 3, card, 500); }
       else if (targetCreature) {
         targetCreature.turnDamage += 3; // Deals 3 points of damage to target creature
         if (targetCreature.turnCanRegenerate) {
@@ -1835,9 +1838,8 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
             addLifeChange(nextState, otherPlayer.num, 1, card, 700, 'Fastbond does 1 damage for every land beyond the first that you play in a single turn');
           } else { card.tokens.push(otherPlayer.num); } // Mark first land of this turn
           otherPlayer.summonedLands = 0;
-        }
+        }        
 
-        
       }
       else if (effect?.trigger === 'onEndTurn') { 
         card.tokens = []; // Remove 1st lands marks
@@ -1845,11 +1847,56 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     };
   }
 
+  // All damage you have taken from any one source this turn is added to your life total instead of subtracted from it.
+  function c000156_ReverseDamage() {
+    card.onStack = (nextState) => {
+      const { card } = getShorts(nextState);
+      if (nextState.lifeChanges[0].gId) { card.targets = [nextState.lifeChanges[0].gId]; }      
+    };
+    card.onSummon = (nextState) => {
+      const { card, cardPlayer, otherPlayer } = getShorts(nextState);
+      if (nextState.lifeChanges.length) {
+        const currentLifeChange = nextState.lifeChanges[0];
+        const originalDamage = currentLifeChange.originalDamage;
+        if (originalDamage > 0) {
+          cardPlayer.life += originalDamage;
+          if (currentLifeChange.damage > 0) { currentLifeChange.damage = 0; } // Cancel damage
+          currentLifeChange.damage -= originalDamage; // Add damage as life
+          currentLifeChange.text   = `The damage has been reverted and now it's added as life (Reverse Damage)`;
+          currentLifeChange.opText = `The damage has been reverted and now it's added as life (Reverse Damage)`;
+        }
+      }
+      moveCardToGraveyard(nextState, gId); // Destroy itself
+    };
+  }
+
+  // Can be cast only when a creature, spell or effect does damage to you.
+  // Eye for an eye does an equal amount of damage to the controller of that creature, spell or effect.
+  // If some spell or effect reduces the amount of damage you receive, it does not reduce the damage dealt by eye for an eye.
+  function c000062_EyeForAnEye() {
+    card.onStack = (nextState) => {
+      const { card } = getShorts(nextState);
+      if (nextState.lifeChanges[0].gId) { card.targets = [nextState.lifeChanges[0].gId]; }
+    };
+    card.onSummon = (nextState) => {
+      const { card, cardPlayer, otherPlayer } = getShorts(nextState);
+      if (nextState.lifeChanges.length) {
+        const currentLifeChange = nextState.lifeChanges[0];
+        const originalDamage = currentLifeChange.originalDamage;
+        if (originalDamage > 0) {
+          otherPlayer.life -= originalDamage;
+          addLifeChange(nextState, otherPlayer.num, originalDamage, card, 0, currentLifeChange.text, currentLifeChange.opText);
+        }
+      }
+      moveCardToGraveyard(nextState, gId); // Destroy itself
+    };
+  }
+
+
+
 
   // Pending to be coded ..... 
   
-  function c000156_ReverseDamage() {}
-  function c000062_EyeForAnEye() {}
   function c000029_Fork() {}
   function c000096_CopyArtifact() { }
   function c000094_Clone() { }

@@ -218,7 +218,10 @@ export class WindowsService {
 
 
     // "Damage Dialog" if any life changes to be notified
-    if (this.game.state.lifeChanges.length) { this.damageDialog.open(); }
+    if (this.game.state.lifeChanges.length) {
+      this.damageDialog.open();
+      if (this.spellStackDialog.display) { this.spellStackDialog.open(); } // If stack is open, show it over
+    }
     else { this.damageDialog.close(); }
 
     // this.prevState = JSON.parse(JSON.stringify(this.game.state));

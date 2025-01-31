@@ -50,7 +50,14 @@ export class GameOptionsService {
       });
     }
     const youMaySummon = (type: TCardType) => {
-      handA.filter(c => c.type === type).forEach(card => {
+      handA.filter(c => c.isType(type) && !c.canPreventDamage).forEach(card => {
+        const option: TGameOption = { action: 'summon-spell', params: { gId: card.gId }, text: `Summon ${card.name}` };
+        state.options.push(option);
+        card.selectableAction = option;
+      });
+    }
+    const youMaySummonDamagePrevention = () => {
+      handA.filter(c => c.isType('instant') && c.canPreventDamage).forEach(card => {
         const option: TGameOption = { action: 'summon-spell', params: { gId: card.gId }, text: `Summon ${card.name}` };
         state.options.push(option);
         card.selectableAction = option;
@@ -84,9 +91,18 @@ export class GameOptionsService {
 
     // Actions that you can do during both your turn or opponents turn:
 
-    // You might acknowledge life changes done (if any)
+
+    // When showing damage or life changes
     if (state.lifeChanges.length && state.lifeChanges[0].player === playerANum ) {
-      state.options.push({ action: 'acknowledge-life-change', params: {}, text: `Ok` });
+
+      // If you can cast spells that prevent damage (Reverse Damage / Eye for an Eye), let it do stuff
+      if (handA.filter(c => c.isType('instant') && c.canPreventDamage).length) {
+        youMaySummonDamagePrevention(); // You may summon instant spells that prevent damage
+        youMaySummon('instant');  // You may summon instant spells (add them to the stack)
+        youMayTriggerAbilities(); // You may use cards
+        if (state.cards.find(c => c.location === 'stack')) { youMaySummon('interruption'); } // You may summon interruptions 
+      }
+      state.options.push({ action: 'acknowledge-life-change', params: {}, text: `Ok` }); // You might just acknowledge it
       return state; // <--- Exclusive Option: You can't do anything else
     }
 

@@ -85,9 +85,13 @@ export class DialogDamageComponent {
           `Your opponent gains ${lifeChange.damage} life`);
       }
 
-      // If the item has "timer", auto acknowledge it after "timer" milliseconds
-      if (this.timeout) { clearTimeout(this.timeout); }
-      if (lifeChange.timer && this.yourChange) { this.timeout = setTimeout(() => this.acknowledge(), lifeChange.timer); }
+      if (this.yourChange) {
+        const canPrevent = !!this.game.state.cards.filter(c => c.location === this.game.yourHand() && c.canPreventDamage).length;
+
+        // If the item has "timer", auto acknowledge it after "timer" milliseconds
+        if (this.timeout) { clearTimeout(this.timeout); }
+        if (lifeChange.timer && !canPrevent) { this.timeout = setTimeout(() => this.acknowledge(), lifeChange.timer); }
+      }
 
     }
 

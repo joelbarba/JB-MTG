@@ -75,6 +75,9 @@
             <bf-checkbox style="margin-right: 10px;" bfLabel="Not Blockable By Walls" [(ngModel)]="selCard.notBlockByWalls"></bf-checkbox>
             <bf-checkbox style="margin-right: 10px;" bfLabel="Cannot be target of Spells" [(ngModel)]="selCard.noTargetSpells"></bf-checkbox>
           </div>
+          <div class="col-12" *ngIf="selCard.type === 'instant'" style="margin: 15px 0;">
+            <bf-checkbox style="margin-right: 10px;" bfLabel="Can prevent damage" [(ngModel)]="selCard.canPreventDamage"></bf-checkbox>
+          </div>
 
           <!-- <bf-input class="col-12" bfLabel="Text" [(ngModel)]="selCard.text"></bf-input> -->
 
