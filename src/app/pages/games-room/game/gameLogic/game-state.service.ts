@@ -182,12 +182,12 @@ export class GameStateService {
 
       // Extended functions (extendCardLogic)
       'onStack', 'onSummon', 'onAbility', 'onDestroy', 'onDiscard', 'afterCombat', 'onEffect', 'onUpkeep',
-      'isType', 'isColor', 'canUntap', 'canAttack', 'canDefend', 'targetBlockers', 
+      'isType', 'isColor', 'canUntap', 'canAttack', 'canDefend', 'targetBlockers', 'isTypeCopy',
       'getSummonCost', 'getAbilityCost', 'getUpkeepCost', 'getCost', 'onPlayerDamage', 'onCreatureDamage'
     ]
     dbState.cards = dbState.cards.map(card => card.keyFilter((v,k) => !extFields.includes(k))) as Array<TGameCard>;
 
-    // Loop dbState properties and find any that is not valid for FireBase (errors)
+    // // Loop dbState properties and find any that is not valid for FireBase (errors)
     // const checkProp = (path: string, prop: string, v: any) => {
     //   const vType = typeof v;
     //   if (v === undefined || (vType !== 'string' && vType !== 'number' && vType !== 'boolean' && v !== null && !Array.isArray(v))) {

@@ -161,6 +161,7 @@ export type TDBGameCard = {
   xValue: number; // Value of the manaExtra used when actioning the card
   waitingUpkeep: boolean;  // Whether the upkeep of the card it's still not processed this turn
   tokens: Array<string>;
+  copyId?: string; // To keep the original card ref of the card that made the copy
 
   turnDamage: number;  // Amount of damaged received during the current turn (if >= defense it dies)
   turnAttack: number;  // <-- attack + effects
@@ -178,6 +179,7 @@ export type TGameCard = TDBGameCard & TCard & { // Not in DB (fixed properties f
   uniqueTargetOf?: Array<TGameCard>;
   hideOnStack?: boolean; // To not reveal the card when dislpayed on the stack
   hideTargetsOnStack?: boolean; // To not reveal the targets of the card when dislpayed on the stack
+  allTypes: TCardExtraType[]; // All types of the card
 
   onStack:   (state: TGameState) => void;   // What the card does when it's added to the stack
   onSummon:  (state: TGameState) => void;   // What the card does when it's summoned
@@ -189,7 +191,7 @@ export type TGameCard = TDBGameCard & TCard & { // Not in DB (fixed properties f
   onPlayerDamage: (state: TGameState, damage: number) => void; // when the card damages a player in combat
   onCreatureDamage: (state: TGameState, gId: string, damage: number) => void; // when the card damages a creature in combat
   afterCombat: (state: TGameState) => void;  // What the card does after combat
-  isType:  (...type: TCardExtraType[]) => boolean; // Checks if the card is of a certain type
+  isType: (...type: TCardExtraType[]) => boolean; // Checks if the card is of a certain type
   isColor: (color: TColor) => boolean; // Checks if the card is of a certain color
   canUntap: (state: TGameState) => boolean;  // Whether the card can be normally untapped
   canAttack: (state: TGameState) => boolean;  // Whether the creature can be selected to attack

@@ -31,8 +31,18 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   card.getSummonCost    = (nextState) => ({ mana: card.cast });
   card.getAbilityCost   = (nextState) => null;
   card.getUpkeepCost    = (nextState) => null;
-  card.isType           = (...types) => types.indexOf(card.type) >= 0;
   card.isColor          = (color) => card.color === color;
+  card.isType           = (...types) => {
+    if (types.indexOf(card.type) >= 0) { return true; }    
+    return !!card.allTypes?.find(type => types.indexOf(type) >= 0);
+  }
+
+  function isAlsoType(...extraTypes: TCardExtraType[]) {
+    if (!card.allTypes) { card.allTypes = [card.type]; }
+    extraTypes.forEach(type => {
+      if (card.allTypes.indexOf(type) <= 0) { card.allTypes.push(type); }
+    });
+  }
 
   card.getCost = (nextState, action) => {
     if (action === 'summon-spell')    { return card.getSummonCost(nextState); }
@@ -298,14 +308,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     default: console.warn('Card ID not found', card.id); 
   }
 
-  function isAlsoType(extraTypes: TCardExtraType[] | TCardExtraType) {
-    if (typeof extraTypes === 'string') { extraTypes = [extraTypes]; }
-    // card.isType = (type) => (extraTypes.indexOf(type) >= 0 || type === card.type);
-    card.isType = (...types) => {
-      if (types.indexOf(card.type) >= 0) { return true; }
-      return !!extraTypes.find(type => types.indexOf(type) >= 0);
-    };
-  }
+
 
   // Common Lands
   function c000001_Island()   { commonLand(1); isAlsoType('island');   } // 1 Blue Mana
@@ -641,7 +644,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   
   function dualLand(color1: number, color2: number) {
     const landTypes = ['island', 'island', 'plains', 'swamp', 'mountain', 'forest'] as TCardExtraType[];
-    isAlsoType([landTypes[color1], landTypes[color2]]);
+    isAlsoType(landTypes[color1], landTypes[color2]);
     
     card.getAbilityCost = () => {
       const possibleTargets = ['custom-color-' + color1, 'custom-color-' + color2];
@@ -1909,12 +1912,53 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   // it is afected by cards that affect either enchantments or artifacts.
   // The copy remains even if the original artifact is destroyed.
   // Enchantments on the original artifact are not copied
-  function c000096_CopyArtifact() { 
+  function c000096_CopyArtifact() {
+    let cardOverride: TGameCard;
+
+    replicate(); // If the target is already set, copy all properties & functions from the target card
+    
+    function replicate() {
+      if (card.copyId) {
+        const dbTargetCard = dbCards.find(c => c.id === card.copyId) || {}; // Target DB properties (ID included)
+        cardOverride = extendCardLogic({...card, ...dbTargetCard, id: card.copyId}) as TGameCard;      
+        Object.keys(cardOverride).forEach(key => { // Copy all properties from cardOverride --- to ---> card
+          const excludeProps = ['id', 'copyId', 'name'];
+          if (excludeProps.indexOf(key) < 0) {
+            // @ts-ignore: Unreachable code error
+            card[key] = cardOverride[key as keyof TGameCard];
+          }
+        });
+        isAlsoType('enchantment'); // Keep the enchantment type
+      }
+    }
+
     card.getSummonCost = (nextState) => {
       const { table } = getShorts(nextState);
       const possibleTargets = table.filter(c => c.isType('artifact')).map(c => c.gId); // Target = artifact in play
       return { mana: card.cast, neededTargets: 1, possibleTargets };
     };
+    card.onSummon = (nextState) => {
+      const { card, targetId } = getShorts(nextState);
+      const targetArtifact = nextState.cards.find(c => c.gId === targetId);
+      if (targetArtifact) {
+        card.targets = [];
+        card.copyId = targetArtifact.id;
+        replicate();
+        cardOverride?.onSummon(nextState); // Call the overriden .onSummon()
+      }
+    };
+    card.onDestroy = (nextState) => {
+      const { card } = getShorts(nextState);
+      cardOverride?.onDestroy(nextState);
+      delete card.copyId; // Uncopy it
+    };
+  }
+
+
+  // Uppon summoning, Clone acquires all characteristics, including color, of any one creature in play on either side;
+  // any creature enchantments on original creature are not copied.
+  // Clone retains these characteristics even after original creature is destroyed.
+  function c000094_Clone() {
     card.onSummon = (nextState) => {
       const { targetId } = getShorts(nextState);
       const targetArtifact = nextState.cards.find(c => c.gId === targetId);
@@ -1935,12 +1979,25 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   }
 
 
+  function c000106_VesuvanDoppelganger() {
+    card.onSummon = (nextState) => {
+      const { tableStack } = getShorts(nextState);
+      const c1 = tableStack.find(c => c.gId === 'g109')
+      if (c1) {
+        console.log(c1.isType('artifact'));
+        console.log(c1.isType('creature'));
+        console.log(c1.isType('enchantment'));
+      }
+      tableStack.filter(c => c.isType('enchantment')).forEach(enchantment => {
+        moveCardToGraveyard(nextState, enchantment.gId);
+      });
+    };
+  }
+
 
   // Pending to be coded ..... 
   
   function c000029_Fork() {}
-  function c000094_Clone() { }
-  function c000106_VesuvanDoppelganger() { }
 
 
 
