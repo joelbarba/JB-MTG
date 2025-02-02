@@ -1959,22 +1959,55 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   // any creature enchantments on original creature are not copied.
   // Clone retains these characteristics even after original creature is destroyed.
   function c000094_Clone() {
-    card.onSummon = (nextState) => {
-      const { targetId } = getShorts(nextState);
-      const targetArtifact = nextState.cards.find(c => c.gId === targetId);
-      if (targetArtifact) {
-      
-        // Replace the "Copy Artifact" object into cards[] with it's new extended version
-        nextState.cards = nextState.cards.map(card => {
-          if (card.gId !== gId) { return card; } // Other cards untouched
-          const dbTargetCard = dbCards.find(c => c.id === targetArtifact.id) || {}; // Add the target DB properties (ID included)
-          return extendCardLogic({ ...card, ...dbTargetCard, ...{
-            name : 'Copy of ' + targetArtifact.name,
-          }});
-        });
+    let cardOverride: TGameCard;
 
-        nextState.cards.find(c => c.gId === gId)?.onSummon(nextState);
+    replicate(); // If the target is already set, copy all properties & functions from the target card
+    
+    function replicate(copyId = card.copyId) {
+      if (copyId) {
+        const dbTargetCard = dbCards.find(c => c.id === copyId) || {}; // Target DB properties (ID included)
+        cardOverride = extendCardLogic({...card, ...dbTargetCard, id: copyId}) as TGameCard;      
+        Object.keys(cardOverride).forEach(key => { // Copy all properties from cardOverride --- to ---> card
+          const excludeProps = ['id', 'copyId', 'name'];
+          if (excludeProps.indexOf(key) < 0) {
+            // @ts-ignore: Unreachable code error
+            card[key] = cardOverride[key as keyof TGameCard];
+          }
+        });
+        card.turnAttack  = card.attack || 0;
+        card.turnDefense = card.defense || 0;
+        card.turnLandWalk = card.landWalk;
+        card.turnCanRegenerate = card.canRegenerate;
       }
+    }
+
+    card.getSummonCost = (nextState) => {
+      const { table } = getShorts(nextState);
+      const possibleTargets = table.filter(c => c.isType('creature')).map(c => c.gId); // Target = creature in play
+      return { mana: card.cast, neededTargets: 1, possibleTargets };
+    };
+    card.onStack = (nextState) => {
+      const { targetId } = getShorts(nextState);
+      const cardToCopy = nextState.cards.find(c => c.gId === targetId);
+      if (cardToCopy) { 
+        card.turnAttack  = cardToCopy.attack || 0;
+        card.turnDefense = cardToCopy.defense || 0;
+      }
+    }
+    card.onSummon = (nextState) => {
+      const { card, targetId } = getShorts(nextState);
+      const cardToCopy = nextState.cards.find(c => c.gId === targetId);
+      if (cardToCopy) {
+        card.targets = [];
+        card.copyId = cardToCopy.id;
+        replicate();
+        cardOverride?.onSummon(nextState); // Call the overriden .onSummon()
+      }
+    };
+    card.onDestroy = (nextState) => {
+      const { card } = getShorts(nextState);
+      cardOverride?.onDestroy(nextState);
+      delete card.copyId; // Uncopy it
     };
   }
 
