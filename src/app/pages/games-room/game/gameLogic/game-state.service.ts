@@ -782,7 +782,6 @@ export class GameStateService {
   // Advances the phase for the given state, or ends the turn
   private endPhase(nextState: TGameState) {
     const { playerA, playerB, turnPlayer } = this.getPlayers(nextState);
-    nextState.lifeChanges = []; // Remove any life notifications
 
     const stackCards = nextState.cards.filter(c => c.location === 'stack');
     if (stackCards.length) { console.error('There should not be cards in the stack at the end of the phase!', stackCards); }

@@ -351,6 +351,8 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   function c000137_Shanodin_Dryads()          { commonCreature(); }
   function c000125_DeadlyInsect()             { commonCreature(); }
   function c000139_DancingScimitar()          { commonCreature(); }
+  function c000152_ObsianusGolem()            { commonCreature(); isAlsoType('artifact'); }
+  function c000154_PearledUnicorn()           { commonCreature(); }
 
 
 
@@ -2235,11 +2237,18 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     };
   }
 
+  function c000153_Onulet() {
+    commonCreature();
+    isAlsoType('artifact');
+    card.onDestroy = (nextState) => { // If Onulet is placed in the graveyard, its controller gains 2 life
+      const { card, cardPlayer } = getShorts(nextState);
+      cardPlayer.life += 2;
+      addLifeChange(nextState, cardPlayer.num, -2, card, 0);
+    };
+  }
+
   // 
 
-  function c000152_ObsianusGolem() {}
-  function c000153_Onulet() {}
-  function c000154_PearledUnicorn() {}
   function c000155_Reconstruction() {}
   function c000157_ScatheZombies() {}
   function c000158_StreamOfLife() {}
