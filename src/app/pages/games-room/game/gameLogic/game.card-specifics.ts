@@ -353,6 +353,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   function c000139_DancingScimitar()          { commonCreature(); }
   function c000152_ObsianusGolem()            { commonCreature(); isAlsoType('artifact'); }
   function c000154_PearledUnicorn()           { commonCreature(); }
+  function c000157_ScatheZombies()            { commonCreature(); }
 
 
 
@@ -908,7 +909,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
       const playerNum = targetId === 'player1' ? '1' : targetId === 'player2' ? '2' : null;
       if (playerNum) { addLifeChange(nextState, playerNum, card.xValue, card, 500); }
       moveCardToGraveyard(nextState, card.gId); // Destroy itself
-    }
+    };
   }
 
   function c000070_HowlFromBeyond() {
@@ -2247,11 +2248,36 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     };
   }
 
+  function c000155_Reconstruction() { // Bring one artifact from your graveyard to your hand
+    card.hideTargetsOnStack = true; // Hides selected card to opponent
+    card.getSummonCost = (nextState: TGameState) => {
+      const { card, cardPlayer, graveyard } = getShorts(nextState);
+      const possibleTargets = graveyard.filter(c => c.controller === cardPlayer.num && c.isType('artifact')).map(c => c.gId); // Artifacts from your grav
+      return { mana: card.cast, customDialog: 'Reconstruction', neededTargets: 1, possibleTargets };
+    };
+    card.onSummon = (nextState: TGameState) => {
+      const { card, targetId } = getShorts(nextState);
+      moveCard(nextState, targetId, 'hand'); // Move selected card to your hand
+      card.targets = [];
+      moveCardToGraveyard(nextState, gId); // Destroy itself
+    };
+  }
+
+  function c000158_StreamOfLife() { // Target player gains X life
+    card.getSummonCost = (nextState: TGameState) => {
+      const {card } = getShorts(nextState);
+      return { mana: card.cast, xMana: [1,1,1,1,1,1], neededTargets: 1, possibleTargets: ['playerA', 'playerB'] };
+    };    
+    card.onSummon = (nextState: TGameState) => {
+      const { targetId, card } = getShorts(nextState);
+      if      (targetId === 'player1') { nextState.player1.life += card.xValue; addLifeChange(nextState, '1', -card.xValue, card, 500); }
+      else if (targetId === 'player2') { nextState.player2.life += card.xValue; addLifeChange(nextState, '2', -card.xValue, card, 500); }
+      moveCardToGraveyard(nextState, card.gId); // Destroy itself
+    };
+  }
+
   // 
 
-  function c000155_Reconstruction() {}
-  function c000157_ScatheZombies() {}
-  function c000158_StreamOfLife() {}
   function c000159_Tranquility() {}
   function c000160_Tsunami() {}
   function c000161_WallOfBone() {}

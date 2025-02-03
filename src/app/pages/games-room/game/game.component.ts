@@ -35,6 +35,7 @@ import { RaiseDeadDialogComponent } from './custom-dialogs/raise-dead/raise-dead
 import { RegrowthDialogComponent } from './custom-dialogs/regrowth/regrowth-dialog.component';
 import { AnimateDeadDialogComponent } from './custom-dialogs/animate-dead/animate-dead-dialog.component';
 import { LibraryOfAlexandriaDialogComponent } from './custom-dialogs/library-of-alexandria/library-of-alexandria-dialog.component';
+import { ReconstructionDialogComponent } from "./custom-dialogs/reconstruction/reconstruction-dialog.component";
 
 
 
@@ -70,6 +71,7 @@ import { LibraryOfAlexandriaDialogComponent } from './custom-dialogs/library-of-
     RegrowthDialogComponent,
     AnimateDeadDialogComponent,
     LibraryOfAlexandriaDialogComponent,
+    ReconstructionDialogComponent
 ],
   templateUrl: './game.component.html',
   styleUrls: ['./game.component.scss'],
