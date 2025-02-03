@@ -626,9 +626,7 @@ export class GameStateService {
         // Trample ability
         if (attackingCard.isTrample && excessDamage > 0) { 
           console.log(`${attackerTxt} -----> also deals the remaining ${excessDamage} points of damage to player ${defendingPlayer.name} (because of TRAMPLE)`);
-          damageToDefender -= excessDamage;
-          // totalDamage += excessDamage;
-          // attackingCard.onPlayerDamage(nextState, excessDamage);
+          damageToDefender -= excessDamage; // pass the remaining damage to the player
           damagePlayer(attackingCard, excessDamage);
         }
 

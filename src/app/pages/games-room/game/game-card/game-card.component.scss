@@ -27,7 +27,7 @@
   height: var(--card-height); // 210
 
 
-  .damage-points {
+  .damage-points, .life-points, .x-value {
     position: absolute;
     left: calc(50% - calc(var(--size-ref) * 0.3)); // xl = 30
     top: calc(var(--size-ref) * 0.23);
@@ -36,10 +36,14 @@
     font-weight: 600;
     -webkit-text-stroke: 2px #fff;
     color: red;
-    .icon-power, .icon-cross { 
+    .icon-power, .icon-cross, .icon-plus { 
       font-size: calc(var(--size-ref) * 0.3); // xl = 30px;
     }
   }
+  .life-points {
+    color: #60dd66; display: flex; align-items: center;
+  }
+
 
   .attack-defense {
     position: absolute;
@@ -194,13 +198,6 @@
     }
   }
 
-  // Upkeep Dialog specific styles:
-  &.upkeepDialog {
-    // &.is-tapped {
-    //   margin-left: 30px !important;
-    //   transform: rotate(90deg);
-    // }
-  }
 
   &.damageDialog, &.deckSelection {
     width: calc(var(--card-width) * 0.75);    // 

@@ -533,7 +533,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
       const { card } = getShorts(nextState);
       const effect = nextState.effects.find(e => e.id === effectId);
       card.turnDefense += effect?.xValue || 0;
-    }
+    };
   }
 
   function c000033_ShivanDragon() {
@@ -2133,10 +2133,63 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     };
   }
 
+  function c000145_FrozenShade() {
+    commonCreature();
+    card.getAbilityCost = () => ({ mana: [0,0,0,0,0,0], xMana: [0,0,0,1,0,0], tap: false, text: `Pay 1 black mana to add +1/+1` });
+    card.onAbility = (nextState: TGameState) => {
+      nextState.effects.push({ scope: 'turn', trigger: 'constantly', gId, targets: [], id: randomId('e'), xValue: card.xValue });
+      card.xValue = 0;
+    };
+    card.onEffect = (nextState: TGameState, effectId: string) => { // Add +1/+1
+      const { card } = getShorts(nextState);
+      const effect = nextState.effects.find(e => e.id === effectId);
+      card.turnAttack += effect?.xValue || 0;
+      card.turnDefense += effect?.xValue || 0;
+    };
+  }
 
-  function c000145_FrozenShade() {}
-  function c000146_HealingSalve() {}
-  function c000147_HolyStrength() {}  
+  function c000146_HealingSalve() { // Gain 3 life, or prevent up to 3 damage from being dealt to a single target
+    card.getSummonCost = (nextState: TGameState) => {
+      const { targetCreatures } = getShorts(nextState);
+      const possibleTargets = [ ...targetCreatures().map(c => c.gId), 'playerA'];
+      return { mana: card.cast, neededTargets: 1, possibleTargets };
+    };
+    card.onSummon = (nextState: TGameState) => {
+      const { targetCreatures, targetId } = getShorts(nextState);
+      const targetCreature = targetCreatures().find(c => c.gId === targetId);      
+      
+      if      (targetId === 'player1') { nextState.player1.life += 3; addLifeChange(nextState, '1', -3, card, 500); } // You gain 3 life
+      else if (targetId === 'player2') { nextState.player2.life += 3; addLifeChange(nextState, '2', -3, card, 500); } // You gain 3 life
+      else if (targetCreature) { targetCreature.turnDamage -= 3; } // Prevent 3 damage to a creature 
+      moveCardToGraveyard(nextState, gId); // Destroy itself
+    };
+  }
+
+  function c000147_HolyStrength() {
+    card.getSummonCost = (nextState: TGameState) => {
+      const { targetCreatures } = getShorts(nextState);
+      const possibleTargets = targetCreatures().map(c => c.gId); // Target = any playing creature
+      return { mana: card.cast, neededTargets: 1, possibleTargets };
+    };
+    card.onSummon = (nextState: TGameState) => {
+      const { targetId } = getShorts(nextState);
+      nextState.effects.push({ scope: 'permanent', trigger: 'constantly', gId, targets: [targetId], id: randomId('e') });
+      moveCard(nextState, gId, 'tble');
+    }
+    card.onEffect = (nextState: TGameState, effectId: string) => { // Add +1/+2 to target creature
+      const { targetCreatures } = getShorts(nextState);
+      const effect = nextState.effects.find(e => e.id === effectId);
+      const effectTargetId = effect?.targets[0]; // The card that the card's effect is targetting
+      const targetCreature = targetCreatures().find(c => c.gId === effectTargetId);
+      if (targetCreature) {
+        targetCreature.turnAttack += 1;
+        targetCreature.turnDefense += 2;
+      }
+    };
+  }
+
+  // 
+
   function c000148_Hurricane() {}
   function c000149_JayemdaeTome() {}
   function c000150_Karma() {}

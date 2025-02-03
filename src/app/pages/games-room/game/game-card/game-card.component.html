@@ -25,12 +25,17 @@
      
   <img [src]="'/assets/images/cards/' + (back ? 'card_back.jpg' : card.image)">
 
-  <span class="damage-points" *ngIf="card.turnDamage || shadow?.damage">
+  <span class="damage-points" *ngIf="(shadow?.damage || 0) > 0 || card.turnDamage > 0">
     <span>{{shadow?.damage || card.turnDamage}}</span>
     <span class="icon-power"></span>
   </span>
 
-  <span class="damage-points" *ngIf="(card.xValue ?? -1) > 0">
+  <span class="life-points" *ngIf="(shadow?.damage || 0) < 0 || card.turnDamage < 0">
+    <span class="icon-plus"></span>
+    <span>{{-(shadow?.damage || 0) || -card.turnDamage}}</span>
+  </span>
+
+  <span class="x-value" *ngIf="(card.xValue ?? -1) > 0">
     <span>{{card.xValue}}</span>
     <span class="icon-cross"></span>
   </span>

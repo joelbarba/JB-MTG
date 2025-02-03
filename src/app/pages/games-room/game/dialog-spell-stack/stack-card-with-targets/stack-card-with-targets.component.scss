@@ -44,7 +44,7 @@ $arrows-color: $text-color;
       border-radius: 10px;
       position: relative;
       .icon-user3 { font-size: calc(var(--size-ref) * 1.40); }
-      .damage-points {
+      .damage-points, .life-points {
         position: absolute;
         line-height: calc(var(--size-ref) * 0.60);
         left: calc(50% - (var(--size-ref) * 0.30));
@@ -53,7 +53,9 @@ $arrows-color: $text-color;
         font-weight: 600;
         -webkit-text-stroke: 2px #fff;
         color: red;
+        &.life-points { color: #60dd66; display: flex; align-items: center; }
         .icon-power { font-size: calc(var(--size-ref) * 0.30); }
+        .icon-plus  { font-size: calc(var(--size-ref) * 0.30); }
       }
       &.selectable-card { background: #b8e1de; &:hover { background: rgba(#FFEB3B, 0.2); }}
     }

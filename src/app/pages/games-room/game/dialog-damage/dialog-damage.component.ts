@@ -86,7 +86,8 @@ export class DialogDamageComponent {
       }
 
       if (this.yourChange) {
-        const canPrevent = !!this.game.state.cards.filter(c => c.canPreventDamage && (c.location === 'stack' || c.location === this.game.yourHand())).length;
+        // If damage is dealt, and there is a card in your hand/stack that can prevent it ---> force timer to stop
+        const canPrevent = lifeChange.damage > 0 && !!this.game.state.cards.filter(c => c.canPreventDamage && (c.location === 'stack' || c.location === this.game.yourHand())).length;
 
         // If the item has "timer", auto acknowledge it after "timer" milliseconds
         if (this.timeout) { clearTimeout(this.timeout); }

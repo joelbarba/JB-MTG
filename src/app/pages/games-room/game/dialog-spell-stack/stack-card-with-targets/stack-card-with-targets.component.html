@@ -24,9 +24,13 @@
     <div class="panel-user" *ngIf="item.player" 
          (click)="cardOp.selectTargetPlayer(item.player.num)"
          [class.selectable-card]="cardOp.isTargetPlayer(item.player.num)">
-      <span class="damage-points" *ngIf="item.shadow.damage">
+      <span class="damage-points" *ngIf="item.shadow.damage > 0">
         <span>{{item.shadow.damage}}</span>
         <span class="icon-power"></span>
+      </span>
+      <span class="life-points" *ngIf="item.shadow.damage < 0">
+        <span class="icon-plus"></span>
+        <span>{{-item.shadow.damage}}</span>
       </span>
       <span class="icon-user3"></span>
       <span>{{targetPlayerText}}</span>
