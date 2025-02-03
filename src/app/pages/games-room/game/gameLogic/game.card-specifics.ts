@@ -300,7 +300,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     case 'c000163':  c000163_WallOfStone();               break;
     case 'c000164':  c000164_WallOfWood();                break;
     case 'c000165':  c000165_WarMammoth();                break;
-    case 'c000166':  c000166_WaterWlemental();            break;
+    case 'c000166':  c000166_WaterElemental();            break;
     case 'c000167':  c000167_WinterOrb();                 break;
     case 'c000168':  c000168_CopperTablet();              break;
     case 'c000169':  c000169_IceStorm();                  break;
@@ -356,6 +356,8 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   function c000157_ScatheZombies()            { commonCreature(); }
   function c000163_WallOfStone()              { commonCreature(); }
   function c000164_WallOfWood()               { commonCreature(); }
+  function c000165_WarMammoth()               { commonCreature(); }
+  function c000166_WaterElemental()           { commonCreature(); }
 
 
 
@@ -2317,9 +2319,22 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
 
   // 
 
-  function c000165_WarMammoth() {}
-  function c000166_WaterWlemental() {}
-  function c000168_CopperTablet() {}
+
+  function c000168_CopperTablet() { // Does 1 damage to each player during his/her upkeep
+    card.getUpkeepCost = (nextState) => {
+      let text = `Copper Tablet does 1 damage to you during your upkeep`;
+      let opText = `Copper Tablet does 1 damage to your oppoennt during his/her upkeep`;
+      return { mana: [0,0,0,0,0,0], text, opText };
+    }
+    card.onUpkeep = (nextState, skip, targets, upkeepPlayerNum) => {
+      const { otherPlayer, table } = getShorts(nextState);
+      otherPlayer.life -= 1;
+      addLifeChange(nextState, upkeepPlayerNum, 1, card, 200);
+    };
+  }
+
+
+
   function c000169_IceStorm() {}
   function c000170_Moat() {}
   function c000171_Cleanse() {}
