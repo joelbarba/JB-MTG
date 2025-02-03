@@ -178,12 +178,14 @@ export class GameStateService {
       'isWall', 'isFlying', 'isTrample', 'isFirstStrike', 'isHaste', 'canRegenerate', 'colorProtection',
 
       // Extended properties (extendCardLogic)
-      'selectableAction', 'effectsFrom', 'targetOf', 'uniqueTargetOf',
+      'selectableAction', 'effectsFrom', 'targetOf', 'uniqueTargetOf', 'hideOnStack', 'hideTargetsOnStack',
+      'allowMultiCast', 'dynamicCost', 'allTypes',
 
       // Extended functions (extendCardLogic)
       'onStack', 'onSummon', 'onAbility', 'onDestroy', 'onDiscard', 'afterCombat', 'onEffect', 'onUpkeep',
       'isType', 'isColor', 'canUntap', 'canAttack', 'canDefend', 'targetBlockers', 'isTypeCopy',
-      'getSummonCost', 'getAbilityCost', 'getUpkeepCost', 'getCost', 'onPlayerDamage', 'onCreatureDamage'
+      'getSummonCost', 'getAbilityCost', 'getUpkeepCost', 'getCost', 'onPlayerDamage', 'onCreatureDamage',
+      'onTarget', 'onCancel',
     ]
     dbState.cards = dbState.cards.map(card => card.keyFilter((v,k) => !extFields.includes(k))) as Array<TGameCard>;
 
@@ -417,7 +419,13 @@ export class GameStateService {
 
   private addToSpellStack(nextState: TGameState, card: TGameCard) {
     const { playerA, playerB } = this.getPlayers(nextState);
-    if (!nextState.cards.find(c => c.location === 'stack')) { nextState.spellStackInitiator = this.playerANum; }
+    if (!nextState.cards.find(c => c.location === 'stack')) { // Init stack
+      nextState.spellStackInitiator = this.playerANum; 
+      if (!!nextState.cards.find(c => c.location === this.yourHand() && c.allowMultiCast)) {
+        playerA.stackCall = true; // Allow the stack initiator to cast more than 1 spell at once
+      }
+    }
+
     moveCard(nextState, card.gId, 'stack'); // Move playing card to the stack
     playerB.stackCall = true; // Activate opponent's stack call, so he gets control later to add more spells to the stack
     if (!playerA.stackCall) { this.switchPlayerControl(nextState); }  // stack initiator (you are just playing a spell)

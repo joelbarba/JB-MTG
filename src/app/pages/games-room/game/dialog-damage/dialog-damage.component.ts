@@ -86,7 +86,7 @@ export class DialogDamageComponent {
       }
 
       if (this.yourChange) {
-        const canPrevent = !!this.game.state.cards.filter(c => c.location === this.game.yourHand() && c.canPreventDamage).length;
+        const canPrevent = !!this.game.state.cards.filter(c => c.canPreventDamage && (c.location === 'stack' || c.location === this.game.yourHand())).length;
 
         // If the item has "timer", auto acknowledge it after "timer" milliseconds
         if (this.timeout) { clearTimeout(this.timeout); }

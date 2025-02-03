@@ -1,6 +1,6 @@
 import { randomId } from "../../../../core/common/commons";
 import { dbCards } from "../../../../core/dbCards";
-import { TCardExtraType, TColor, TGameCard, TGameState } from "../../../../core/types";
+import { TActionCost, TActionParams, TCardExtraType, TColor, TGameCard, TGameState } from "../../../../core/types";
 import { addLifeChange, drawCard, getCards, killCreature, moveCard, moveCardToGraveyard, shuffleDeck } from "./game.utils";
 
 
@@ -14,8 +14,8 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   // But to be 100% pure, we should filter the object from the given nextState in every function --> const card = getCard(nextState);
 
   // Functions to exted: common values
-  card.onStack          = (nextState) => {}
   card.onSummon         = (nextState) => { moveCard(nextState, gId, 'tble'); getCard(nextState).status = null; }
+  card.onStack          = (nextState) => {}
   card.onAbility        = (nextState) => {}
   card.onDestroy        = (nextState) => {};
   card.onDiscard        = (nextState) => moveCard(nextState, gId, 'grav');
@@ -31,6 +31,8 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   card.getSummonCost    = (nextState) => ({ mana: card.cast });
   card.getAbilityCost   = (nextState) => null;
   card.getUpkeepCost    = (nextState) => null;
+  card.onTarget         = (state) => {};
+  card.onCancel         = (state) => {};
   card.isColor          = (color) => card.color === color;
   card.isType           = (...types) => {
     if (types.indexOf(card.type) >= 0) { return true; }    
@@ -625,7 +627,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
       const possibleTargets = [1, 2, 3, 4, 5].map(v => 'custom-color-' + v);
       return {
         mana: [0,0,0,0,0,0], tap: true,
-        neededTargets: 3, possibleTargets, customDialog: true, // Targets will be the colors (1,2,3,4,5)
+        neededTargets: 3, possibleTargets, customDialog: 'BlackLotus', // Targets will be the colors (1,2,3,4,5)
         text: `Tap to add 3 mana of any single color`
       }
     };
@@ -650,7 +652,8 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
       const possibleTargets = ['custom-color-' + color1, 'custom-color-' + color2];
       return {
         mana: [0,0,0,0,0,0], tap: true, effect: 'onTapLand',
-        neededTargets: 1, possibleTargets, customDialog: true, // Target will be the color
+        neededTargets: 1, possibleTargets, // Target will be the color
+        customDialog: card?.name.replaceAll(' ', ''),
         text: `Tap ${card.name} to get 1 mana`
       }
     };
@@ -1165,7 +1168,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
         mana: [0,0,0,0,0,0],
         text: 'Target non-wall creature an opponent control gains forestwalk until your next turn',
         opText: 'Target non-wall creature you control gains forestwalk until opponent next turn',
-        customDialog: true,
+        customDialog: 'ErhnamDjinn',
         neededTargets: 1, possibleTargets
       };
     }
@@ -1286,7 +1289,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
       const possibleTargets = [1, 2, 3, 4, 5].map(v => 'custom-color-' + v);
       return {
         mana: [0,0,0,0,0,0], tap: true,
-        neededTargets: 1, possibleTargets, customDialog: true, // Targets will be the colors (1,2,3,4,5)
+        neededTargets: 1, possibleTargets, customDialog: 'BirdsOfParadise', // Targets will be the colors (1,2,3,4,5)
         text: `Tap to add 1 mana of any single color`
       }
     };
@@ -1348,7 +1351,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     card.getSummonCost = (nextState: TGameState) => {
       const { card, cardPlayer, deck } = getShorts(nextState);
       const possibleTargets = deck.filter(c => c.controller === cardPlayer.num).map(c => c.gId); // One card from your deck
-      return { mana: card.cast, customDialog: true, neededTargets: 1, possibleTargets };
+      return { mana: card.cast, customDialog: 'DemonicTutor', neededTargets: 1, possibleTargets };
     };
     card.onSummon = (nextState: TGameState) => {
       const { card, targetId, cardPlayer } = getShorts(nextState);
@@ -1364,7 +1367,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     card.getSummonCost = (nextState: TGameState) => {
       const { card, cardPlayer, graveyard } = getShorts(nextState);
       const possibleTargets = graveyard.filter(c => c.controller === cardPlayer.num).map(c => c.gId); // Any card from your grav
-      return { mana: card.cast, customDialog: true, neededTargets: 1, possibleTargets };
+      return { mana: card.cast, customDialog: 'Regrowth', neededTargets: 1, possibleTargets };
     };
     card.onSummon = (nextState: TGameState) => {
       const { card, targetId } = getShorts(nextState);
@@ -1379,7 +1382,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     card.getSummonCost = (nextState: TGameState) => {
       const { card, cardPlayer, graveyard } = getShorts(nextState);
       const possibleTargets = graveyard.filter(c => c.controller === cardPlayer.num && c.isType('creature')).map(c => c.gId); // Creatures from your grav
-      return { mana: card.cast, customDialog: true, neededTargets: 1, possibleTargets };
+      return { mana: card.cast, customDialog: 'RaiseDead', neededTargets: 1, possibleTargets };
     };
     card.onSummon = (nextState: TGameState) => {
       const { card, targetId } = getShorts(nextState);
@@ -1393,7 +1396,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     card.getSummonCost = (nextState: TGameState) => {
       const { card, graveyard } = getShorts(nextState);
       const possibleTargets = graveyard.filter(c => c.isType('creature')).map(c => c.gId); // Creatures from any grav
-      return { mana: card.cast, customDialog: true, neededTargets: 1, possibleTargets };
+      return { mana: card.cast, customDialog: 'AnimateDead', neededTargets: 1, possibleTargets };
     };
     card.onSummon = (nextState: TGameState) => {
       const { card, targetId } = getShorts(nextState);
@@ -1498,7 +1501,8 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     commonLand(0);
     card.getAbilityCost = () => {
       const possibleTargets = ['mana', 'draw'];
-      return { mana: [0,0,0,0,0,0], tap: true, customDialog: true, neededTargets: 1, possibleTargets, text: `Use ${card.name}`, effect: 'onTapLand' };
+      return { mana: [0,0,0,0,0,0], tap: true, customDialog: 'LibraryOfAlexandria', 
+               neededTargets: 1, possibleTargets, text: `Use ${card.name}`, effect: 'onTapLand' };
     };
     card.onAbility = (nextState: TGameState) => {
       const { targetId, cardPlayer } = getShorts(nextState);
@@ -1922,7 +1926,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
         const dbTargetCard = dbCards.find(c => c.id === card.copyId) || {}; // Target DB properties (ID included)
         cardOverride = extendCardLogic({...card, ...dbTargetCard, id: card.copyId}) as TGameCard;      
         Object.keys(cardOverride).forEach(key => { // Copy all properties from cardOverride --- to ---> card
-          const excludeProps = ['id', 'copyId', 'name'];
+          const excludeProps = ['id', 'copyId', 'cast', 'name'];
           if (excludeProps.indexOf(key) < 0) {
             // @ts-ignore: Unreachable code error
             card[key] = cardOverride[key as keyof TGameCard];
@@ -1968,7 +1972,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
         const dbTargetCard = dbCards.find(c => c.id === copyId) || {}; // Target DB properties (ID included)
         cardOverride = extendCardLogic({...card, ...dbTargetCard, id: copyId}) as TGameCard;      
         Object.keys(cardOverride).forEach(key => { // Copy all properties from cardOverride --- to ---> card
-          const excludeProps = ['id', 'copyId', 'name'];
+          const excludeProps = ['id', 'copyId', 'cast', 'name'];
           if (excludeProps.indexOf(key) < 0) {
             // @ts-ignore: Unreachable code error
             card[key] = cardOverride[key as keyof TGameCard];
@@ -1986,14 +1990,6 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
       const possibleTargets = table.filter(c => c.isType('creature')).map(c => c.gId); // Target = creature in play
       return { mana: card.cast, neededTargets: 1, possibleTargets };
     };
-    card.onStack = (nextState) => {
-      const { targetId } = getShorts(nextState);
-      const cardToCopy = nextState.cards.find(c => c.gId === targetId);
-      if (cardToCopy) { 
-        card.turnAttack  = cardToCopy.attack || 0;
-        card.turnDefense = cardToCopy.defense || 0;
-      }
-    }
     card.onSummon = (nextState) => {
       const { card, targetId } = getShorts(nextState);
       const cardToCopy = nextState.cards.find(c => c.gId === targetId);
@@ -2012,29 +2008,99 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   }
 
 
-  function c000106_VesuvanDoppelganger() {
-    card.onSummon = (nextState) => {
-      const { tableStack } = getShorts(nextState);
-      const c1 = tableStack.find(c => c.gId === 'g109')
-      if (c1) {
-        console.log(c1.isType('artifact'));
-        console.log(c1.isType('creature'));
-        console.log(c1.isType('enchantment'));
+  // Any sorcery or instant spell just cast is doubled.
+  // Treat Fork as an exact copy of target spell except that Fork remains red.
+  // Copy and original may have different targets
+  function c000029_Fork() {
+    card.allowMultiCast = true; // Stack won't switch to playerB immediately at start
+    card.dynamicCost = true;    // The summoning cost will be recalculated each try
+    let cardOverride: TGameCard;
+
+    replicate(); // If the target is already set, copy all properties & functions
+    
+    function replicate(copyId = card.copyId) {
+      if (copyId) {
+        const dbTargetCard = dbCards.find(c => c.id === copyId) || {}; // Target DB properties
+        cardOverride = extendCardLogic({...card, ...dbTargetCard, id: copyId}) as TGameCard;      
+        Object.keys(cardOverride).forEach(key => {
+          const excludeProps = ['id', 'copyId', 'cast', 'name', 'image'];
+          if (excludeProps.indexOf(key) < 0) {
+            // @ts-ignore: Unreachable code error
+            card[key] = cardOverride[key as keyof TGameCard];
+          }
+        });
+        card.name = copyId === 'c000029' ? 'Fork' : 'Forked ' + cardOverride.name;
+        card.color = 'red';
       }
-      tableStack.filter(c => c.isType('enchantment')).forEach(enchantment => {
-        moveCardToGraveyard(nextState, enchantment.gId);
-      });
-    };
+
+      card.onTarget = (state, params: TActionParams) => {
+        const { card } = getShorts(state);
+        if (!card.copyId && params.targets && params.targets.length === 1) {
+          const targetId = params.targets[0];
+          const cardToCopy = state.cards.find(c => c.gId === targetId);
+          if (cardToCopy) {
+            card.copyId = cardToCopy.id;
+            card.xValue = cardToCopy.xValue;
+            params.targets.pop();
+            replicate();
+          }
+        }
+      };
+      card.onCancel = (state) => {
+        delete card.copyId;
+        replicate(card.id); // Set all Fork props back
+      };
+  
+      card.getSummonCost = (nextState: TGameState) => {
+        const { card, stack } = getShorts(nextState);
+        const possibleTargets = stack.filter(c => c.isType('instant', 'sorcery')).map(c => c.gId);
+        const cost: TActionCost = { mana: card.cast, neededTargets: 1, possibleTargets };  // Initial target (spell to copy)
+
+        if (card.copyId) { // If copy target set, replace targets
+          const copyCost = cardOverride?.getSummonCost(nextState);
+          cost.possibleTargets = copyCost?.possibleTargets || [];
+          cost.neededTargets   = copyCost?.neededTargets || 0;
+          if (copyCost?.customDialog) { cost.customDialog = copyCost.customDialog };
+        }
+
+        return cost;
+      };
+      
+      card.getCost = (nextState, action) => {
+        if (action === 'summon-spell')    { return card.getSummonCost(nextState); }
+        if (action === 'trigger-ability') { return card.getAbilityCost(nextState); }
+        if (action === 'pay-upkeep')      { return card.getUpkeepCost(nextState); }
+        return null;
+      }
+  
+  
+  
+      // card.onSummon = (nextState) => {
+      //   const { card, targetId } = getShorts(nextState);
+      //   const cardToCopy = nextState.cards.find(c => c.gId === targetId);
+      //   if (cardToCopy) {
+      //     card.copyId = cardToCopy.id;
+      //     card.targets = [...cardToCopy.targets];
+      //     replicate();
+      //     cardOverride?.onSummon(nextState); // Call the overriden .onSummon()
+      //   }
+      // };
+      card.onDestroy = (nextState) => {
+        const { card } = getShorts(nextState);
+        cardOverride?.onDestroy(nextState);
+        delete card.copyId; // Uncopy it
+        replicate(card.id); // Set all Fork props back
+      };
+    }
+
   }
 
 
+  
+  
   // Pending to be coded ..... 
   
-  function c000029_Fork() {}
-
-
-
-
+  function c000106_VesuvanDoppelganger() { }
   function c000098_Fireball() { }
   function c000113_TheAbyss() { }
   function c000117_BalduvianHorde() { }

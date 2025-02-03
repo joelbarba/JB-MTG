@@ -179,11 +179,15 @@ export type TGameCard = TDBGameCard & TCard & { // Not in DB (fixed properties f
   uniqueTargetOf?: Array<TGameCard>;
   hideOnStack?: boolean; // To not reveal the card when dislpayed on the stack
   hideTargetsOnStack?: boolean; // To not reveal the targets of the card when dislpayed on the stack
+  allowMultiCast?: boolean; // If you have a card with this in your hand, you can cast more than 1 spell to the stack intitally (for Fork)
+  dynamicCost?: boolean; // ture=The cost to cast/ability/upkeep may change, so it needs to be recalculated (for Fork)
   allTypes: TCardExtraType[]; // All types of the card
 
-  onStack:   (state: TGameState) => void;   // What the card does when it's added to the stack
   onSummon:  (state: TGameState) => void;   // What the card does when it's summoned
   onAbility: (state: TGameState) => void;   // What the card does when it's used for its ability (tap...)
+  onStack:   (state: TGameState) => void;   // What the card does when it's added to the stack
+  onTarget:  (state: TGameState, params: TActionParams) => void; // What the card does when a target is selected (in cardOp)
+  onCancel:  (state: TGameState) => void;   // What the card does when the summoning operation is canceled (in cardOp)
   onDestroy: (state: TGameState) => void;   // What the card does when it's destroyed
   onDiscard: (state: TGameState) => void;   // What the card does when it's discarded
   onUpkeep:  (state: TGameState, skip: boolean, targets?: string[]) => void;   // What the card does during the upkeep phase
@@ -208,7 +212,7 @@ export type TActionCost = {
   xMana           ?: TCast,     // If extra mana, what colors are allowed (0=not allowed, >0 allowed)
   neededTargets   ?: number,    // Number of targets needed
   possibleTargets ?: string[],  // Possible ids of the targets (gId / playerNum / custom /...)
-  customDialog    ?: boolean,   // If a custom dialog is needed (dialog code = card name)
+  customDialog    ?: string,    // If a custom dialog is needed (dialog code = card name)
   tap             ?: boolean,   // If the cost requires the card to tap
   canSkip         ?: boolean,   // (only for upkeep) If true, the cost is optional and can be skipped
   skipText        ?: string,    // If it can be skipped, the text on the "Cancel" button

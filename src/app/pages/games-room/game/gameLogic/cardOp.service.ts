@@ -176,7 +176,8 @@ export class CardOpServiceNew {
       }
 
       if (op.status === 'selectingTargets') { // Set dialog if needed
-        if (op.cost?.customDialog) { this.customDialog = this.card?.name.replaceAll(' ', '') || null; }
+        // if (op.cost?.customDialog) { this.customDialog = this.card?.name.replaceAll(' ', '') || null; }
+        this.customDialog = op.cost?.customDialog || null;
         
         // Turn playerA/B to player1/2 in possibleTargets[]
         this.possibleTargets = (op.cost?.possibleTargets || []).map(target => {
@@ -225,6 +226,8 @@ export class CardOpServiceNew {
     
     const card = this.game.state.cards.find(c => c.gId === op.gId);
     if (!card) { return 'error'; }
+
+    if (card.dynamicCost) { op.cost = card.getCost(this.game.state, op.action); } // Recalculate cost
     
     console.log('Trying to execute the current operation', op);
 
@@ -332,7 +335,9 @@ export class CardOpServiceNew {
   // Adding 1 target to the selection
   selectTargets(targets: string[]) {
     if (!this.params.targets) { this.params.targets = []; }
-    targets.forEach(target => this.params.targets?.push(target));    
+    targets.forEach(target => this.params.targets?.push(target));
+    const card = this.game.state.cards.find(c => c.gId === this.stack.at(-1)?.gId);
+    if (card) { card.onTarget(this.game.state, this.params); }
     this.tryToExecute();
   }
 
@@ -350,7 +355,11 @@ export class CardOpServiceNew {
   // Cancels the current operation, and sets the previous (if any)
   cancel() { 
     const op = this.stack.at(-1);
-    if (op) { this.removeOpFromStack(op.gId); }
+    if (op) {
+      this.removeOpFromStack(op.gId);
+      const card = this.game.state.cards.find(c => c.gId === op.gId);
+      if (card) { card.onCancel(this.game.state); }
+    }
     this.afterChanges();
   }
 

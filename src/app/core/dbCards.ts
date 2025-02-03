@@ -740,7 +740,7 @@ export const dbCards: TCard[] = [
     id:               'c000029', 
     name:             `Fork`, 
     image:            'fork.jpg', 
-    cast:             [0,0,0,0,0,0], 
+    cast:             [0,0,0,0,2,0], 
     color:            'red', 
     text:             '', 
     type:             'interruption', 

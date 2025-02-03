@@ -26,7 +26,7 @@ export class GameOptionsService {
     const playerB = playerBNum === '1' ? state.player1 : state.player2;
 
     // const { hand, table } = this.getCards(state, 'playerA'); // Your cards
-    const { handA, tableA, unresolvedUpkeeps } = getCards(state, playerANum);
+    const { handA, tableA, stack, unresolvedUpkeeps } = getCards(state, playerANum);
 
     // Shortcut to check if the current phase is any of the given
     const isPhase = (...phases: string[]) => phases.includes(state.phase);    
@@ -98,10 +98,20 @@ export class GameOptionsService {
       // If you can cast spells that prevent damage (Reverse Damage / Eye for an Eye), let it do stuff
       if (handA.filter(c => c.isType('instant') && c.canPreventDamage).length) {
         youMaySummonDamagePrevention(); // You may summon instant spells that prevent damage
-        youMaySummon('instant');  // You may summon instant spells (add them to the stack)
-        youMayTriggerAbilities(); // You may use cards
+        youMaySummon('instant');
+        youMayTriggerAbilities();
         if (state.cards.find(c => c.location === 'stack')) { youMaySummon('interruption'); } // You may summon interruptions 
       }
+
+      // If you are playing a preventing damage on the stack and want to fork it, allow it too
+      if (!!stack.find(c => c.canPreventDamage) && handA.filter(c => c.allowMultiCast)) {
+        youMaySummonDamagePrevention(); // You may summon instant spells that prevent damage
+        youMaySummon('instant');
+        youMayTriggerAbilities();
+        youMaySummon('interruption');
+        state.options.push({ action: 'release-stack', params: {}, text: `Continue` });  // You may finish the spell stack
+      }
+
       state.options.push({ action: 'acknowledge-life-change', params: {}, text: `Ok` }); // You might just acknowledge it
       return state; // <--- Exclusive Option: You can't do anything else
     }
