@@ -1,7 +1,7 @@
 import { randomId } from "../../../../core/common/commons";
 import { dbCards } from "../../../../core/dbCards";
 import { TActionCost, TActionParams, TCardExtraType, TColor, TGameCard, TGameState } from "../../../../core/types";
-import { addLifeChange, drawCard, getCards, killCreature, moveCard, moveCardToGraveyard, shuffleDeck } from "./game.utils";
+import { addLifeChange, destroyCard, drawCard, getCards, killCreature, moveCard, moveCardToGraveyard, shuffleDeck } from "./game.utils";
 
 
 // ------------------------ SPECIFIC EVENTS for every CARD ------------------------
@@ -347,6 +347,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   function c000136_Bog_Wraith()               { commonCreature(); }
   function c000137_Shanodin_Dryads()          { commonCreature(); }
   function c000125_DeadlyInsect()             { commonCreature(); }
+  function c000139_DancingScimitar()          { commonCreature(); }
 
 
 
@@ -359,13 +360,9 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     card.onSummon = (nextState: TGameState) => {
       const { targetCreatures, targetId } = getShorts(nextState);
       const targetCreature = targetCreatures().find(c => c.gId === targetId);
-      if      (targetId === 'player1') { nextState.player1.life -= 3; } // Deals 3 points of damage to player1
-      else if (targetId === 'player2') { nextState.player2.life -= 3; } // Deals 3 points of damage to player2
+      if      (targetId === 'player1') { nextState.player1.life -= 3; addLifeChange(nextState, '1', 3, card, 500); } // Deals 3 points of damage to player1
+      else if (targetId === 'player2') { nextState.player2.life -= 3; addLifeChange(nextState, '2', 3, card, 500); } // Deals 3 points of damage to player2
       else if (targetCreature) { targetCreature.turnDamage += 3; } // Deals 3 points of damage to target creature
-
-      const playerNum = targetId === 'player1' ? '1' : targetId === 'player2' ? '2' : null;
-      if (playerNum) { addLifeChange(nextState, playerNum, 3, card, 500); }
-
       moveCardToGraveyard(nextState, gId); // Destroy itself
     };
   }
@@ -1890,27 +1887,18 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
       if (nextState.lifeChanges.length) {
         const currentLifeChange = nextState.lifeChanges[0];
         const originalDamage = currentLifeChange.originalDamage;
+        const sourceCard = nextState.cards.find(c => c.gId === currentLifeChange.gId);
         if (originalDamage > 0) {
-          otherPlayer.life -= originalDamage;
-          addLifeChange(nextState, otherPlayer.num, originalDamage, card, 0, currentLifeChange.text, currentLifeChange.opText);
+          let player = otherPlayer;
+          if (sourceCard?.controller === '1') { player = nextState.player1; }
+          if (sourceCard?.controller === '2') { player = nextState.player2; }
+          player.life -= originalDamage;
+          addLifeChange(nextState, player.num, originalDamage, card, 0, currentLifeChange.text, currentLifeChange.opText);
         }
       }
       moveCardToGraveyard(nextState, gId); // Destroy itself
     };
   }
-
-  // function c000011_SolRing() {
-  //   card.getAbilityCost = () => ({ 
-  //     mana: [0,0,0,0,0,0], tap: true,
-  //     neededTargets: 0, possibleTargets: [], 
-  //     text: `Tap ${card.name} to add 2 colorless mana`,
-  //   });
-  //   card.onAbility = (nextState: TGameState) => {
-  //     const { card, cardPlayer } = getShorts(nextState);
-  //     cardPlayer.manaPool[0] += 2;
-  //   };
-  // }
-
 
   // Select any artifact in play. This enchantment acts as a duplicate of that artifact; 
   // it is afected by cards that affect either enchantments or artifacts.
@@ -2073,18 +2061,6 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
         return null;
       }
   
-  
-  
-      // card.onSummon = (nextState) => {
-      //   const { card, targetId } = getShorts(nextState);
-      //   const cardToCopy = nextState.cards.find(c => c.gId === targetId);
-      //   if (cardToCopy) {
-      //     card.copyId = cardToCopy.id;
-      //     card.targets = [...cardToCopy.targets];
-      //     replicate();
-      //     cardOverride?.onSummon(nextState); // Call the overriden .onSummon()
-      //   }
-      // };
       card.onDestroy = (nextState) => {
         const { card } = getShorts(nextState);
         cardOverride?.onDestroy(nextState);
@@ -2096,32 +2072,74 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   }
 
 
-  
-  
-  // Pending to be coded ..... 
-  
-  function c000106_VesuvanDoppelganger() { }
-  function c000098_Fireball() { }
-  function c000113_TheAbyss() { }
-  function c000117_BalduvianHorde() { }
-  function c000121_MishrasFactory() { }
-  function c000129_GiantTortoise() { }
-  function c000130_TimeElemental() { }
-  function c000132_PsychicVenom() { }
-  function c000138_Balance() {}
-  function c000139_DancingScimitar() {}
-  function c000140_DesertTwister() {}
-  function c000141_DingusEgg() {}
-  function c000142_DisruptingScepter() {}
-  function c000143_Flashfires() {}
-  function c000144_ForceOfNature() {}
+  function c000132_PsychicVenom() {
+    card.getSummonCost = (nextState: TGameState) => {
+      const { table } = getShorts(nextState);
+      const possibleTargets = table.filter(c => c.isType('land')).map(c => c.gId); // Target = land
+      return { mana: card.cast, neededTargets: 1, possibleTargets };
+    };
+    card.onSummon = (nextState: TGameState) => {
+      const { targetId } = getShorts(nextState);
+      nextState.effects.push({ scope: 'permanent', trigger: 'onTapLand', gId, targets: [targetId], id: randomId('e') });
+      moveCard(nextState, gId, 'tble');
+    }
+    card.onEffect = (nextState, effectId, abilityCardId, params) => {
+      const { targetId } = getShorts(nextState);
+      if (abilityCardId === targetId) {
+        const land = nextState.cards.find(c => c.gId === abilityCardId);
+        if (land) {
+          const player = land?.controller === '1' ? nextState.player1 : nextState.player2;
+          player.life -= 2; addLifeChange(nextState, player.num, 2, land, 500);
+        }
+      }
+    };
+  }
+
+  function c000140_DesertTwister() { // Destroy any card in play
+    card.getSummonCost = (nextState: TGameState) => {
+      const { tableStack, noProtection } = getShorts(nextState);
+      const possibleTargets = tableStack.filter(c => noProtection(c)).map(c => c.gId);
+      return { mana: card.cast, neededTargets: 1, possibleTargets }; // Target = any card in play
+    };       
+    card.onSummon = (nextState: TGameState) => {
+      const { targetId } = getShorts(nextState);
+      destroyCard(nextState, targetId);     // Destroy target
+      moveCardToGraveyard(nextState, gId);  // Destroy itsef
+    };
+  }
+
+  function c000143_Flashfires() { // All plains in play are destroyed
+    card.onSummon = (nextState: TGameState) => {
+      const { tableStack } = getShorts(nextState);
+      tableStack.filter(c => c.isType('plains')).forEach(c => destroyCard(nextState, c.gId)); // Destroy plains
+      moveCardToGraveyard(nextState, gId);  // Destroy itsef
+    };
+  }
+
+  function c000144_ForceOfNature() {
+    commonCreature();
+    card.getUpkeepCost = (nextState) => {
+      const text = 'You must pay 4 green mana or Force of Nature does 8 damage to you';
+      const opText = 'Player opponent is paying Force of Nature upkeep';
+      const skipText = `Don't pay and get 8 damage`;
+      return { mana: [0,0,0,0,0,4], text, opText, canSkip: true, skipText };
+    }
+    card.onUpkeep = (nextState, skip) => {
+      const { card, cardPlayer } = getShorts(nextState);
+      if (skip) {  // If upkeep not paid: 8 damage 
+        cardPlayer.life -= 8; 
+        addLifeChange(nextState, cardPlayer.num, 8, card, 500, 'Force of Nature damages you', 'Force of Nature damages opponent');
+      }
+    };
+  }
+
+
   function c000145_FrozenShade() {}
   function c000146_HealingSalve() {}
   function c000147_HolyStrength() {}  
   function c000148_Hurricane() {}
   function c000149_JayemdaeTome() {}
   function c000150_Karma() {}
-  function c000151_NetherShadow() {}
   function c000152_ObsianusGolem() {}
   function c000153_Onulet() {}
   function c000154_PearledUnicorn() {}
@@ -2136,13 +2154,28 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   function c000164_WallOfWood() {}
   function c000165_WarMammoth() {}
   function c000166_WaterWlemental() {}
-  function c000167_WinterOrb() {}
   function c000168_CopperTablet() {}
   function c000169_IceStorm() {}
   function c000170_Moat() {}
   function c000171_Cleanse() {}
   function c000172_DivineOffering() {}
   function c000173_DivineTransformation() {}
+  
+  
+  // Pending to be coded ..... 
+  
+  function c000106_VesuvanDoppelganger() { }
+  function c000098_Fireball() { }
+  function c000113_TheAbyss() { }
+  function c000117_BalduvianHorde() { }
+  function c000121_MishrasFactory() { }
+  function c000129_GiantTortoise() { }
+  function c000130_TimeElemental() { }
+  function c000138_Balance() {}
+  function c000141_DingusEgg() {}
+  function c000142_DisruptingScepter() {}
+  function c000151_NetherShadow() {}
+  function c000167_WinterOrb() {}
   function c000174_Mightstone() {}
   function c000175_StripMine() {}
 

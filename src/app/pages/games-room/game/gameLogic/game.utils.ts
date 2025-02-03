@@ -141,6 +141,11 @@ export const killCreature = (nextState: TGameState, gId: string) => {
   }
 };
 
+export const destroyCard = (nextState: TGameState, gId: string) => {
+  const card = nextState.cards.find(c => c.gId === gId);
+  card?.isType('creature') ? killCreature(nextState, gId) : moveCardToGraveyard(nextState, gId);
+};
+
 
 export const drawCard = (nextState: TGameState, playerNum: '1' | '2') => {
   const deck = nextState.cards.filter(c => c.location === 'deck' + playerNum).sort((a, b) => a.order > b.order ? 1 : -1);
