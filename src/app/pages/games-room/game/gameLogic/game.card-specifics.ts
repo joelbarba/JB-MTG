@@ -65,6 +65,9 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     const targetCreatures = () => tableStack.filter(c => c.isType('creature') && !c.noTargetSpells).filter(noProtection);
     return { card, targetId, cardPlayer, otherPlayer, noProtection, targetCreatures, table, stack, tableStack, deck, hand, play, graveyard };
   }
+  const getPlayer = (nextState: TGameState, targetCard: TGameCard) => {
+    return targetCard.controller === '1' ? nextState.player1 : nextState.player2;
+  }
 
 
   const commonLand = (manaNum: 0|1|2|3|4|5) => {
@@ -990,7 +993,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
       const targetCreature = targetCreatures().find(c => c.gId === targetId);
       if (targetCreature) {        
         moveCardToGraveyard(nextState, targetCreature.gId, true); // Destroy creature (remove from the game)
-        const player = targetCreature.controller === '1' ? nextState.player1 : nextState.player2;
+        const player = targetCreature.controller === '1' ? nextState.player1 : nextState.player2;        
         const lifeGain = targetCreature.turnAttack;
         player.life += lifeGain; // Creature's controller gains as many life as the creature's power
         nextState.lifeChanges.push({ player: player.num, title: card.name, 
@@ -2188,11 +2191,52 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     };
   }
 
+  function c000148_Hurricane() { // All players and flying creatures suffer X damage
+    card.getSummonCost = (nextState: TGameState) => {
+      const { card } = getShorts(nextState);
+      return { mana: card.cast, xMana: [1,1,1,1,1,1], neededTargets: 0, possibleTargets: [] };
+    };    
+    card.onSummon = (nextState: TGameState) => {
+      const { tableStack, card, cardPlayer, otherPlayer } = getShorts(nextState);      
+      tableStack.filter(c => c.isType('creature') && c.isFlying).forEach(creature => {
+        creature.turnDamage += card.xValue; // Deals X points of damage to each flying creature
+      });
+      nextState.player1.life -= card.xValue; // Deals X points of damage to player1
+      nextState.player2.life -= card.xValue; // Deals X points of damage to player2
+      addLifeChange(nextState, otherPlayer.num, card.xValue, card, 0);
+      addLifeChange(nextState, cardPlayer.num,  card.xValue, card, 0);
+      moveCardToGraveyard(nextState, card.gId); // Destroy itself
+    }
+  }
+  
+  function c000149_JayemdaeTome() {
+    card.getAbilityCost = () => ({ mana: [4,0,0,0,0,0], tap: true, text: `Use ${card.name} to draw one extra card` });
+    card.onAbility = (nextState) => {
+      const { cardPlayer } = getShorts(nextState);
+      drawCard(nextState, cardPlayer.num); // Draw one extra card
+    };
+  }
+
+  function c000150_Karma() { // During every player's upkeep, does 1 damage for every swamp he/she has.
+    card.getUpkeepCost = (nextState) => {
+      const { table } = getShorts(nextState);
+      const upkeepPlayerNum = nextState.turn; // Presume this runs only during playerA's upkeep
+      const numOfSwamps = table.filter(c => c.controller === upkeepPlayerNum && c.isType('swamp')).length;
+      let text = `Karma does ${numOfSwamps} damage to you, because you have ${numOfSwamps} swamps in play`;
+      let opText = `Karma does ${numOfSwamps} damage to your opponent, because he/she has ${numOfSwamps} swamps in play`;
+      return { mana: [0,0,0,0,0,0], text, opText };
+    }
+    card.onUpkeep = (nextState, skip, targets, upkeepPlayerNum) => {
+      const { otherPlayer, table } = getShorts(nextState);
+      const numOfSwamps = table.filter(c => c.controller === upkeepPlayerNum && c.isType('swamp')).length;
+      const damage = numOfSwamps;
+      otherPlayer.life -= damage;
+      addLifeChange(nextState, upkeepPlayerNum, damage, card, 200);
+    };
+  }
+
   // 
 
-  function c000148_Hurricane() {}
-  function c000149_JayemdaeTome() {}
-  function c000150_Karma() {}
   function c000152_ObsianusGolem() {}
   function c000153_Onulet() {}
   function c000154_PearledUnicorn() {}

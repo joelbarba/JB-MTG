@@ -716,16 +716,17 @@ export class GameStateService {
         this.payManaCost(nextState, params, cost, card); // Spend Cost
         card.targets = params.targets || [];
         card.waitingUpkeep = false;
-        card.onUpkeep(nextState, false, params.targets);
+        card.onUpkeep(nextState, false, params.targets || [], playerA.num);
       }  
     }
   }
 
   private skipUpkeep(nextState: TGameState, params: TActionParams) {
+    const { playerA } = this.getPlayers(nextState);
     const { unresolvedUpkeeps } = this.getCards(nextState);
     const card = unresolvedUpkeeps.find(q => q.gId === params?.gId);
     if (card) {
-      card.onUpkeep(nextState, true);
+      card.onUpkeep(nextState, true, [], playerA.num);
       card.waitingUpkeep = false;
     }
   }
