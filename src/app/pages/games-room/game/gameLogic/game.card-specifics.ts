@@ -694,6 +694,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
         console.log(`Land ${land.gId} ${land.name} is destroyed`);
         moveCardToGraveyard(nextState, land.gId);
       });
+      moveCardToGraveyard(nextState, card.gId); // Destroy itself
     };    
   }
 
@@ -704,7 +705,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
         console.log(`Creature ${creature.gId} ${creature.name} is destroyed`);
         killCreature(nextState, creature.gId);
       });
-      moveCardToGraveyard(nextState, card.gId);
+      moveCardToGraveyard(nextState, card.gId); // Destroy itself
     };
   }
 
@@ -2278,8 +2279,26 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
 
   // 
 
-  function c000159_Tranquility() {}
-  function c000160_Tsunami() {}
+  function c000159_Tranquility() { // All enchantments in play must be discarded
+    card.onSummon = (nextState: TGameState) => {
+      const { tableStack } = getShorts(nextState);
+      tableStack.filter(c => c.isType('enchantment')).forEach(enchantment => {
+        moveCardToGraveyard(nextState, enchantment.gId);
+      });
+      moveCardToGraveyard(nextState, card.gId); // Destroy itself
+    };
+  }
+
+  function c000160_Tsunami() { // All Islands in play are destroyed
+    card.onSummon = (nextState: TGameState) => {
+      const { tableStack } = getShorts(nextState);
+      tableStack.filter(c => c.isType('island')).forEach(island => {
+        moveCardToGraveyard(nextState, island.gId);
+      });
+      moveCardToGraveyard(nextState, card.gId); // Destroy itself
+    };
+  }
+
   function c000161_WallOfBone() {}
   function c000162_WallOfBrambles() {}
   function c000163_WallOfStone() {}
