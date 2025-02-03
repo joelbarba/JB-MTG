@@ -354,6 +354,8 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   function c000152_ObsianusGolem()            { commonCreature(); isAlsoType('artifact'); }
   function c000154_PearledUnicorn()           { commonCreature(); }
   function c000157_ScatheZombies()            { commonCreature(); }
+  function c000163_WallOfStone()              { commonCreature(); }
+  function c000164_WallOfWood()               { commonCreature(); }
 
 
 
@@ -2299,10 +2301,22 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     };
   }
 
-  function c000161_WallOfBone() {}
-  function c000162_WallOfBrambles() {}
-  function c000163_WallOfStone() {}
-  function c000164_WallOfWood() {}
+  function c000161_WallOfBone()     { 
+    commonCreature(); 
+    addRegenerateAbility();
+    card.getAbilityCost = () => ({ mana: [0,0,0,1,0,0], tap: false, text: `Pay 1 black mana to regenerate ${card.name}` });
+  }
+
+  function c000162_WallOfBrambles() {
+    commonCreature(); 
+    addRegenerateAbility();
+    card.getAbilityCost = () => ({ mana: [0,0,0,0,0,1], tap: false, text: `Pay 1 green mana to regenerate ${card.name}` });
+  }
+
+
+
+  // 
+
   function c000165_WarMammoth() {}
   function c000166_WaterWlemental() {}
   function c000168_CopperTablet() {}
