@@ -1513,9 +1513,10 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
                neededTargets: 1, possibleTargets, text: `Use ${card.name}`, effect: 'onTapLand' };
     };
     card.onAbility = (nextState: TGameState) => {
-      const { targetId, cardPlayer } = getShorts(nextState);
+      const { card, targetId, cardPlayer } = getShorts(nextState);
       if (targetId === 'mana') { cardPlayer.manaPool[0] += 1; }
       if (targetId === 'draw') { drawCard(nextState, cardPlayer.num); }
+      card.targets = [];
     };   
   }
 
@@ -2281,8 +2282,6 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     };
   }
 
-  // 
-
   function c000159_Tranquility() { // All enchantments in play must be discarded
     card.onSummon = (nextState: TGameState) => {
       const { tableStack } = getShorts(nextState);
@@ -2315,11 +2314,6 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     card.getAbilityCost = () => ({ mana: [0,0,0,0,0,1], tap: false, text: `Pay 1 green mana to regenerate ${card.name}` });
   }
 
-
-
-  // 
-
-
   function c000168_CopperTablet() { // Does 1 damage to each player during his/her upkeep
     card.getUpkeepCost = (nextState) => {
       let text = `Copper Tablet does 1 damage to you during your upkeep`;
@@ -2333,14 +2327,77 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     };
   }
 
+  function c000169_IceStorm() { // Destroys any one land
+    card.getSummonCost = (nextState: TGameState) => {
+      const { tableStack } = getShorts(nextState);
+      const possibleTargets = tableStack.filter(c => c.isType('land')).map(c => c.gId);
+      return { mana: card.cast, neededTargets: 1, possibleTargets }; // Target = any land in play
+    };       
+    card.onSummon = (nextState: TGameState) => {
+      const { targetId } = getShorts(nextState);
+      destroyCard(nextState, targetId);     // Destroy target
+      moveCardToGraveyard(nextState, gId);  // Destroy itsef
+    };
+  }
 
+  function c000171_Cleanse() { // All black creatures in play are destroyed
+    card.onSummon = (nextState: TGameState) => {
+      const { tableStack, card, noProtection } = getShorts(nextState);
+      tableStack.filter(c => c.isType('creature') && c.color === 'black' && noProtection(c)).forEach(creature => {
+        console.log(`Creature ${creature.gId} ${creature.name} is destroyed`);
+        killCreature(nextState, creature.gId);
+      });
+      moveCardToGraveyard(nextState, card.gId); // Destroy itself
+    };
+  }
 
-  function c000169_IceStorm() {}
-  function c000170_Moat() {}
-  function c000171_Cleanse() {}
-  function c000172_DivineOffering() {}
-  function c000173_DivineTransformation() {}
+  function c000172_DivineOffering() { // Destroy target artifact. You gain life points equal to casting cost of the artifact
+    card.getSummonCost = (nextState: TGameState) => {
+      const { tableStack } = getShorts(nextState);
+      const possibleTargets = tableStack.filter(c => c.isType('artifact')).map(c => c.gId);
+      return { mana: card.cast, neededTargets: 1, possibleTargets }; // Target = any artifact
+    };       
+    card.onSummon = (nextState: TGameState) => {
+      const { targetId, cardPlayer } = getShorts(nextState);
+      const targetArtifact = nextState.cards.find(c => c.gId === targetId);
+      if (targetArtifact) { 
+        const totalCast = targetArtifact.cast.reduce((a,v) => a + v, 0);
+        cardPlayer.life += totalCast;
+        addLifeChange(nextState, cardPlayer.num, -totalCast, targetArtifact, 0);
+        destroyCard(nextState, targetId); // Destroy target artifact
+      }
+      moveCardToGraveyard(nextState, gId);  // Destroy itsef
+    };
+  }
+
+  function c000173_DivineTransformation() { // Target creature gains +3/+3
+    card.getSummonCost = (nextState: TGameState) => {
+      const { targetCreatures } = getShorts(nextState);
+      const possibleTargets = targetCreatures().map(c => c.gId); // Target = any playing creature
+      return { mana: card.cast, neededTargets: 1, possibleTargets };
+    };
+    card.onSummon = (nextState: TGameState) => {
+      const { targetId } = getShorts(nextState);
+      nextState.effects.push({ scope: 'permanent', trigger: 'constantly', gId, targets: [targetId], id: randomId('e') });
+      moveCard(nextState, gId, 'tble');
+    }
+    card.onEffect = (nextState: TGameState, effectId: string) => { // Add +3/+3 to target creature
+      const { targetCreatures } = getShorts(nextState);
+      const effect = nextState.effects.find(e => e.id === effectId);
+      const effectTargetId = effect?.targets[0]; // The card that the card's effect is targetting
+      const targetCreature = targetCreatures().find(c => c.gId === effectTargetId);
+      if (targetCreature) {
+        targetCreature.turnAttack  += 3;
+        targetCreature.turnDefense += 3;
+      }
+    };
+  }
   
+  function c000170_Moat() { // Non-flying creatures cannot attack
+
+  }
+
+  // 
   
   // Pending to be coded ..... 
   

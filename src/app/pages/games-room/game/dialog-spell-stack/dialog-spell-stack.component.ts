@@ -114,8 +114,9 @@ export class DialogSpellStackComponent {
         else { // target = gId
           const card = state.cards.find(c => c.gId === target);
           if (card) {
-            if (card.targets.length) { findEmptyTargets(card.targets); }
-            else { rootTargets.add(target); }
+            if (card.targets.length && state.cards.find(c => card.targets.indexOf(c.gId) >= 0)) {
+              findEmptyTargets(card.targets);   // If the card has at least 1 target that is a gId, dive in
+            } else { rootTargets.add(target); } // If not, it's a root target
           }
         }
       });
