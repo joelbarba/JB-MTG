@@ -27,7 +27,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   card.canUntap         = (nextState) => true;
   card.canAttack        = (nextState) => !!card.isType('creature');
   card.canDefend        = (nextState) => !!card.isType('creature');
-  card.targetBlockers   = (nextState) => [];  // Returns a list of gId of the attacking creatues that can block
+  card.targetBlockers   = (nextState) => [];  // Returns a list of gId of the attacking creatues that the current card can block
   card.getSummonCost    = (nextState) => ({ mana: card.cast });
   card.getAbilityCost   = (nextState) => null;
   card.getUpkeepCost    = (nextState) => null;
@@ -95,6 +95,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     };
     card.canAttack = (nextState: TGameState) => {
       const { card } = getShorts(nextState);
+      if (nextState.effects.find(e => e.id === 'moat') && !card.isFlying) { return false; }
       return card && !card.isTapped && card.status !== 'sickness' && !card.isWall;
     };
     card.canDefend = (nextState: TGameState) => {
@@ -2380,7 +2381,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
       const { targetId } = getShorts(nextState);
       nextState.effects.push({ scope: 'permanent', trigger: 'constantly', gId, targets: [targetId], id: randomId('e') });
       moveCard(nextState, gId, 'tble');
-    }
+    };
     card.onEffect = (nextState: TGameState, effectId: string) => { // Add +3/+3 to target creature
       const { targetCreatures } = getShorts(nextState);
       const effect = nextState.effects.find(e => e.id === effectId);
@@ -2394,7 +2395,11 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
   }
   
   function c000170_Moat() { // Non-flying creatures cannot attack
-
+    card.onSummon = (nextState: TGameState) => {
+      nextState.effects.push({ scope: 'permanent', trigger: 'constantly', gId, targets: [], id: 'moat' });
+      moveCard(nextState, gId, 'tble');
+      // The logis is implemented in the common canAttack() function
+    };
   }
 
   // 

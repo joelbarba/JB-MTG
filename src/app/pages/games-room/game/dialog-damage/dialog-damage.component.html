@@ -30,7 +30,7 @@
 
   <p *ngIf="text" [innerHtml]="text"></p>
 
-  <div class="btns-box" *ngIf="youControl">
+  <div class="btns-box" *ngIf="youControl && !timeout">
     <bf-btn bfText="Ok, go on" class="quaternary" bfIcon="icon-arrow-right3" (bfClick)="acknowledge()"></bf-btn>
   </div>
 </div>

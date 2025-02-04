@@ -189,21 +189,21 @@ export class GameStateService {
     ]
     dbState.cards = dbState.cards.map(card => card.keyFilter((v,k) => !extFields.includes(k))) as Array<TGameCard>;
 
-    // // Loop dbState properties and find any that is not valid for FireBase (errors)
-    // const checkProp = (path: string, prop: string, v: any) => {
-    //   const vType = typeof v;
-    //   if (v === undefined || (vType !== 'string' && vType !== 'number' && vType !== 'boolean' && v !== null && !Array.isArray(v))) {
-    //     console.error('WRONG dbState property:', path, prop, v, vType);        
-    //   }
-    //   if (Array.isArray(v)) {
-    //     v.filter(vv => vv === undefined).forEach(i => console.error('WRONG dbState property:', path, prop, v, vType));
-    //   }
-    // }
-    // dbState.cards.forEach(c => { let prop: keyof TGameCard; for (prop in c) { checkProp('cards[].', prop, c[prop]); }; });
-    // dbState.effects.forEach(c => { let prop: keyof TEffect; for (prop in c) { checkProp('effects[].', prop, c[prop]); }; });
-    // let prop: keyof TPlayer;
-    // for (prop in dbState.player1) { checkProp('player1.', prop, dbState.player1[prop]); }
-    // for (prop in dbState.player2) { checkProp('player2.', prop, dbState.player2[prop]); }
+    // Loop dbState properties and find any that is not valid for FireBase (errors)
+    const checkProp = (path: string, prop: string, v: any) => {
+      const vType = typeof v;
+      if (v === undefined || (vType !== 'string' && vType !== 'number' && vType !== 'boolean' && v !== null && !Array.isArray(v))) {
+        console.error('WRONG dbState property:', path, prop, v, vType);        
+      }
+      if (Array.isArray(v)) {
+        v.filter(vv => vv === undefined).forEach(i => console.error('WRONG dbState property:', path, prop, v, vType));
+      }
+    }
+    dbState.cards.forEach(c => { let prop: keyof TGameCard; for (prop in c) { checkProp('cards[].', prop, c[prop]); }; });
+    dbState.effects.forEach(c => { let prop: keyof TEffect; for (prop in c) { checkProp('effects[].', prop, c[prop]); }; });
+    let prop: keyof TPlayer;
+    for (prop in dbState.player1) { checkProp('player1.', prop, dbState.player1[prop]); }
+    for (prop in dbState.player2) { checkProp('player2.', prop, dbState.player2[prop]); }
 
     return dbState;
   }
