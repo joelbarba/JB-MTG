@@ -54,7 +54,7 @@
     &.xxl .mtg-card { width: 400px; height: 560px; @include border-adjustment(10px); }
   }
 
-  @media (max-width: 1000px) or (max-height: 800px) { // small screen
+  @media (max-width: 1000px) or (max-height: 900px) { // small screen
     &.xs .mtg-card  { width: 60px;  height: 84px;  @include border-adjustment(1px); }
     &.sm .mtg-card  { width: 75px;  height: 105px; @include border-adjustment(2px); }
     &.md .mtg-card  { width: 100px; height: 140px; @include border-adjustment(3px); }

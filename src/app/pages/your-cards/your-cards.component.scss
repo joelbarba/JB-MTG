@@ -7,6 +7,8 @@ h2.fixed-title {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  line-height: 40px;
+  margin: 0;
 }
 
 .page {
@@ -53,6 +55,15 @@ h2.fixed-title {
       cursor: pointer;
       &:hover { color: black; }
     }
+
+    .unit-details {
+      width: calc(100% + 20px);
+      padding: 15px 10px;
+      font-size: 13px;
+      div { display: flex; margin-bottom: 4px; }
+      b     { flex: 1; }
+      span  { flex: 2; word-break: break-word; }
+    }
   }
 
   .list {
@@ -66,12 +77,17 @@ h2.fixed-title {
     }
 
     .search-box {
+      padding: 15px 5px;
       margin-top: 0;
-      max-height: 84px;
-      bf-input, .checkboxes { flex: 3; padding: 0 15px; }
-      container-type: inline-size;
-      @container (max-width: 700px) {
-        bf-dropdown { display: none; }
+      bf-input, .checkboxes { padding: 0 15px; flex: 0 0 25%; max-width: 25%; } // col-3
+      // container-type: inline-size;
+      // @container (max-width: 700px) {
+      &.compact {
+        bf-input, .checkboxes { flex: 0 0 50%; max-width: 50%; } // col-6
+        bf-dropdown { margin-top: 15px; flex: 0 0 50%; max-width: 50%; } // col-6
+        // bf-input { flex: 0 0 100%; max-width: 100%; } // col-12
+        // bf-dropdown { margin-top: 15px; flex: 0 0 30%; max-width: 30%; } // col-4
+        // .checkboxes { margin-top: 15px; flex: 0 0 40%; max-width: 40%; } // col-4
       }
     }
 
@@ -96,23 +112,41 @@ h2.fixed-title {
       padding-left: 15px;
     }
     .close-btn {
+      // margin-left: 15px;
+      // line-height: 37px;
+      margin-right: 15px;
       font-size: 20px;
       color: #bdbdbd;
-      line-height: 35px;
       cursor: pointer;
+    }
+    .saving-tip, .saved-deck {      
+      text-align: right;
+      line-height: 40px;
+      font-size: 20px;
+      padding: 0 15px;
+      border-radius: 8px;
+      background: #ffaa00;
+      &.saved-deck { 
+        background: none;
+        padding: 0 15px 0 5px;
+      }
     }
 
     .decks-list {
       display: flex;
+      flex-wrap: wrap;
       list-style-type: none;
       padding: 10px 15px;
       margin-top: 10px;
       .deck-list-item {
         cursor: pointer;
-        max-width: 120px;
         margin: 0 10px;
         text-align: center;
-        img { max-width: 120px; }
+        // max-width : calc(var(--size-ref) * 1.20);  // xl=120, md=100, sm=75
+        // img { max-width : calc(var(--size-ref) * 1.20); }
+        max-width: 130px; img { max-width: 130px; }
+        @media (max-width: 1500px) or (max-height: 1050px) { max-width: 110px; img { max-width: 110px; } } // medium screen
+        @media (max-width: 1000px) or (max-height: 900px)  { max-width:  90px; img { max-width:  90px; } } // small screen
       }
     }
 
@@ -129,10 +163,6 @@ h2.fixed-title {
         padding: 8px;
 
         .deck-card-item { display: inline-block; }
-        .deck-unit-placeholder {
-          background-color: purple;
-        }
-
         
         &.bf-drop-container {
           .card-wrapper.hide { display: none; } // Don't display the reordering card in it's original position
@@ -145,19 +175,22 @@ h2.fixed-title {
           // }
         }
 
-        .bf-drop-placeholder {
-          top: 15px;
+        .deck-unit-placeholder.bf-drop-placeholder {
           background: rgba(yellow, 0.5);
-          width: 120px; height: 168px; // large screen
-          @media (max-width: 1500px) or (max-height: 1050px) { width: 96px; height: 140px; } // medium screen
-          @media (max-width: 1000px) or (max-height: 800px)  { width: 71px; height: 105px; } // small screen
+          top: 15px; width: 120px; height: 168px; // large screen          
+          @media (max-width: 1500px) or (max-height: 1050px) { top: 12px; width: 96px; height: 140px; } // medium screen
+          @media (max-width: 1000px) or (max-height: 900px)  { top: 10px; width: 71px; height: 105px; } // small screen
+          
+          // top: calc(var(--size-ref) * 0.12);
+          // width : calc(var(--size-ref) * 1.16);  // xl=120, md=100, sm=75
+          // height: calc(var(--size-ref) * 1.62);  // xl=168, md=144, sm=109
+
           vertical-align: top;
           border-radius: 4px;
-          border: 3px dashed #959595;          
+          border: 3px dashed #959595;
           transition-duration: 120ms;
           &.active-placeholder {
-            margin: 0 6px;
-            // width: 120px;
+            margin: 0 4px;
             opacity: 0.5;
             background: greenyellow;
           }

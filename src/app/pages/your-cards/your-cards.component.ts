@@ -4,20 +4,21 @@ import { ShellService } from '../../shell/shell.service';
 import { CommonModule, formatNumber } from '@angular/common';
 import { Firestore, QuerySnapshot, QueryDocumentSnapshot, DocumentData, setDoc, updateDoc, deleteDoc } from '@angular/fire/firestore';
 import { getDocs, getDoc, collection, doc } from '@angular/fire/firestore';
-import { Observable, Subscription } from 'rxjs';
+import { BehaviorSubject, debounceTime, Observable, Subject, Subscription, tap } from 'rxjs';
 import { collectionData } from 'rxfire/firestore';
 import { TCard, TDeckRef } from '../../core/types';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { BfConfirmService, BfDnDModule, BfDnDService, BfGrowlService, BfListHandler, BfUiLibModule } from 'bf-ui-lib';
 import { MtgCardComponent } from '../../core/common/internal-lib/mtg-card/mtg-card.component';
-import { cardOrderFn, unitOrderFn, cardTypes, colors, randomUnitId } from '../../core/common/commons';
+import { cardOrderFn, unitOrderFn, cardTypes, colors, randomUnitId, getTime } from '../../core/common/commons';
 import { HoverTipDirective } from '../../core/common/internal-lib/bf-tooltip/bf-tooltip.directive';
 import { DataService, TFullCard, TFullDeck, TFullUnit } from '../../core/dataService';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { SellOfferModalComponent } from '../../core/modals/sellOfferModal/sell-offer-modal.component';
 import { ActivatedRoute } from '@angular/router';
 import { BfTooltipService } from '../../core/common/internal-lib/bf-tooltip/bf-tooltip.service';
+import { ManaArrayComponent } from "../games-room/game/mana-array/mana-array.component";
 
 
 
@@ -32,7 +33,8 @@ import { BfTooltipService } from '../../core/common/internal-lib/bf-tooltip/bf-t
     MtgCardComponent,
     HoverTipDirective,
     BfDnDModule,
-  ],
+    ManaArrayComponent,
+],
   templateUrl: './your-cards.component.html',
   styleUrl: './your-cards.component.scss',
   encapsulation: ViewEncapsulation.None,
@@ -67,11 +69,16 @@ export class YourCardsComponent {
   showDecks = false;
   deckSearch = '';
 
+  deckAction = ''
+  debounceName = new Subject();
+
   dragMode: 'add-card' | 'add-unit' | 'order-unit' | 'order-card' | 'del-unit' | 'del-card' | null = null;
 
   decks: Array<TFullDeck> = [];     // All your decks ---> deck.cards = Array<TFullUnit>
   selDeck?: TFullDeck;              // Current selected deck
   deckName = '';
+
+  isSaving = false; // Whether a change is pending to be saved automatically
 
   deckGroupedCards: Array<TFullCard> = [];  // Cards of the selected deck grouped (all units of the same card together)
 
@@ -80,7 +87,7 @@ export class YourCardsComponent {
 
   constructor(
     private shell: ShellService,
-    private auth: AuthService,
+    public auth: AuthService,
     private firestore: Firestore,
     private growl: BfGrowlService,
     private confirm: BfConfirmService,
@@ -125,6 +132,7 @@ export class YourCardsComponent {
     };
   }
 
+
   async ngOnInit() {
     if (this.route.snapshot?.routeConfig?.path === 'decks') { this.showDecks = true; }
     const deckId = this.route.snapshot.paramMap.get('deckId') || '';
@@ -145,15 +153,21 @@ export class YourCardsComponent {
       if (deck) { this.showDecks = true; this.editDeck(deck); }
     }
 
-    // Catch the bfDragMode of the draggable element (to be used when drop)
+    // Save deck after 1sec of name change
+    this.debounceName.pipe(tap(c => this.isSaving = true), debounceTime(1000)).subscribe(name => this.saveDeck());
+
+    
+    // Drag & Drop events:
     this.subs.push(this.bfDnD.dragStart$.subscribe((ev:any) => {
-      this.dragMode = ev.bfDragMode;
+      this.dragMode = ev.bfDragMode;  // Catch the bfDragMode of the draggable element (to be used when drop)
       this.tooltipService.flush();
       this.tooltipService.enabled = false;
     }));
+
     this.subs.push(this.bfDnD.dragEndOk$.subscribe((ev:any) => {
       this.tooltipService.enabled = true;
     }));
+
     this.subs.push(this.bfDnD.dragEndKo$.subscribe((ev:any) => {
       this.tooltipService.enabled = true;
 
@@ -187,8 +201,14 @@ export class YourCardsComponent {
 
   async loadDecks() {
     this.decks = this.dataService.yourDecks.map(deck => {
-      return { id: deck.id, deckName: deck.deckName, units: [...deck.units] };
-    })
+      if (!deck.created) { deck.created = getTime(); }
+      return { ...deck, units: [...deck.units] };
+    });
+    this.decks.sort((a,b) => {
+      return new Date(a.created) > new Date(b.created) ? 1 : -1;
+    });
+    console.log('this.dataService.yourDecks', this.dataService.yourDecks);
+    console.log('this.decks', this.decks);
   }
 
   private loadGroupDeck() {
@@ -287,6 +307,7 @@ export class YourCardsComponent {
       const unit = this.selDeck.units.splice(currInd, 1); // Remove unit from current position
       if (currInd < newIndex) { newIndex -= 1; } // If it was before the new position, that's now shifted -1
       this.selDeck.units.splice(newIndex, 0, unit[0]); // Add it to the new position
+      this.saveDeck();
     }
   }
 
@@ -311,13 +332,14 @@ export class YourCardsComponent {
           return this.growl.error(`You cannot have more than ${unit.card.maxInDeck} <b>${unit.card.name}</b> in a deck`);
         }
         console.log(`Adding ${unit.card.name} (${unit.ref}) to the deck`);
-        this.growl.success(`1 <b>${unit.card.name}</b> added`);
+        // this.growl.success(`1 <b>${unit.card.name}</b> added`);
 
         if (newIndex === -1) { // Add it as the last card in the deck
           this.selDeck.units.push({ ...unit });
         } else {
           this.selDeck.units.splice(newIndex, 0, { ...unit });
         }
+        this.saveDeck();
 
 
       } else { // Remove it from the deck
@@ -326,6 +348,34 @@ export class YourCardsComponent {
       this.loadGroupDeck();
     }
   }
+
+
+  removeUnitFromDeck(unit: TFullUnit) {
+    if (this.selDeck) {
+      const ind = this.selDeck.units.map(c => c.ref).indexOf(unit.ref);
+      this.selDeck.units.splice(ind, 1);
+      // this.selDeck.units.sort(unitOrderFn);
+      const groupedCard = this.deckGroupedCards.find(c => c.id === unit.cardId);
+      if (groupedCard) {
+        groupedCard.units.splice(groupedCard.units.map(c => c.ref).indexOf(unit.ref), 1);
+        if (!groupedCard.units.length) { // If all units are gone
+          this.deckGroupedCards.splice(this.deckGroupedCards.indexOf(groupedCard), 1);
+        }
+      }
+      console.log(`Removing ${unit.card.name} (${unit.ref}) from the deck`);
+      this.saveDeck();
+      // this.growl.error(`1 <b>${unit.card.name}</b> removed`);
+    }
+  }
+
+  removeCardFromDeck(card: TFullCard) {
+    if (this.selDeck && card.units.length) {
+      const deckUnits = this.selDeck.units.filter(du => du.cardId === card.id);
+      const unitToRemove = deckUnits[deckUnits.length - 1];
+      this.removeUnitFromDeck(unitToRemove);
+    }
+  }
+
 
   // @HostListener('window:keyup', ['$event'])
   // keyEvent(ev: KeyboardEvent) {
@@ -362,28 +412,22 @@ export class YourCardsComponent {
   autoOrderDeck() {
     if (!this.selDeck) { return; }
     this.selDeck.units.sort(unitOrderFn);
-    this.deckGroupedCards.sort(cardOrderFn);    
+    this.deckGroupedCards.sort(cardOrderFn);
+    this.saveDeck();
   }
 
 
-
-  createNewDeck() {
-    this.editDeck({ id: randomUnitId(), deckName: 'New Deck', units: [] });
+  selectDeck(deck: TFullDeck) {
+    if (this.deckAction === 'copy')     { this.copyDeck(deck); }
+    else if (this.deckAction === 'del') { this.deleteDeck(deck); }
+    else { this.editDeck(deck); }
   }
 
-  editDeck(deck: TFullDeck) {
-    this.selDeck = deck;
-    this.deckName = deck.deckName;
-    this.loadGroupDeck();
-    window.history.pushState(null, 'Your Deck', `/cards/decks/${deck.id}`);
+  selectDeckTip() {
+    if (this.deckAction === 'copy') { return 'Make a copy of this deck'; }
+    if (this.deckAction === 'del')  { return 'Delete this deck'; }
+    return 'Edit Deck';
   }
-
-  goBackToDecks() {
-    this.selDeck = undefined; 
-    this.loadDecks();
-    window.history.pushState(null, 'Your Decks', `/cards/decks`);
-  }
-
 
   deckTotals() {
     let deckStats = '';
@@ -408,32 +452,39 @@ export class YourCardsComponent {
 
 
 
-  removeUnitFromDeck(unit: TFullUnit) {
-    if (this.selDeck) {
-      console.log(`Removing ${unit.card.name} (${unit.ref}) from the deck`);
-      this.growl.error(`1 <b>${unit.card.name}</b> removed`);
-      const ind = this.selDeck.units.map(c => c.ref).indexOf(unit.ref);
-      this.selDeck.units.splice(ind, 1);
-      // this.selDeck.units.sort(unitOrderFn);
-      const groupedCard = this.deckGroupedCards.find(c => c.id === unit.cardId);
-      if (groupedCard) {
-        groupedCard.units.splice(groupedCard.units.map(c => c.ref).indexOf(unit.ref), 1);
-        if (!groupedCard.units.length) { // If all units are gone
-          this.deckGroupedCards.splice(this.deckGroupedCards.indexOf(groupedCard), 1);
-        }
-      }
-    }
+  goBackToDecks() {
+    this.selDeck = undefined; 
+    this.loadDecks();
+    window.history.pushState(null, 'Your Decks', `/cards/decks`);
   }
 
-  removeCardFromDeck(card: TFullCard) {
-    if (this.selDeck && card.units.length) {
-      const deckUnits = this.selDeck.units.filter(du => du.cardId === card.id);
-      const unitToRemove = deckUnits[deckUnits.length - 1];
-      this.removeUnitFromDeck(unitToRemove);
-    }
+  createNewDeck() {
+    this.deckAction = '';
+    this.editDeck({ id: randomUnitId(), created: getTime(), deckName: 'New Deck', units: [] });
   }
+
+  editDeck(deck: TFullDeck) {
+    this.deckAction = '';
+    this.selDeck = deck;
+    this.deckName = deck.deckName;
+    this.loadGroupDeck();
+    window.history.pushState(null, 'Your Deck', `/cards/decks/${deck.id}`);
+  }
+
+  copyDeck(deck: TFullDeck) {
+    this.deckAction = '';
+    const deckName = `Copy of ${deck.deckName}`;
+    const newDeck = { id: randomUnitId(), deckName, created: getTime(), units: [...deck.units] }
+    this.editDeck(newDeck);    
+    this.saveDeck();
+    this.growl.success(`A new deck has been created, as copy of ${deck.deckName}`);
+  }
+
+
+
 
   deleteDeck(deck: TFullDeck) {
+    this.deckAction = '';
     this.confirm.open({
       title            : 'Delete Deck',
       htmlContent      : `Are you sure you want to delete your deck <b>${deck.deckName}</b>?`,
@@ -441,22 +492,26 @@ export class YourCardsComponent {
     }).then(res => { if (res === 'yes' && this.auth.profileUserId) {
       deleteDoc(doc(this.firestore, 'users', this.auth.profileUserId, 'decks', deck.id)).then(() => {
         this.growl.success(`Deck ${deck.deckName} deleted`);
-        this.loadDecks();
+        if (this.selDeck) { this.goBackToDecks(); }
+        else { this.loadDecks(); }
       });
     }});
   }
 
   async saveDeck() {
     if (this.selDeck && this.auth.profileUserId) {
+      this.isSaving = true;
       this.selDeck.deckName = this.deckName;
       const dbDeck = {
         id       : this.selDeck.id,
+        created  : this.selDeck.created || getTime(),
         deckName : this.selDeck.deckName,
         units    : this.selDeck.units.map(card => card.ref),
       }
       console.log('Saving Card', dbDeck);
       await setDoc(doc(this.firestore, 'users', this.auth.profileUserId, 'decks', dbDeck.id), dbDeck);
-      this.growl.success(`Deck saved`);
+      this.isSaving = false;
+      // this.growl.success(`Deck saved`);
     }
   }
 
@@ -470,4 +525,12 @@ export class YourCardsComponent {
 }
 
 
+// TODO: Edit unit details
 
+// OK TODO: Delete deck (in deck editor)
+// OK TODO: Copy deck (in deck editor)
+// OK Show when deck is properly saved (or saving)
+// OK TODO: Delete deck
+// OK TODO: Copy deck
+// OK TODO: Autosave
+// OK TODO: Break color+type filter for your cards

@@ -32,3 +32,8 @@ $growl-success-bg: $secondary_color;
 
 $growl-error: $white;
 $growl-error-bg: $warning_color;
+
+
+:root { --size-ref: 100px; }
+@media screen and (max-height: 1050px) { :root { --size-ref: 80px; }}
+@media screen and (max-height: 900px)  { :root { --size-ref: 66px; }}

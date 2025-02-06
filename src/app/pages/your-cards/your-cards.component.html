@@ -2,7 +2,7 @@
 
   <!-- Card Details -->
   <div class="details">
-    <h2>{{ 'Card Details' | translate }}</h2>
+    <h2 class="fixed-title" style="min-height: 40px;">{{ 'Card Details' | translate }}</h2>
 
     <div class="full-card" *ngIf="!hoveringCard && !hoveringUnit"><mtg-card class="xl" style="opacity: 0;"></mtg-card></div>
 
@@ -42,7 +42,17 @@
 
     <div class="full-card" *ngIf="hoveringUnit">
       <mtg-card [cardImg]="hoveringUnit.card.image" class="xl" [border]="hoveringUnit.card.border"></mtg-card>
-      <h4 style="margin-top: 30px;">Ref: {{hoveringUnit.ref}}</h4>
+      <!-- <h4 style="margin-top: 30px;">Ref: {{hoveringUnit.ref}}</h4> -->
+      <div class="unit-details">
+        <div><b>Name:</b><span>{{hoveringUnit.card.name}}</span></div>
+        <div><b>Card Id:</b><span>{{hoveringUnit.card.id}}</span></div>
+        <div><b>Unit Ref:</b><span>{{hoveringUnit.shortRef}}</span></div>
+        <div><b>Avg. Price:</b><span>{{hoveringUnit.card.price}} sats</span></div>
+        <div><b>Max in Deck:</b><span>{{hoveringUnit.card.maxInDeck || 'any'}}</span></div>
+        <div><b>Type:</b><span>{{hoveringUnit.card.type}}</span></div>
+        <div><b>Color:</b><span>{{hoveringUnit.card.color}}</span></div>
+        <!-- <div><b>Cast</b><span><mana-array class="md" [mana]="hoveringUnit.card.cast"></mana-array></span></div> -->
+      </div>
     </div>
 
   </div>
@@ -52,17 +62,17 @@
   <div class="list">
     <div class="d-flex" style="margin-bottom: 5px;">
       <h2 class="fixed-title flex-1">{{ 'Your Cards' | translate }}</h2>
-      <bf-btn class="flex-1 text-right" *ngIf="!showDecks"
+      <bf-btn class="flex-1 quaternary text-right" *ngIf="!showDecks"
               bfText="Show Your Decks" bfIcon="icon-arrow-right3" (bfClick)="switchShowDecks()">
       </bf-btn>
     </div>
 
     <!-- Search Box -->
-    <div class="row whiteBg search-box">
+    <div class="row whiteBg search-box" [class.compact]="showDecks">
       <bf-input class="flat" bfIcon="icon-search" [(ngModel)]="filterText" (ngModelChange)="filterList($event, 'text')"></bf-input>
       <div class="checkboxes">
         <bf-checkbox class="pad-input" bfLabel="Group" [(ngModel)]="isGrouped"></bf-checkbox>
-        <bf-checkbox class="pad-input" bfLabel="Ready" [(ngModel)]="filterReady" (ngModelChange)="filterList($event, 'ready')"></bf-checkbox>
+        <bf-checkbox class="pad-input" bfLabel="Ready" [(ngModel)]="filterReady" (ngModelChange)="filterList($event, 'ready')" *ngIf="auth.profile?.isAdmin"></bf-checkbox>
       </div>
 
       <!-- Card Type -->
@@ -84,10 +94,12 @@
         [(ngModel)]="filterColor"
         (ngModelChange)="filterList($event, 'color')">
       </bf-dropdown>
+
+
     </div>
 
     <!-- All Card Units -->
-    <div class="all-cards" *ngIf="!isGrouped">
+    <div class="all-cards" *ngIf="!isGrouped" [style.top.px]="showDecks ? 175 : 120">
       <div class="card-wrapper" *ngFor="let unit of unitsList.renderList$ | async" 
            [hoverTip]="selDeck && !isUnitInDeck(unit) ? 'Click to add it to the deck' : ''"
            bfDragGroup="into-deck" [bfDraggable]="unit" [bfDragMode]="canUnitBeAddedToTheDeck(unit) ? 'add-unit' : 'disabled'"
@@ -104,7 +116,7 @@
     </div>
 
     <!-- All Grouped Cards -->
-    <div class="all-cards" *ngIf="isGrouped">
+    <div class="all-cards" *ngIf="isGrouped" [style.top.px]="showDecks ? 175 : 120">
       <div class="card-wrapper" *ngFor="let card of cardsList.renderList$ | async"
            [hoverTip]="selDeck && !isCardInDeck(card) ? 'Click to add it to the deck' : ''"           
            bfDragGroup="into-deck" [bfDraggable]="card" [bfDragMode]="canCardBeAddedToTheDeck(card) ? 'add-card' : 'disabled'"
@@ -135,16 +147,22 @@
 
     <!-- Decks List Header -->
     <div class="d-flex" style="margin-bottom: 5px;" *ngIf="!selDeck">
-      <h2 class="fixed-title flex-1">{{ 'Your Decks' | translate }}</h2>
-      <span class="close-btn icon-cross" hoverTip="Close your decks" tipSide="left" (click)="switchShowDecks()"></span>
+      <!-- <span class="close-btn icon-cross" hoverTip="Close your decks" tipSide="left" (click)="switchShowDecks()"></span> -->
+      <bf-btn bfIcon="icon-undo2" class="close-btn quaternary" hoverTip="Close your decks" tipSide="left" (click)="switchShowDecks()"></bf-btn>            
+      <h2 class="fixed-title">{{ 'Your Decks' | translate }}</h2>
     </div>
 
     <div class="whiteBg row" style="margin: 0 0;" *ngIf="!selDeck">
       <!-- <bf-input class="col-4 flat" bfIcon="icon-search" [(ngModel)]="deckSearch"></bf-input> -->
       
       <div class="col-8">
-        <bf-btn bfText="Copy Deck" bfIcon="icon-copy" (bfClick)="createNewDeck()"></bf-btn>
-        <bf-btn bfText="Delete Deck" bfIcon="icon-bin" class="warning" (bfClick)="createNewDeck()"></bf-btn>
+        <!-- [bfDisabled]="!!deckAction"  -->
+        <bf-btn [bfText]="deckAction !== 'copy' ? 'Copy Deck' : 'Cancel Copy'" bfIcon="icon-copy"
+                (bfClick)="deckAction = (deckAction === 'copy' ?  '' : 'copy')">
+        </bf-btn>
+        <bf-btn [bfText]="deckAction !== 'del' ? 'Delete Deck' : 'Cancel Delete'" bfIcon="icon-bin" class="warning"
+                (bfClick)="deckAction = (deckAction === 'del' ?  '' : 'del')">
+        </bf-btn>
       </div>
       <div class="col-4 text-right">
         <bf-btn bfText="Add New Deck" bfType="add" (bfClick)="createNewDeck()"></bf-btn>
@@ -154,32 +172,24 @@
     <!-- Decks List -->
     <ul class="decks-list" *ngIf="decks && !selDeck">
       <li class="deck-list-item" *ngFor="let deck of decks" 
-          hoverTip="Edit Deck" (click)="editDeck(deck)">
+          [hoverTip]="selectDeckTip()" (click)="selectDeck(deck)">
         <img src="/assets/images/deck.png"/>
         <div class="deck-name">{{deck.deckName}}</div>
       </li>
     </ul>
-    <!-- <ul class="list-unstyled table-list header" *ngIf="decks && !selDeck">
-      <li class="list-header">
-        <bf-list-header-col class="col-7" colTitle="Deck Name"></bf-list-header-col>
-        <bf-list-header-col class="col-5" colTitle=""></bf-list-header-col>
-      </li>
-      <li class="list-row" *ngFor="let deck of decks">
-        <div class="col-8 ref-font">{{deck.deckName}}</div>
-        <div class="col-4 text-right">
-          <bf-btn bfText="Remove" bfType="delete" (bfClick)="deleteDeck(deck)" class="warning"></bf-btn>
-          <bf-btn bfText="Edit" bfType="edit" (bfClick)="editDeck(deck)"></bf-btn>
-        </div>
-      </li>
-    </ul> -->
 
 
 
 
     <!-- Deck Editor Header -->
     <div class="d-flex" style="margin-bottom: 5px;" *ngIf="selDeck">
-      <h2 class="flex-3">{{ 'Your Deck' | translate }}</h2>
-      <span class="close-btn icon-cross" hoverTip="Back to your decks" tipSide="left" (click)="goBackToDecks()"></span>
+      <!-- <span class="close-btn icon-cross" hoverTip="Back to your decks" tipSide="right" (click)="goBackToDecks()"></span> -->
+      <bf-btn bfIcon="icon-undo2" class="close-btn quaternary" hoverTip="Back to your decks" tipSide="left" (click)="goBackToDecks()"></bf-btn>            
+      <h2 class="fixed-title flex-1">{{ 'Your Deck' | translate }}</h2>
+      <div class="saving-tip" [show]="isSaving">Saving Deck...</div>
+      <div class="saved-deck" [show]="!isSaving" hoverTip="All changes are properly saved" tipSide="left">
+        <span class="icon-checkmark"></span>
+      </div>
     </div>
 
     <!-- Deck Editor -->
@@ -187,7 +197,7 @@
       <div class="row whiteBg" style="margin-top: 0; padding: 15px 5px 10px;">
         <div class="col-12" style="display: flex; align-items: baseline;">
           <bf-label bfText="Name" style="margin-right: 15px;"></bf-label>
-          <bf-input class="flat flex-1" [(ngModel)]="deckName"></bf-input>
+          <bf-input class="flat flex-1" [(ngModel)]="deckName" (ngModelChange)="debounceName.next($event)"></bf-input>
 
           <div class="flex-1" style="margin-left: 30px;">
             <bf-checkbox class="pad-input" bfLabel="Group" [(ngModel)]="isDeckGrouped"></bf-checkbox>
@@ -195,29 +205,14 @@
           </div>
 
           <div class="flex-1 text-right">
-            <!-- <bf-btn bfText="Copy" bfIcon="icon-copy" (bfClick)="createNewDeck()"></bf-btn>
-            <bf-btn bfText="Delete" bfIcon="icon-bin" class="warning" (bfClick)="createNewDeck()"></bf-btn>
-            <bf-btn bfText="Undo" bfIcon="icon-undo2" class="quaternary" (bfClick)="saveDeck()"></bf-btn>
-            <bf-btn bfText="Order" class="quaternary" bfIcon="icon-sort-amount-desc" (bfClick)="autoOrderDeck()"></bf-btn> -->
-
-            <bf-btn hoverTip="Copy Deck"  bfIcon="icon-copy" (bfClick)="createNewDeck()"></bf-btn>
-            <bf-btn hoverTip="Delete Deck"bfIcon="icon-bin" class="warning" (bfClick)="createNewDeck()"></bf-btn>
-            <!-- <bf-btn hoverTip="Undo"  bfIcon="icon-undo2" class="quaternary" (bfClick)="saveDeck()"></bf-btn> -->
-            <bf-btn hoverTip="Auto Order Cards" bfIcon="icon-sort-amount-desc" class="quaternary"  (bfClick)="autoOrderDeck()"></bf-btn>
-            
+            <bf-btn hoverTip="Auto Order Cards" bfIcon="icon-sort-amount-desc" (bfClick)="autoOrderDeck()"></bf-btn>            
+            <bf-btn hoverTip="Copy Deck"  bfIcon="icon-copy" (bfClick)="copyDeck(selDeck)"></bf-btn>
+            <bf-btn hoverTip="Delete Deck"bfIcon="icon-bin" class="warning" (bfClick)="deleteDeck(selDeck)"></bf-btn>
             <!-- <bf-btn bfText="Save" bfType="save" (bfClick)="saveDeck()"></bf-btn> -->
           </div>
         </div>
 
         <div class="col-12" style="margin-top: 15px;">{{deckTotals()}}</div>
-
-        
-
-
-        
-
-        
-        
       </div>
 
       <!-- All Units in Deck -->      
@@ -233,10 +228,12 @@
                [bfDropPlaceholder]="unit" bfDropContainerId="unit-deck">
           </div>
 
-          <div class="card-wrapper" [hoverTip]="'Click to remove it'"
+          <!-- [hoverTip]="'Click to remove it'" -->
+          <div class="card-wrapper"
                bfDragGroup="into-deck" [bfDraggable]="unit" bfDragMode="order-unit"
                [class.hide]="bfDnD.isDragging && bfDnD.bfDraggable?.ref === unit.ref"
-               (mouseenter)="hoverUnit(unit, true)" (mouseleave)="hoverUnit()" (click)="removeUnitFromDeck(unit)">
+               (mouseenter)="hoverUnit(unit, true)"  (click)="removeUnitFromDeck(unit)">
+               <!-- (mouseleave)="hoverUnit()" -->
             <div class="card-name">{{unit.card.name}}</div>
             <mtg-card [cardImg]="unit.card.image" class="sm" [border]="unit.card.border"></mtg-card>
   

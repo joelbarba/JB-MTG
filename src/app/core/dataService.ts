@@ -9,7 +9,7 @@ import { BfDefer } from "bf-ui-lib";
 export type TDBUnit = { ref: string, ownerId: string, sellPrice?: number };
 export type TFullUnit = TDBUnit & { owner: TUser, isYours: boolean; cardId: string, shortRef: string, card: TFullCard };
 export type TFullCard = TCard & { units: Array<TFullUnit>; };
-export type TFullDeck = { id: string; deckName: string; units: Array<TFullUnit>; };
+export type TFullDeck = { id: string; deckName: string; created: string, units: Array<TFullUnit>; };
 
 @Injectable({ providedIn: 'root' })
 export class DataService {
@@ -106,7 +106,7 @@ export class DataService {
             return unit;
           }) as Array<TFullUnit>;
 
-          return { id: deck.id, deckName: deck.deckName, units: units.filter(u => !!u) } as TFullDeck;
+          return { id: deck.id, deckName: deck.deckName, created: deck.created, units: units.filter(u => !!u) } as TFullDeck;
         });
         this.yourDecks$.next(this.yourDecks);
         this.deferYourDecks.resolve(this.yourDecks);

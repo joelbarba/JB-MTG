@@ -15,6 +15,7 @@ export type TUser = {
 export type TDeckRef = {
   id: string;
   deckName: string;
+  created: string;
   restricted: boolean;  // false = 4 cards of any type allowed
   units: Array<string>;  // unit ref
 }
