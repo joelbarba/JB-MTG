@@ -125,6 +125,7 @@ export class GameComponent {
   mainInfo = '';  // General info for the state
   opInfo = '';    // Info about the current operation
   itemInfo = '';  // Info about a specific item (card, button, ...)
+  expandedTalbe: 'A' | 'B' | null = null;
 
   @ViewChild('fullCardEl', { read: ElementRef, static: false }) fullCardEl!: ElementRef;
   @ViewChild('tableADiv', { read: ElementRef, static: false }) tableADiv!: ElementRef;
@@ -214,7 +215,7 @@ export class GameComponent {
       this.setVarsFromStateChange();
       this.showToastMesssages();
       this.autoAdvance();
-      this.autoPositionGameCards();
+      this.autoPositionGameCards(true);
     }));
 
 
@@ -449,7 +450,7 @@ export class GameComponent {
 
   displayTableA: Array<TExtGameCard> = [];  // tableA + playing cards from B that target cards from tableA
   displayTableB: Array<TExtGameCard> = [];  // tableB + playing cards from A that target cards from tableB
-  autoPositionGameCards() {
+  autoPositionGameCards(autocollapseHandB = false) {
 
     // Order cards in a grid of columns: Lands + Creatures + Others
     const positionTable = (tableCards: Array<TExtGameCard>) => {
@@ -524,28 +525,43 @@ export class GameComponent {
     let maxCardsPerRow = Math.floor((this.tableWidth - 200) / (cardWidth + gap)) + 1;
     if (!this.tableWidth) { maxCardsPerRow = 10; }
 
+    const maxGroupedCardsA = tableGridA.reduce((a,v) => Math.max(v.length, a), 1); // Maxim number of grouped cards
+    const maxGroupedCardsB = tableGridB.reduce((a,v) => Math.max(v.length, a), 1);
+
     // Once the grid is constructed, give coordinates to every card
     tableGridA.filter(c => !!c.length).forEach((arr, col) => {
+      const row = Math.floor(col / maxCardsPerRow);
+      const isThereSpace = this.expandedTalbe === 'A' && (this.windowHeight > 750 || !this.isHandAExp);
+      const rowGap = isThereSpace ? gap * maxGroupedCardsA * 2 : gap * 2;
+      let rowTop = 20 + (row * (cardHeight + rowGap));
       arr.forEach((card, ind) => {
-        const row = Math.floor(col / maxCardsPerRow);
         card.posX = 20 + ((col % maxCardsPerRow) * (cardWidth + gap));
-        card.posY = 20 + (row * (cardHeight + gap)) + (ind * gap * 2);
+        card.posY = rowTop + (ind * gap * 2);
         card.zInd = 100 + ind;
-      })
-    });
-    const tableBTop = (cardHeight * 1.6) - (Math.floor(tableGridB.filter(c => !!c.length).length / maxCardsPerRow) * (cardHeight + gap));
-    tableGridB.filter(c => !!c.length).forEach((arr, col) => {
-      arr.forEach((card, ind) => {
-        const row = Math.floor(col / maxCardsPerRow);
-        card.posX = 20 + ((col % maxCardsPerRow) * (cardWidth + gap));
-        card.posY = tableBTop + (row * (cardHeight + gap)) + (ind * gap * 2);
-        card.zInd = 100 + (col * 15) + ind;
       })
     });
 
     const totalBCols = tableGridB.filter(c => !!c.length).length;
-    if (totalBCols > maxCardsPerRow) { this.isHandBExp = false; } // Collapse Opponent's hand to give more space
+    if (totalBCols > maxCardsPerRow && autocollapseHandB) { this.isHandBExp = false; } // Collapse Opponent's hand to give more space
+
+    const tableBTop = Math.max(20, (cardHeight * 1.6) - (Math.floor(tableGridB.filter(c => !!c.length).length / maxCardsPerRow) * (cardHeight + gap)));
+    console.log('tableBTop', tableBTop);
+    tableGridB.filter(c => !!c.length).forEach((arr, col) => {
+      const row = Math.floor(col / maxCardsPerRow);
+      const isThereSpace = this.expandedTalbe === 'B' && (this.windowHeight > 750 || !this.isHandBExp);
+      const rowGap = isThereSpace ? gap * maxGroupedCardsB * 2 : gap * 2;
+      let rowTop = tableBTop + (row * (cardHeight + rowGap));
+      arr.forEach((card, ind) => {
+        card.posX = 20 + ((col % maxCardsPerRow) * (cardWidth + gap));
+        card.posY = rowTop + (ind * gap * 2);
+        card.zInd = 100 + (col * 15) + ind;
+      })
+    });
+
+
   }
+
+
 
   extendTableCard(card: TGameCard, grid: 'A'| 'B'): TExtGameCard {
     const extInfo = this.positions[card.gId];

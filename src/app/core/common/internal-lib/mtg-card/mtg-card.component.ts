@@ -17,6 +17,7 @@ export class MtgCardComponent {
   @Input() cardImg?: string;
   @Input() back = false;
   @Input() border?: 'white' | 'black' = 'white';
+  @Input() isDraggable = false;
 
   constructor() {
   }

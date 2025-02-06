@@ -3,6 +3,7 @@ import { Subject } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class BfTooltipService {
+  enabled = true;
   isOn = false;
   left = -200;
   top = -200;
@@ -21,7 +22,7 @@ export class BfTooltipService {
 
   // rect = rectangle of the hovering element that cause the tooltip trigger
   activate(text: string, tipId: string, tipSide: 'top' | 'right' | 'bottom' | 'left', rect: DOMRect) {
-    if (text) {
+    if (this.enabled && text) {
       this.isOn = true;
       this.tipSide = tipSide;
 

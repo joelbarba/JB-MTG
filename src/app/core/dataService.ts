@@ -8,8 +8,8 @@ import { BfDefer } from "bf-ui-lib";
 
 export type TDBUnit = { ref: string, ownerId: string, sellPrice?: number };
 export type TFullUnit = TDBUnit & { owner: TUser, isYours: boolean; cardId: string, shortRef: string, card: TFullCard };
-export type TFullCard = TCard & { units: Array<TFullUnit>; }
-export type TFullDeck = { id: string; deckName: string; units: Array<TFullUnit>; }
+export type TFullCard = TCard & { units: Array<TFullUnit>; };
+export type TFullDeck = { id: string; deckName: string; units: Array<TFullUnit>; };
 
 @Injectable({ providedIn: 'root' })
 export class DataService {

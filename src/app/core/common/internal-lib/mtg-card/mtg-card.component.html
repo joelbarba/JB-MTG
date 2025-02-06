@@ -1,9 +1,9 @@
 <div class="mtg-card back-card" *ngIf="!cardImg">
-  <img src="/assets/images/cards/card_back.jpg">
+  <img src="/assets/images/cards/card_back.jpg" [draggable]="isDraggable">
 </div>
 
 <div class="mtg-card" *ngIf="cardImg" [class.back-card]="back" [class.black-border]="border === 'black'">
-  <img [src]="'/assets/images/cards/' + (back ? 'card_back.jpg' : cardImg)">
+  <img [src]="'/assets/images/cards/' + (back ? 'card_back.jpg' : cardImg)" [draggable]="isDraggable">
 </div>
 
 

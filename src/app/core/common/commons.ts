@@ -35,6 +35,10 @@ export const landTypes = [
   { value: 'forest',   text: 'Forest'   },
 ];
 
+
+const mapOrderColor = {
+  'uncolored': 0
+}
 export const cardOrderFn = (a: TCard, b: TCard) => {
   if (a.type !== b.type) {
     if (a.type === 'land') { return -1; }
@@ -59,6 +63,31 @@ export const cardOrderFn = (a: TCard, b: TCard) => {
   if (a.name !== b.name) { return a.name < b.name ? -1 : 1; }
   return 0;
 };
+
+// export const cardOrderFn = (a: TCard, b: TCard) => {
+//   if (a.type !== b.type) {
+//     if (a.type === 'land') { return -1; }
+//     if (b.type === 'land') { return 1; }
+//     if (a.type === 'artifact') { return -1; }
+//     if (b.type === 'artifact') { return 1; }
+//   } 
+//   if (a.color !== b.color) {
+//     if (a.color === 'uncolored') { return -1;  }
+//     if (b.color === 'uncolored') { return 1; }
+//     if (a.color === 'blue')  { return -1; }
+//     if (b.color === 'blue')  { return  1; }
+//     if (a.color === 'white') { return -1; }
+//     if (b.color === 'white') { return  1; }
+//     if (a.color === 'black') { return -1; }
+//     if (b.color === 'black') { return  1; }
+//     if (a.color === 'red')   { return -1; }
+//     if (b.color === 'red')   { return  1; }
+//     if (a.color === 'green') { return -1; }
+//     if (b.color === 'green') { return  1; }
+//   }
+//   if (a.name !== b.name) { return a.name < b.name ? -1 : 1; }
+//   return 0;
+// };
 
 export const unitOrderFn = (a: TFullUnit, b: TFullUnit) => {
   const res = cardOrderFn(a.card, b.card);

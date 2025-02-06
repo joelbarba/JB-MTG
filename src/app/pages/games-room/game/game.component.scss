@@ -128,8 +128,30 @@
     display: flex;
     flex-direction: column;
     .player-A, .player-B {
+      position: relative;
       flex: 1;
-      position: relative;      
+      transition-duration: 200ms;
+      transition-timing-function: cubic-bezier(.05,.5,.2,.9);
+      &.expanded { flex: 3; }
+      .expand-table-pin {
+        position: absolute;        
+        right: 0;
+        width: 40px;
+        height: 55px;
+        z-index: 1000;
+        opacity: 0.5;
+        background: #afafaf;
+        border: 1px solid black;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        &.b { bottom: 0; border-top-left-radius: 3px; }
+        &.a { top: 0; border-bottom-left-radius: 3px; }
+        span { font-size: calc(var(--size-ref) * 0.25); }
+      }
+
+
       .phases-box {
         background-color: $gray-dark;
         position: absolute;
@@ -206,6 +228,7 @@
         top: 0;
         bottom: 0;
         padding: 15px;
+        overflow: auto;
         game-card { position: absolute; }
       }
 

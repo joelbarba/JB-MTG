@@ -9,7 +9,7 @@ import { collectionData } from 'rxfire/firestore';
 import { TCard, TDeckRef } from '../../core/types';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { BfConfirmService, BfGrowlService, BfListHandler, BfUiLibModule } from 'bf-ui-lib';
+import { BfConfirmService, BfDnDModule, BfDnDService, BfGrowlService, BfListHandler, BfUiLibModule } from 'bf-ui-lib';
 import { MtgCardComponent } from '../../core/common/internal-lib/mtg-card/mtg-card.component';
 import { cardOrderFn, unitOrderFn, cardTypes, colors, randomUnitId } from '../../core/common/commons';
 import { HoverTipDirective } from '../../core/common/internal-lib/bf-tooltip/bf-tooltip.directive';
@@ -17,6 +17,7 @@ import { DataService, TFullCard, TFullDeck, TFullUnit } from '../../core/dataSer
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { SellOfferModalComponent } from '../../core/modals/sellOfferModal/sell-offer-modal.component';
 import { ActivatedRoute } from '@angular/router';
+import { BfTooltipService } from '../../core/common/internal-lib/bf-tooltip/bf-tooltip.service';
 
 
 
@@ -30,6 +31,7 @@ import { ActivatedRoute } from '@angular/router';
     BfUiLibModule,
     MtgCardComponent,
     HoverTipDirective,
+    BfDnDModule,
   ],
   templateUrl: './your-cards.component.html',
   styleUrl: './your-cards.component.scss',
@@ -37,6 +39,7 @@ import { ActivatedRoute } from '@angular/router';
 })
 export class YourCardsComponent {
   cardsList!: BfListHandler;
+  unitsList!: BfListHandler;
 
   groupedCards: Array<TFullCard> = [];    // All your cards grouped (all your units together)
   yourUnits: Array<TFullUnit> = [];       // All your units
@@ -49,13 +52,22 @@ export class YourCardsComponent {
   selUnit: TFullUnit | null = null;   // Current selected unit
 
   isGrouped = true;       // Whether your cards list is grouped (true) or displaying all your units seperately (false)
-  isDeckGrouped = true;   // Whether the cards in the selected deck are displayed grouped (true) or seperately (false)
+  isDeckGrouped = false;  // Whether the cards in the selected deck are displayed grouped (true) or seperately (false)
+  isRestricted = true;    // If false, you can add 4 cards of any type in the deck
+
+  filterText = '';
+  filterCardType = '';
+  filterColor = '';
+  filterEdition = '';
+  filterReady = true;
 
   colors = colors;
   cardTypes = cardTypes;
 
   showDecks = false;
+  deckSearch = '';
 
+  dragMode: 'add-card' | 'add-unit' | 'order-unit' | 'order-card' | 'del-unit' | 'del-card' | null = null;
 
   decks: Array<TFullDeck> = [];     // All your decks ---> deck.cards = Array<TFullUnit>
   selDeck?: TFullDeck;              // Current selected deck
@@ -75,6 +87,8 @@ export class YourCardsComponent {
     private dataService: DataService,
     private ngbModal: NgbModal,
     private route: ActivatedRoute,
+    private tooltipService: BfTooltipService,
+    public bfDnD: BfDnDService,
   ) {
     this.shell.gameMode('off');
     this.cardsList = new BfListHandler({
@@ -82,15 +96,32 @@ export class YourCardsComponent {
       filterFields  : ['name'],
       orderFields   : ['id'],
       orderReverse  : false,
-      rowsPerPage   : 50000,
-    });
+      rowsPerPage   : 200,
+    });    
+    this.unitsList = new BfListHandler({
+      listName      : 'units-list',
+      filterFields  : ['name'],
+      orderFields   : ['id'],
+      orderReverse  : false,
+      rowsPerPage   : 200,
+    });    
+
     this.cardsList.orderList = (list) => list.sort(cardOrderFn);
     this.cardsList.filterList = (list: Array<any>, filterText = ''): Array<any> => {
-      if (!this.isGrouped) {
-        if (this.cardsList.filters.cardType) { list = list.filter(u => u.card.type === this.cardsList.filters.cardType); }
-        if (this.cardsList.filters.color)    { list = list.filter(u => u.card.color === this.cardsList.filters.color); }
-      }
-      return this.cardsList.defaultFilterList(list, filterText, ['name']);
+      if (this.filterText)     { list = list.filter(c => (c.name + '').toLocaleLowerCase().indexOf(this.filterText.toLowerCase()) >= 0); }
+      if (this.filterCardType) { list = list.filter(c => c.type === this.filterCardType); }
+      if (this.filterColor)    { list = list.filter(c => c.color === this.filterColor); }
+      if (this.filterReady)    { list = list.filter(c => c.readyToPlay === true); }
+      return list;
+    };
+    
+    this.unitsList.orderList = (list) => list.sort(unitOrderFn);
+    this.unitsList.filterList = (list: Array<any>, filterText = ''): Array<any> => {
+      if (this.filterText)     { list = list.filter(u => (u.card.name + '').toLocaleLowerCase().indexOf(this.filterText.toLowerCase()) >= 0); }
+      if (this.filterCardType) { list = list.filter(u => u.card.type === this.filterCardType); }
+      if (this.filterColor)    { list = list.filter(u => u.card.color === this.filterColor); }
+      if (this.filterReady)    { list = list.filter(u => u.card.readyToPlay === true); }
+      return list;
     };
   }
 
@@ -113,10 +144,29 @@ export class YourCardsComponent {
       const deck = this.decks.find(d => d.id === deckId);
       if (deck) { this.showDecks = true; this.editDeck(deck); }
     }
+
+    // Catch the bfDragMode of the draggable element (to be used when drop)
+    this.subs.push(this.bfDnD.dragStart$.subscribe((ev:any) => {
+      this.dragMode = ev.bfDragMode;
+      this.tooltipService.flush();
+      this.tooltipService.enabled = false;
+    }));
+    this.subs.push(this.bfDnD.dragEndOk$.subscribe((ev:any) => {
+      this.tooltipService.enabled = true;
+    }));
+    this.subs.push(this.bfDnD.dragEndKo$.subscribe((ev:any) => {
+      this.tooltipService.enabled = true;
+
+      // If dragging a card out of the deck, remove it from the deck
+      if (this.bfDnD.bfDragMode === 'order-unit') { this.removeUnitFromDeck(this.bfDnD.bfDraggable); }
+      if (this.bfDnD.bfDragMode === 'order-card') { this.removeCardFromDeck(this.bfDnD.bfDraggable); }
+    }));
+
   }
 
   ngOnDestroy() {
     this.cardsList.destroy();
+    this.unitsList.destroy();
     this.subs.forEach(sub => sub.unsubscribe())
   }
 
@@ -129,12 +179,15 @@ export class YourCardsComponent {
     });
     // console.log('Your Grouped Cards', this.groupedCards);
     // console.log('Your Units', this.yourUnits);
-    this.switchGrouped();
+    this.cardsList.orderList = (list) => list.sort(cardOrderFn);
+    this.cardsList.load(this.groupedCards);
+    this.unitsList.orderList = (list) => list.sort(unitOrderFn);
+    this.unitsList.load(this.yourUnits);
   }
 
   async loadDecks() {
     this.decks = this.dataService.yourDecks.map(deck => {
-      return { id: deck.id, deckName: deck.deckName, units: deck.units.sort(unitOrderFn) };
+      return { id: deck.id, deckName: deck.deckName, units: [...deck.units] };
     })
   }
 
@@ -150,24 +203,11 @@ export class YourCardsComponent {
     }
   }
 
-
-  switchGrouped() {
-    if (this.isGrouped) {
-      this.cardsList.orderList = (list) => list.sort(cardOrderFn);
-      this.cardsList.load(this.groupedCards);
-    } else {
-      this.cardsList.orderList = (list) => list.sort(unitOrderFn);
-      this.cardsList.load(this.yourUnits);
-    }    
+  filterList(value: string, field: string) {
+    this.cardsList.filter(value);
+    this.unitsList.filter(value);
   }
 
-  filterReadyToPlay(value: boolean) {
-    if (value) {
-      this.cardsList.filter(true, 'readyToPlay');
-    } else {
-      this.cardsList.resetFilters();
-    }
-  }
 
 
   switchShowDecks() {
@@ -181,12 +221,14 @@ export class YourCardsComponent {
   }
 
   hoverCard(card?: TFullCard, fromDeck = false) {
+    if (this.bfDnD.isDragging) { return; }
     this.hoveringCard = card || this.selCard;
     this.hoveringUnit = this.hoveringCard ? null : this.selUnit;
     this.hoverFromDeck = fromDeck;
   }
 
   hoverUnit(unit?: TFullUnit, fromDeck = false) {
+    if (this.bfDnD.isDragging) { return; }
     this.hoveringUnit = unit || this.selUnit;
     this.hoveringCard = this.hoveringUnit ? null : this.selCard;
     this.hoverFromDeck = fromDeck;
@@ -218,27 +260,64 @@ export class YourCardsComponent {
     this.selCard = card;
     this.selUnit = null;
     this.hoverCard(card);
-    if (this.showDecks && this.selDeck && !this.isCardInDeck(card)) { // If not all units are in the deck
+    this.moveCardToDeck(card);
+  }
+
+  canCardBeAddedToTheDeck(card: TFullCard) { return !!(this.showDecks && this.selDeck && !this.isCardInDeck(card)); }
+  canUnitBeAddedToTheDeck(unit: TFullUnit) { return !!(this.showDecks && this.selDeck && !this.isUnitInDeck(unit)); }
+
+  dropIntoDeck(event: any) {
+    // console.log('event', event);
+    // console.log('bfDnD', this.bfDnD);
+    if (!this.selDeck) { return; }
+
+    let newIndex = -1;
+    if (event.bfDropPlaceholder.containerId === 'unit-deck') {
+      const pos = event.bfDropPlaceholder.id.split('-')[0]; // before / after
+      const nextUnit = event.bfDropPlaceholder.model; // The unit it goes after/before
+      newIndex = this.selDeck.units.map(u => u.ref).indexOf(nextUnit.ref || '');
+      if (pos === 'after') { newIndex += 1; }
+    }
+
+    if (this.dragMode === 'add-unit') { this.moveUnitToDeck(event.bfDraggable, newIndex); }
+    if (this.dragMode === 'add-card') { this.moveCardToDeck(event.bfDraggable, newIndex); }
+
+    if (this.dragMode === 'order-unit') { // Reorder the card inside the deck
+      const currInd = this.selDeck.units.map(u => u.ref).indexOf(event.bfDraggable.ref);
+      const unit = this.selDeck.units.splice(currInd, 1); // Remove unit from current position
+      if (currInd < newIndex) { newIndex -= 1; } // If it was before the new position, that's now shifted -1
+      this.selDeck.units.splice(newIndex, 0, unit[0]); // Add it to the new position
+    }
+  }
+
+
+
+  moveCardToDeck(card: TFullCard, newIndex = -1) {
+    if (this.canCardBeAddedToTheDeck(card)) { // If some units are not in the deck
       const unit = card.units.find(u => !this.selDeck?.units.find(du => du.ref === u.ref)); // Find a unit that is not already in the deck
-      if (unit) { this.moveUnitToDeck(unit); } // Add it to the deck
+      if (unit) { this.moveUnitToDeck(unit, newIndex); } // Add it to the deck
     }
   }
 
   // Add / Remove a unit card to/from the selected deck
-  private moveUnitToDeck(unit: TFullUnit) {
+  private moveUnitToDeck(unit: TFullUnit, newIndex = -1) {
     if (this.showDecks && this.selDeck) {
       if (!this.isUnitInDeck(unit)) { // Add it to the deck
 
         if (!unit.card.readyToPlay) {
           return this.growl.error(`Sorry, ${unit.card.name} is still not ready to play :(`);
         }
-        if (unit.card.maxInDeck && unit.card.maxInDeck <= this.selDeck.units.filter(u => u.cardId === unit.card.id).length) {
-          return this.growl.error(`You cannot have more than ${unit.card.maxInDeck} ${unit.card.name} in a deck`);
+        if (this.isRestricted && unit.card.maxInDeck && unit.card.maxInDeck <= this.selDeck.units.filter(u => u.cardId === unit.card.id).length) {
+          return this.growl.error(`You cannot have more than ${unit.card.maxInDeck} <b>${unit.card.name}</b> in a deck`);
         }
         console.log(`Adding ${unit.card.name} (${unit.ref}) to the deck`);
-        this.growl.success(`${unit.card.name} added to the deck`);
-        this.selDeck.units.push({ ...unit });
-        this.selDeck.units.sort(unitOrderFn);
+        this.growl.success(`1 <b>${unit.card.name}</b> added`);
+
+        if (newIndex === -1) { // Add it as the last card in the deck
+          this.selDeck.units.push({ ...unit });
+        } else {
+          this.selDeck.units.splice(newIndex, 0, { ...unit });
+        }
 
 
       } else { // Remove it from the deck
@@ -280,7 +359,11 @@ export class YourCardsComponent {
   // }
 
 
-
+  autoOrderDeck() {
+    if (!this.selDeck) { return; }
+    this.selDeck.units.sort(unitOrderFn);
+    this.deckGroupedCards.sort(cardOrderFn);    
+  }
 
 
 
@@ -301,15 +384,26 @@ export class YourCardsComponent {
     window.history.pushState(null, 'Your Decks', `/cards/decks`);
   }
 
+
   deckTotals() {
+    let deckStats = '';
     if (this.selDeck) {
-      return { 
-        total     : this.selDeck.units.length,
-        lands     : this.selDeck.units.filter(c => c.card.type === 'land').length,
-        noLands   : this.selDeck.units.filter(c => c.card.type !== 'land').length,
-        creatures : this.selDeck.units.filter(c => c.card.type === 'creature').length,
-      };
-    } else { return { total: 0, lands: 0, noLands: 0, creatures : 0 }; }
+      const total = this.selDeck.units.length;
+      const lands = this.selDeck.units.filter(c => c.card.type === 'land').length;
+      const islands   = this.selDeck.units.filter(c => c.card.id === 'c000001').length;
+      const plains    = this.selDeck.units.filter(c => c.card.id === 'c000002').length;
+      const swamps    = this.selDeck.units.filter(c => c.card.id === 'c000003').length;
+      const mountains = this.selDeck.units.filter(c => c.card.id === 'c000004').length;
+      const forests   = this.selDeck.units.filter(c => c.card.id === 'c000005').length;
+      let landInfo = '';
+      if (islands > 0)   { landInfo += (landInfo ? ' + ' : '') + islands   + ' islands';   }
+      if (plains > 0)    { landInfo += (landInfo ? ' + ' : '') + plains    + ' plains';    }
+      if (swamps > 0)    { landInfo += (landInfo ? ' + ' : '') + swamps    + ' swamps';    }
+      if (mountains > 0) { landInfo += (landInfo ? ' + ' : '') + mountains + ' mountains'; }
+      if (forests > 0)   { landInfo += (landInfo ? ' + ' : '') + forests   + ' forests';   }
+      deckStats = `Total: ${total} cards ----> ${lands} lands ${landInfo ? '(' + landInfo + ')' : ''}`;
+    }
+    return deckStats;
   }
 
 
@@ -317,10 +411,10 @@ export class YourCardsComponent {
   removeUnitFromDeck(unit: TFullUnit) {
     if (this.selDeck) {
       console.log(`Removing ${unit.card.name} (${unit.ref}) from the deck`);
-      this.growl.error(`${unit.card.name} removed from the deck`);
+      this.growl.error(`1 <b>${unit.card.name}</b> removed`);
       const ind = this.selDeck.units.map(c => c.ref).indexOf(unit.ref);
       this.selDeck.units.splice(ind, 1);
-      this.selDeck.units.sort(unitOrderFn);
+      // this.selDeck.units.sort(unitOrderFn);
       const groupedCard = this.deckGroupedCards.find(c => c.id === unit.cardId);
       if (groupedCard) {
         groupedCard.units.splice(groupedCard.units.map(c => c.ref).indexOf(unit.ref), 1);

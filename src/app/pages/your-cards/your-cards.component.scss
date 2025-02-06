@@ -56,10 +56,15 @@ h2.fixed-title {
   }
 
   .list {
-    flex: 1;
+    flex: 3;
     position: relative;
     padding: 0 15px;
     border-right: 1px solid #aaa;
+    
+    &.bf-drop-container.dragging-over {
+      background: #ff0b0b54;
+    }
+
     .search-box {
       margin-top: 0;
       max-height: 84px;
@@ -76,17 +81,39 @@ h2.fixed-title {
       top: 135px;
       margin-right: 15px;
       overflow: auto;
+      .bf-draggable.card-wrapper.is-dragging { opacity: 0.2; }
     }  
   }
 
   .decks {
     width: 0;
     overflow: hidden;
-    transition-duration: 300ms;
+    transition-duration: 100ms;
+    transition-timing-function: cubic-bezier(.05,.5,.2,.9);
     &.expanded {
-      flex: 1; 
+      flex: 5; 
       width: unset; 
       padding-left: 15px;
+    }
+    .close-btn {
+      font-size: 20px;
+      color: #bdbdbd;
+      line-height: 35px;
+      cursor: pointer;
+    }
+
+    .decks-list {
+      display: flex;
+      list-style-type: none;
+      padding: 10px 15px;
+      margin-top: 10px;
+      .deck-list-item {
+        cursor: pointer;
+        max-width: 120px;
+        margin: 0 10px;
+        text-align: center;
+        img { max-width: 120px; }
+      }
     }
 
     .deck-editor {
@@ -94,11 +121,52 @@ h2.fixed-title {
       height: 100%;
       .deck-editor-list {
         position: absolute;
-        bottom: 0;
-        top: 90px;
-        // margin-right: 15px;
         overflow: auto;
+        left: 0;
+        right: 0;
+        top: 100px;
+        bottom: 50px;
+        padding: 8px;
 
+        .deck-card-item { display: inline-block; }
+        .deck-unit-placeholder {
+          background-color: purple;
+        }
+
+        
+        &.bf-drop-container {
+          .card-wrapper.hide { display: none; } // Don't display the reordering card in it's original position
+          // &.dragging-over {
+          //   padding: 4px;
+          //   border: 4px dashed gray;
+          //   border-radius: 10px;
+          //   background: darkseagreen;
+          //   border-color: greenyellow;
+          // }
+        }
+
+        .bf-drop-placeholder {
+          top: 15px;
+          background: rgba(yellow, 0.5);
+          width: 120px; height: 168px; // large screen
+          @media (max-width: 1500px) or (max-height: 1050px) { width: 96px; height: 140px; } // medium screen
+          @media (max-width: 1000px) or (max-height: 800px)  { width: 71px; height: 105px; } // small screen
+          vertical-align: top;
+          border-radius: 4px;
+          border: 3px dashed #959595;          
+          transition-duration: 120ms;
+          &.active-placeholder {
+            margin: 0 6px;
+            // width: 120px;
+            opacity: 0.5;
+            background: greenyellow;
+          }
+          &:not(.active-placeholder) {
+            width: 0;
+            padding: 0;
+            border: none;
+          }
+        }
       }
     }
 
@@ -142,8 +210,17 @@ h2.fixed-title {
         border-radius: 4px;
       }
     }
-  }
+  }  
 
-  
 
+  bf-btn + bf-btn { margin-left: 15px; }
+  bf-checkbox + bf-checkbox { margin-left: 15px; }
+}
+
+
+
+// --------- Non encapsulated styles ------
+.bf-drag-ghost {
+  opacity: 0.6;
+  .card-name { display: none; }
 }
