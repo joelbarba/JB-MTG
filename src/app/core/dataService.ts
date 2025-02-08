@@ -6,6 +6,7 @@ import { BehaviorSubject, filter, map, Subject } from "rxjs";
 import { Unsubscribe } from "firebase/auth";
 import { BfDefer } from "bf-ui-lib";
 import { dbCards } from "./dbCards";
+import { getTime } from "./common/commons";
 
 export type TFullUnit = TDBUnit & { ref: string, owner: TDBUser, isYours: boolean; cardId: string, shortRef: string, card: TFullCard };
 export type TFullCard = TDBCard & { units: Array<TFullUnit>; };
@@ -23,6 +24,7 @@ export class DataService {
 
   cards$: BehaviorSubject<Array<TFullCard>> = new BehaviorSubject([] as Array<TFullCard>);
   users$: BehaviorSubject<Array<TDBUser>> = new BehaviorSubject([] as Array<TDBUser>);
+  ownership$: BehaviorSubject<TDBOwnership> = new BehaviorSubject({} as TDBOwnership);
   yourDecks$: BehaviorSubject<Array<TFullDeck>> = new BehaviorSubject([] as Array<TFullDeck>);
   yourCredit$ = this.users$.pipe(map(users => users.find(u => u.uid === this.auth.profileUserId)?.sats || 0));
 
@@ -176,6 +178,7 @@ export class DataService {
     console.log('ownership', this.ownership);
     this.isOwnersLoaded = true;
     this.mergeData();
+    this.ownership$.next(this.ownership);
   }
 
 
@@ -203,7 +206,9 @@ export class DataService {
   }
 
 
-  async buyUnit(unit: TFullUnit): Promise<string | void> {  // TODO: All this logic should go to a cloud function to be called through a webAPI
+// TODO: All this 3 functions should go to a cloud function to be called through a webAPI
+  async buyUnit(unit: TFullUnit): Promise<string | void> {  
+    if (unit.sellPrice === null) { return; } // It's not on sale
     console.log('Buying unit', unit);
 
     const price = (typeof unit.sellPrice === 'string' ? Number.parseInt(unit.sellPrice, 10) : unit.sellPrice) || 0;
@@ -220,15 +225,28 @@ export class DataService {
     
     // Change unit owner + Delete Offer
     await setDoc(doc(this.firestore, 'units', unit.ref), { ownerId: this.auth.profileUserId });
+
+    // Change unit ownership + remove sell offer
+    const docObj = { [unit.shortRef]: { ownerId: this.auth.profileUserId, sellPrice: null } };
+    await updateDoc(doc(this.firestore, 'ownership', unit.cardId), docObj);
+    await updateDoc(doc(this.firestore, 'ownership', 'updates'), { [unit.cardId]: getTime() });
+    unit.sellPrice = null;
   }
 
   async sellUnit(unit: TFullUnit, sellPrice: number) {
-    console.log('Selling Card', unit);
-    await updateDoc(doc(this.firestore, 'units', unit.ref), { sellPrice });
+    console.log('Adding a sell offer for Card Unit:', unit);
+    const docObj = { [unit.shortRef]: { ownerId: unit.ownerId, sellPrice } };
+    await updateDoc(doc(this.firestore, 'ownership', unit.cardId), docObj);
+    await updateDoc(doc(this.firestore, 'ownership', 'updates'), { [unit.cardId]: getTime() });
+    unit.sellPrice = sellPrice;
   }
 
   async removeSellOffer(unit: TFullUnit) {
-    await updateDoc(doc(this.firestore, 'units', unit.ref), { sellPrice: deleteField() });
+    console.log('Removing the sell offer for Card Unit:', unit);
+    const docObj = { [unit.shortRef]: { ownerId: unit.ownerId, sellPrice: null } };
+    await updateDoc(doc(this.firestore, 'ownership', unit.cardId), docObj);
+    await updateDoc(doc(this.firestore, 'ownership', 'updates'), { [unit.cardId]: getTime() });
+    unit.sellPrice = null;
   }
 
 

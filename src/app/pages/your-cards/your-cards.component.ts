@@ -183,10 +183,10 @@ export class YourCardsComponent {
   }
 
   loadCards() {
-    this.groupedCards = this.dataService.cards.filter(c => c.units.some(u => u.ownerId === this.auth.profileUserId));
+    this.groupedCards = this.dataService.cards.filter(c => c.units.some(u => u.ownerId === this.auth.profileUserId)).map(card => ({ ...card }));
     this.yourUnits = [];
     this.groupedCards.forEach(card => {
-      card.units = card.units.filter(u => u.ownerId === this.auth.profileUserId);
+      card.units = card.units.filter(u => u.ownerId === this.auth.profileUserId).map(unit => ({ ...unit }));
       card.units.forEach(unit => this.yourUnits.push(unit));
     });
     // console.log('Your Grouped Cards', this.groupedCards);

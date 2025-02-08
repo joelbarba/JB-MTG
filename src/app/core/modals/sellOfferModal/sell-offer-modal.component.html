@@ -8,7 +8,7 @@
 <p><b>Ref:</b> {{unit.ref}}</p>
 <p>Average price: <b>{{unit.card.price | number: '1.0-0' }}</b> sats</p>
 
-<div class="deck-warning">
+<div class="deck-warning" *ngIf="deckCount > 0">
   <p><b>Warning</b>: This unit is being used in {{deckCount}} of your decks</p>
   <!-- <p *ngFor="let deckName of deckNamesList">{{deckName}}</p> -->
   <!-- <bf-btn bfText="Remove / Replace it from all decks"></bf-btn> -->

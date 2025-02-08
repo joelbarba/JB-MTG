@@ -180,6 +180,9 @@ export class SettingsComponent {
     }
   }
 
+  setOwner(unit: TFullUnit) {
+    unit.owner = this.dataService.users.find(u => u.uid === unit.ownerId) || unit.owner;
+  }
 
 
   async saveCard(card: TFullCard) {

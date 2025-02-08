@@ -5,9 +5,10 @@
     <mtg-card [cardImg]="card.image" class="xl" [border]="card.border"></mtg-card>
     <div class="card-details">
       <!-- <div class="name">{{card.name}}</div> -->
-      <div class="quantity">There are <b>{{card.units.length}}</b> units of this card</div>
-      <div class="price">Avg Price: <b>{{ (card.price || 0) | number: '1.0-0' }}</b> sats</div>
-      <div>{{card.id}}</div>
+      <div class="quantity">There are <b>{{stats.totals}}</b> units of this card</div>
+      <div class="quantity">You own <b>{{stats.yours}}</b> of them</div>
+      <div class="price">Avg. Price = <b>{{ (card.price || 0) | number: '1.0-0' }}</b> sats</div>
+      <!-- <div>{{card.id}}</div> -->
       <bf-btn style="margin-top: 50px;" class="full-width" bfText="Go Back to the List" bfType="back" (bfClick)="goBack()"></bf-btn>
     </div>
   </div>
@@ -21,9 +22,9 @@
       
       <!-- <bf-input class="col-4 flat" bfIcon="icon-search" [(ngModel)]="cardsList.filterText" (ngModelChange)="cardsList.filter($event)"></bf-input> -->
       <div class="col-12">
-        <bf-checkbox class="flat" bfLabel="Show Only Yours"   [(ngModel)]="onlyYours" (ngModelChange)="onlyOthers = false; showList()"></bf-checkbox>
-        <bf-checkbox class="flat" bfLabel="Show Only Others"  [(ngModel)]="onlyOthers" (ngModelChange)="onlyYours = false; showList()"></bf-checkbox>
-        <bf-checkbox class="flat" bfLabel="Show Only On Sale" [(ngModel)]="onlyOnSale" (ngModelChange)="showList()"></bf-checkbox>
+        <bf-checkbox class="flat" [bfLabel]="'Show Yours ('   + stats.yours + ')'"  [(ngModel)]="onlyYours" (ngModelChange)="onlyOthers = false; showList()"></bf-checkbox>
+        <bf-checkbox class="flat" [bfLabel]="'Show Others ('  + stats.others + ')'" [(ngModel)]="onlyOthers" (ngModelChange)="onlyYours = false; showList()"></bf-checkbox>
+        <bf-checkbox class="flat" [bfLabel]="'Show On Sale (' + stats.onSale + ')'" [(ngModel)]="onlyOnSale" (ngModelChange)="showList()"></bf-checkbox>
       </div>
 
     </div>

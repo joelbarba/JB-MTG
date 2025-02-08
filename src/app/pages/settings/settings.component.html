@@ -135,16 +135,17 @@
           <div class="col-4 ref-font">{{unit.ref}}</div>
           <div class="col-4">
             <!-- <span style="padding: 0 15px; cursor: pointer;">{{unit.owner.name}}</span> -->
-             <bf-dropdown class="flat"
-              [(ngModel)]="unit.owner"
-              (ngModelChange)="unit.ownerId = unit.owner.uid"
+            <bf-dropdown class="flat"
+              [(ngModel)]="unit.ownerId"
+              (ngModelChange)="setOwner(unit)"
               [bfList]="users"
               bfRender="name"
+              bfSelect="uid"
               bfEmptyLabel="Free"
              ></bf-dropdown>
+             <!-- {{unit.ownerId}} -->
           </div>
           <div class="col-4">
-            <!-- {{unit.ownerId}} -->
             <!-- {{unit.sellPrice}} -->
             <bf-input class="flat" [(ngModel)]="unit.sellPrice"></bf-input>
             <bf-btn *ngIf="unit.sellPrice === null" bfText="Sell"    class="secondary" style="margin-left: 15px;" (bfClick)="unit.sellPrice = selCard.price"></bf-btn>

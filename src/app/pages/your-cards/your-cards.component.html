@@ -11,14 +11,14 @@
         <mtg-card [cardImg]="hoveringCard.image" class="xl" [border]="hoveringCard.border"></mtg-card>
       </div>
       <h4 class="units-title">
-        <span *ngIf="!hoverFromDeck">You own {{ hoveringCard.units.length }} units:</span>
+        <span *ngIf="!hoverFromDeck">You own {{ hoveringCard.units.length }} <b>{{hoveringCard.name}}</b></span>
         <span *ngIf="hoverFromDeck">Deck units ({{ hoveringCard.units.length }})</span>
       </h4>
       <div>
         <ul class="list-unstyled table-list header" *ngIf="hoveringCard.units.length">
           <li class="list-header">
-            <bf-list-header-col class="col-7" colTitle="Ref"></bf-list-header-col>
-            <bf-list-header-col class="col-5" colTitle=""></bf-list-header-col>
+            <bf-list-header-col class="col-12" colTitle="Reference"></bf-list-header-col>
+            <!-- <bf-list-header-col class="col-5" colTitle=""></bf-list-header-col> -->
           </li>
         </ul>
       </div>

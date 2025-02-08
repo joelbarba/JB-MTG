@@ -46,6 +46,8 @@ export class LibraryCardComponent {
   onlyOthers = false;
   onlyOnSale = false;
 
+  stats = { totals: 0, yours: 0, others: 0, onSale: 0 };
+
   constructor(
     private shell: ShellService,
     private auth: AuthService,
@@ -63,9 +65,7 @@ export class LibraryCardComponent {
   async ngOnInit() {
     this.cardId = this.route.snapshot.paramMap.get('cardId') || '';
     await this.dataService.loadPromise;
-    this.showList();
     this.cardSub = this.dataService.cards$.subscribe(cards => this.showList());
-    // console.log(this.card);
   }  
 
   ngOnDestroy() {
@@ -76,22 +76,31 @@ export class LibraryCardComponent {
 
   showList() {
     this.card = this.dataService.cards.find(c => c.id === this.cardId);
-    if (this.card) {
+    if (this.card) {      
       this.units = this.card.units.filter(unit => {
         if (this.onlyYours && !unit.isYours) { return false; }
         if (this.onlyOthers && unit.isYours) { return false; }
-        if (this.onlyOnSale && !unit.sellPrice) { return false; }
+        if (this.onlyOnSale && unit.sellPrice === null) { return false; }
         return true;
-      });
+      }).sort((a,b) => a.ref > b.ref ? 1 : -1);
+      this.stats = {
+        totals  : this.card.units.length,
+        yours   : this.card.units.filter(u => u.isYours).length,
+        others  : this.card.units.filter(u => !u.isYours).length,
+        onSale  : this.card.units.filter(u => u.sellPrice !== null).length
+      };
     }
   }
+
+  
+
 
 
   async buyUnit(unit: TFullUnit) {
     if (unit.sellPrice) {
       const formatPrice = formatNumber(unit.sellPrice, 'en-US', '1.0-0');
       let htmlContent = `Are you sure you want to buy 1 <b>${unit.card.name}</b> for <b>${formatPrice}</b> sats?`;
-      const res = await this.confirm.open({ title: `Buy "${unit.card.name}"`, htmlContent, yesButtonText: 'Yes, buy it' });
+      const res = await this.confirm.open({ title: `Buy "${unit.card.name}" (${unit.ref})`, htmlContent, yesButtonText: 'Yes, buy it' });
       if (res === 'yes') {
         const error = await this.dataService.buyUnit(unit);
         if (error) { this.growl.error(error); }
