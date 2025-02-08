@@ -2,14 +2,14 @@ import { Component, HostListener, Renderer2, ViewEncapsulation } from '@angular/
 import { AuthService } from '../../core/common/auth.service';
 import { ShellService } from '../../shell/shell.service';
 import { CommonModule } from '@angular/common';
-import { Firestore, QuerySnapshot, QueryDocumentSnapshot, DocumentData, setDoc, updateDoc, deleteDoc } from '@angular/fire/firestore';
+import { Firestore, QuerySnapshot, QueryDocumentSnapshot, DocumentData, setDoc, updateDoc, deleteDoc, Unsubscribe, onSnapshot } from '@angular/fire/firestore';
 import { getDocs, getDoc, collection, doc } from '@angular/fire/firestore';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { BfGrowlService, BfListHandler, BfUiLibModule } from 'bf-ui-lib';
 import { MtgCardComponent } from "../../core/common/internal-lib/mtg-card/mtg-card.component";
-import { TCard, TCast, TUser } from '../../core/types';
-import { cardTypes, colors, landTypes, randomUnitId, upkeepTypes } from '../../core/common/commons';
+import { TDBCard, TCast, TDBUser, TDBOwnership, TDBUnit } from '../../core/types';
+import { cardTypes, colors, getTime, landTypes, randomUnitId, upkeepTypes } from '../../core/common/commons';
 import { DataService, TFullCard, TFullUnit } from '../../core/dataService';
 import { dbCards } from '../../core/dbCards';
 
@@ -27,7 +27,9 @@ import { dbCards } from '../../core/dbCards';
   styleUrl: './settings.component.scss',
 })
 export class SettingsComponent {
-  users: Array<TUser> = [];  
+  firebaseCards: Array<TDBCard> = [];
+
+  users: Array<TDBUser> = [];  
   cardsList: BfListHandler;
   
   selCard: TFullCard | null = null;
@@ -39,9 +41,12 @@ export class SettingsComponent {
 
   hasBlackBorder = false;
   highlightNoneReady = true;
+  addUnitsWithSellOffer = false;
 
   totalCards = 0;
   totalCardsReady = 0;
+
+  private subs: Array<Unsubscribe> = [];
 
   constructor(
     private shell: ShellService,
@@ -59,7 +64,7 @@ export class SettingsComponent {
       rowsPerPage   : 50000,
     });
     // this.cardsList.orderList = cardOrderList;
-    this.cardsList.orderList = (list: Array<TCard>) => {
+    this.cardsList.orderList = (list: Array<TDBCard>) => {
       list.sort((a,b) => a.id > b.id ? 1 : -1);
       return list;
     };
@@ -67,15 +72,38 @@ export class SettingsComponent {
 
   async ngOnInit() {
     await this.dataService.loadPromise;
-    this.cardsList.load(this.dataService.cards);    
+
+    // Load Firebase /cards
+    const firebaseCards: Array<TDBCard> = [];
+    const allDocs: QuerySnapshot<DocumentData> = await getDocs(collection(this.firestore, 'cards'));
+    allDocs.forEach(doc => firebaseCards.push({ id: doc.id, totalUnits: 1, ...doc.data() } as TDBCard));
+
+    // Override the dbCards values with the firebase ones
+    const cards = this.dataService.cards.map(card => {
+      const firebaseCard = firebaseCards.find(c => c.id === card.id);
+      if (firebaseCard) {
+        card.units = card.units.slice(0, firebaseCard.totalUnits); // If there are fewer units in DB, cut them
+        if (firebaseCard.totalUnits > card.units.length) { // If there are more, add them (with default owner)
+          for (let t = card.units.length; t < firebaseCard.totalUnits; t++) { this.pushNewUnit(card); }
+        }
+      }
+      return { ...card, ...firebaseCard, units: card.units };
+    });
+
+    this.cardsList.load(cards);
 
     this.users = this.dataService.users;
     this.users.sort((a,b) => a.name > b.name ? 1 : -1);
 
     this.selectCard(this.cardsList.loadedList[0]);
     this.updateTotals();
-    // this.showCode();
   }
+
+  // ngOnDestroy() {
+  //   this.subs.forEach(unsubscribe => unsubscribe());
+  // }
+
+
 
   filterReadyToPlay(value: boolean) {
     if (value) {
@@ -116,32 +144,39 @@ export class SettingsComponent {
     this.selCard = card;
     this.hasBlackBorder = card.border === 'black';
     this.selCard.upkeepPlayer = this.selCard.upkeepPlayer || null;
-    console.log(this.selCard);
+    // console.log(this.selCard);
+  }
+
+  pushNewUnit(card: TFullCard) {
+    const totals = card.units.length;
+    const shortRef = 'u' + ((totals + 1) + '').padStart(4, '0');
+    card.units.push({ 
+      shortRef  : shortRef,
+      ref       : card.id + '.' + shortRef,
+      ownerId   : this.dataService.defaultUser.uid,
+      owner     : this.dataService.defaultUser,
+      isYours   : true,
+      cardId    : card.id,
+      card      : card,
+      sellPrice : this.addUnitsWithSellOffer ? card.price || 0 : null,
+    });
   }
 
 
-  createUnit() {
+  createUnit(num = 1) {
     if (this.selCard) {
-      const ref = this.selCard.id + '.' + randomUnitId(20);
-      const ownerId = this.dataService.defaultUser.uid;
-      this.selCard.units.push({ 
-        ref,
-        ownerId,
-        owner    : this.dataService.defaultUser,
-        isYours  : true,
-        cardId   : this.selCard.id,
-        shortRef : ref.split('.')[1],
-        card     : this.selCard,
-      });
-      setDoc(doc(this.firestore, 'units', ref), { ownerId  });
+      for (let t = 0; t < num; t++) { this.pushNewUnit(this.selCard); }
+      this.selCard.totalUnits = this.selCard.units.length;
+      // setDoc(doc(this.firestore, 'units', ref), { ownerId  });
       // this.growl.success('New unit added');
     }
   }
 
-  deleteUnit(unit: TFullUnit) {
+  deleteUnit() {
     if (this.selCard) {
-      this.selCard.units.splice(this.selCard.units.indexOf(unit), 1);
-      deleteDoc(doc(this.firestore, 'units', unit.ref));
+      this.selCard.units.splice(this.selCard.units.length - 1, 1);
+      this.selCard.totalUnits = this.selCard.units.length;
+      // deleteDoc(doc(this.firestore, 'units', unit.ref));
     }
   }
 
@@ -157,16 +192,30 @@ export class SettingsComponent {
     card.isHaste       = !!card.isHaste;
     card.isWall        = !!card.isWall;
     card.border = this.hasBlackBorder ? 'black' : 'white';
+    card.totalUnits = card.units.length;
 
-    const rawCard = card.keyFilter((v,k) => k !== 'id' && k !== 'units') as Omit<TCard, 'id'>; // Remove the fields .id and .units
+    const rawCard = card.keyFilter((v,k) => k !== 'id' && k !== 'units') as Omit<TDBCard, 'id'>; // Remove the fields .id and .units
     console.log('Saving Card', rawCard);
     await updateDoc(doc(this.firestore, 'cards', card.id), rawCard);
     // await setDoc(doc(this.firestore, 'cards', card.id), rawCard);
+
+    // Update all units ownership
+    const cardOwnership: { [key:string]: TDBUnit } = {};
+    card.units.forEach(unit => {
+      const ref = unit.shortRef;
+      if (unit.sellPrice === undefined) { unit.sellPrice = null; }
+      cardOwnership[ref] = { ownerId: unit.ownerId, sellPrice: unit.sellPrice };
+    });
+    console.log('saving card ownership', cardOwnership);
+    await setDoc(doc(this.firestore, 'ownership', card.id), cardOwnership);
+    
+    // Set new time for the last update of the card units owners
+    await updateDoc(doc(this.firestore, 'ownership', 'updates'), { [card.id]: getTime() });
+
+
     this.growl.success(`Card ${card.name} updated`);
 
-    const list = this.cardsList.loadedList;
-    this.selectCard(list[Math.min(list.indexOf(card) + 1, list.length - 1)]); // Select the next card
-    this.updateTotals();
+    // this.newCard();
   }
 
 
@@ -174,7 +223,7 @@ export class SettingsComponent {
     const lastId = this.cardsList.loadedList.at(-1)?.id;
     if (!lastId) { return; }
     const id = 'c' + ((Number.parseInt(lastId.slice(1)) + 1) + '').padStart(6, '0');
-    const card: TCard = {
+    const card: TDBCard = {
       id,
       name            : 'New Card',
       image           : 'image',
@@ -200,6 +249,7 @@ export class SettingsComponent {
       maxInDeck       : 4,
       readyToPlay     : false,
       upkeepPlayer    : null,
+      totalUnits      : 0,
     };
     // console.log('New Card:', card);
     await setDoc(doc(this.firestore, 'cards', id), card);
@@ -213,24 +263,35 @@ export class SettingsComponent {
 
   numArr(num: number): Array<number> { return Array.from(Array(num).keys()) }
 
-  // async dbTransfer() {
-  //   // const snapshot: QuerySnapshot<DocumentData> = await getDocs(collection(this.firestore, 'cards'));
-  //   // const cards = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as TCard));
-  //   // cards.forEach(card => {
-  //   //   card.units.forEach(unit => {
-  //   //     setDoc(doc(this.firestore, 'units', unit.ref), { ownerId: unit.owner });
-  //   //   });
-  //   // });
-  // }
+  countSellUnits() {
+    return this.selCard?.units.filter(u => u.sellPrice !== null).length || 0;
+  }
+  nextCard() {
+    const list = this.cardsList.loadedList;
+    this.selectCard(list[Math.min(list.indexOf(this.selCard) + 1, list.length - 1)]); // Select the next card
+    this.updateTotals();
+  }
+
+
+  async customUnitCreation() {
+    if (this.selCard) {
+      this.addUnitsWithSellOffer = false; this.createUnit(9);
+      this.addUnitsWithSellOffer = true;  this.createUnit(10);
+
+      await this.saveCard(this.selCard);      
+      this.nextCard();
+    }
+  }
 
   showingCode = false;
   cardsDBCode = '';
+
   showCode() {
     console.log('show code');
     this.showingCode = !this.showingCode;
     if (this.showingCode) {
-      this.cardsDBCode = `import { TCard } from "./types";\n\n`;
-      this.cardsDBCode += `export const dbCards: TCard[] = [`;
+      this.cardsDBCode = `import { TDBCard } from "./types";\n\n`;
+      this.cardsDBCode += `export const dbCards: TDBCard[] = [`;
 
       this.dataService.cards.forEach(card => {
 
@@ -239,31 +300,32 @@ export class SettingsComponent {
         const landWalk = card.landWalk ? `'${card.landWalk}'` : 'null';
         
         this.cardsDBCode += `\n  {`;
-        this.cardsDBCode += `\n    id:               '${card.id}', `;
-        this.cardsDBCode += `\n    name:             \`${card.name}\`, `;
-        this.cardsDBCode += `\n    image:            '${card.image}', `;
-        this.cardsDBCode += `\n    cast:             [${card.cast}], `;
-        this.cardsDBCode += `\n    color:            '${card.color}', `;
-        this.cardsDBCode += `\n    text:             '${card.text}', `;
-        this.cardsDBCode += `\n    type:             '${card.type}', `;
-        this.cardsDBCode += `\n    price:            ${card.price}, `;
-        this.cardsDBCode += `\n    attack:           ${card.attack || '0'}, `;
-        this.cardsDBCode += `\n    defense:          ${card.defense || '0'}, `;
-        this.cardsDBCode += `\n    isWall:           ${!!card.isWall}, `;
-        this.cardsDBCode += `\n    isFlying:         ${!!card.isFlying}, `;
-        this.cardsDBCode += `\n    isTrample:        ${!!card.isTrample}, `;
-        this.cardsDBCode += `\n    isFirstStrike:    ${!!card.isFirstStrike}, `;
-        this.cardsDBCode += `\n    isHaste:          ${!!card.isHaste}, `;
-        this.cardsDBCode += `\n    canRegenerate:    ${!!card.canRegenerate ? 'true' : 'null'}, `;
-        this.cardsDBCode += `\n    notBlockByWalls:  ${!!card.notBlockByWalls}, `;
-        this.cardsDBCode += `\n    noTargetSpells:   ${!!card.noTargetSpells}, `;
-        this.cardsDBCode += `\n    canPreventDamage: ${!!card.canPreventDamage}, `;
-        this.cardsDBCode += `\n    colorProtection:  ${colorProtection}, `;
-        this.cardsDBCode += `\n    upkeepPlayer:     ${upkeepPlayer}, `;
-        this.cardsDBCode += `\n    landWalk:         ${landWalk}, `;
-        this.cardsDBCode += `\n    readyToPlay:      ${!!card.readyToPlay}, `;
-        if (card.border) { this.cardsDBCode += `\n    border:          '${card.border || 'white'}', `; }
-        if (card.maxInDeck) { this.cardsDBCode += `\n    maxInDeck:       ${card.maxInDeck || 'null'}, `; }
+        this.cardsDBCode += `\n    id:               '${card.id}',`;
+        this.cardsDBCode += `\n    name:             \`${card.name}\`,`;
+        this.cardsDBCode += `\n    image:            '${card.image}',`;
+        this.cardsDBCode += `\n    cast:             [${card.cast}],`;
+        this.cardsDBCode += `\n    color:            '${card.color}',`;
+        this.cardsDBCode += `\n    text:             '${card.text}',`;
+        this.cardsDBCode += `\n    type:             '${card.type}',`;
+        this.cardsDBCode += `\n    price:            ${card.price},`;
+        this.cardsDBCode += `\n    attack:           ${card.attack || '0'},`;
+        this.cardsDBCode += `\n    defense:          ${card.defense || '0'},`;
+        this.cardsDBCode += `\n    isWall:           ${!!card.isWall},`;
+        this.cardsDBCode += `\n    isFlying:         ${!!card.isFlying},`;
+        this.cardsDBCode += `\n    isTrample:        ${!!card.isTrample},`;
+        this.cardsDBCode += `\n    isFirstStrike:    ${!!card.isFirstStrike},`;
+        this.cardsDBCode += `\n    isHaste:          ${!!card.isHaste},`;
+        this.cardsDBCode += `\n    canRegenerate:    ${!!card.canRegenerate ? 'true' : 'null'},`;
+        this.cardsDBCode += `\n    notBlockByWalls:  ${!!card.notBlockByWalls},`;
+        this.cardsDBCode += `\n    noTargetSpells:   ${!!card.noTargetSpells},`;
+        this.cardsDBCode += `\n    canPreventDamage: ${!!card.canPreventDamage},`;
+        this.cardsDBCode += `\n    colorProtection:  ${colorProtection},`;
+        this.cardsDBCode += `\n    upkeepPlayer:     ${upkeepPlayer},`;
+        this.cardsDBCode += `\n    landWalk:         ${landWalk},`;
+        this.cardsDBCode += `\n    readyToPlay:      ${!!card.readyToPlay},`;
+        if (card.border)    { this.cardsDBCode += `\n    border:           '${card.border || 'white'}',`; }
+        if (card.maxInDeck) { this.cardsDBCode += `\n    maxInDeck:        ${card.maxInDeck || 'null'},`; }
+        this.cardsDBCode += `\n    totalUnits:       ${card.units.length}`;
         this.cardsDBCode += `\n  },`;
       });     
        
@@ -273,7 +335,7 @@ export class SettingsComponent {
     navigator.clipboard.writeText(this.cardsDBCode);
 
     this.dataService.cards.forEach(card => {
-      const match = dbCards.find(c => c.id === card.id) as TCard;
+      const match = dbCards.find(c => c.id === card.id) as TDBCard;
       if (!match) {
         console.log('New Card: ' + card.id + ' - ' + card.name, card);
       } else {
@@ -285,20 +347,26 @@ export class SettingsComponent {
       }
     });
 
-    // setTimeout(() => {
-    //   let text = document.querySelector('#db-code')?.childNodes[0];
-    //   let range = new Range();
-    //   let selection = document.getSelection();
-    //   if (text && selection) {
-    //     range.setStart(text, 0);
-    //     range.setEnd(text, 100);
-    //     selection.removeAllRanges();
-    //     selection.addRange(range);        
-    //   }
-    // }, 500);
-
-
   }
+
+  codeForCardUnits() {
+    console.log('show code');
+    this.showingCode = !this.showingCode;
+    if (this.showingCode) {
+      this.cardsDBCode = `export const dbCardUnits: { [key: string]: string[] } = {`;
+      this.dataService.cards.forEach(card => {
+        this.cardsDBCode += `\n  '${card.id}': [`;
+        this.cardsDBCode += card.units.map(unit => `'${unit.shortRef}'`).join(`, `)
+        // card.units.forEach(unit => this.cardsDBCode += `'${unit.shortRef}', `);
+        this.cardsDBCode += `],`;
+      });     
+       
+      this.cardsDBCode += `\n};`;
+    }
+    navigator.clipboard.writeText(this.cardsDBCode);
+  }
+
+
 }
 
 

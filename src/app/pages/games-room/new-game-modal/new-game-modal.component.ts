@@ -6,7 +6,7 @@ import { NgbActiveModal } from "@ng-bootstrap/ng-bootstrap";
 import { TranslateModule } from "@ngx-translate/core";
 import { MtgCardComponent } from "../../../core/common/internal-lib/mtg-card/mtg-card.component";
 import { DataService, TFullDeck } from "../../../core/dataService";
-import { TUser } from "../../../core/types";
+import { TDBUser } from "../../../core/types";
 import { AuthService } from "../../../core/common/auth.service";
 
 type TDeckItem = { id: string; name: string; };
@@ -42,7 +42,7 @@ export class NewGameModalComponent {
     rowsPerPage   : 8,
   });
 
-  selectedUser?: TUser;
+  selectedUser?: TDBUser;
   selectedDeck?: TDeckItem;
   blockPr!: Promise<void>;
 

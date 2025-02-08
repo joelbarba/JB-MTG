@@ -1,12 +1,10 @@
 import { Component, HostListener, ViewEncapsulation } from '@angular/core';
 import { AuthService } from '../../core/common/auth.service';
 import { ShellService } from '../../shell/shell.service';
-import { CommonModule, formatNumber } from '@angular/common';
-import { Firestore, QuerySnapshot, QueryDocumentSnapshot, DocumentData, setDoc, updateDoc, deleteDoc } from '@angular/fire/firestore';
+import { CommonModule } from '@angular/common';
+import { Firestore, setDoc, deleteDoc } from '@angular/fire/firestore';
 import { getDocs, getDoc, collection, doc } from '@angular/fire/firestore';
 import { BehaviorSubject, debounceTime, Observable, Subject, Subscription, tap } from 'rxjs';
-import { collectionData } from 'rxfire/firestore';
-import { TCard, TDeckRef } from '../../core/types';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { BfConfirmService, BfDnDModule, BfDnDService, BfGrowlService, BfListHandler, BfUiLibModule } from 'bf-ui-lib';
@@ -33,7 +31,7 @@ import { ManaArrayComponent } from "../games-room/game/mana-array/mana-array.com
     MtgCardComponent,
     HoverTipDirective,
     BfDnDModule,
-    ManaArrayComponent,
+    // ManaArrayComponent,
 ],
   templateUrl: './your-cards.component.html',
   styleUrl: './your-cards.component.scss',
@@ -148,7 +146,7 @@ export class YourCardsComponent {
 
     await this.dataService.yourDecksPromise;
     if (deckId) {
-      console.log('DECK ID', deckId);
+      // console.log('DECK ID', deckId);
       const deck = this.decks.find(d => d.id === deckId);
       if (deck) { this.showDecks = true; this.editDeck(deck); }
     }
@@ -207,8 +205,8 @@ export class YourCardsComponent {
     this.decks.sort((a,b) => {
       return new Date(a.created) > new Date(b.created) ? 1 : -1;
     });
-    console.log('this.dataService.yourDecks', this.dataService.yourDecks);
-    console.log('this.decks', this.decks);
+    // console.log('this.dataService.yourDecks', this.dataService.yourDecks);
+    // console.log('this.decks', this.decks);
   }
 
   private loadGroupDeck() {
@@ -508,7 +506,7 @@ export class YourCardsComponent {
         deckName : this.selDeck.deckName,
         units    : this.selDeck.units.map(card => card.ref),
       }
-      console.log('Saving Card', dbDeck);
+      console.log('Saving DECK', dbDeck);
       await setDoc(doc(this.firestore, 'users', this.auth.profileUserId, 'decks', dbDeck.id), dbDeck);
       this.isSaving = false;
       // this.growl.success(`Deck saved`);

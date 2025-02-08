@@ -2,24 +2,6 @@ export type TColor = 'uncolored' | 'blue' | 'white' | 'black' | 'red' | 'green' 
 export type TCast = [number, number, number, number, number, number];
 export type TCardType = 'land' | 'creature' | 'instant' | 'interruption' | 'artifact' | 'sorcery' | 'enchantment';
 export type TCardExtraType = TCardType | 'island' | 'plains' | 'swamp' | 'mountain' | 'forest';
-
-export type TUser = {
-  name: string;
-  email: string;
-  uid: string;
-  isAdmin: boolean;
-  isEnabled: boolean;
-  sats: number;
-  // decks: Array<TDeckRef>;
-}
-export type TDeckRef = {
-  id: string;
-  deckName: string;
-  created: string;
-  restricted: boolean;  // false = 4 cards of any type allowed
-  units: Array<string>;  // unit ref
-}
-
 export enum EPhase {
   untap   = 'untap',
   upkeep  = 'upkeep',
@@ -39,7 +21,38 @@ export enum ESubPhase {
   regenerate     = 'regenerate',
 }
 
-export type TCard = {
+/*************************************************
+ * Firebase Collections:
+ * 
+ * - users          [userId]:TDBUser
+ *    - decks       [deckId]:TDBUserDeck
+ * 
+ * - cards          [cardId]:TDBCard ---> to export to dbCards.ts
+ * - games          [gameId]:TGameDBState
+ * - gamesChat      [msgId]:TDBChatMsg
+ * - gamesHistory   [gameId]:{}
+ * - history        [action-0001]:{ action, params, player, time }[]
+ *                  [action-0002]:{ action, params, player, time }[]
+ *                  [action-000N]:{ action, params, player, time }[]
+ * 
+ * - ownership      [updates]: { c000001: '25-11-2024 19:31:21',
+ *                               c000002: '25-11-2024 19:31:22', }
+ *                  [c000001]: { 
+ *                    u0001: { ownerId: 'userId', sellPrice: sats }
+ *                    u0002: { ownerId: 'userId', sellPrice: sats }
+ *                    u000N: { ownerId: 'userId', sellPrice: sats }
+ *                  }
+ * 
+ * c000001.u0001
+ **************************************************/
+
+export type TDBUnit = { ownerId: string, sellPrice: number | null };
+export type TDBOwnership =                       // {
+    { [key:string]: { [key:string]: TDBUnit }}  //   c000001: { u0001: { ownerId: '', ... }}, {}, {},  ...
+  & { updates?: { [key:string]: string  }}      //   updates: { c000001: '25-11-2024 19:31:22' }
+                                                // }
+
+export type TDBCard = {
   id      : string; // C000000
   cast    : TCast;
   color   : TColor;
@@ -65,8 +78,34 @@ export type TCard = {
   landWalk: 'island' | 'plains' | 'swamp' | 'mountain' | 'forest' | null; // Islandwalk, Plainswalk, Swampwalk, Mountainwalk, Forestwalk
   maxInDeck?: number;    // Max number of the same card you can have in a deck (1, 4, undefined=as many as you want)
   readyToPlay: boolean;
-  // units: Array<{ ref: string, owner: string }>;
+  totalUnits: number;  // 20 = c000001.u0001 ~ c000001.u0020
 };
+
+export type TDBUser = {
+  name: string;
+  email: string;
+  uid: string;
+  isAdmin: boolean;
+  isEnabled: boolean;
+  sats: number;
+  // decks: Array<TDeckRef>;
+}
+export type TDBUserDeck = {
+  id: string;
+  deckName: string;
+  created: string;
+  restricted: boolean;  // false = 4 cards of any type allowed
+  units: Array<string>;  // unit ref
+}
+
+export type TDBChatMsg = { player: string, text: string };
+
+
+
+
+
+
+// *************************************************** GAME TYPES ***************************************************
 
 export type TCardLocation = 'discarded' | 'stack'
   | 'deck1' | 'hand1' | 'tble1' | 'grav1'
@@ -173,7 +212,7 @@ export type TDBGameCard = {
 }
 // export type TCardToken = { id: string; text?: string; };
 
-export type TGameCard = TDBGameCard & TCard & { // Not in DB (fixed properties from TCard + extended props & functions)
+export type TGameCard = TDBGameCard & TDBCard & { // Not in DB (fixed properties from TCard + extended props & functions)
   selectableAction?: null | TGameOption;
   // selectableTarget?: null | { text: string, value: string };
   effectsFrom?: Array<TEffect>;

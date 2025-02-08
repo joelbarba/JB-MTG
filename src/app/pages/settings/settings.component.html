@@ -3,11 +3,15 @@
 <div class="page">
 
   <div class="details">
-    <div *ngIf="selCard">
+    <div *ngIf="selCard">      
      
       <div class="card-data">
         <div class="row whiteBg">
-          <h3 class="col-12">Details: {{selCard.id}}</h3>
+          <h3 class="col-12">
+            Details: {{selCard.id}}
+            <bf-btn bfText="Add 20 Units" style="margin-left: 15px;" (bfClick)="customUnitCreation()"></bf-btn>
+            <bf-btn bfText="Next" style="margin-left: 15px;" (bfClick)="nextCard()"></bf-btn>
+          </h3>
 
           <bf-input class="col-6" bfLabel="Image" [(ngModel)]="selCard.image" (ngModelChange)="prepareName()"></bf-input>
           <bf-input class="col-6" bfLabel="Name"  [(ngModel)]="selCard.name"></bf-input>
@@ -87,6 +91,7 @@
 
           <bf-input class="col-3" bfLabel="Max In Deck" [(ngModel)]="selCard.maxInDeck" (bfOnEnter)="saveCard(selCard)"></bf-input>
 
+          <div class="col-4" style="margin-top: 30px;">totalUnits: {{selCard.totalUnits || 0}}</div>
           <bf-checkbox class="col-4" bfLabel="Black Border" [(ngModel)]="hasBlackBorder" style="margin-top: 30px;"></bf-checkbox>
           <bf-checkbox class="col-4" bfLabel="Ready to play" [(ngModel)]="selCard.readyToPlay" style="margin-top: 30px;"></bf-checkbox>
 
@@ -103,16 +108,20 @@
 
       </div>
 
-      <h4 style="margin-top: -30px;">
-        <bf-btn bfText="+1 Unit" bfType="add" style="margin-right: 15px;" (bfClick)="createUnit()"></bf-btn>
-        <span>Units ({{selCard.units.length}}):</span>
-      </h4>
+      <div style="margin: -30px 0 5px;">
+        <h4 style="display: inline-block; margin-right: 15px;">Units ({{selCard.units.length}}):</h4>
+        <bf-btn bfText="-1"  style="margin-right: 15px;" (bfClick)="deleteUnit()" class="warning"></bf-btn>
+        <bf-btn bfText="+1"  style="margin-right: 15px;" (bfClick)="createUnit()"></bf-btn>
+        <bf-btn bfText="+10" style="margin-right: 15px;" (bfClick)="createUnit(10)"></bf-btn>
+        <bf-checkbox bfLabel="With Sell Offer" [(ngModel)]="addUnitsWithSellOffer"></bf-checkbox>
+        <span style="margin-left: 15px;">OnSale={{countSellUnits()}}</span>
+      </div>
       <div>
         <ul class="list-unstyled table-list header" *ngIf="selCard.units.length">
           <li class="list-header">
-            <bf-list-header-col class="col-6" colTitle="Ref"></bf-list-header-col>
+            <bf-list-header-col class="col-4" colTitle="Ref"></bf-list-header-col>
             <bf-list-header-col class="col-4" colTitle="Owner"></bf-list-header-col>
-            <bf-list-header-col class="col-2" colTitle=""></bf-list-header-col>
+            <bf-list-header-col class="col-4" colTitle="Sell Price"></bf-list-header-col>
           </li>
         </ul>
       </div>
@@ -121,21 +130,26 @@
 
     <div class="units-list" *ngIf="selCard">
 
-      <ul class="list-unstyled table-list content">
+      <ul class="list-unstyled table-list content" style="min-height: 300px;">
         <li class="list-row" *ngFor="let unit of selCard.units; let ind = index">
-          <div class="col-6 ref-font">[{{ind}}] {{unit.ref}}</div>
+          <div class="col-4 ref-font">{{unit.ref}}</div>
           <div class="col-4">
-            {{unit.owner.name}}
-             <!-- <bf-dropdown class="flat"
+            <!-- <span style="padding: 0 15px; cursor: pointer;">{{unit.owner.name}}</span> -->
+             <bf-dropdown class="flat"
               [(ngModel)]="unit.owner"
+              (ngModelChange)="unit.ownerId = unit.owner.uid"
               [bfList]="users"
               bfRender="name"
               bfEmptyLabel="Free"
-             ></bf-dropdown> -->
+             ></bf-dropdown>
           </div>
-          <div class="col-2 text-right">
-            <bf-btn bfType="delete-icon" (bfClick)="deleteUnit(unit)"></bf-btn>
-          </div>
+          <div class="col-4">
+            <!-- {{unit.ownerId}} -->
+            <!-- {{unit.sellPrice}} -->
+            <bf-input class="flat" [(ngModel)]="unit.sellPrice"></bf-input>
+            <bf-btn *ngIf="unit.sellPrice === null" bfText="Sell"    class="secondary" style="margin-left: 15px;" (bfClick)="unit.sellPrice = selCard.price"></bf-btn>
+            <bf-btn *ngIf="unit.sellPrice !== null" bfText="NotSell" class="warning"   style="margin-left: 15px;" (bfClick)="unit.sellPrice = null"></bf-btn>
+          </div>          
         </li>
       </ul>
     </div>
@@ -155,7 +169,8 @@
       <bf-checkbox class="col-4 pad-input" bfLabel="Highlight Not Ready" [(ngModel)]="highlightNoneReady"></bf-checkbox>
       <div class="col-4 text-right">
         <bf-btn bfIcon="icon-plus" bfText="New Card" (bfClick)="newCard()"></bf-btn>
-        <bf-btn bfIcon="icon-plus" bfText="Show Code" (bfClick)="showCode()" style="margin-left: 15px;"></bf-btn>
+        <bf-btn bfIcon="icon-plus" bfText="dbCards.ts" (bfClick)="showCode()" style="margin-left: 15px;"></bf-btn>
+        <!-- <bf-btn bfIcon="icon-plus" bfText="dbCardUnits.ts" (bfClick)="codeForCardUnits()" style="margin-left: 15px;"></bf-btn> -->
       </div>
     </div>
 

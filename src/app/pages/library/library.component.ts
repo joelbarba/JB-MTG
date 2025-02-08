@@ -6,7 +6,6 @@ import { Firestore, QuerySnapshot, QueryDocumentSnapshot, DocumentData, setDoc, 
 import { getDocs, getDoc, collection, doc } from '@angular/fire/firestore';
 import { Observable, Subscription } from 'rxjs';
 import { collectionData } from 'rxfire/firestore';
-import { TCard } from '../../core/types';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { BfConfirmService, BfListHandler, BfUiLibModule } from 'bf-ui-lib';

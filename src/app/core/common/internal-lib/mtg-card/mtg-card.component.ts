@@ -1,5 +1,5 @@
 import { Component, Input } from '@angular/core';
-import { TCard } from '../../../types';
+import { TDBCard } from '../../../types';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -13,7 +13,7 @@ import { CommonModule } from '@angular/common';
   styleUrl: './mtg-card.component.scss'
 })
 export class MtgCardComponent {
-  // @Input() card!: TCard | null;
+  // @Input() card!: TDBCard | null;
   @Input() cardImg?: string;
   @Input() back = false;
   @Input() border?: 'white' | 'black' = 'white';

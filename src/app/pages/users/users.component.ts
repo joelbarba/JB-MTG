@@ -8,7 +8,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { BfConfirmService, BfGrowlService, BfListHandler, BfUiLibModule } from 'bf-ui-lib';
 import { Subject } from 'rxjs';
 import { Auth, createUserWithEmailAndPassword, sendEmailVerification, sendPasswordResetEmail, updateProfile } from '@angular/fire/auth';
-import { TUser } from '../../core/types';
+import { TDBUser } from '../../core/types';
 
 
 
@@ -28,12 +28,12 @@ import { TUser } from '../../core/types';
 export class UsersComponent {
   
   usersColSub!: Unsubscribe;
-  users: Array<TUser> = [];
-  users$ = new Subject<Array<TUser>>();
+  users: Array<TDBUser> = [];
+  users$ = new Subject<Array<TDBUser>>();
   usersList!: BfListHandler;
   
-  newUser?: Omit<TUser, 'uid'> & { pass: string };
-  editUser?: TUser;
+  newUser?: Omit<TDBUser, 'uid'> & { pass: string };
+  editUser?: TDBUser;
 
   btnDisabled = false; // Whether the create/save user button is enabled
 
@@ -69,7 +69,7 @@ export class UsersComponent {
     this.usersColSub = onSnapshot(collection(this.firestore, 'users'), (snapshot: QuerySnapshot) => {
       const source = snapshot.metadata.hasPendingWrites ? 'local' : 'server';
       this.users = snapshot.docs.map(doc => {
-        return { ...doc.data(), uid: doc.id } as TUser;
+        return { ...doc.data(), uid: doc.id } as TDBUser;
       });
       this.users$.next(this.users);
     });    
@@ -145,7 +145,7 @@ export class UsersComponent {
     }
   }
 
-  prepareEditUser(user: TUser) {
+  prepareEditUser(user: TDBUser) {
     this.editUser = user;
     this.btnDisabled = false;
   }

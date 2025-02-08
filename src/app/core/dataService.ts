@@ -1,33 +1,32 @@
 import { Injectable } from "@angular/core";
 import { AuthService } from "./common/auth.service";
-import { addDoc, collection, deleteField, doc, DocumentData, Firestore, getDoc, getDocs, onSnapshot, QueryDocumentSnapshot, QuerySnapshot, setDoc, updateDoc } from "@angular/fire/firestore";
-import { EPhase, TCard, TCardLocation, TCast, TDBGameCard, TDeckRef, TGameCard, TGameDBState, TPlayer, TUser } from "./types";
+import { addDoc, collection, deleteField, doc, DocumentData, DocumentReference, DocumentSnapshot, Firestore, getDoc, getDocs, onSnapshot, QueryDocumentSnapshot, QuerySnapshot, setDoc, updateDoc } from "@angular/fire/firestore";
+import { EPhase, TDBCard, TCardLocation, TCast, TDBGameCard, TDBUserDeck, TGameCard, TGameDBState, TPlayer, TDBUser, TDBUnit, TDBOwnership } from "./types";
 import { BehaviorSubject, filter, map, Subject } from "rxjs";
 import { Unsubscribe } from "firebase/auth";
 import { BfDefer } from "bf-ui-lib";
+import { dbCards } from "./dbCards";
 
-export type TDBUnit = { ref: string, ownerId: string, sellPrice?: number };
-export type TFullUnit = TDBUnit & { owner: TUser, isYours: boolean; cardId: string, shortRef: string, card: TFullCard };
-export type TFullCard = TCard & { units: Array<TFullUnit>; };
+export type TFullUnit = TDBUnit & { ref: string, owner: TDBUser, isYours: boolean; cardId: string, shortRef: string, card: TFullCard };
+export type TFullCard = TDBCard & { units: Array<TFullUnit>; };
 export type TFullDeck = { id: string; deckName: string; created: string, units: Array<TFullUnit>; };
 
 @Injectable({ providedIn: 'root' })
 export class DataService {
 
-  dbCards: Array<TCard> = [];
+  dbCards: Array<TDBCard> = dbCards;
+  users: Array<TDBUser> = [];
+  ownership: TDBOwnership = {};
+
   cards: Array<TFullCard> = [];
-  users: Array<TUser> = [];
-  units: Array<TDBUnit> = [];
   yourDecks: Array<TFullDeck> = [];
 
   cards$: BehaviorSubject<Array<TFullCard>> = new BehaviorSubject([] as Array<TFullCard>);
-  users$: BehaviorSubject<Array<TUser>> = new BehaviorSubject([] as Array<TUser>);
-  units$: BehaviorSubject<Array<TDBUnit>> = new BehaviorSubject([] as Array<TDBUnit>);
+  users$: BehaviorSubject<Array<TDBUser>> = new BehaviorSubject([] as Array<TDBUser>);
   yourDecks$: BehaviorSubject<Array<TFullDeck>> = new BehaviorSubject([] as Array<TFullDeck>);
-
   yourCredit$ = this.users$.pipe(map(users => users.find(u => u.uid === this.auth.profileUserId)?.sats || 0));
 
-  defaultUser: TUser = {
+  defaultUser: TDBUser = {
     uid       : '4cix25Z3DPNgcTFy4FcsYmXjdSi1',
     name      : 'Joel',
     email     : 'joel.barba.vidal@gmail.com',
@@ -36,15 +35,18 @@ export class DataService {
     sats      : 5000000,
   };
 
-
   private subs: Array<Unsubscribe> = [];
+
   private isUsersLoaded = false;
-  private isUnitsLoaded = false;
-  private loadDefer = new BfDefer();
-  loadPromise = this.loadDefer.promise;
-  
+  private isOwnersLoaded = false;
+
+  private loadDefer = new BfDefer();  
   private deferYourDecks = new BfDefer();
+
+  loadPromise = this.loadDefer.promise;
   yourDecksPromise = this.deferYourDecks.promise;
+
+
 
   constructor(
     private auth: AuthService,
@@ -60,53 +62,57 @@ export class DataService {
   private async loadCards() {
     this.subs.forEach(unsubscribe => unsubscribe());
     this.isUsersLoaded = false;
-    this.isUnitsLoaded = false;
+    this.isOwnersLoaded = false;
     await this.auth.profilePromise;
 
-    // When /cards collection changes
-    this.subs.push(onSnapshot(collection(this.firestore, 'cards'), (snapshot: QuerySnapshot) => {
-      this.dbCards = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as TCard));
-      this.cards = snapshot.docs.map(doc => {
-        const data = { id: doc.id, ...doc.data() } as TFullCard;
-        return { ...data, units: [] } as TFullCard;
-      });      
-      this.mergeData();
-      // console.log('/cards collection changes', this.cards);
-    }));
+    // Extend dbCards.ts data into full objects (TFullCard + TFullUnit)
+    this.cards = this.dbCards.map(dbCard => {
+      const fullCard = { ...dbCard, units: [] } as TFullCard;
+      fullCard.units = Array.from(new Array(dbCard.totalUnits)).map((v, ind) => {
+        const shortRef = 'u' + ((ind + 1) + '').padStart(4, '0');
+        return {
+          shortRef,
+          ref       : dbCard.id + '.' + shortRef,
+          ownerId   : this.defaultUser.uid,
+          owner     : this.defaultUser, 
+          isYours   : false,
+          cardId    : dbCard.id,
+          card      : fullCard,
+          sellPrice : null,
+        };
+      });
+      return fullCard;
+    });
 
-    // When /users collection changes
+    this.loadOwnership();
+
+
+
+    // Watch /users collection
     this.subs.push(onSnapshot(collection(this.firestore, 'users'), (snapshot: QuerySnapshot) => {
-      this.users = snapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() } as TUser));
+      console.log('/users collection changes', this.users);
+      this.users = snapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() } as TDBUser));
       this.users$.next(this.users);
       this.defaultUser = this.users.find(u => u.uid === this.defaultUser.uid) || this.defaultUser;
       this.isUsersLoaded = true;
       this.mergeData();
-      // console.log('/users collection changes', this.users);
     }));
 
-    // When /units collection changes
-    this.subs.push(onSnapshot(collection(this.firestore, 'units'), (snapshot: QuerySnapshot) => {
-      this.units = snapshot.docs.map(doc => ({ ref: doc.id, ...doc.data() } as TDBUnit));
-      this.units$.next(this.units);
-      this.isUnitsLoaded = true;
-      this.mergeData();
-      // console.log('/units collection changes', this.units);
-    }));
 
-    // When your decks change
+    // Watch your decks changes
     if (this.auth.profileUserId) {
       await this.loadPromise;
       this.subs.push(onSnapshot(collection(this.firestore, 'users', this.auth.profileUserId, 'decks'), (snapshot: QuerySnapshot) => {
         this.yourDecks = snapshot.docs.map(doc => {
-          const deck = { id: doc.id, ...doc.data() } as TDeckRef; // Here we only have the units ref
+          const deck = { id: doc.id, ...doc.data() } as TDBUserDeck; // Here we only have the units ref
           const units = deck.units.map(ref => {
             const card = this.cards.find(c => c.id === ref.split('.')[0]);
             const unit = card?.units.find(u => u.ref === ref);
-            if (!unit) { console.log(`Error on Deck ${deck.deckName}. No reference ${ref} for ${card?.name}/${card?.id}`); }
+            if (!unit) { console.log(`Error on Deck "${deck.deckName}". Unit ${ref} (${card?.name}) doesn't belong to you`); }
             return unit;
-          }) as Array<TFullUnit>;
+          }).filter(u => !!u) as Array<TFullUnit>;
 
-          return { id: deck.id, deckName: deck.deckName, created: deck.created, units: units.filter(u => !!u) } as TFullDeck;
+          return { id: deck.id, deckName: deck.deckName, created: deck.created, units } as TFullDeck;
         });
         this.yourDecks$.next(this.yourDecks);
         this.deferYourDecks.resolve(this.yourDecks);
@@ -115,19 +121,82 @@ export class DataService {
     }
   }
 
-  private mergeData() { // Merging cards + users + units
-    this.cards.forEach(card => {
-      card.units = this.units.filter(u => u.ref.split('.')[0] === card.id).map(unit => {
-        const owner = this.users.find(u => u.uid === unit.ownerId) || this.defaultUser;
-        const isYours = this.auth.profileUserId === unit.ownerId;
-        const cardId = unit.ref.split('.')[0] || '';
-        const shortRef = unit.ref.split('.')[1] || '';
-        const card = this.cards.find(c => c.id === cardId);
-        if (!card) { console.error(`CARD ID NOT FOUND:`, cardId); }
-        return { ...unit, owner, isYours, cardId, shortRef, card: card || this.cards[0] };
-      });
+
+
+  // Loads the ownership of card units.
+  // If present on the localstorage (cache), it takes it from there
+  // It watches ownership[updates], and loads further deltas if any new updates
+  private async loadOwnership() {
+    const localOwners = JSON.parse(localStorage['ownership'] || 'null');
+    this.ownership = { ...localOwners };
+
+    if (!localOwners) {  // First load (loading everything)
+      console.log('No localstorage: Loading full ownership register');
+      const allDocs: QuerySnapshot<DocumentData> = await getDocs(collection(this.firestore, 'ownership'));
+      allDocs.forEach(doc => this.ownership[doc.id] = { ...doc.data() });
+      // doc.id = c000099,   doc.data() = { u0001: {...}, u0002: {...} }
+      localStorage['ownership'] = JSON.stringify(this.ownership); // Save it to localstorage
+
+    } else {
+      console.log('ownership taken from cache');
+      // const docSnap = await getDoc(doc(this.firestore, 'ownership', 'updates'));
+      // await this.updateOwnershipDeltas(docSnap);
+    }
+
+    // Real time updates
+    onSnapshot(doc(this.firestore, 'ownership', 'updates'), docSnap => {
+      this.updateOwnershipDeltas(docSnap);
     });
-    if (this.isUsersLoaded && this.isUnitsLoaded) {
+  }
+
+  // Depending on the times into the special document: ownership[updates],
+  // if an update time for a specific cardId is greater than the local copy (localstorage),
+  // load again the ownership of all units for that card (ownership[cardId])
+  private async updateOwnershipDeltas(docSnap: DocumentSnapshot<DocumentData>) {
+    console.log('checking ownership deltas');
+    const dbUpdates = docSnap.data() as { [key: string]: string };
+    const cacheUpdates = this.ownership['updates'] || {};
+
+    const cardsToUpdate: { cardId: string, dbTimeStr: string }[] = [];
+    Object.entries(dbUpdates).forEach(([cardId, dbTimeStr]) => {
+      const dbTime = new Date(dbTimeStr);
+      const cacheTime = new Date(cacheUpdates[cardId] || '01-01-2000');
+      if (dbTime > cacheTime) { cardsToUpdate.push({ cardId, dbTimeStr }); }
+    });
+
+    for (let t = 0; t < cardsToUpdate.length; t++) {
+      const { cardId, dbTimeStr } = cardsToUpdate[t];
+      console.log('The units of card', cardId, 'have changed. Loading new ownership for them');
+      const docSnap = await getDoc(doc(this.firestore, 'ownership', cardId));
+      this.ownership[cardId] = { ...docSnap.data() } as { [key:string]: TDBUnit };
+      cacheUpdates[cardId] = dbTimeStr;
+    }
+
+    localStorage['ownership'] = JSON.stringify(this.ownership); // Save it to localstorage
+    console.log('ownership', this.ownership);
+    this.isOwnersLoaded = true;
+    this.mergeData();
+  }
+
+
+  // It merges the main objects: cards[] + ownership[] + users[]
+  private mergeData() {
+    if (!this.isOwnersLoaded) { return; }
+
+    // Add ownerId + sellPrice + owner + isYours on every card[].units[]
+    this.cards.forEach(card => card.units.forEach(unit => {
+      if (!this.ownership[card.id]) { return console.warn('Card without any ownership', card); }
+      if (!this.ownership[card.id][unit.shortRef]) { return console.warn(`Unit without ownership --> [${card.id}][${unit.shortRef}]`); }
+      unit.ownerId = this.ownership[card.id][unit.shortRef].ownerId;
+      unit.sellPrice = this.ownership[card.id][unit.shortRef].sellPrice;
+
+      if (this.isUsersLoaded) {
+        unit.owner = this.users.find(u => u.uid === unit.ownerId) || this.defaultUser;
+        unit.isYours = this.auth.profileUserId === unit.ownerId;
+      }
+    }));
+
+    if (this.isUsersLoaded) {
       this.cards$.next(this.cards);
       this.loadDefer.resolve(this.cards);
     }
@@ -145,7 +214,7 @@ export class DataService {
     
     // Add money to the seller
     let docSnap = await getDoc(doc(this.firestore, 'users', unit.ownerId));
-    const owner = docSnap.data() as TUser;
+    const owner = docSnap.data() as TDBUser;
     owner.sats += price;
     await updateDoc(doc(this.firestore, 'users', unit.ownerId), { sats: owner.sats });
     
@@ -224,7 +293,7 @@ export class DataService {
     // Player 1's deck
     docSnap = await getDoc(doc(this.firestore, 'users', newGame.player1.userId, 'decks', newGame.deckId1));
     if (!docSnap.exists()) { return 'Deck Id not found: ' + newGame.deckId1;  }
-    const dbDeck1 = docSnap.data() as TDeckRef;
+    const dbDeck1 = docSnap.data() as TDBUserDeck;
     let cardsDeck1 = dbDeck1.units.map(u => u.split('.')[0]);
 
 

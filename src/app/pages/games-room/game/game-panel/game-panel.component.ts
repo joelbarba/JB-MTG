@@ -8,9 +8,9 @@ import { GameStateService } from '../gameLogic/game-state.service';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { getTime } from '../../../../core/common/commons';
+import { TDBChatMsg } from '../../../../core/types';
 
-type TDBChatMsg = { player: string, text: string };
-type TChatMsg = { text: string, isYou: boolean };
+
 
 @Component({
   selector: 'game-panel',

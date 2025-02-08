@@ -3,7 +3,7 @@ import { Subject, Subscription } from 'rxjs';
 import { AuthService } from '../../../../core/common/auth.service';
 import { ShellService } from '../../../../shell/shell.service';
 import { Firestore, QuerySnapshot, collection, doc, getDoc, getDocs, onSnapshot, setDoc, DocumentData, Unsubscribe } from '@angular/fire/firestore';
-import { EPhase, TAction, TCard, TCardLocation, TGameState, TGameDBState, TGameCard, TActionParams, TCardType, TCardAnyLocation, ESubPhase, TCast, TActionCost, TPlayer, TEffect } from '../../../../core/types';
+import { EPhase, TAction, TDBCard, TCardLocation, TGameState, TGameDBState, TGameCard, TActionParams, TCardType, TCardAnyLocation, ESubPhase, TCast, TActionCost, TPlayer, TEffect } from '../../../../core/types';
 import { calcManaCost, calcManaForUncolored, checkMana, drawCard, endGame, getCards, getPlayers, killDamagedCreatures, moveCard, moveCardToGraveyard, spendMana, validateCost } from './game.utils';
 import { GameOptionsService } from './game.options.service';
 import { extendCardLogic } from './game.card-specifics';
@@ -16,7 +16,7 @@ import { dbCards } from '../../../../core/dbCards';
 
 @Injectable({ providedIn: 'root' })
 export class GameStateService {
-  library: Array<TCard> = [];
+  library: Array<TDBCard> = [];
   libraryDef!: BfDefer;
   firstStateDef!: BfDefer;
 
@@ -68,11 +68,11 @@ export class GameStateService {
     getDocs(collection(this.firestore, 'cards')).then((ref: QuerySnapshot<DocumentData>) => {
       this.library = [];
       ref.forEach(doc => {
-        const card = doc.data() as TCard;
+        const card = doc.data() as TDBCard;
         const cardProps = 'cast, color, name, image, text, type, attack, defense, '
                         + 'isFlying, isTrample, isFirstStrike, isWall, isHaste, colorProtection'
         const filteredCard = card.keyFilter(cardProps);
-        this.library.push({ id: doc.id, ...filteredCard } as TCard);
+        this.library.push({ id: doc.id, ...filteredCard } as TDBCard);
       });
       // console.log(this.library);
       this.libraryDef.resolve()

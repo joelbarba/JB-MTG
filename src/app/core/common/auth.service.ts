@@ -14,7 +14,7 @@ import {
   UserInfo,
   updateProfile,
 } from '@angular/fire/auth';
-import { TUser } from '../types';
+import { TDBUser } from '../types';
 
 
 const httpOptions = { headers: new HttpHeaders({ 'Content-Type':  'application/json' }) };
@@ -22,14 +22,14 @@ const httpOptions = { headers: new HttpHeaders({ 'Content-Type':  'application/j
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  authLoadPromise: Promise<TUser>; // Loading profile promise. This is resolved once after loading
+  authLoadPromise: Promise<TDBUser>; // Loading profile promise. This is resolved once after loading
 
   private profileDefer = new BfDefer();
-  profilePromise: Promise<TUser> = this.profileDefer.promise; // It resolves once a valid profile is loaded (login or load)
+  profilePromise: Promise<TDBUser> = this.profileDefer.promise; // It resolves once a valid profile is loaded (login or load)
 
 
-  profile ?: TUser;
-  profile$ = new BehaviorSubject<TUser | undefined>(undefined);
+  profile ?: TDBUser;
+  profile$ = new BehaviorSubject<TDBUser | undefined>(undefined);
 
   profileUserId ?: string;
   profileUserName ?: string;
@@ -95,7 +95,7 @@ export class AuthService {
   }
 
   // Request log in (initiate session)
-  async requestLogin(username: string, password: string): Promise<TUser | undefined> {
+  async requestLogin(username: string, password: string): Promise<TDBUser | undefined> {
     const data = await signInWithEmailAndPassword(this.firebaseAuth, username, password)    
     const profile = await this.mapProfile(data.user);
     console.log('User logged in - Profile =', profile);
@@ -105,7 +105,7 @@ export class AuthService {
     // return promise;
   }
 
-  private async mapProfile(user: UserInfo): Promise<TUser> { 
+  private async mapProfile(user: UserInfo): Promise<TDBUser> { 
     // https://firebase.google.com/docs/reference/js/auth.user
     // console.log('token',        user.accessToken);
     // console.log('photoUrl',     user.photoURL);
@@ -125,7 +125,7 @@ export class AuthService {
     // Fetch /users document and add the custom data
     const docSnap = await getDoc(doc(this.firestore, 'users', user.uid));
     if (docSnap.exists()) {
-      const data = docSnap.data() as TUser;
+      const data = docSnap.data() as TDBUser;
       profile.isAdmin = data.isAdmin;
       profile.isEnabled = data.isEnabled;
       profile.sats = data.sats;

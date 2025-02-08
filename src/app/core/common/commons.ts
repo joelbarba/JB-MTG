@@ -1,6 +1,6 @@
 import { BfListHandler } from "bf-ui-lib";
 import { TFullUnit } from "../dataService";
-import { TCard } from "../types";
+import { TDBCard } from "../types";
 
 export const colors = [
   { value: 'uncolored'},
@@ -36,7 +36,7 @@ export const landTypes = [
 ];
 
 
-export const cardOrderFn = (a: TCard, b: TCard) => {
+export const cardOrderFn = (a: TDBCard, b: TDBCard) => {
   if (a.type !== b.type) {
     if (a.type === 'land') { return -1; }
     if (b.type === 'land') { return 1; }
