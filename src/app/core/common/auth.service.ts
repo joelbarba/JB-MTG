@@ -31,8 +31,12 @@ export class AuthService {
   profile ?: TDBUser;
   profile$ = new BehaviorSubject<TDBUser | undefined>(undefined);
 
-  profileUserId ?: string;
-  profileUserName ?: string;
+  profileUserId = ''; // = profile.uid
+  profileName = '';   // = profile.name
+  username = '';      // = profile.username
+  isAdmin = false;    // role = 'admin'
+  isGuest = false;    // role = 'guest'
+  isEnabled = true;   // role != 'disabled'
 
   private firebaseUser!: User;
 
@@ -58,8 +62,8 @@ export class AuthService {
 
     this.profile$.subscribe(profile => {      
       this.profile = profile;
-      this.profileUserName = profile?.name || '';
-      this.profileUserId = profile?.uid;
+      this.profileUserId = profile?.uid || '';
+      this.profileName = profile?.name || '';
       if (profile && this.profileDefer.status === 0) { this.profileDefer.resolve(profile); }
     });
 
@@ -72,7 +76,7 @@ export class AuthService {
           console.log('Auth Session Detected. You are:', user.displayName);
           this.firebaseUser = user;
           this.mapProfile(user).then(profile => {
-            if (profile.isEnabled) {
+            if (profile.role !== 'disabled') {
               this.profile$.next(profile);
               return resolve(profile);
             } else {
@@ -111,27 +115,31 @@ export class AuthService {
     // console.log('photoUrl',     user.photoURL);
     // console.log('uid',          user.uid);
     // console.log('displayName',  user.displayName);
-    const profile = {
-      // photoURL  : user.photoURL || '',
+    const profile: TDBUser = {
       uid       : user.uid,
+      username  : '',
       name      : user.displayName || '',
       email     : user.email || '',
-      isAdmin   : false,
-      isEnabled : false,
       sats      : 0,
-      decks     : [],
+      role      : 'player',
     };
 
     // Fetch /users document and add the custom data
     const docSnap = await getDoc(doc(this.firestore, 'users', user.uid));
     if (docSnap.exists()) {
       const data = docSnap.data() as TDBUser;
-      profile.isAdmin = data.isAdmin;
-      profile.isEnabled = data.isEnabled;
-      profile.sats = data.sats;
+      profile.username  = data.username;
+      profile.name      = data.name;
+      profile.email     = data.email;
+      profile.role      = data.role;
+      profile.sats      = data.sats;
     }
 
-    if (!profile.isEnabled) { this.requestLogout(); }
+    this.isAdmin   = profile.role === 'admin';
+    this.isGuest   = profile.role === 'guest';
+    this.isEnabled = profile.role !== 'disabled';
+
+    if (!this.isEnabled) { this.requestLogout(); }
 
     return profile;
   }

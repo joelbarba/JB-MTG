@@ -73,7 +73,7 @@ export class GamesRoomComponent {
   async ngOnInit() {
     await this.auth.profilePromise;
     await this.dataService.yourDecksPromise;
-    this.isAdmin = !!this.auth.profile?.isAdmin;
+    this.isAdmin = !!this.auth.isAdmin;
 
     this.gamesSub = onSnapshot(collection(this.firestore, 'games'), (snapshot: QuerySnapshot) => {
       this.games = snapshot.docs.map(doc => {

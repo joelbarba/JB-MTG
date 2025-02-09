@@ -12,21 +12,21 @@
         <ul class="list-unstyled table-list">
           <li class="list-header">
             <bf-list-header-col class="col-2" colTitle="Name"     fieldName="name"      [orderConf]="usersList.orderConf"></bf-list-header-col>
-            <bf-list-header-col class="col-4" colTitle="Email"    fieldName="email"     [orderConf]="usersList.orderConf"></bf-list-header-col>
             <bf-list-header-col class="col-3" colTitle="Uid"      fieldName="uid"       [orderConf]="usersList.orderConf"></bf-list-header-col>
-            <bf-list-header-col class="col-1" colTitle="Admin"    fieldName="isAdmin"   [orderConf]="usersList.orderConf"></bf-list-header-col>
-            <bf-list-header-col class="col-1" colTitle="Enabled"  fieldName="isEnabled" [orderConf]="usersList.orderConf"></bf-list-header-col>
-            <bf-list-header-col class="col-2" colTitle=""></bf-list-header-col>
+            <bf-list-header-col class="col-2" colTitle="Username" fieldName="username"  [orderConf]="usersList.orderConf"></bf-list-header-col>
+            <bf-list-header-col class="col-3" colTitle="Email"    fieldName="email"     [orderConf]="usersList.orderConf"></bf-list-header-col>
+            <bf-list-header-col class="col-1" colTitle="Role"     fieldName="role"      [orderConf]="usersList.orderConf"></bf-list-header-col>
+            <bf-list-header-col class="col-1" colTitle=""></bf-list-header-col>
           </li>
     
           <bf-list-placeholder [hidden]="usersList.loadingStatus > 1" [bfColumns]="[1, 2, 4, 4, 1]"></bf-list-placeholder>
           <li class="list-row" [hidden]="usersList.loadingStatus <= 1" *ngFor="let user of usersList.renderList$ | async"
-             [class.is-disabled]="!user.isEnabled">
+             [class.is-disabled]="user.role === 'disabled'" (click)="prepareEditUser(user)">
             <div class="col-2">{{user.name}}</div>
-            <div class="col-4">{{user.email}}</div>
             <div class="col-3">{{user.uid}}</div>
-            <div class="col-1">{{user.isAdmin}}</div>
-            <div class="col-1">{{user.isEnabled}}</div>
+            <div class="col-2">{{user.username}}</div>
+            <div class="col-3">{{user.email}}</div>
+            <div class="col-1">{{user.role}}</div>
             <div class="col-1 text-right">
               <!-- <bf-btn bfType="delete" (bfClick)="deleteUser(user)"></bf-btn> -->
               <bf-btn bfType="edit"   (bfClick)="prepareEditUser(user)"></bf-btn>
@@ -41,37 +41,71 @@
 
   </div>
 
+
+
+
+  <div class="edit-user whiteBg row" *ngIf="editUser">
+    <h3 class="col-12">Edit User: {{editUser.name}}</h3>
+    <bf-dropdown class="col-5"
+      bfLabel="Role"
+      [(ngModel)]="editUser.role"
+      [bfList]="rolesList"
+      [bfRequired]="true"
+      bfRender="code"
+      bfSelect="code">
+    </bf-dropdown>
+    <bf-input class="col-7"   bfLabel="Email"         [(ngModel)]="editUser.email"></bf-input>
+    <bf-input class="col-5"   bfLabel="Username"      [(ngModel)]="editUser.username"></bf-input>
+    <bf-input class="col-7"   bfLabel="Name"          [(ngModel)]="editUser.name"></bf-input>
+    <bf-input class="col-5"   bfLabel="Credit (sats)" [(ngModel)]="editUser.sats"></bf-input>
+
+    <bf-input class="col-7"   bfLabel="New Password" [(ngModel)]="newPass"></bf-input>
+    <div class="col-12 text-right">
+      <bf-btn bfText="Update Password" bfIcon="icon-checkmark" class="extra" (bfClick)="updatePassword(newPass)"></bf-btn>
+    </div>
+
+    <div class="col-12" style="margin: 35px 0;">
+      <a [href]="'/cards?userId=' + editUser.uid">See his cards: /cards?userId={{editUser.uid}}</a>
+    </div>
+
+
+    <div class="btns-box">
+      <!-- <bf-btn bfText="Send Verification Email" bfIcon="icon-cross" class="extra" (bfClick)="sendVerificationEmail()"></bf-btn> -->
+
+      <bf-btn bfText="Delete User" bfIcon="icon-cross" class="warning" (bfClick)="deleteUser()"></bf-btn>
+      <!-- <bf-btn bfText="Reset Password" bfIcon="icon-cross" class="extra" (bfClick)="resetPassword()"></bf-btn> -->
+      <bf-btn bfText="Update User" bfIcon="icon-checkmark" [bfDisabled]="btnDisabled" (bfClick)="updateUser()"></bf-btn>
+    </div>
+  </div>
+
+
+
+
+
+
   <div class="new-user whiteBg row" *ngIf="newUser && !editUser">
     <h3 class="col-12">New User</h3>
-    <bf-input class="col-5" bfLabel="Name" [(ngModel)]="newUser.name"></bf-input>
-    <bf-input class="col-7" bfLabel="Email" [(ngModel)]="newUser.email"></bf-input>
-    <bf-input class="col-5" bfLabel="Credit (sats)" [(ngModel)]="newUser.sats"></bf-input>
-    <bf-input class="col-7" bfLabel="Password" [(ngModel)]="newUser.pass"></bf-input>
-    <bf-switch class="col-12" bfLabel="Is Admin" [(ngModel)]="newUser.isAdmin" bfLabelPos="left"></bf-switch>
-    <bf-switch class="col-12" bfLabel="Is Enabled" [(ngModel)]="newUser.isEnabled" bfLabelPos="left"></bf-switch>
+    <bf-dropdown class="col-5"
+      bfLabel="Role"
+      [(ngModel)]="newUser.role"
+      [bfList]="rolesList"
+      [bfRequired]="true"
+      bfRender="code"
+      bfSelect="code">
+    </bf-dropdown>
+    <bf-input class="col-7"   bfLabel="Email"         [(ngModel)]="newUser.email" [bfDisabled]="true"></bf-input>
+    <bf-input class="col-5"   bfLabel="Username"      [(ngModel)]="newUser.username" (ngModelChange)="newUser.email = 'joel.barba.vidal+' + newUser.username + '@gmail.com'"></bf-input>
+    <bf-input class="col-7"   bfLabel="Name"          [(ngModel)]="newUser.name"></bf-input>
+    <bf-input class="col-5"   bfLabel="Credit (sats)" [(ngModel)]="newUser.sats"></bf-input>
+    <bf-input class="col-7"   bfLabel="Password"      [(ngModel)]="newUser.pass"></bf-input>
+    <!-- <div class="col-5"></div>
+    <bf-input class="col-7"   bfLabel="Repeat Password" [(ngModel)]="passCheck"></bf-input> -->
+
     <div class="btns-box col-12">
       <bf-btn bfText="Create User" bfIcon="icon-plus" [bfDisabled]="btnDisabled" (bfClick)="createUser()"></bf-btn>
     </div>
   </div>
 
 
-  <div class="edit-user whiteBg row" *ngIf="editUser">
-    <h3 class="col-12">Edit User: {{editUser.name}}</h3>
-    <bf-input class="col-5"   bfLabel="Name"          [(ngModel)]="editUser.name"></bf-input>
-    <bf-input class="col-7"   bfLabel="Email"         [(ngModel)]="editUser.email"></bf-input>
-    <bf-input class="col-5"   bfLabel="Credit (sats)" [(ngModel)]="editUser.sats"></bf-input>
-    <bf-input class="col-7"   bfLabel="Password"      [ngModel]="''" [bfDisabled]="true"></bf-input>
-    <bf-switch class="col-12" bfLabel="Is Admin"      [(ngModel)]="editUser.isAdmin"   bfLabelPos="left"></bf-switch>
-    <bf-switch class="col-12" bfLabel="Is Enabled"    [(ngModel)]="editUser.isEnabled" bfLabelPos="left"></bf-switch>
-    <div class="btns-box col-12">
-
-
-    <div class="btns-box">
-      <!-- <bf-btn bfText="Cancel" bfIcon="icon-cross" (bfClick)="editUser = undefined"></bf-btn> -->
-      <bf-btn bfText="Delete User" bfIcon="icon-cross" class="warning" (bfClick)="deleteUser()"></bf-btn>
-      <bf-btn bfText="Reset Password" bfIcon="icon-cross" class="extra" (bfClick)="resetPassword()"></bf-btn>
-      <bf-btn bfText="Update User" bfIcon="icon-plus" [bfDisabled]="btnDisabled" (bfClick)="updateUser()"></bf-btn>
-    </div>
-  </div>
   
 </div>

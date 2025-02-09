@@ -2,7 +2,7 @@ import { Component, HostListener, ViewEncapsulation } from '@angular/core';
 import { AuthService } from '../../core/common/auth.service';
 import { ShellService } from '../../shell/shell.service';
 import { CommonModule } from '@angular/common';
-import { Firestore, setDoc, deleteDoc } from '@angular/fire/firestore';
+import { Firestore, setDoc, deleteDoc, onSnapshot, QuerySnapshot, Unsubscribe } from '@angular/fire/firestore';
 import { getDocs, getDoc, collection, doc } from '@angular/fire/firestore';
 import { BehaviorSubject, debounceTime, Observable, Subject, Subscription, tap } from 'rxjs';
 import { FormsModule } from '@angular/forms';
@@ -17,6 +17,7 @@ import { SellOfferModalComponent } from '../../core/modals/sellOfferModal/sell-o
 import { ActivatedRoute } from '@angular/router';
 import { BfTooltipService } from '../../core/common/internal-lib/bf-tooltip/bf-tooltip.service';
 import { ManaArrayComponent } from "../games-room/game/mana-array/mana-array.component";
+import { TDBUserDeck } from '../../core/types';
 
 
 
@@ -82,6 +83,8 @@ export class YourCardsComponent {
 
   subs: Array<Subscription> = [];
 
+  userId = ''; // If showing the cards of a different user than this.auth.profileUserId (admin only)
+
 
   constructor(
     private shell: ShellService,
@@ -138,8 +141,12 @@ export class YourCardsComponent {
     await this.auth.profilePromise;
     await this.dataService.loadPromise;
 
+    if (this.auth.isAdmin && this.route.snapshot.queryParams['userId']) {
+      this.userId = this.route.snapshot.queryParams['userId'];
+    }
+
     this.subs.push(this.dataService.cards$.subscribe(cards => this.loadCards()));
-    this.subs.push(this.dataService.yourDecks$.subscribe(decks => this.loadDecks()));
+    this.loadAndWatchDecks();
 
     this.selectCard(this.groupedCards[0]);
     
@@ -176,17 +183,21 @@ export class YourCardsComponent {
 
   }
 
+  otherDecksSub?: Unsubscribe;
+
   ngOnDestroy() {
     this.cardsList.destroy();
     this.unitsList.destroy();
-    this.subs.forEach(sub => sub.unsubscribe())
+    this.subs.forEach(sub => sub.unsubscribe());
+    if (this.otherDecksSub) { this.otherDecksSub(); }
   }
 
   loadCards() {
-    this.groupedCards = this.dataService.cards.filter(c => c.units.some(u => u.ownerId === this.auth.profileUserId)).map(card => ({ ...card }));
+    const userId = this.userId || this.auth.profileUserId;
+    this.groupedCards = this.dataService.cards.filter(c => c.units.some(u => u.ownerId === userId)).map(card => ({ ...card }));
     this.yourUnits = [];
     this.groupedCards.forEach(card => {
-      card.units = card.units.filter(u => u.ownerId === this.auth.profileUserId).map(unit => ({ ...unit }));
+      card.units = card.units.filter(u => u.ownerId === userId).map(unit => ({ ...unit }));
       card.units.forEach(unit => this.yourUnits.push(unit));
     });
     // console.log('Your Grouped Cards', this.groupedCards);
@@ -197,17 +208,30 @@ export class YourCardsComponent {
     this.unitsList.load(this.yourUnits);
   }
 
-  async loadDecks() {
-    this.decks = this.dataService.yourDecks.map(deck => {
-      if (!deck.created) { deck.created = getTime(); }
-      return { ...deck, units: [...deck.units] };
-    });
-    this.decks.sort((a,b) => {
-      return new Date(a.created) > new Date(b.created) ? 1 : -1;
-    });
-    // console.log('this.dataService.yourDecks', this.dataService.yourDecks);
-    // console.log('this.decks', this.decks);
+  async loadAndWatchDecks() {
+    if (!this.userId) { // Load your decks
+      this.subs.push(this.dataService.yourDecks$.subscribe(decks => {
+        this.decks = this.dataService.yourDecks.map(deck => ({ ...deck, units: [...deck.units] }));
+        this.decks.sort((a,b) => new Date(a.created) > new Date(b.created) ? 1 : -1);
+      }));
+
+    } else { // Load another user's decks
+      this.otherDecksSub = onSnapshot(collection(this.firestore, 'users', this.userId, 'decks'), (snapshot: QuerySnapshot) => {
+        this.decks = snapshot.docs.map(doc => {
+          const deck = { id: doc.id, ...doc.data() } as TDBUserDeck; // Here we only have the units ref
+          const units = deck.units.map(ref => {
+            const card = this.dataService.cards.find(c => c.id === ref.split('.')[0]);
+            const unit = card?.units.find(u => u.ref === ref);
+            if (!unit) { console.log(`Error on Deck "${deck.deckName}". Unit ${ref} (${card?.name}) not found`); }
+            return unit;
+          }).filter(u => !!u) as Array<TFullUnit>;
+          return { id: deck.id, deckName: deck.deckName, created: deck.created, units } as TFullDeck;
+        });
+        this.decks.sort((a,b) => new Date(a.created) > new Date(b.created) ? 1 : -1);
+      });
+    }
   }
+
 
   private loadGroupDeck() {
     if (this.selDeck) {
@@ -229,12 +253,13 @@ export class YourCardsComponent {
 
 
   switchShowDecks() {
+    const params = this.userId ? '?userId=' + this.userId : '';
     this.showDecks = !this.showDecks;
-    if (!this.showDecks) { 
-      this.selDeck = undefined; 
-      window.history.replaceState(null, 'Your Cards', '/cards');
+    if (!this.showDecks) {
+      this.selDeck = undefined;      
+      window.history.replaceState(null, 'Your Cards', '/cards' + params);
     } else {
-      window.history.replaceState(null, 'Your Decks', '/cards/decks');
+      window.history.replaceState(null, 'Your Decks', '/cards/decks' + params);
     }
   }
 
@@ -452,8 +477,9 @@ export class YourCardsComponent {
 
   goBackToDecks() {
     this.selDeck = undefined; 
-    this.loadDecks();
-    window.history.pushState(null, 'Your Decks', `/cards/decks`);
+    this.loadAndWatchDecks();
+    const params = this.userId ? '?userId=' + this.userId : '';
+    window.history.pushState(null, 'Your Decks', `/cards/decks` + params);
   }
 
   createNewDeck() {
@@ -466,7 +492,8 @@ export class YourCardsComponent {
     this.selDeck = deck;
     this.deckName = deck.deckName;
     this.loadGroupDeck();
-    window.history.pushState(null, 'Your Deck', `/cards/decks/${deck.id}`);
+    const params = this.userId ? '?userId=' + this.userId : '';
+    window.history.pushState(null, 'Your Deck', `/cards/decks/${deck.id}` + params);
   }
 
   copyDeck(deck: TFullDeck) {
@@ -481,17 +508,18 @@ export class YourCardsComponent {
 
 
 
-  deleteDeck(deck: TFullDeck) {
+  deleteDeck(deck: TFullDeck) {    
     this.deckAction = '';
     this.confirm.open({
       title            : 'Delete Deck',
       htmlContent      : `Are you sure you want to delete your deck <b>${deck.deckName}</b>?`,
       yesButtonText    : 'Yes, delete it',
     }).then(res => { if (res === 'yes' && this.auth.profileUserId) {
-      deleteDoc(doc(this.firestore, 'users', this.auth.profileUserId, 'decks', deck.id)).then(() => {
+      const userId = this.userId || this.auth.profileUserId;
+      deleteDoc(doc(this.firestore, 'users', userId, 'decks', deck.id)).then(() => {
         this.growl.success(`Deck ${deck.deckName} deleted`);
         if (this.selDeck) { this.goBackToDecks(); }
-        else { this.loadDecks(); }
+        else { this.loadAndWatchDecks(); }
       });
     }});
   }
@@ -507,7 +535,8 @@ export class YourCardsComponent {
         units    : this.selDeck.units.map(card => card.ref),
       }
       console.log('Saving DECK', dbDeck);
-      await setDoc(doc(this.firestore, 'users', this.auth.profileUserId, 'decks', dbDeck.id), dbDeck);
+      const userId = this.userId || this.auth.profileUserId;
+      await setDoc(doc(this.firestore, 'users', userId, 'decks', dbDeck.id), dbDeck);
       this.isSaving = false;
       // this.growl.success(`Deck saved`);
     }

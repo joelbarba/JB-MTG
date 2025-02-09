@@ -48,8 +48,9 @@ export class LoginComponent {
   }
 
   login() {
-    if (!!this.user &&  this.pass) {
-      this.auth.requestLogin(this.user, this.pass).then(profile => {
+    if (!!this.user && this.pass) {
+      const email = `joel.barba.vidal+${this.user}'@gmail.com`;
+      this.auth.requestLogin(email, this.pass).then(profile => {
         console.log('LOG IN', profile);
         this.router.navigate(['/home']);
       });

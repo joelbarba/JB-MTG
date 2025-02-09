@@ -29,12 +29,12 @@ export class DataService {
   yourCredit$ = this.users$.pipe(map(users => users.find(u => u.uid === this.auth.profileUserId)?.sats || 0));
 
   defaultUser: TDBUser = {
-    uid       : '4cix25Z3DPNgcTFy4FcsYmXjdSi1',
-    name      : 'Joel',
-    email     : 'joel.barba.vidal@gmail.com',
-    isAdmin   : true,
-    isEnabled : true,
-    sats      : 5000000,
+    uid      : '4cix25Z3DPNgcTFy4FcsYmXjdSi1',
+    username : 'joel.barba',
+    name     : 'Joel',
+    email    : 'joel.barba.vidal@gmail.com',
+    role     : 'admin',
+    sats     : 5000000,
   };
 
   private subs: Array<Unsubscribe> = [];

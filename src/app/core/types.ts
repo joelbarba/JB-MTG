@@ -82,13 +82,13 @@ export type TDBCard = {
 };
 
 export type TDBUser = {
-  name: string;
-  email: string;
-  uid: string;
-  isAdmin: boolean;
-  isEnabled: boolean;
-  sats: number;
-  // decks: Array<TDeckRef>;
+  uid       : string;
+  username  : string;
+  name      : string;
+  email     : string;
+  sats      : number;
+  role      : 'admin' | 'player' | 'guest' | 'disabled'
+  // decks: Array<TDeckRef>; // loaded apart (TFullUser)
 }
 export type TDBUserDeck = {
   id: string;
@@ -146,7 +146,7 @@ export type TPlayer = {
   stackCall: boolean;  // true if the spell-stack needs to stop on the player
   selectableAction?: null | TGameOption;
 }
-
+ 
 
 export type TGameDBState = {
   created: string;

@@ -9,6 +9,12 @@ h2 { padding: 15px 15px 0 15px; }
     .is-disabled {
       background: #afafaf !important;
     }
+    .list-row {
+      cursor: pointer;
+      &:hover {
+        background: greenyellow;
+      }
+    }
   }
 
   .new-user, .edit-user {

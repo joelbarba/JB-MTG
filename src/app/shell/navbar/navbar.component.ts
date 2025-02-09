@@ -6,6 +6,7 @@ import { BfGrowlModule, BfGrowlService, BfUiLibModule } from 'bf-ui-lib';
 import { BfAvatarComponent } from '../../core/common/internal-lib/bf-avatar/bf-avatar.component';
 import { AuthService } from '../../core/common/auth.service';
 import { DataService } from '../../core/dataService';
+import { Auth, sendEmailVerification, sendPasswordResetEmail, updatePassword, updateProfile, UserCredential } from '@angular/fire/auth';
 // import { SubSink } from 'subsink';
 
 @Component({
@@ -31,14 +32,16 @@ export class NavbarComponent implements OnInit, OnDestroy {
   language$ = this.appTranslate.language$;
   lang = '';
   displayName = '';
-  email = '';
+  username = '';
+
 
 
   constructor(
     public readonly auth: AuthService,
     public readonly appTranslate: AppTranslateService,
     private growl: BfGrowlService,
-    public dataService: DataService,
+    public dataService: DataService,    
+    private firebaseAuth: Auth,
   ) {
   }
 
@@ -47,12 +50,12 @@ export class NavbarComponent implements OnInit, OnDestroy {
     this.auth.profilePromise.then(profile => {
       // console.log('PROFILE PROMISE', profile);
       this.displayName = profile.name;
-      this.email = profile.email;
+      this.username = profile.username;
     });
 
     this.auth.profile$.subscribe(profile => {
       this.isLoggedIn = !!profile;
-      // console.log('PROFILE OBSERVABLE', this.auth.profileUserName);
+      // console.log('PROFILE OBSERVABLE', this.auth.profileName);
 
       const userId = this.auth.profileUserId;
       this.profileImageUrl = '';
@@ -79,8 +82,29 @@ export class NavbarComponent implements OnInit, OnDestroy {
   }
 
   updateProfile() {
-    this.auth.updateProfile({ displayName: this.displayName, email: this.email }).then(() => {
+    this.auth.updateProfile({ displayName: this.displayName }).then(() => {
       this.growl.success(`Profile updated`);
     });
+  }
+
+  
+  newPass = ''; // '123456_good3';
+  passBtnDisabled = false;
+
+  updatePassword(newPass = '') {
+    if (this.firebaseAuth.currentUser) {
+      this.passBtnDisabled = true;
+      console.log('Updating password to: ', newPass);
+      updatePassword(this.firebaseAuth.currentUser, newPass).then(() => {
+        this.growl.success(`New password set successfuly`);
+        this.passBtnDisabled = false;
+        this.newPass = '';
+        
+      }).catch((error) => {
+        console.log('error', error);
+        this.growl.error(`Error updating password: ` + error);
+        this.passBtnDisabled = false;
+      });
+    }
   }
 }

@@ -7,10 +7,17 @@ import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { BfConfirmService, BfGrowlService, BfListHandler, BfUiLibModule } from 'bf-ui-lib';
 import { Subject } from 'rxjs';
-import { Auth, createUserWithEmailAndPassword, sendEmailVerification, sendPasswordResetEmail, updateProfile } from '@angular/fire/auth';
+import { Auth, createUserWithEmailAndPassword, sendEmailVerification, sendPasswordResetEmail, updatePassword, updateProfile, UserCredential } from '@angular/fire/auth';
 import { TDBUser } from '../../core/types';
+import { Router, RouterModule } from '@angular/router';
+import { DataService } from '../../core/dataService';
 
-
+const roles = [
+  { code: 'admin' },
+  { code: 'player' },
+  { code: 'guest' },
+  { code: 'disabled' },
+]
 
 @Component({
   selector: 'app-users',
@@ -20,6 +27,7 @@ import { TDBUser } from '../../core/types';
     TranslateModule,
     FormsModule,
     BfUiLibModule,
+    RouterModule,
   ],
   templateUrl: './users.component.html',
   styleUrl: './users.component.scss',
@@ -36,8 +44,8 @@ export class UsersComponent {
   editUser?: TDBUser;
 
   btnDisabled = false; // Whether the create/save user button is enabled
-
-
+  rolesList = [...roles];
+  passCheck = '';
 
   constructor(
     private shell: ShellService,
@@ -45,67 +53,93 @@ export class UsersComponent {
     public firestore: Firestore,
     public growl: BfGrowlService,
     private confirm: BfConfirmService,
+    public router: Router,
+    public dataService: DataService,
   ) {
     this.shell.gameMode('off');
   }
 
-  async ngOnInit() {
-    this.loadUsers();
-    this.prepareNewUser();
-  }
-
-  loadUsers() {
+  async ngOnInit() {    
     this.usersList = new BfListHandler({
-      data$         : this.users$,
       listName      : 'users-list',
       filterFields  : ['name', 'email'],
       orderFields   : ['name'],
       orderReverse  : false,
     });
+    
+    await this.dataService.loadPromise;
+    this.usersList.load(this.dataService.users.map(user => ({ ...user })));
+    // this.dataService.users$.subscribe(users => {});
 
-
-    if (this.usersColSub) { this.usersColSub(); } // unsubscribe if previous detected
-
-    this.usersColSub = onSnapshot(collection(this.firestore, 'users'), (snapshot: QuerySnapshot) => {
-      const source = snapshot.metadata.hasPendingWrites ? 'local' : 'server';
-      this.users = snapshot.docs.map(doc => {
-        return { ...doc.data(), uid: doc.id } as TDBUser;
-      });
-      this.users$.next(this.users);
-    });    
-
+    this.prepareNewUser();
   }
 
   prepareNewUser() {
-    this.newUser = { name: '', email: '', pass: '', sats: 100000, isAdmin: false, isEnabled: false, };
+    this.newUser = { name: '', username: '', email: 'joel.barba.vidal@gmail.com', pass: '123456_good', sats: 100000, role: 'player', };
     this.editUser = undefined;
     this.btnDisabled = false;
   }
 
-
+  // joel.barba.vidal@gmail.com
+  // 123456_good
   createUser() {
     if (this.newUser) {
+      // if (this.newUser.pass !== this.passCheck) { return this.growl.error('Password mismatch. Type them again'); }
       this.btnDisabled = true;
+
+      // The new user email is always set automatically to 'joel.barba.vidal@gmail.com', so we can use the username to log in
+      this.newUser.email = `joel.barba.vidal+${this.newUser.username}'@gmail.com`;
+
       const userDoc = { 
         name      : this.newUser.name,
+        username  : this.newUser.username,
         email     : this.newUser.email,
-        isAdmin   : this.newUser.isAdmin,
-        isEnabled : this.newUser.isEnabled,
+        sats      : this.newUser.sats,
+        role      : this.newUser.role,
       };
       const email = this.newUser.email;
-      const pass = this.newUser.pass;
-      createUserWithEmailAndPassword(this.firebaseAuth, email, pass).then(data => {
+      const pass = this.newUser.pass;      
+      createUserWithEmailAndPassword(this.firebaseAuth, email, pass).then((data: UserCredential) => {
         console.log(data.user);
-        updateProfile(data.user, { displayName: userDoc.name });
+        updateProfile(data.user, { displayName: userDoc.name, photoURL: userDoc.username });
         // sendEmailVerification(data.user);
         setDoc(doc(this.firestore, 'users', data.user.uid), userDoc).then(docRef => {
           this.growl.success(`New user ${userDoc.name} added successfuly. UID: ${data.user.uid}`);
-          this.prepareNewUser();
+          setTimeout(() => {
+            this.usersList.load(this.dataService.users.map(user => ({ ...user })));
+            const selUser = this.dataService.users.find(u => u.uid === data.user.uid);
+            if (selUser) { this.prepareEditUser(selUser); }
+            this.newPass = pass;
+          }, 500);
         });
       });
     }
   }
 
+  // This is not really needed, we use unverified users
+  // sendVerificationEmail() {
+  //   sendEmailVerification(data.user);
+  // }
+
+  passBtnDisabled = false;
+  newPass = '123456_good';
+
+  updatePassword(newPass = '') {
+    if (this.firebaseAuth.currentUser) {
+      this.passBtnDisabled = true;
+      console.log('Updating password to: ', newPass);
+      updatePassword(this.firebaseAuth.currentUser, newPass).then(() => {
+        this.growl.success(`New password set successfuly`);
+        this.passBtnDisabled = false;
+        this.newPass = '';
+        
+      }).catch((error) => {
+        console.log('error', error);
+        this.growl.error(`Error updating password: ` + error);
+        this.passBtnDisabled = false;
+      });
+    }
+  }
 
   resetPassword() {
     if (this.editUser) {
@@ -139,6 +173,7 @@ export class UsersComponent {
           deleteDoc(doc(this.firestore, 'users', this.editUser.uid)).then(() => {
             const text = `User ${this.editUser?.name} deleted. You should now remove it from the Firebase Auth too: https://console.firebase.google.com/project/jb-mtg/authentication/users`;
             this.growl.pushMsg({ text, timeOut: 0, msgType: 'success' });
+            this.prepareNewUser();
           });
         }
       }, (res) => {});
@@ -155,9 +190,9 @@ export class UsersComponent {
       this.btnDisabled = true;
       const userDoc = { 
         name      : this.editUser.name,
+        username  : this.editUser.username,
         email     : this.editUser.email,
-        isAdmin   : this.editUser.isAdmin,
-        isEnabled : this.editUser.isEnabled,
+        role      : this.editUser.role,
         sats      : this.editUser.sats,
       };
       setDoc(doc(this.firestore, 'users', this.editUser.uid), userDoc).then(docRef => {

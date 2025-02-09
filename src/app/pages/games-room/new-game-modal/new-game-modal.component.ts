@@ -68,10 +68,10 @@ export class NewGameModalComponent {
 
 
   async createRequest() {
-    if (this.selectedUser && this.selectedDeck && this.auth.profileUserId && this.auth.profileUserName) {
+    if (this.selectedUser && this.selectedDeck && this.auth.profileUserId && this.auth.profileName) {
       const player1 = {
         id: this.auth.profileUserId,
-        name: this.auth.profileUserName,
+        name: this.auth.profileName,
         deckId: this.selectedDeck.id
       };
       const error = await this.dataService.requestNewGame(player1, this.selectedUser.uid);

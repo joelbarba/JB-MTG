@@ -72,7 +72,7 @@
       <bf-input class="flat" bfIcon="icon-search" [(ngModel)]="filterText" (ngModelChange)="filterList($event, 'text')"></bf-input>
       <div class="checkboxes">
         <bf-checkbox class="pad-input" bfLabel="Group" [(ngModel)]="isGrouped"></bf-checkbox>
-        <bf-checkbox class="pad-input" bfLabel="Ready" [(ngModel)]="filterReady" (ngModelChange)="filterList($event, 'ready')" *ngIf="auth.profile?.isAdmin"></bf-checkbox>
+        <bf-checkbox class="pad-input" bfLabel="Ready" [(ngModel)]="filterReady" (ngModelChange)="filterList($event, 'ready')" *ngIf="auth.isAdmin"></bf-checkbox>
       </div>
 
       <!-- Card Type -->

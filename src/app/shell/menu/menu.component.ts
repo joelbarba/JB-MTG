@@ -48,8 +48,8 @@ export class MenuComponent {
   }
   
   ngOnInit() {
-    this.auth.profilePromise.then(profile => this.isAdmin = profile.isAdmin);
-    this.auth.profile$.subscribe(profile => this.isAdmin = profile?.isAdmin || false);
+    this.auth.profilePromise.then(profile => this.isAdmin = profile.role === 'admin');
+    this.auth.profile$.subscribe(profile => this.isAdmin = profile?.role === 'admin');
 
     // Mark the current route on the menu
     this.router.events.subscribe((routeEvent) => {
