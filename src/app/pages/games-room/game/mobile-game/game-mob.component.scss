@@ -1,6 +1,12 @@
 @import '../game.vars.scss';
 
-$hand-height: 157px;
+$hand-height-lg: 230px; // large screen
+$hand-height-md: 190px; // medium screen
+$hand-height-sm: 157px; // small screen
+
+// $hand-height: 230px; // large screen
+// @media (max-height: 1050px) { $hand-height: 190px; }  // medium screen
+// @media (max-height: 900px)  { $hand-height: 157px; } // small screen
 
 .game {
   width: 100%;
@@ -11,8 +17,13 @@ $hand-height: 157px;
     position: fixed;
     border: 1px solid black;
     // top: 0;
-    height: 157px;
-    bottom: 0;
+    // height: 157px;
+    // bottom: 0;
+
+    // This should be for vertical device only
+    top: calc(50% - 100px);
+    height: 200px;
+
     right: 0;
     width: 60px;
     display: flex;
@@ -54,7 +65,9 @@ $hand-height: 157px;
       width: 25px;
       left: 0;
       top: 0;
-      bottom: $hand-height;
+      bottom: $hand-height-lg;
+      @media (max-height: 1050px) { bottom: $hand-height-md; }  // medium screen
+      @media (max-height: 900px)  { bottom: $hand-height-sm; } // small screen
       display: flex;
       flex-direction: column;
       justify-content: space-between;
@@ -80,7 +93,9 @@ $hand-height: 157px;
       position: absolute;
       left: 0;
       bottom: 0;
-      height: $hand-height;
+      height: $hand-height-lg;
+      @media (max-height: 1050px) { height: $hand-height-md; }  // medium screen
+      @media (max-height: 900px)  { height: $hand-height-sm; } // small screen
       width: 50px;
       background: $gray-dark;
       border-left: 1px solid $gray-light;
@@ -145,7 +160,9 @@ $hand-height: 157px;
 
     .info-box {
       position: absolute;
-      bottom: $hand-height;
+      bottom: $hand-height-lg;
+      @media (max-height: 1050px) { bottom: $hand-height-md; }  // medium screen
+      @media (max-height: 900px)  { bottom: $hand-height-sm; } // small screen
       left: 25px;
       // right: 0;
       padding: 5px;
@@ -179,9 +196,12 @@ $hand-height: 157px;
       position: absolute;
       left: 50px;
       bottom: 0;
-      right: 60px;
+      // right: 60px;
+      right: 0;
       padding: 5px;
-      height: $hand-height;
+      height: $hand-height-lg;
+      @media (max-height: 1050px) { height: $hand-height-md; }  // medium screen
+      @media (max-height: 900px)  { height: $hand-height-sm; } // small screen
       overflow: auto;
       min-width: calc(var(--card-width) + 10px); // xl = 160px;
       background: $hand-box-bg;        
@@ -217,7 +237,9 @@ $hand-height: 157px;
 
   .playerB-panel {
     .phases-box {
-      top: $hand-height;
+      top: $hand-height-lg;
+      @media (max-height: 1050px) { top: $hand-height-md; }  // medium screen
+      @media (max-height: 900px)  { top: $hand-height-sm; } // small screen
       bottom: 0;
     }
     .mana-pool {
