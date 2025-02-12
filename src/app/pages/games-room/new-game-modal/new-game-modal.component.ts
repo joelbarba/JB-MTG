@@ -90,7 +90,7 @@ export class NewGameModalComponent {
   async createGame() { 
     if (this.selectedDeck && this.gameId) {
       this.growl.success(`Starting a new game with ${this.playerName}`);
-      const error = await this.dataService.createNewGame(this.gameId, this.selectedDeck.id);
+      const error = await this.dataService.createNewGame(this.gameId, this.selectedDeck.id, this.auth.profileUserId);
       if (error) { return this.growl.error(error); }
       this.ngbModal.close({ deckId: this.selectedDeck?.id });
     }

@@ -65,6 +65,10 @@ export class OnboardingComponent {
         this.isDefaultOk = true;
         this.btnEnabled = true;
 
+        if (this.auth.isGuest) {
+          this.router.navigate(['/game', 'WvYPxRKiPZ4lCzuV3yHZ']);
+        }
+
       }).catch(err => {
         this.isDefaultOk = false;
         this.router.navigate(['/onboarding']);

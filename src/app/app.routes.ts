@@ -20,11 +20,15 @@ export class AuthGuard {
 
   async canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Promise<GuardResult> {
     await this.auth.profilePromise;
-    // console.log(route.routeConfig?.path, state.url);
+    console.log(route.routeConfig?.path, state.url);
     const url = state.url; // route.routeConfig?.path
     if (!this.auth.profileUserId) { return false; } // Prevent access to the route      
     if (this.auth.isOnboarding) {
       this.router.navigate(['/onboarding']); // Redirect
+      return false;
+    }
+    if (this.auth.isGuest && url !== '/game/WvYPxRKiPZ4lCzuV3yHZ') {
+      this.router.navigate(['/game', 'WvYPxRKiPZ4lCzuV3yHZ']);
       return false;
     }
     if (!this.auth.isAdmin) {

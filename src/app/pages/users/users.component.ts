@@ -90,6 +90,12 @@ export class UsersComponent {
     this.newUser.pass = this.newUser.email;
   }
 
+  copyLink() {
+    const link = `https://jb-mtg.netlify.app/onboarding?usr=${this.editUser?.username}`;
+    navigator.clipboard.writeText(link);
+    this.growl.success('Link copied to the clipboard');
+  }
+
   createUser() {
     if (this.newUser) {
       // if (this.newUser.pass !== this.passCheck) { return this.growl.error('Password mismatch. Type them again'); }

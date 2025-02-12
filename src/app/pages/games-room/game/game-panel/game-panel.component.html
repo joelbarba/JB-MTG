@@ -8,10 +8,10 @@
     <!-- <div class="hover-opener" (mouseover)="hoverToOpen()"></div> -->
     <h1>Game</h1>
     <div class="text-right" style="margin-bottom: 20px;">
-      <bf-btn bfText="Exit Game" bfIcon="icon-esc" (bfClick)="exitGame()"></bf-btn>
+      <bf-btn *ngIf="!auth.isGuest" bfText="Exit Game" bfIcon="icon-esc" (bfClick)="exitGame()"></bf-btn>
 
       <!-- Debug Buttons -->
-      <div *ngIf="true">
+      <div *ngIf="false">
         <!-- <bf-btn (bfClick)="growl.success('test test');" bfText="GROWL" class="full-width"></bf-btn> -->
         <bf-btn (bfClick)="game.action('refresh')" bfText="REFRESH" ></bf-btn>
         <bf-btn (bfClick)="game.saveStateDebug()" bfText="SAVE STATE"></bf-btn>

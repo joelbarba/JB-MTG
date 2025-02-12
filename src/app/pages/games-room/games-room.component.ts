@@ -155,10 +155,11 @@ export class GamesRoomComponent {
   }
 
   async resetGame(game: TGameExt) {
+    const deckId2 = game.deckId2;
     await this.deleteGame(game.gameId);
     const player1 = { id: game.player1.userId, name: game.player1.name, deckId: game.deckId1 };
     await this.dataService.requestNewGame(player1, game.player2.userId, game.gameId);
-    await this.dataService.createNewGame(game.gameId, game.deckId2);
+    await this.dataService.createNewGame(game.gameId, deckId2, game.player2.userId);
     this.growl.success('Game reset');
     // this.goToGame(gameId);
   }

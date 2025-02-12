@@ -32,4 +32,9 @@ h2 { padding: 15px 15px 0 15px; }
     }
   }
 
+  .onb-link {
+    cursor: pointer;
+    &:hover { text-decoration: underline; }
+  }
+
 }

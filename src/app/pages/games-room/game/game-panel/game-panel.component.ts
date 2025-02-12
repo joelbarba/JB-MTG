@@ -9,6 +9,7 @@ import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { getTime } from '../../../../core/common/commons';
 import { TDBChatMsg } from '../../../../core/types';
+import { AuthService } from '../../../../core/common/auth.service';
 
 
 
@@ -40,6 +41,7 @@ export class GamePanelComponent {
     public router: Router,
     public firestore: Firestore,
     public growl: BfGrowlService,
+    public auth: AuthService,
   ) {
 
   }

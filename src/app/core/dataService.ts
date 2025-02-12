@@ -301,7 +301,7 @@ export class DataService {
 
 
 
-  async createNewGame(gameId: string, player2DeckId: string): Promise<string | void> {
+  async createNewGame(gameId: string, player2DeckId: string, player2Id: string): Promise<string | void> {
     let docSnap = await getDoc(doc(this.firestore, 'games', gameId));
     if (!docSnap.exists()) { return 'Game Id not found: ' + gameId;  }
     const newGame = docSnap.data() as TGameDBState;
@@ -318,7 +318,21 @@ export class DataService {
 
 
     // Player 2's deck
-    const fullDeck2 = this.yourDecks.find(d => d.id = player2DeckId);
+    // const fullDeck2 = this.yourDecks.find(d => d.id = player2DeckId);
+    docSnap = await getDoc(doc(this.firestore, 'users', player2Id, 'decks', player2DeckId));
+    const dbDeck2 = { id: docSnap.id, ...docSnap.data() } as TDBUserDeck;
+    const fullDeck2: TFullDeck = {
+      id: dbDeck2.id,
+      deckName: dbDeck2.deckName,
+      created: dbDeck2.created,
+      units: dbDeck2.units.map(ref => {
+        const card = this.cards.find(c => c.id === ref.split('.')[0]);
+        const unit = card?.units.find(u => u.ref === ref);
+        if (!unit) { console.log(`Error on Deck "${dbDeck2.deckName}". Unit ${ref} (${card?.name})`); }
+        return unit;
+      }).filter(u => !!u) as Array<TFullUnit>
+    };
+
     if (!fullDeck2) { return 'Deck Id not found ' + player2DeckId; }
     let cardsDeck2 = fullDeck2.units.map(u => u.cardId);
     newGame.deckId2 = player2DeckId;

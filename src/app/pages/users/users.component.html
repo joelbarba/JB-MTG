@@ -65,7 +65,12 @@
     </div> -->
 
     <div class="col-12" style="margin: 35px 0;">
-      <div *ngIf="editUser.role === 'onboarding'" style="margin-bottom: 20px;">Onboarding link to set the password: <a [href]="'/onboarding?usr=' + editUser.username">/onboarding?usr={{editUser.username}}</a></div>
+      <div *ngIf="editUser.role === 'onboarding'" style="margin-bottom: 20px;">Onboarding link to set the password: 
+        <b (click)="copyLink()" class="onb-link">https://jb-mtg.netlify.app/onboarding?usr={{editUser.username}}</b>
+      </div>
+      <div *ngIf="editUser.role === 'guest'" style="margin-bottom: 20px;">Direct game link: 
+        <b (click)="copyLink()" class="onb-link">https://jb-mtg.netlify.app/onboarding?usr={{editUser.username}}</b>
+      </div>
       <div>See his cards on: <a [href]="'/cards?userId=' + editUser.uid">/cards?userId={{editUser.uid}}</a></div>
     </div>
 
