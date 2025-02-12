@@ -1,29 +1,22 @@
-<h1>Sell "{{unit.card.name}}"</h1>
+<h1>Buy 1 "{{unit.card.name}}"</h1>
 <span class="icon-cross2 close-btn" (click)="close()"></span>
-
-<!-- <h3>{{unit.ref}}</h3> -->
 
 <mtg-card [cardImg]="unit.card.image" class="lg" [border]="unit.card.border"></mtg-card>
 
 <p><b>Ref:</b> {{unit.ref}}</p>
-<p>Average price: <b>{{unit.card.price | number: '1.0-0' }}</b> sats</p>
+<p style="margin-bottom: 10px;">Average price: <b>{{unit.card.price | number: '1.0-0' }}</b> sats</p>
 
-<div class="deck-warning" *ngIf="deckCount > 0">
-  <p><b>Warning</b>: This unit is being used in {{deckCount}} of your decks</p>
-  <!-- <p *ngFor="let deckName of deckNamesList">{{deckName}}</p> -->
-  <!-- <bf-btn bfText="Remove / Replace it from all decks"></bf-btn> -->
-</div>
+<p *ngIf="unitsYouOwn">You already own <b>{{unitsYouOwn}}</b> {{unit.card.name}}</p>
+<p *ngIf="!unitsYouOwn">You own <b>0</b> {{unit.card.name}}</p>
 
-<bf-input bfLabel="Sell it for" class="sell-input"
-          bfRightBtnText="sats"
-          [(ngModel)]="price"
-          (bfOnEnter)="addSellOffer()">
-</bf-input>
+<h2>Current Offer: <b>{{formattedPrice}}</b> sats</h2>
 
-<div class="bottom-row text-center" *ngIf="!unit.sellPrice">
-  <bf-btn bfText="Place a Sell Order" class="warning" bfIcon="icon-coin-dollar" (bfClick)="addSellOffer()"></bf-btn>
-</div>
-<div class="bottom-row text-center" *ngIf="unit.sellPrice">
-  <bf-btn bfText="Cancel Sell Order" class="primary" bfIcon="icon-cross" (bfClick)="removeSellOffer()"></bf-btn>
-  <bf-btn bfText="Update Sell Order" class="warning" bfIcon="icon-coin-dollar" (bfClick)="addSellOffer()"></bf-btn>
+
+<p class="show-options" (click)="openCardUnits()">Show More Options</p>
+
+<div class="bottom-row">
+  <!-- <bf-btn bfText="More Options" class="primary" (bfClick)="openCardUnits()"></bf-btn> -->
+  <bf-btn [bfText]="buyBtnText" class="secondary" [bfAsyncPromise]="btnPromise"
+          bfIcon="icon-coin-dollar" [bfDisabled]="btnDisabled" (bfClick)="btnPromise = buyIt()">
+  </bf-btn>
 </div>

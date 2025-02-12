@@ -28,18 +28,18 @@ mtg-card {
 }
 
 p { margin: 0; }
-.sell-input { margin: 20px 0 10px; }
 
-.deck-warning {
-  text-align: center;
-  margin: 20px 0 10px;
-  color: red;
-  bf-btn { margin: 5px 0 0; }
+.show-options {
+  text-decoration: underline;
+  cursor: pointer;
 }
 
 .bottom-row {
   margin-top: 20px;
   width: 100%;
+  display: flex;
+  // justify-content: space-between;
+  justify-content: center;
 }
 
 bf-btn + bf-btn { margin-left: 15px; }

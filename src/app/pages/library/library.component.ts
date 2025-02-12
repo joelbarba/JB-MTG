@@ -15,6 +15,8 @@ import { MtgCardComponent } from '../../core/common/internal-lib/mtg-card/mtg-ca
 import { cardOrderFn, cardTypes, colors } from '../../core/common/commons';
 import { Router } from '@angular/router';
 import { DataService, TFullCard, TFullUnit } from '../../core/dataService';
+import { BuyModalComponent } from '../../core/modals/buyModal/buy-modal.component';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 
 
 
@@ -51,6 +53,7 @@ export class LibraryComponent {
     private dataService: DataService,
     private growl: BfGrowlService,
     private confirm: BfConfirmService,
+    private ngbModal: NgbModal,
   ) {
     this.shell.gameMode('off');
     this.cardsList = new BfListHandler({
@@ -116,25 +119,28 @@ export class LibraryComponent {
       }
     });
 
-    if (unit && unit.sellPrice !== null) {
-      const sellPrice = unit.sellPrice;
-      const formatPrice = formatNumber(sellPrice, 'en-US', '1.0-0');
-      let htmlContent = `Buy 1 <b>${unit.card.name}</b> for <b>${formatPrice}</b> sats?`;
-      const res = await this.confirm.open({ 
-        title: `Buy "${unit.card.name}" (${unit.ref})`, 
-        htmlContent, 
-        yesButtonText: 'Yes, buy it',
-        showNo: true, noButtonText: 'No, more options'
-      });
-      if (res === 'yes') {
-        const error = await this.dataService.buyUnit(unit);
-        if (error) { this.growl.error(error); }
-        else { this.growl.success(`${unit.card?.name} bought for ${formatNumber(sellPrice || 0, 'en-US', '1.0-0')} sats`); }
+    const modalRef = this.ngbModal.open(BuyModalComponent, { backdrop: 'static', centered: false, size: 'md' });
+    modalRef.componentInstance.unit = unit;
 
-      } else if (res === 'no') {
-        this.goToCard(card);
-      }
-    }
+    // if (unit && unit.sellPrice !== null) {
+    //   const sellPrice = unit.sellPrice;
+    //   const formatPrice = formatNumber(sellPrice, 'en-US', '1.0-0');
+    //   let htmlContent = `Buy 1 <b>${unit.card.name}</b> for <b>${formatPrice}</b> sats?`;
+    //   const res = await this.confirm.open({ 
+    //     title: `Buy "${unit.card.name}" (${unit.ref})`, 
+    //     htmlContent, 
+    //     yesButtonText: 'Yes, buy it',
+    //     showNo: true, noButtonText: 'No, more options'
+    //   });
+    //   if (res === 'yes') {
+    //     const error = await this.dataService.buyUnit(unit);
+    //     if (error) { this.growl.error(error); }
+    //     else { this.growl.success(`${unit.card?.name} bought for ${formatNumber(sellPrice || 0, 'en-US', '1.0-0')} sats`); }
+
+    //   } else if (res === 'no') {
+    //     this.goToCard(card);
+    //   }
+    // }
   }
 
   // @HostListener('window:keyup', ['$event'])

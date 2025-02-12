@@ -63,6 +63,12 @@ export class NewGameModalComponent {
     
     this.dataService.yourDecks$.subscribe(decks => {
       this.decksList.load(decks.map(deck => ({ id: deck.id, name: deck.deckName })));
+
+      if (decks.length === 1) { // If you have only 1 deck, automatically select it
+        this.selectedDeck = this.decksList.loadedList[0];
+        if (!this.playerName) { this.createRequest(); }
+        else { this.createGame(); }
+      }
     });
   }
 

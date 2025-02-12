@@ -21,9 +21,9 @@
 </bf-input>
 
 <div class="bottom-row text-center" *ngIf="!unit.sellPrice">
-  <bf-btn bfText="Place a Sell Order" class="warning" bfIcon="icon-coin-dollar" (bfClick)="addSellOffer()"></bf-btn>
+  <bf-btn bfText="Place a Sell Order" class="warning" bfIcon="icon-coin-dollar" [bfDisabled]="btnDisabled" [bfAsyncPromise]="btnPromise1" (bfClick)="btnPromise1 = addSellOffer()"></bf-btn>
 </div>
 <div class="bottom-row text-center" *ngIf="unit.sellPrice">
-  <bf-btn bfText="Cancel Sell Order" class="primary" bfIcon="icon-cross" (bfClick)="removeSellOffer()"></bf-btn>
-  <bf-btn bfText="Update Sell Order" class="warning" bfIcon="icon-coin-dollar" (bfClick)="addSellOffer()"></bf-btn>
+  <bf-btn bfText="Cancel Sell Order" class="primary" bfIcon="icon-cross"       [bfDisabled]="btnDisabled" [bfAsyncPromise]="btnPromise2" (bfClick)="btnPromise2 = removeSellOffer()"></bf-btn>
+  <bf-btn bfText="Update Sell Order" class="warning" bfIcon="icon-coin-dollar" [bfDisabled]="btnDisabled" [bfAsyncPromise]="btnPromise3" (bfClick)="btnPromise3 = addSellOffer()"></bf-btn>
 </div>

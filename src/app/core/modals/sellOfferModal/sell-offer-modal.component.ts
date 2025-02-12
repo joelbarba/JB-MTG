@@ -27,6 +27,10 @@ export class SellOfferModalComponent {
   price!: number;
   deckCount = 0;
   deckNamesList: Array<string> = [];
+  btnDisabled = false;
+  btnPromise1!: Promise<void>;
+  btnPromise2!: Promise<void>;
+  btnPromise3!: Promise<void>;
 
   constructor(
     private ngbModal: NgbActiveModal,
@@ -46,6 +50,7 @@ export class SellOfferModalComponent {
 
   async addSellOffer() {
     if (this.price <= 0) { return; }
+    this.btnDisabled = true;
     const formatPrice = formatNumber(this.price, 'en-US', '1.0-0');
     // let htmlContent = `Are you sure you want to place a sell offer of 1 <b>${this.unit.card.name}</b> for <b>${formatPrice}</b> sats?`;
     // const decks = this.dataService.yourDecks.filter(deck => deck.units.find(u => u.ref === this.unit.ref));
@@ -58,12 +63,15 @@ export class SellOfferModalComponent {
 
     await this.dataService.sellUnit(this.unit, this.price);
     this.growl.success(`${this.unit.card.name} is now for sale for ${formatPrice} sats`);
+    this.btnDisabled = false;
     this.close();
   }
 
   async removeSellOffer() {
+    this.btnDisabled = true;
     await this.dataService.removeSellOffer(this.unit);
     this.growl.success(`${this.unit.card.name} sell offer removed`);
+    this.btnDisabled = false;
     this.close();
   }
 

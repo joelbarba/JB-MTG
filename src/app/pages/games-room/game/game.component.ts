@@ -545,7 +545,7 @@ export class GameComponent {
     if (totalBCols > maxCardsPerRow && autocollapseHandB) { this.isHandBExp = false; } // Collapse Opponent's hand to give more space
 
     const tableBTop = Math.max(20, (cardHeight * 1.6) - (Math.floor(tableGridB.filter(c => !!c.length).length / maxCardsPerRow) * (cardHeight + gap)));
-    console.log('tableBTop', tableBTop);
+    // console.log('tableBTop', tableBTop);
     tableGridB.filter(c => !!c.length).forEach((arr, col) => {
       const row = Math.floor(col / maxCardsPerRow);
       const isThereSpace = this.expandedTalbe === 'B' && (this.windowHeight > 750 || !this.isHandBExp);

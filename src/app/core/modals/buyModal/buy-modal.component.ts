@@ -1,5 +1,5 @@
 import { CommonModule, formatNumber } from "@angular/common";
-import { Component } from "@angular/core";
+import { Component, HostListener } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { BfConfirmService, BfGrowlService, BfUiLibModule } from "bf-ui-lib";
 import { NgbActiveModal } from "@ng-bootstrap/ng-bootstrap";
@@ -7,9 +7,12 @@ import { TranslateModule } from "@ngx-translate/core";
 import { MtgCardComponent } from "../../common/internal-lib/mtg-card/mtg-card.component";
 import { HoverTipDirective } from "../../common/internal-lib/bf-tooltip/bf-tooltip.directive";
 import { DataService, TFullCard, TFullDeck, TFullUnit } from "../../dataService";
+import { Router } from "@angular/router";
 
 @Component({
-  selector: 'modal-sell-offer',
+  selector: 'modal-buy',
+  templateUrl: './buy-modal.component.html',
+  styleUrls : ['./buy-modal.component.scss'],
   standalone: true,
   imports: [
     CommonModule,
@@ -19,51 +22,56 @@ import { DataService, TFullCard, TFullDeck, TFullUnit } from "../../dataService"
     MtgCardComponent,
     // HoverTipDirective,
   ],
-  templateUrl: './sell-offer-modal.component.html',
-  styleUrls: ['./sell-offer-modal.component.scss'],
 })
-export class SellOfferModalComponent {
+export class BuyModalComponent {
   unit!: TFullUnit;
   price!: number;
-  deckCount = 0;
-  deckNamesList: Array<string> = [];
+  
+  formattedPrice = '';
+  buyBtnText = 'Buy it';
+  btnDisabled = false;
+  btnPromise!: Promise<void>;
+
+  unitsYouOwn = 0;
 
   constructor(
     private ngbModal: NgbActiveModal,
     private dataService: DataService,
     private growl: BfGrowlService,
     private confirm: BfConfirmService,
+    private router: Router,
   ) {}
 
   ngOnInit() {
     this.price = this.unit.sellPrice || this.unit.card.price;
+    this.formattedPrice = formatNumber(this.price || 0, 'en-US', '1.0-0');
+    this.buyBtnText = `Yes, buy it for ${this.formattedPrice} sats`;
 
-    const decks = this.dataService.yourDecks.filter(deck => deck.units.find(u => u.ref === this.unit.ref));
-    this.deckCount = decks.length;
-    this.deckNamesList = decks.map(deck => deck.deckName);
+    // Calculate how many of this card you already own
+    const card = this.dataService.cards.find(c => c.id === this.unit.cardId);
+    if (card) { this.unitsYouOwn = card.units.filter(u => u.isYours).length }
   }
 
+  async buyIt() {
+    this.btnDisabled = true;
+    console.log('Buying 1', this.unit.card.name, 'for', this.price, 'sats. Ref=', this.unit);
 
-  async addSellOffer() {
-    if (this.price <= 0) { return; }
-    const formatPrice = formatNumber(this.price, 'en-US', '1.0-0');
-    // let htmlContent = `Are you sure you want to place a sell offer of 1 <b>${this.unit.card.name}</b> for <b>${formatPrice}</b> sats?`;
-    // const decks = this.dataService.yourDecks.filter(deck => deck.units.find(u => u.ref === this.unit.ref));
-    // if (decks.length) {
-    //   htmlContent += `<br/><br/><b>Warning</b>: This unit is being used in ${decks.length} of your decks:<br/>`;
-    //   htmlContent += decks.map(deck => `- ${deck.deckName}<br/>`);
-    // }
-    // const res = await this.confirm.open({ title: `Sell "${this.unit.card.name}"`, htmlContent, yesButtonText: 'Yes, sell it' });
-    // if (res === 'yes') {}
+    const error = await this.dataService.buyUnit(this.unit);
+    if (error) { this.growl.error(error); }
+    else { this.growl.success(`${this.unit.card?.name} bought for ${this.formattedPrice} sats`); }
 
-    await this.dataService.sellUnit(this.unit, this.price);
-    this.growl.success(`${this.unit.card.name} is now for sale for ${formatPrice} sats`);
+    this.btnDisabled = false;
     this.close();
   }
 
-  async removeSellOffer() {
-    await this.dataService.removeSellOffer(this.unit);
-    this.growl.success(`${this.unit.card.name} sell offer removed`);
+  @HostListener('window:keyup', ['$event'])
+  keyEvent(ev: KeyboardEvent) {
+    if (ev.code === 'KeyY') { this.buyIt(); }
+    ev.stopPropagation();
+  }
+
+  openCardUnits() {
+    this.router.navigate(['/library', this.unit.cardId]);
     this.close();
   }
 

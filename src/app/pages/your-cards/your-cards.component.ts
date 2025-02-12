@@ -193,6 +193,7 @@ export class YourCardsComponent {
   }
 
   loadCards() {
+    console.log('loding cards');
     const userId = this.userId || this.auth.profileUserId;
     this.groupedCards = this.dataService.cards.filter(c => c.units.some(u => u.ownerId === userId)).map(card => ({ ...card }));
     this.yourUnits = [];
@@ -206,6 +207,9 @@ export class YourCardsComponent {
     this.cardsList.load(this.groupedCards);
     this.unitsList.orderList = (list) => list.sort(unitOrderFn);
     this.unitsList.load(this.yourUnits);
+    if (this.hoveringCard) {
+      this.hoverCard(this.groupedCards.find(c => c.id === this.hoveringCard?.id));
+    }
   }
 
   async loadAndWatchDecks() {

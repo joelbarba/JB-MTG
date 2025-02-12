@@ -306,8 +306,9 @@ export class DataService {
     if (!docSnap.exists()) { return 'Game Id not found: ' + gameId;  }
     const newGame = docSnap.data() as TGameDBState;
 
-    const testingMode = localStorage.getItem('testingMode');
-    if (testingMode) { console.log('TESTING MODE'); }
+    // const testingMode = localStorage.getItem('testingMode');
+    // if (testingMode) { console.log('TESTING MODE'); }    
+    const testingMode = false;
 
     // Player 1's deck
     docSnap = await getDoc(doc(this.firestore, 'users', newGame.player1.userId, 'decks', newGame.deckId1));

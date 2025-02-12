@@ -15,6 +15,7 @@ import { DataService, TFullCard, TFullUnit } from '../../../core/dataService';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { SellOfferModalComponent } from '../../../core/modals/sellOfferModal/sell-offer-modal.component';
 import { HoverTipDirective } from '../../../core/common/internal-lib/bf-tooltip/bf-tooltip.directive';
+import { BuyModalComponent } from '../../../core/modals/buyModal/buy-modal.component';
 
 
 @Component({
@@ -97,15 +98,17 @@ export class LibraryCardComponent {
 
 
   async buyUnit(unit: TFullUnit) {
-    if (unit.sellPrice) {
-      const formatPrice = formatNumber(unit.sellPrice, 'en-US', '1.0-0');
-      let htmlContent = `Are you sure you want to buy 1 <b>${unit.card.name}</b> for <b>${formatPrice}</b> sats?`;
-      const res = await this.confirm.open({ title: `Buy "${unit.card.name}" (${unit.ref})`, htmlContent, yesButtonText: 'Yes, buy it' });
-      if (res === 'yes') {
-        const error = await this.dataService.buyUnit(unit);
-        if (error) { this.growl.error(error); }
-        else { this.growl.success(`${this.card?.name} bought for ${formatNumber(unit.sellPrice || 0, 'en-US', '1.0-0')} sats`); }
-      }
+    if (unit.sellPrice !== null) {
+      const modalRef = this.ngbModal.open(BuyModalComponent, { backdrop: 'static', centered: false, size: 'md' });
+      modalRef.componentInstance.unit = unit;
+      // const formatPrice = formatNumber(unit.sellPrice, 'en-US', '1.0-0');
+      // let htmlContent = `Are you sure you want to buy 1 <b>${unit.card.name}</b> for <b>${formatPrice}</b> sats?`;
+      // const res = await this.confirm.open({ title: `Buy "${unit.card.name}" (${unit.ref})`, htmlContent, yesButtonText: 'Yes, buy it' });
+      // if (res === 'yes') {
+      //   const error = await this.dataService.buyUnit(unit);
+      //   if (error) { this.growl.error(error); }
+      //   else { this.growl.success(`${this.card?.name} bought for ${formatNumber(unit.sellPrice || 0, 'en-US', '1.0-0')} sats`); }
+      // }
     }
   }
 

@@ -30,7 +30,7 @@
           <div class="col-3 on-sale" *ngIf="unit.sellPrice === null && !hoverFromDeck" (click)="askSellUnit(unit)">
             <span hoverTip="Place a sell offer" tipSide="right">Sell it</span>
           </div>
-          <div class="col-3 on-sale" *ngIf="unit.sellPrice && !hoverFromDeck" (bfClick)="askSellUnit(unit)">
+          <div class="col-3 on-sale" *ngIf="unit.sellPrice && !hoverFromDeck" (click)="askSellUnit(unit)">
             <span [hoverTip]="'for ' + (unit.sellPrice | number: '1.0-0') + ' sats'" tipSide="right">On Sale</span>
             <!-- <bf-btn *ngIf="!hoverFromDeck" bfText="On Sale" class="warning" (bfClick)="askSellUnit(unit)"
                     [hoverTip]="'for ' + (unit.sellPrice | number: '1.0-0') + ' sats'" tipSide="right">
