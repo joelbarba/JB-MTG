@@ -119,6 +119,8 @@ export class LibraryComponent {
       }
     });
 
+    if (!unit) { this.growl.error('There are no units on sale'); return; }
+
     const modalRef = this.ngbModal.open(BuyModalComponent, { backdrop: 'static', centered: false, size: 'md' });
     modalRef.componentInstance.unit = unit;
 

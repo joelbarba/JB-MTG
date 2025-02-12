@@ -16,7 +16,9 @@
       <div class="price">Avg Price: <b>{{ (hoveringCard.price || 0) | number: '1.0-0' }}</b> sats</div>
       <!-- <div>{{hoveringCard.id}}</div> -->
       <div style="margin-top: 15px;">
-        <bf-btn class="secondary" [bfText]="'Buy 1 ' + hoveringCard.name" (bfClick)="buyBestUnit(hoveringCard)"></bf-btn>
+        <bf-btn class="secondary" [bfText]="'Buy 1 ' + hoveringCard.name" 
+                [bfDisabled]="!unitsForSale" (bfClick)="buyBestUnit(hoveringCard)">
+        </bf-btn>
       </div>      
       <div style="margin-top: 30px;">
         <bf-btn bfText="Show More Details" (bfClick)="goToCard(hoveringCard)"></bf-btn>

@@ -12,10 +12,11 @@
   <div class="navbar-content">
     <bf-avatar *ngIf="isLoggedIn" 
       class="profile-avatar white-border sm"
-      defaultText="JB"
+      defaultIcon="icon-user2"
       [imgUrl]="profileImageUrl"
       (click)="toggleProfile()">
     </bf-avatar>
+    <!-- [defaultText]="initials" -->
     <!-- [hasAvatar]="!!auth.profile?.avatar_id" -->
   </div>
 

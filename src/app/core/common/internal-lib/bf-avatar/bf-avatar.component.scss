@@ -1,8 +1,8 @@
 @import 'variables';
 
 $bf-avatar-border: $primary_color;
-$bf-avatar-bg: $white;
-$bf-avatar-color: $primary_color;
+$bf-avatar-bg: lighten($grey, 20%);;
+$bf-avatar-color: $white;
 $bf-avatar-initials-bg: lighten($grey, 20%);
 $bf-avatar-initials-color: $white;
 

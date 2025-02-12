@@ -11,10 +11,8 @@
     />
 
     <ng-container *ngIf="!isLoading && (!showImg || !avatarUrl)">
-      <div *ngIf="!defaultText"
-           [ngClass]="defaultIcon"
-           [style.color]="color"
-           class="default">
+      <div *ngIf="!defaultText" class="default">
+        <span [ngClass]="defaultIcon" [style.color]="color"></span>
       </div>
       <div *ngIf="defaultText" class="initials">
         <span>{{defaultText}}</span>

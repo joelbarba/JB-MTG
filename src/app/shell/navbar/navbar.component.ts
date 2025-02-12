@@ -33,6 +33,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
   lang = '';
   displayName = '';
   username = '';
+  initials = '';
 
 
 
@@ -51,6 +52,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
       // console.log('PROFILE PROMISE', profile);
       this.displayName = profile.name;
       this.username = profile.username;
+      this.initials = this.displayName.split(' ').map(s => s.slice(0,1)).join('').slice(0,3);
     });
 
     this.auth.profile$.subscribe(profile => {
