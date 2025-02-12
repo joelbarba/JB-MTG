@@ -4,7 +4,7 @@
   <div class="details">    
     <mtg-card [cardImg]="card.image" class="xl" [border]="card.border"></mtg-card>
     <div class="card-details">
-      <!-- <div class="name">{{card.name}}</div> -->
+      <div class="name"><b>{{card.name}}</b></div>
       <div class="quantity">There are <b>{{stats.totals}}</b> units of this card</div>
       <div class="quantity">You own <b>{{stats.yours}}</b> of them</div>
       <div class="price">Avg. Price = <b>{{ (card.price || 0) | number: '1.0-0' }}</b> sats</div>
@@ -35,8 +35,8 @@
         <mtg-card [cardImg]="card.image" class="xs" [border]="card.border"></mtg-card>
         <div class="unit-data">
           <div class="unit-text-data">
-            <!-- <div class="ref"><b>Id:</b> {{unit.ref}}</div> -->
-            <div class="ref">{{cardId}}.<br/>{{unit.shortRef}}</div>
+            <div class="ref"><b>Ref:</b> {{unit.ref}}</div>
+            <!-- <div class="ref">{{cardId}}.<br/>{{unit.shortRef}}</div> -->
             <div class="owner"><b>Owned by:</b> {{unit.owner.name}}</div>
             <div class="price" *ngIf="!unit.isYours && unit.sellPrice"><b>For Sale:</b> {{unit.sellPrice | number: '1.0-0'}} sats</div>
             <div class="price on-sale" *ngIf="unit.isYours && unit.sellPrice" (click)="askSellUnit(unit)">

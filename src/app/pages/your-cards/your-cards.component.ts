@@ -9,7 +9,7 @@ import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { BfConfirmService, BfDnDModule, BfDnDService, BfGrowlService, BfListHandler, BfUiLibModule } from 'bf-ui-lib';
 import { MtgCardComponent } from '../../core/common/internal-lib/mtg-card/mtg-card.component';
-import { cardOrderFn, unitOrderFn, cardTypes, colors, randomUnitId, getTime } from '../../core/common/commons';
+import { cardOrderFn, unitOrderFn, cardTypes, colors, randomUID, getTime } from '../../core/common/commons';
 import { HoverTipDirective } from '../../core/common/internal-lib/bf-tooltip/bf-tooltip.directive';
 import { DataService, TFullCard, TFullDeck, TFullUnit } from '../../core/dataService';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
@@ -484,7 +484,7 @@ export class YourCardsComponent {
 
   createNewDeck() {
     this.deckAction = '';
-    this.editDeck({ id: randomUnitId(), created: getTime(), deckName: 'New Deck', units: [] });
+    this.editDeck({ id: randomUID(), created: getTime(), deckName: 'New Deck', units: [] });
   }
 
   editDeck(deck: TFullDeck) {
@@ -499,7 +499,7 @@ export class YourCardsComponent {
   copyDeck(deck: TFullDeck) {
     this.deckAction = '';
     const deckName = `Copy of ${deck.deckName}`;
-    const newDeck = { id: randomUnitId(), deckName, created: getTime(), units: [...deck.units] }
+    const newDeck = { id: randomUID(), deckName, created: getTime(), units: [...deck.units] }
     this.editDeck(newDeck);    
     this.saveDeck();
     this.growl.success(`A new deck has been created, as copy of ${deck.deckName}`);

@@ -192,6 +192,7 @@ export class DataService {
       if (!this.ownership[card.id][unit.shortRef]) { return console.warn(`Unit without ownership --> [${card.id}][${unit.shortRef}]`); }
       unit.ownerId = this.ownership[card.id][unit.shortRef].ownerId;
       unit.sellPrice = this.ownership[card.id][unit.shortRef].sellPrice;
+      if (typeof unit.sellPrice === 'string') { unit.sellPrice = Number.parseInt(unit.sellPrice, 10); }
 
       if (this.isUsersLoaded) {
         unit.owner = this.users.find(u => u.uid === unit.ownerId) || this.defaultUser;

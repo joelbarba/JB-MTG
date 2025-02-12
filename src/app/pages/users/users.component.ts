@@ -7,14 +7,16 @@ import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { BfConfirmService, BfGrowlService, BfListHandler, BfUiLibModule } from 'bf-ui-lib';
 import { Subject } from 'rxjs';
-import { Auth, createUserWithEmailAndPassword, sendEmailVerification, sendPasswordResetEmail, updatePassword, updateProfile, UserCredential } from '@angular/fire/auth';
+import { Auth, AuthCredential, createUserWithEmailAndPassword, reauthenticateWithCredential, sendEmailVerification, sendPasswordResetEmail, updateEmail, updatePassword, updateProfile, UserCredential } from '@angular/fire/auth';
 import { TDBUser } from '../../core/types';
 import { Router, RouterModule } from '@angular/router';
 import { DataService } from '../../core/dataService';
+import { AuthService } from '../../core/common/auth.service';
 
 const roles = [
-  { code: 'admin' },
+  { code: 'onboarding' },
   { code: 'player' },
+  { code: 'admin' },
   { code: 'guest' },
   { code: 'disabled' },
 ]
@@ -45,10 +47,12 @@ export class UsersComponent {
 
   btnDisabled = false; // Whether the create/save user button is enabled
   rolesList = [...roles];
-  passCheck = '';
+  // passCheck = '';
+  newPass = '';
 
   constructor(
     private shell: ShellService,
+    private auth: AuthService,
     private firebaseAuth: Auth,
     public firestore: Firestore,
     public growl: BfGrowlService,
@@ -75,22 +79,27 @@ export class UsersComponent {
   }
 
   prepareNewUser() {
-    this.newUser = { name: '', username: '', email: 'joel.barba.vidal@gmail.com', pass: '123456_good', sats: 100000, role: 'player', };
+    this.newUser = { name: '', username: '', email: '', pass: '', sats: 100000, role: 'onboarding', };
     this.editUser = undefined;
     this.btnDisabled = false;
   }
 
-  // joel.barba.vidal@gmail.com
-  // 123456_good
+  onUsernameChange() {
+    if (!this.newUser) { return; }
+    this.newUser.email = `joel.barba.vidal+${this.newUser.username}@gmail.com`;
+    this.newUser.pass = this.newUser.email;
+  }
+
   createUser() {
     if (this.newUser) {
       // if (this.newUser.pass !== this.passCheck) { return this.growl.error('Password mismatch. Type them again'); }
       this.btnDisabled = true;
 
-      // The new user email is always set automatically to 'joel.barba.vidal@gmail.com', so we can use the username to log in
-      this.newUser.email = `joel.barba.vidal+${this.newUser.username}'@gmail.com`;
+      // The new user email is always set automatically to 'joel.barba.vidal+{username}@gmail.com', so we can use the username to log in
+      // Also, the default password will be the email too + 'onboarding' role. This way the user can change it himself through the link.
+      this.onUsernameChange();
 
-      const userDoc = { 
+      const userDoc = {
         name      : this.newUser.name,
         username  : this.newUser.username,
         email     : this.newUser.email,
@@ -98,7 +107,8 @@ export class UsersComponent {
         role      : this.newUser.role,
       };
       const email = this.newUser.email;
-      const pass = this.newUser.pass;      
+      const pass = this.newUser.pass || this.newUser.email;
+      console.log('Creating user with email=', email, 'and password=', pass);
       createUserWithEmailAndPassword(this.firebaseAuth, email, pass).then((data: UserCredential) => {
         console.log(data.user);
         updateProfile(data.user, { displayName: userDoc.name, photoURL: userDoc.username });
@@ -116,37 +126,20 @@ export class UsersComponent {
     }
   }
 
+
   // This is not really needed, we use unverified users
   // sendVerificationEmail() {
   //   sendEmailVerification(data.user);
   // }
 
-  passBtnDisabled = false;
-  newPass = '123456_good';
 
-  updatePassword(newPass = '') {
-    if (this.firebaseAuth.currentUser) {
-      this.passBtnDisabled = true;
-      console.log('Updating password to: ', newPass);
-      updatePassword(this.firebaseAuth.currentUser, newPass).then(() => {
-        this.growl.success(`New password set successfuly`);
-        this.passBtnDisabled = false;
-        this.newPass = '';
-        
-      }).catch((error) => {
-        console.log('error', error);
-        this.growl.error(`Error updating password: ` + error);
-        this.passBtnDisabled = false;
-      });
-    }
-  }
 
   resetPassword() {
     if (this.editUser) {
       const email = this.editUser.email;
       this.confirm.open({
         title         : 'Reset Password',
-        htmlContent   : `This will reset the password for <b>${this.editUser.name}</b> and sent him a new email with a url to set a new one.`,
+        htmlContent   : `This will reset the password for <b>${this.editUser.name}</b>. It'll send an email to ${this.editUser.email} with a url to set a new one.`,
         noButtonText  : 'Yes, do it',
         showYes       : false,
         showNo        : true,
@@ -173,6 +166,7 @@ export class UsersComponent {
           deleteDoc(doc(this.firestore, 'users', this.editUser.uid)).then(() => {
             const text = `User ${this.editUser?.name} deleted. You should now remove it from the Firebase Auth too: https://console.firebase.google.com/project/jb-mtg/authentication/users`;
             this.growl.pushMsg({ text, timeOut: 0, msgType: 'success' });
+            this.usersList.load(this.dataService.users.map(user => ({ ...user })));
             this.prepareNewUser();
           });
         }
@@ -186,7 +180,7 @@ export class UsersComponent {
   }
 
   updateUser() {
-    if (this.editUser) {
+    if (this.editUser) {      
       this.btnDisabled = true;
       const userDoc = { 
         name      : this.editUser.name,

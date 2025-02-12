@@ -74,7 +74,7 @@ export const getTime = (): string => {
   const time = new Date();
   let timeStr = (time.getFullYear() + '').padStart(4, '0') + '-';
   timeStr += ((time.getMonth() + 1) + '').padStart(2, '0') + '-';
-  timeStr += (time.getDay() + '').padStart(2, '0') + ' ';
+  timeStr += (time.getDate() + '').padStart(2, '0') + ' ';
   timeStr += (time.getHours() + '').padStart(2, '0') + ':';
   timeStr += (time.getMinutes() + '').padStart(2, '0') + ':';
   timeStr += (time.getSeconds() + '').padStart(2, '0') + '.';
@@ -83,7 +83,7 @@ export const getTime = (): string => {
 }
 
 export const randomId = (prefix = ''): string => { return prefix + (Math.round((Math.random() * 1000)) + ((new Date()).getTime() * 1000)); };
-export const randomUnitId = (length = 20) => {
+export const randomUID = (length = 20) => {
   let result = '';
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   const charactersLength = characters.length;

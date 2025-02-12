@@ -27,14 +27,14 @@
       <ul class="list-unstyled table-list content">
         <li class="list-row" *ngFor="let unit of hoveringCard.units">
           <div class="col-9 ref-font">{{unit.ref}}</div>
-          <div class="col-3 text-right" *ngIf="!unit.sellPrice">
-            <bf-btn *ngIf="!hoverFromDeck" class="warning" 
-                     bfText="Sell it"
-                    (bfClick)="askSellUnit(unit)">
-            </bf-btn>
+          <div class="col-3 on-sale" *ngIf="unit.sellPrice === null && !hoverFromDeck" (click)="askSellUnit(unit)">
+            <span hoverTip="Place a sell offer" tipSide="right">Sell it</span>
           </div>
-          <div class="col-3 on-sale" *ngIf="unit.sellPrice" (click)="askSellUnit(unit)">
+          <div class="col-3 on-sale" *ngIf="unit.sellPrice && !hoverFromDeck" (bfClick)="askSellUnit(unit)">
             <span [hoverTip]="'for ' + (unit.sellPrice | number: '1.0-0') + ' sats'" tipSide="right">On Sale</span>
+            <!-- <bf-btn *ngIf="!hoverFromDeck" bfText="On Sale" class="warning" (bfClick)="askSellUnit(unit)"
+                    [hoverTip]="'for ' + (unit.sellPrice | number: '1.0-0') + ' sats'" tipSide="right">
+            </bf-btn> -->
           </div>
         </li>
       </ul>

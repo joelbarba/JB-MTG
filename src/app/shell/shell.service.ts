@@ -14,4 +14,6 @@ export class ShellService {
     this.showNavBar = mode === 'off';
     // this.scrollable = mode === 'off';
   }
+
+
 }

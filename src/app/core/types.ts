@@ -87,7 +87,7 @@ export type TDBUser = {
   name      : string;
   email     : string;
   sats      : number;
-  role      : 'admin' | 'player' | 'guest' | 'disabled'
+  role      : 'admin' | 'player' | 'guest' | 'onboarding' | 'disabled'
   // decks: Array<TDeckRef>; // loaded apart (TFullUser)
 }
 export type TDBUserDeck = {

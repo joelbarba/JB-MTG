@@ -69,6 +69,10 @@ h2 { padding: 15px 15px 0 15px; }
 
     .units-list {
       overflow: auto;
+      li.list-row { 
+        min-height: 38px;
+        padding: 0px 10px;
+      }
     }
     .ref-font { font-family: monospace; }
   }

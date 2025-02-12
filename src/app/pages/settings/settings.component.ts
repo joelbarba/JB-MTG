@@ -9,7 +9,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { BfGrowlService, BfListHandler, BfUiLibModule } from 'bf-ui-lib';
 import { MtgCardComponent } from "../../core/common/internal-lib/mtg-card/mtg-card.component";
 import { TDBCard, TCast, TDBUser, TDBOwnership, TDBUnit } from '../../core/types';
-import { cardTypes, colors, getTime, landTypes, randomUnitId, upkeepTypes } from '../../core/common/commons';
+import { cardTypes, colors, getTime, landTypes, upkeepTypes } from '../../core/common/commons';
 import { DataService, TFullCard, TFullUnit } from '../../core/dataService';
 import { dbCards } from '../../core/dbCards';
 
@@ -213,7 +213,9 @@ export class SettingsComponent {
     await setDoc(doc(this.firestore, 'ownership', card.id), cardOwnership);
     
     // Set new time for the last update of the card units owners
-    await updateDoc(doc(this.firestore, 'ownership', 'updates'), { [card.id]: getTime() });
+    const updateObj = { [card.id]: getTime() };
+    console.log(`Update[]`, updateObj);
+    await updateDoc(doc(this.firestore, 'ownership', 'updates'), updateObj);
 
 
     this.growl.success(`Card ${card.name} updated`);

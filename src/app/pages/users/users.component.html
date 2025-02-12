@@ -59,21 +59,21 @@
     <bf-input class="col-7"   bfLabel="Name"          [(ngModel)]="editUser.name"></bf-input>
     <bf-input class="col-5"   bfLabel="Credit (sats)" [(ngModel)]="editUser.sats"></bf-input>
 
-    <bf-input class="col-7"   bfLabel="New Password" [(ngModel)]="newPass"></bf-input>
-    <div class="col-12 text-right">
+    <bf-input class="col-7"   bfLabel="Password" [(ngModel)]="newPass" [bfDisabled]="true"></bf-input>
+    <!-- <div class="col-12 text-right">
       <bf-btn bfText="Update Password" bfIcon="icon-checkmark" class="extra" (bfClick)="updatePassword(newPass)"></bf-btn>
-    </div>
+    </div> -->
 
     <div class="col-12" style="margin: 35px 0;">
-      <a [href]="'/cards?userId=' + editUser.uid">See his cards: /cards?userId={{editUser.uid}}</a>
+      <div *ngIf="editUser.role === 'onboarding'" style="margin-bottom: 20px;">Onboarding link to set the password: <a [href]="'/onboarding?usr=' + editUser.username">/onboarding?usr={{editUser.username}}</a></div>
+      <div>See his cards on: <a [href]="'/cards?userId=' + editUser.uid">/cards?userId={{editUser.uid}}</a></div>
     </div>
 
 
     <div class="btns-box">
       <!-- <bf-btn bfText="Send Verification Email" bfIcon="icon-cross" class="extra" (bfClick)="sendVerificationEmail()"></bf-btn> -->
-
       <bf-btn bfText="Delete User" bfIcon="icon-cross" class="warning" (bfClick)="deleteUser()"></bf-btn>
-      <!-- <bf-btn bfText="Reset Password" bfIcon="icon-cross" class="extra" (bfClick)="resetPassword()"></bf-btn> -->
+      <bf-btn bfText="Reset Password" bfIcon="icon-cross" class="extra" (bfClick)="resetPassword()"></bf-btn>
       <bf-btn bfText="Update User" bfIcon="icon-checkmark" [bfDisabled]="btnDisabled" (bfClick)="updateUser()"></bf-btn>
     </div>
   </div>
@@ -94,10 +94,12 @@
       bfSelect="code">
     </bf-dropdown>
     <bf-input class="col-7"   bfLabel="Email"         [(ngModel)]="newUser.email" [bfDisabled]="true"></bf-input>
-    <bf-input class="col-5"   bfLabel="Username"      [(ngModel)]="newUser.username" (ngModelChange)="newUser.email = 'joel.barba.vidal+' + newUser.username + '@gmail.com'"></bf-input>
+    <bf-input class="col-5"   bfLabel="Username"      [(ngModel)]="newUser.username" (ngModelChange)="onUsernameChange()"></bf-input>
     <bf-input class="col-7"   bfLabel="Name"          [(ngModel)]="newUser.name"></bf-input>
     <bf-input class="col-5"   bfLabel="Credit (sats)" [(ngModel)]="newUser.sats"></bf-input>
     <bf-input class="col-7"   bfLabel="Password"      [(ngModel)]="newUser.pass"></bf-input>
+    <div class="col-5"></div>
+    <div class="col-7">By default password = email, so the user can set it himself through the onboarding link later.</div>
     <!-- <div class="col-5"></div>
     <bf-input class="col-7"   bfLabel="Repeat Password" [(ngModel)]="passCheck"></bf-input> -->
 

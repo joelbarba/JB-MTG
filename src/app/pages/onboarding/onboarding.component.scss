@@ -1,0 +1,15 @@
+:host {
+  display: block;
+  padding: 50px;
+  text-align: center;
+}
+
+.signup-form {
+  margin: 20px calc(50% - 180px);
+  border: 1px solid black;
+  padding: 20px;
+  border-radius: 5px;
+  text-align: left;
+  bf-input { margin-bottom: 20px; }
+  bf-btn { margin-top: 15px; }
+}

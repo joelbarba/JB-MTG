@@ -13,6 +13,8 @@ import {
   User,
   UserInfo,
   updateProfile,
+  updateEmail,
+  updatePassword,
 } from '@angular/fire/auth';
 import { TDBUser } from '../types';
 
@@ -37,8 +39,9 @@ export class AuthService {
   isAdmin = false;    // role = 'admin'
   isGuest = false;    // role = 'guest'
   isEnabled = true;   // role != 'disabled'
+  isOnboarding = true; // role != 'onboarding'
 
-  private firebaseUser!: User;
+  firebaseUser!: User;
 
   constructor(
     private loadingBar: BfLoadingBarService,
@@ -74,13 +77,13 @@ export class AuthService {
       onAuthStateChanged(this.firebaseAuth, (user) => {
         if (user) {
           console.log('Auth Session Detected. You are:', user.displayName);
+          // updateEmail(user, 'joel.barba.vidal+joel@gmail.com');
           this.firebaseUser = user;
           this.mapProfile(user).then(profile => {
-            if (profile.role !== 'disabled') {
+            if (profile.role === 'disabled') { reject(); } 
+            else {
               this.profile$.next(profile);
               return resolve(profile);
-            } else {
-              reject();
             }
           });
 
@@ -138,6 +141,7 @@ export class AuthService {
     this.isAdmin   = profile.role === 'admin';
     this.isGuest   = profile.role === 'guest';
     this.isEnabled = profile.role !== 'disabled';
+    this.isOnboarding = profile.role === 'onboarding';
 
     if (!this.isEnabled) { this.requestLogout(); }
 
@@ -167,6 +171,10 @@ export class AuthService {
     } else {
       return true;
     }
+  }
+
+  async updatePassword(newPass = '') {
+
   }
 
   async updateProfile(data: any): Promise<void> {

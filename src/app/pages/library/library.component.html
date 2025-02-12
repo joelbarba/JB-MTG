@@ -9,14 +9,19 @@
     <!-- <mtg-card [cardImg]="hoveringCard?.image" class="sm"></mtg-card> -->
     <!-- <mtg-card [cardImg]="hoveringCard?.image" class="xs"></mtg-card> -->
     <div class="card-details" *ngIf="hoveringCard">
-      <!-- <div class="name">{{hoveringCard.name}}</div> -->
-      <div class="quantity">There are <b>{{hoveringCard.units.length}}</b> units of this card</div>
-      <div class="price">Avg Price: <b>{{ (hoveringCard.price || 0) | number: '1.0-0' }}</b> sats</div>
-      <div>{{hoveringCard.id}}</div>
       <!-- <div>{{hoveringCard.id}}</div> -->
-      <!-- <div style="margin-top: 30px;">
-        <bf-btn bfText="Show More Details" bfIcon="icon-file-text" (bfClick)="goToCard(hoveringCard)"></bf-btn>
-      </div> -->
+      <div class="name"><b>{{hoveringCard.name}}</b></div>
+      <div class="quantity">There are <b>{{hoveringCard.units.length}}</b> units of this card</div>
+      <div class="quantity">({{unitsForSale}} of them for sale)</div>
+      <div class="price">Avg Price: <b>{{ (hoveringCard.price || 0) | number: '1.0-0' }}</b> sats</div>
+      <!-- <div>{{hoveringCard.id}}</div> -->
+      <div style="margin-top: 15px;">
+        <bf-btn class="secondary" [bfText]="'Buy 1 ' + hoveringCard.name" (bfClick)="buyBestUnit(hoveringCard)"></bf-btn>
+      </div>      
+      <div style="margin-top: 30px;">
+        <bf-btn bfText="Show More Details" (bfClick)="goToCard(hoveringCard)"></bf-btn>
+        <!-- bfIcon="icon-file-text" -->
+      </div>
     </div>
   </div>
 
@@ -28,7 +33,9 @@
       <bf-input class="col-4 flat" bfIcon="icon-search" [(ngModel)]="cardsList.filterText" (ngModelChange)="cardsList.filter($event)"></bf-input>
       <div class="col-2">
         <!-- <bf-checkbox class="pad-input" bfLabel="For Sale" [(ngModel)]="cardsList.filters.readyToPlay" (ngModelChange)="filterReadyToPlay($event)"></bf-checkbox> -->
-        <bf-checkbox class="pad-input" bfLabel="Ready" [(ngModel)]="cardsList.filters.readyToPlay" (ngModelChange)="filterReadyToPlay($event)"></bf-checkbox>
+        <bf-checkbox class="pad-input" bfLabel="Ready" *ngIf="auth.isAdmin"
+                    [(ngModel)]="cardsList.filters.readyToPlay" (ngModelChange)="filterReadyToPlay($event)">
+        </bf-checkbox>
       </div>
 
       <!-- Card Type -->
@@ -54,9 +61,12 @@
 
     <div class="all-cards" *ngIf="cardsList.loadingStatus === 2">
       <div class="card-wrapper" *ngFor="let card of cardsList.renderList$ | async"           
-           (mouseenter)="hoverCard(card)" (click)="goToCard(card)">
-           <!-- (mouseleave)="hoverCard()" -->
-           <!-- (click)="selectCard(card)" (dblclick)="goToCard(card)" -->
+           (mouseenter)="hoverCard(card)" 
+           (mouseleave)="hoverCard()"
+           (click)="selectCard(card)"
+           (dblclick)="buyBestUnit(card)"
+           >
+           <!-- (click)="goToCard(card)" -->
   
         <mtg-card [cardImg]="card.image" class="sm" [border]="card.border" [class.selected]="selectedCard?.id === card.id"></mtg-card>
         <span class="card-name">{{card.name}}</span>

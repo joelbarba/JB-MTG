@@ -1,0 +1,36 @@
+<div *ngIf="isDefaultOk === null">
+  <h1>Loading...</h1>
+</div>
+
+<div *ngIf="isDefaultOk === false">
+  <h1>Sorry, this is not a valid link</h1>
+</div>
+
+<div *ngIf="isDefaultOk === true">
+  <h1>Magic the Gathering (Vintage)</h1>
+  <h2 style="margin-bottom: 60px;">New User SetUp</h2>
+  <p>A new user has been added for you. Please set your password to get started.</p>
+  <div class="row whiteBg signup-form">
+    <bf-input class="col-12" [(ngModel)]="username" bfLabel="view.common.user" [bfDisabled]="true"></bf-input>
+    <bf-input class="col-12" [(ngModel)]="pass" bfLabel="view.common.password" [bfRequired]="true" 
+              [bfAutoFocus]="true" (bfOnEnter)="setPass()" bfType="password">
+    </bf-input>
+    <bf-btn class="col-12 full-width" bfText="Get Started" bfIcon="icon-arrow-right3" 
+            [bfDisabled]="!pass || !btnEnabled" (bfClick)="setPass()">
+    </bf-btn>
+    
+    <!-- <div class="col-12" style="margin-top: 65px; text-align: center;" *ngIf="languages">
+        <bf-dropdown
+          style="text-align: left;"
+          bfLabel="view.common.language"
+          [(ngModel)]="lang"
+          (ngModelChange)="selectLang($event)"
+          [bfList]="languages"
+          bfSelect="code"
+          bfRender="name"
+          bfPlaceholder="views.dropdown.placeholder">
+        </bf-dropdown>
+    </div> -->
+  </div>
+
+</div>

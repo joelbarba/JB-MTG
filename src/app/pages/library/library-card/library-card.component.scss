@@ -16,7 +16,8 @@ h2 { padding: 15px 15px 0 15px; }
     .card-details {
       text-align: center;
       margin: 20px -15px;
-      font-size: 1.8em;
+      font-size: 1.5em;
+      .name { margin-bottom: 15px; }
       .price { margin-top: 15px; }
     }
   }

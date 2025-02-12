@@ -36,9 +36,11 @@ h2.fixed-title {
     .units-title {
       margin-top: 30px;
     }
-
+    
+    ul.header li.list-header { padding: 4px 10px; }
     .units-list {
       overflow: auto;
+      .list-row { min-height: 30px; }
     }
 
     ul.table-list li.list-row [class*=col-] { padding: 0 5px; }
