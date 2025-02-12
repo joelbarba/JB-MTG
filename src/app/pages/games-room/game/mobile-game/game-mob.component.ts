@@ -1,48 +1,48 @@
 import { asNativeElements, Component, ElementRef, ViewChild, ViewEncapsulation } from '@angular/core';
-import { AuthService } from '../../../core/common/auth.service';
-import { ShellService } from '../../../shell/shell.service';
+import { AuthService } from '../../../../core/common/auth.service';
+import { ShellService } from '../../../../shell/shell.service';
 import { CommonModule } from '@angular/common';
 import { BfConfirmService, BfDnDModule, BfDnDService, BfGrowlService, BfUiLibModule } from 'bf-ui-lib';
-import { GameStateService } from './gameLogic/game-state.service';
+import { GameStateService } from '../gameLogic/game-state.service';
 import { filter, map, Subscription, timeout } from 'rxjs';
-import { EPhase, TGameState, TGameCard, TExtGameCard, TPlayer, TAction, TCast, TActionParams, ESubPhase, TCardLocation } from '../../../core/types';
+import { EPhase, TGameState, TGameCard, TExtGameCard, TPlayer, TAction, TCast, TActionParams, ESubPhase, TCardLocation } from '../../../../core/types';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { DialogSelectingManaComponent } from './dialog-selecting-mana/dialog-selecting-mana.component';
-import { PanelGraveyardComponent } from './panel-graveyard/panel-graveyard.component';
-import { DialogCombatComponent } from './dialog-combat/dialog-combat.component';
-import { DialogSpellStackComponent } from './dialog-spell-stack/dialog-spell-stack.component';
-import { HoverTipDirective } from '../../../core/common/internal-lib/bf-tooltip/bf-tooltip.directive';
-import { PanelEffectsComponent } from './panel-effects/panel-effects.component';
-import { ManaArrayComponent } from './mana-array/mana-array.component';
-import { GamePanelComponent } from "./game-panel/game-panel.component";
-import { GameCardComponent } from "./game-card/game-card.component";
-import { BfTooltipService } from '../../../core/common/internal-lib/bf-tooltip/bf-tooltip.service';
-import { BlackLotusDialogComponent } from "./custom-dialogs/black-lotus/black-lotus-dialog.component";
-import { DualLandDialogComponent } from "./custom-dialogs/dual-land/dual-land-dialog.component";
-import { DialogRegenerateComponent } from './dialog-regenerate/dialog-regenerate.component';
-import { DialogExtraManaComponent} from "./dialog-extra-mana/dialog-extra-mana.component";
-import { CardOpServiceNew } from './gameLogic/cardOp.service';
-import { WindowsService } from './gameLogic/windows.service';
-import { GameCardEventsService } from './gameLogic/game-card-events.service';
-import { DialogDamageComponent } from "./dialog-damage/dialog-damage.component";
-import { DialogUpkeepComponent } from './dialog-upkeep/dialog-upkeep.component';
-import { ErhnamDjinnDialogComponent } from './custom-dialogs/erhnam-djinn/erhnam-djinn-dialog.component';
-import { BirdsOfParadiseDialogComponent } from './custom-dialogs/birds-of-paradise/birds-of-paradise-dialog.component';
-import { DemonicTutorDialogComponent } from './custom-dialogs/demonic-tutor/demonic-tutor-dialog.component';
-import { RaiseDeadDialogComponent } from './custom-dialogs/raise-dead/raise-dead-dialog.component';
-import { RegrowthDialogComponent } from './custom-dialogs/regrowth/regrowth-dialog.component';
-import { AnimateDeadDialogComponent } from './custom-dialogs/animate-dead/animate-dead-dialog.component';
-import { LibraryOfAlexandriaDialogComponent } from './custom-dialogs/library-of-alexandria/library-of-alexandria-dialog.component';
-import { ReconstructionDialogComponent } from "./custom-dialogs/reconstruction/reconstruction-dialog.component";
-import { mobileCheck } from '../../../core/common/commons';
+import { DialogSelectingManaComponent } from '../dialog-selecting-mana/dialog-selecting-mana.component';
+import { PanelGraveyardComponent } from '../panel-graveyard/panel-graveyard.component';
+import { DialogCombatComponent } from '../dialog-combat/dialog-combat.component';
+import { DialogSpellStackComponent } from '../dialog-spell-stack/dialog-spell-stack.component';
+import { HoverTipDirective } from '../../../../core/common/internal-lib/bf-tooltip/bf-tooltip.directive';
+import { PanelEffectsComponent } from '../panel-effects/panel-effects.component';
+import { ManaArrayComponent } from '../mana-array/mana-array.component';
+import { GamePanelComponent } from "../game-panel/game-panel.component";
+import { GameCardComponent } from "../game-card/game-card.component";
+import { BfTooltipService } from '../../../../core/common/internal-lib/bf-tooltip/bf-tooltip.service';
+import { BlackLotusDialogComponent } from "../custom-dialogs/black-lotus/black-lotus-dialog.component";
+import { DualLandDialogComponent } from "../custom-dialogs/dual-land/dual-land-dialog.component";
+import { DialogRegenerateComponent } from '../dialog-regenerate/dialog-regenerate.component';
+import { DialogExtraManaComponent} from "../dialog-extra-mana/dialog-extra-mana.component";
+import { CardOpServiceNew } from '../gameLogic/cardOp.service';
+import { WindowsService } from '../gameLogic/windows.service';
+import { GameCardEventsService } from '../gameLogic/game-card-events.service';
+import { DialogDamageComponent } from "../dialog-damage/dialog-damage.component";
+import { DialogUpkeepComponent } from '../dialog-upkeep/dialog-upkeep.component';
+import { ErhnamDjinnDialogComponent } from '../custom-dialogs/erhnam-djinn/erhnam-djinn-dialog.component';
+import { BirdsOfParadiseDialogComponent } from '../custom-dialogs/birds-of-paradise/birds-of-paradise-dialog.component';
+import { DemonicTutorDialogComponent } from '../custom-dialogs/demonic-tutor/demonic-tutor-dialog.component';
+import { RaiseDeadDialogComponent } from '../custom-dialogs/raise-dead/raise-dead-dialog.component';
+import { RegrowthDialogComponent } from '../custom-dialogs/regrowth/regrowth-dialog.component';
+import { AnimateDeadDialogComponent } from '../custom-dialogs/animate-dead/animate-dead-dialog.component';
+import { LibraryOfAlexandriaDialogComponent } from '../custom-dialogs/library-of-alexandria/library-of-alexandria-dialog.component';
+import { ReconstructionDialogComponent } from "../custom-dialogs/reconstruction/reconstruction-dialog.component";
+import { mobileCheck } from '../../../../core/common/commons';
 
 
 
 
 @Component({
-  selector: 'app-game',
+  selector: 'app-game-mob',
   standalone: true,
   imports: [
     CommonModule,
@@ -74,11 +74,14 @@ import { mobileCheck } from '../../../core/common/commons';
     LibraryOfAlexandriaDialogComponent,
     ReconstructionDialogComponent
 ],
-  templateUrl: './game.component.html',
-  styleUrls: ['./game.component.scss'],
+  templateUrl: './game-mob.component.html',
+  styleUrls: ['./game-mob.component.scss'],
   encapsulation: ViewEncapsulation.None,
 })
-export class GameComponent {
+export class GameMobComponent {
+  mainPanel: 'A' | 'B' = 'A';
+  prevTurn = '';
+
   fullCard = {
     img: 'taiga.jpg',
     border: 'white',
@@ -152,7 +155,9 @@ export class GameComponent {
   async ngOnInit() {
     const gameId = this.route.snapshot.params['gameId'];
     console.log('Entering Game ID', gameId);
-    if (mobileCheck()) { window.location.href = '/game-mob/' + gameId; return; } // If mobile    
+
+    if (!mobileCheck()) { window.location.href = '/game/' + gameId; return; } // If not mobile
+
     await this.game.activateGame(gameId);
 
     this.subs.push(this.cardEv.hoverCard$.subscribe(hoveringCard => {
@@ -173,7 +178,7 @@ export class GameComponent {
       this.mainInfo = '';
       this.itemInfo = '';
       this.globalButtons = [];
-      this.tooltipService.flush();
+      this.tooltipService.flush();      
 
       // console.log('New State:', state);      
       this.state = state;
@@ -218,6 +223,12 @@ export class GameComponent {
       this.showToastMesssages();
       this.autoAdvance();
       this.autoPositionGameCards(true);
+
+      const turn = state.turn === this.game.playerANum ? 'A' : 'B';
+      if (this.prevTurn !== turn) { // changing turn
+        this.mainPanel = turn;
+        this.prevTurn = turn;
+      }
     }));
 
 
@@ -524,7 +535,7 @@ export class GameComponent {
     if (this.windowHeight <= 1050) { cardWidth = 97; cardHeight = 136; gap = 12; }
     if (this.windowHeight <= 900)  { cardWidth = 81; cardHeight = 113; gap = 10; }
 
-    let maxCardsPerRow = Math.floor((this.tableWidth - 200) / (cardWidth + gap)) + 1;
+    let maxCardsPerRow = 99999;
     if (!this.tableWidth) { maxCardsPerRow = 10; }
 
     const maxGroupedCardsA = tableGridA.reduce((a,v) => Math.max(v.length, a), 1); // Maxim number of grouped cards
@@ -532,7 +543,7 @@ export class GameComponent {
 
     // Once the grid is constructed, give coordinates to every card
     tableGridA.filter(c => !!c.length).forEach((arr, col) => {
-      const row = Math.floor(col / maxCardsPerRow);
+      const row = 0; // Math.floor(col / maxCardsPerRow);
       const isThereSpace = this.expandedTalbe === 'A' && (this.windowHeight > 750 || !this.isHandAExp);
       const rowGap = isThereSpace ? gap * maxGroupedCardsA * 2 : gap * 2;
       let rowTop = 20 + (row * (cardHeight + rowGap));
@@ -543,13 +554,14 @@ export class GameComponent {
       })
     });
 
-    const totalBCols = tableGridB.filter(c => !!c.length).length;
-    if (totalBCols > maxCardsPerRow && autocollapseHandB) { this.isHandBExp = false; } // Collapse Opponent's hand to give more space
+    // const totalBCols = tableGridB.filter(c => !!c.length).length;
+    // if (totalBCols > maxCardsPerRow && autocollapseHandB) { this.isHandBExp = false; } // Collapse Opponent's hand to give more space
 
-    const tableBTop = Math.max(20, (cardHeight * 1.6) - (Math.floor(tableGridB.filter(c => !!c.length).length / maxCardsPerRow) * (cardHeight + gap)));
+    // const tableBTop = Math.max(20, (cardHeight * 1.6) - (Math.floor(tableGridB.filter(c => !!c.length).length / maxCardsPerRow) * (cardHeight + gap)));
+    const tableBTop = Math.max(20, (cardHeight * 1.6));
     // console.log('tableBTop', tableBTop);
     tableGridB.filter(c => !!c.length).forEach((arr, col) => {
-      const row = Math.floor(col / maxCardsPerRow);
+      const row = 0; // Math.floor(col / maxCardsPerRow);
       const isThereSpace = this.expandedTalbe === 'B' && (this.windowHeight > 750 || !this.isHandBExp);
       const rowGap = isThereSpace ? gap * maxGroupedCardsB * 2 : gap * 2;
       let rowTop = tableBTop + (row * (cardHeight + rowGap));

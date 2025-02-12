@@ -1,0 +1,391 @@
+@import '../game.vars.scss';
+
+$hand-height: 157px;
+
+.game {
+  width: 100%;
+  height: 100%;
+
+  .ctrl-panel {
+    z-index: 300;
+    position: fixed;
+    border: 1px solid black;
+    // top: 0;
+    height: 157px;
+    bottom: 0;
+    right: 0;
+    width: 60px;
+    display: flex;
+    flex-direction: column;
+    .ctrl-btn {
+      flex: 1;
+      background-color: #d9d9d9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 30px;
+      &.active { box-shadow: inset 0px 0px 5px 3px #626362; background: gray; }
+    }
+  }
+
+
+
+  .playerA-panel, .playerB-panel, .data-panel {
+    position: fixed;
+    height: 100vh;
+    left: 0;
+    right: 0;
+    transition-duration: 200ms;
+    transition-timing-function: cubic-bezier(.05,.5,.2,.9);
+    &.playerB-panel { top: -100vh; }
+    &.playerA-panel { top: 100vh;  }
+    &.data-panel { top: 100vh; }
+    &.active { top: 0; }
+
+    &.in-control { background-color: $player-in-control-bg; }
+    &.in-waiting { background-color: $player-in-waiting-bg; }
+
+    .panel-label { position: absolute; left: 30px; }
+
+    .phases-box {
+      z-index: 200;
+      background-color: $gray-dark;
+      position: absolute;
+      width: 25px;
+      left: 0;
+      top: 0;
+      bottom: $hand-height;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 1px 2px;
+      .phase {
+        flex: 1;
+        font-size: 16px;
+        text-align: center;
+        border: 1px solid $gray-light;
+        border-radius: 3px;
+        margin: 1px 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        &.post-combat { transform: rotate(180deg); }
+        &.discard { transform: rotate(180deg); }
+        &.selected { background-color: $white-dark; }
+      }
+    }
+
+    .mana-pool {
+      z-index: 200;
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      height: $hand-height;
+      width: 50px;
+      background: $gray-dark;
+      border-left: 1px solid $gray-light;
+      display: flex;
+      flex-direction: column;        
+      .mana {
+        flex: 1;
+        border-top: 1px solid $gray-light;
+        &:first-child { margin-top: -1px; }
+        padding: 0 2px;
+        display: flex;
+        align-items: center;
+        user-select: none;
+        img { 
+          flex: 0 1 auto;
+          padding: 0 3px;
+          height: 15px;
+        }
+        span {
+          flex: 1 0 auto; 
+          text-align: center;
+          color: $white-dark;
+          font-weight: bold;
+          font-size: 15px;
+        }
+      }
+      &.selectable .mana { cursor: pointer; }
+    }
+
+    .life-deck {
+      position: absolute;
+      top: 0;
+      right: 0;
+      z-index: 200;
+      background-color: $gray-light;
+      border-bottom-left-radius: 4px;
+      display: flex;
+      flex-direction: column;
+      padding: 5px 0 0;
+      .life {
+        flex: 1;
+        color: $white-dark;        
+        .life-label { font-size: 9px; }
+        .life-value { font-size: 30px; line-height: 34px; }
+        text-align: center;
+        user-select: none;
+        &.is-selectable {
+          cursor: pointer;
+          transition-duration: 0.4s;
+          background: $player-selectable-color;
+          &:hover { background: $player-selectable-hover; }
+        }
+      }
+      .deck {
+        flex: 1;
+        padding: 5px;
+        .deck-label { font-size: 9px; color: white; text-align: center; }
+        game-card { &.selectable { cursor: pointer; } }
+        .grav-card { opacity: 0.5; }
+      }
+    }
+
+    .info-box {
+      position: absolute;
+      bottom: $hand-height;
+      left: 25px;
+      // right: 0;
+      padding: 5px;
+      display: flex;
+      align-items: center;
+      border-top-right-radius: 6px;
+      z-index: 600;
+      box-shadow: 3px -4px 5px 1px rgb(97 97 97 / 18%);
+      background: $info-box-bg;
+      bf-btn + bf-btn { margin-left: 10px; }
+      .main-info {
+        margin: 0 15px;
+        display: flex;
+        align-items: center;
+      }
+
+      @media screen and (max-height: 900px) {
+        bf-btn {
+          transform: scale(0.70);
+          transform-origin: left;
+          height: 26px;
+          margin: -7px -45px 0 -3px;
+        }
+      }
+    }
+
+
+    .hand-box {
+      z-index: 1000;
+      border: 1px solid $gray-dark;
+      position: absolute;
+      left: 50px;
+      bottom: 0;
+      right: 60px;
+      padding: 5px;
+      height: $hand-height;
+      overflow: auto;
+      min-width: calc(var(--card-width) + 10px); // xl = 160px;
+      background: $hand-box-bg;        
+      transform-origin: top;
+      transition: transform 350ms cubic-bezier(.05,.5,.2,.9);
+      .no-cards {
+        width: 100%;
+        text-align: center;
+        color: $gray-light;
+        font-size: 20px;
+        padding: 30% 0;
+        min-height: calc(var(--card-height) + 10px); // xl = 220px;
+        max-width: calc(var(--card-width) - 15px); // xl = 135px;
+      }
+
+      display: flex;
+      game-card { margin: 2.5px 4px; }
+    }
+
+    .play-box {
+      z-index: 100;
+      position: absolute;
+      left: 25px;
+      right: 60px;
+      top: 0;
+      bottom: 0;
+      padding: 5px;
+      overflow: auto;
+      game-card { position: absolute; }
+    }
+
+  }
+
+  .playerB-panel {
+    .phases-box {
+      top: $hand-height;
+      bottom: 0;
+    }
+    .mana-pool {
+      bottom: unset;
+      top: 0;
+    }
+    .hand-box {
+      bottom: unset;
+      top: 0;
+    }
+  }
+
+
+
+
+  .left-panel {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: var(--left-panel-width);
+    background: $gray-light;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+
+    .full-card {
+      padding: 10px;
+      flex: 1 1 auto;
+      position: relative;
+      max-width: var(--left-panel-width);
+      max-height: var(--full-card-max-height);
+      .card-border {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        // border: 10px solid black;
+        img { 
+          max-height: calc(100% - 20px);
+          max-width: calc(100% - 20px);
+          border: var(--full-card-border) solid white;
+          &.black-border { border-color: black; }
+          border-width: 6px;
+          border-radius: 12px;
+        }
+      }
+    }
+
+    .player-A, .player-B {
+      flex: 0 0 auto;
+      height: calc(calc(100% - var(--full-card-max-height)) / 2);
+      min-height: calc(102px + var(--card-height));
+      background: $gray-dark;
+      border: 1px solid $gray-light;
+      display: flex;
+
+      .left {
+        flex: 1 0 auto;
+        display: flex;
+        flex-direction: column;
+
+      }
+
+
+
+    }
+  }
+
+  // --------------------------------------------------------------
+
+  .board-panel {
+    position: absolute;
+    left: var(--left-panel-width);
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background-color: $player-in-control-bg;
+
+    display: flex;
+    flex-direction: column;
+    .player-A, .player-B {
+      position: relative;
+      flex: 1;
+      transition-duration: 200ms;
+      transition-timing-function: cubic-bezier(.05,.5,.2,.9);
+      &.expanded { flex: 3; }
+      .expand-table-pin {
+        position: absolute;        
+        right: 0;
+        width: 40px;
+        height: 55px;
+        z-index: 1000;
+        opacity: 0.5;
+        background: #afafaf;
+        border: 1px solid black;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        &.b { bottom: 0; border-top-left-radius: 3px; }
+        &.a { top: 0; border-bottom-left-radius: 3px; }
+        span { font-size: calc(var(--size-ref) * 0.25); }
+      }
+
+
+
+
+
+
+
+
+    }
+    .player-B {
+      border-bottom: 2px solid $gray-light;
+    }
+
+
+    .player-B {
+      &.in-control { background-color: $player-in-control-bg; }
+      &.in-waiting { background-color: $player-in-waiting-bg; }
+      .hand-box {
+        top: calc(-11px - var(--card-height)); // xl = -221px;
+        &.expanded { transform: translateY(calc(var(--card-height) + 10px)); } // xl = 220px
+        border-bottom-right-radius: 5px;
+        .box-button {
+          bottom: -30px;
+          border-top: none;
+          border-bottom-left-radius: 5px;
+          border-bottom-right-radius: 5px;
+        }
+      }
+      .play-box {
+        bottom: 0;
+      }
+    }
+
+    .player-A {
+      &.in-control { background-color: $player-in-control-bg; }
+      &.in-waiting { background-color: $player-in-waiting-bg; }
+      .hand-box {
+        bottom: calc(-11px - var(--card-height)); // xl = -221
+        &.expanded { transform: translateY(calc(-10px - var(--card-height))); } // xl = -220px
+        border-top-right-radius: 5px;
+        .box-button {
+          top: -30px;
+          padding-top: 2px;
+          border-bottom: none;
+          border-top-left-radius: 5px;
+          border-top-right-radius: 5px;
+        }
+      }
+    }
+
+  }
+}
+
+// This is to avoid hiding cards on the back when tapped
+game-card[from="tbleA"] { width: 0; height: 0; }
+game-card[from="tbleB"] { width: 0; height: 0; }
+
+
+
+
+.center { display: flex; justify-content: center; }
+.v-align { display: flex; align-items: center; }
+.flex-1 { flex: 1; }

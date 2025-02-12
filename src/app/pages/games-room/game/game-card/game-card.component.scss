@@ -226,6 +226,20 @@
       width  : calc(100% - calc(var(--card-border) * 1.5 * 2));
     }
   }
+  
+  &.mobDeck {
+    width: calc(var(--card-width) * 0.5);    // 
+    height: calc(var(--card-height) * 0.5);  // 
+    border-radius: calc((var(--card-border) + 2px) * 0.5);
+    img {
+      top    : calc(var(--card-border) * 0.5);
+      left   : calc(var(--card-border) * 0.5);
+      right  : calc(var(--card-border) * 0.5);
+      bottom : calc(var(--card-border) * 0.5);
+      height : calc(100% - calc(var(--card-border) * 0.5 * 2));
+      width  : calc(100% - calc(var(--card-border) * 0.5 * 2));
+    }
+  }
 
 }
 

@@ -887,7 +887,7 @@ export const dbCards: TDBCard[] = [
     attack:           5,
     defense:          5,
     isWall:           false,
-    isFlying:         false,
+    isFlying:         true,
     isTrample:        false,
     isFirstStrike:    false,
     isHaste:          false,

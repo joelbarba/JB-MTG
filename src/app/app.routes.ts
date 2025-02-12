@@ -11,6 +11,7 @@ import { LibraryCardComponent } from './pages/library/library-card/library-card.
 import { OnboardingComponent } from './pages/onboarding/onboarding.component';
 import { Injectable } from '@angular/core';
 import { AuthService } from './core/common/auth.service';
+import { GameMobComponent } from './pages/games-room/game/mobile-game/game-mob.component';
 
 
 @Injectable({ providedIn: 'root' })
@@ -66,6 +67,10 @@ export const routes: Routes = [
     { path: 'game', canActivate: [AuthGuard], children: [
       { path: '',        component: GamesRoomComponent,   data: { label: 'page.label.game' } },
       { path: ':gameId', component: GameComponent,        data: { label: 'page.label.game' } },
+    ]},
+    { path: 'game-mob', canActivate: [AuthGuard], children: [
+      { path: '',        component: GamesRoomComponent,   data: { label: 'page.label.game' } },
+      { path: ':gameId', component: GameMobComponent,        data: { label: 'page.label.game' } },
     ]},
 
     { path: 'settings', canActivate: [AuthGuard], component: SettingsComponent, data: { label: 'page.label.settings' } },

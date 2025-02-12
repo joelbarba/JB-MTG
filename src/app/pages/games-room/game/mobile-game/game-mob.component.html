@@ -1,0 +1,300 @@
+<div class="game" *ngIf="!!state">
+
+  <div class="ctrl-panel">
+    <div class="ctrl-btn" [class.active]="mainPanel === 'B'" (click)="mainPanel = 'B'"><span class="icon-arrow-up"></span></div>
+    <div class="ctrl-btn" [class.active]="mainPanel === 'A'" (click)="mainPanel = 'A'"><span class="icon-arrow-down"></span></div>
+  </div>
+
+
+
+  <div [class.active]="mainPanel === 'B'" class="playerB-panel"
+       [class.in-waiting]="state.control === game.playerANum" 
+       [class.in-control]="state.control !== game.playerANum">
+    <!-- <span class="panel-label">Opponent</span> -->
+
+    <div class="phases-box">
+      <div class="phase untap"       [class.selected]="phase === 'B.untap'">    <span class="icon-undo2"> </span></div>
+      <div class="phase upkeep"      [class.selected]="phase === 'B.upkeep'">   <span class="icon-hammer"></span></div>
+      <div class="phase draw"        [class.selected]="phase === 'B.draw'">     <span class="icon-hand">  </span></div>
+      <div class="phase pre-combat"  [class.selected]="phase === 'B.pre'">      <span class="icon-moon">  </span></div>
+      <div class="phase combat"      [class.selected]="phase === 'B.combat'">   <span class="icon-sword"> </span></div>
+      <div class="phase post-combat" [class.selected]="phase === 'B.post'">     <span class="icon-moon">  </span></div>
+      <div class="phase discard"     [class.selected]="phase === 'B.discard'">  <span class="icon-hand">  </span></div>
+      <div class="phase end"         [class.selected]="phase === 'B.end'">      <span class="icon-fire">  </span></div>
+    </div>
+    <div class="mana-pool">
+      <div class="mana"> <img src="assets/images/Xmana.png">    <span>{{playerB.manaPool[0]}}</span> </div>
+      <div class="mana"> <img src="assets/images/blueMana.png"> <span>{{playerB.manaPool[1]}}</span> </div>
+      <div class="mana"> <img src="assets/images/whiteMana.png"><span>{{playerB.manaPool[2]}}</span> </div>
+      <div class="mana"> <img src="assets/images/blackMana.png"><span>{{playerB.manaPool[3]}}</span> </div>
+      <div class="mana"> <img src="assets/images/redMana.png">  <span>{{playerB.manaPool[4]}}</span> </div>
+      <div class="mana"> <img src="assets/images/greenMana.png"><span>{{playerB.manaPool[5]}}</span> </div>
+    </div>
+
+    <div class="life-deck">
+      <div class="life" 
+          (mouseleave)="itemInfo = ''"
+          (mouseenter)="itemInfo = 'Select target player (opponent)'"
+          [class.is-selectable]="isPlayerSelectable(playerB.num)"
+          (click)="selectPlayer(playerB.num)">
+        <div class="life-label">Life:</div>
+        <div class="life-value">{{playerB.life}}</div>
+      </div>
+      <div class="deck">
+        <div class="deck-label">Deck:</div>
+        <game-card [card]="null" from="mobDeck"
+                   [back]="true"
+                   [selectable]="false"
+                   [hoverTip]="playerB.name + '\'s Deck (' + deckBCount + ' cards)'"
+                   tipSide="bottom"
+                   [count]="deckBCount">
+        </game-card>
+      </div>
+      <div class="deck">
+        <div class="deck-label">Graveyard:</div>
+        <game-card [card]="topGravB" from="mobDeck" class="grav-card"
+                   [class.empty]="!topGravB"
+                   [selectable]="false"
+                   [hoverTip]="playerB.name + '\'s Graveyard'"
+                   tipSide="bottom"
+                   (click)="win.graveyardPanel.toggle('B')">
+        </game-card>
+      </div>
+    </div>
+
+    <div class="hand-box" [class.expanded]="isHandBExp">
+      <div *ngIf="!handB.length" class="no-cards">No Cards on the Hand</div>
+      <game-card *ngFor="let card of handB" [card]="card" from="handB" [back]="true"></game-card>
+    </div>
+
+    <div class="play-box">
+      <game-card *ngFor="let card of displayTableB" [card]="card" from="tbleB"
+        [style.left.px]="card.posX"
+        [style.top.px]="card.posY"
+        [style.z-index]="card.zInd"
+        (click)="selectCardFromTable(card)"
+        (mouseenter)="cardEv.hoverCard$.next(card)"
+        (mouseleave)="cardEv.hoverCard$.next(null)">
+      </game-card>
+    </div>
+
+
+  </div>
+
+  <div [class.active]="mainPanel === 'A'" class="playerA-panel"
+       [class.in-waiting]="state.control !== game.playerANum" 
+       [class.in-control]="state.control === game.playerANum">
+    <!-- <span class="panel-label">You</span> -->
+
+    <div class="phases-box">
+      <div class="phase untap"       [class.selected]="phase === 'A.untap'">    <span class="icon-undo2"> </span></div>
+      <div class="phase upkeep"      [class.selected]="phase === 'A.upkeep'">   <span class="icon-hammer"></span></div>
+      <div class="phase draw"        [class.selected]="phase === 'A.draw'">     <span class="icon-hand">  </span></div>
+      <div class="phase pre-combat"  [class.selected]="phase === 'A.pre'">      <span class="icon-moon">  </span></div>
+      <div class="phase combat"      [class.selected]="phase === 'A.combat'">   <span class="icon-sword"> </span></div>
+      <div class="phase post-combat" [class.selected]="phase === 'A.post'">     <span class="icon-moon">  </span></div>
+      <div class="phase discard"     [class.selected]="phase === 'A.discard'">  <span class="icon-hand">  </span></div>
+      <div class="phase end"         [class.selected]="phase === 'A.end'">      <span class="icon-fire">  </span></div>
+    </div>
+    <div class="mana-pool" [class.selectable]="cardOp.status === 'selectingMana' || cardOp.status === 'waitingExtraMana'">
+      <div class="mana" (click)="selectManaPool('A', 0)"> <img src="assets/images/Xmana.png">    <span>{{cardOp.manaToDisplay[0]}}</span> </div>
+      <div class="mana" (click)="selectManaPool('A', 1)"> <img src="assets/images/blueMana.png"> <span>{{cardOp.manaToDisplay[1]}}</span> </div>
+      <div class="mana" (click)="selectManaPool('A', 2)"> <img src="assets/images/whiteMana.png"><span>{{cardOp.manaToDisplay[2]}}</span> </div>
+      <div class="mana" (click)="selectManaPool('A', 3)"> <img src="assets/images/blackMana.png"><span>{{cardOp.manaToDisplay[3]}}</span> </div>
+      <div class="mana" (click)="selectManaPool('A', 4)"> <img src="assets/images/redMana.png">  <span>{{cardOp.manaToDisplay[4]}}</span> </div>
+      <div class="mana" (click)="selectManaPool('A', 5)"> <img src="assets/images/greenMana.png"><span>{{cardOp.manaToDisplay[5]}}</span> </div>
+    </div>
+
+    <div class="life-deck">
+      <div class="life" 
+           (mouseleave)="itemInfo = ''"
+           (mouseenter)="itemInfo = 'Select target player (you)'"
+           [class.is-selectable]="isPlayerSelectable(playerA.num)"
+           (click)="selectPlayer(playerA.num)">
+        <div class="life-label">Life:</div>
+        <div class="life-value">{{playerA.life}}</div>
+      </div>
+      <div class="deck">
+        <div class="deck-label">Deck:</div>
+        <game-card [card]="null" from="mobDeck"
+                   [back]="true"
+                   [hoverTip]="'Your Deck (' + deckACount + ' cards)'"
+                   [count]="deckACount"
+                   [selectable]="canIDraw"
+                   (click)="drawCard()">
+        </game-card>
+      </div>
+      <div class="deck">
+        <div class="deck-label">Graveyard:</div>
+        <game-card [card]="topGravA" from="mobDeck" class="grav-card"
+                   [class.empty]="!topGravA"
+                   [selectable]="false"
+                   hoverTip="Your Graveyard"
+                   (click)="win.graveyardPanel.toggle('A')">
+        </game-card>
+      </div>
+    </div>
+
+    <!-- ----------------------------- Info Box ----------------------------- -->
+    <div class="info-box">
+      <bf-btn (bfClick)="skipPhase.skip()" [bfDisabled]="!skipPhase.enabled"
+              bfText="Next Phase" class="primary" bfIcon="icon-arrow-right3"
+              (mouseover)="itemInfo = skipPhase.enabled ? skipPhase.help : skipPhase.whyNot"
+              (mouseleave)="itemInfo = ''">
+      </bf-btn>
+      <bf-btn *ngFor="let gBtn of globalButtons"
+              [bfText]="gBtn.text" [bfIcon]="gBtn.icon" (bfClick)="gBtn.clickFn()">
+      </bf-btn>
+      <bf-btn *ngIf="cardOp.status" [bfText]="'Cancel ' + cardOp.card?.name" 
+              bfIcon="icon-cross" (bfClick)="cardOp.cancel()">
+      </bf-btn>
+      <span class="main-info" *ngIf="mainInfo && !opInfo && !itemInfo">{{mainInfo}}</span>
+      <span class="main-info" *ngIf="opInfo && !itemInfo">
+        <span>{{opInfo}}</span>
+        <span *ngIf="cardOp.status === 'waitingMana'">
+          <mana-array style="margin-left: 5px;" class="md" [mana]="cardOp.manaNeeded"></mana-array>
+        </span>
+      </span>
+      <span class="main-info" *ngIf="itemInfo">{{itemInfo}}</span>
+    </div>
+    <!-- -------------------------------------------------------------------- -->
+
+
+    <div class="hand-box" [class.expanded]="isHandAExp">
+      <div *ngIf="!handA.length" class="no-cards">No Cards on your Hand</div>
+      <game-card *ngFor="let card of handA"  [card]="card" from="handA"
+        (click)="selectCardFromYourHand(card)"
+        [hoverTip]="card.selectableAction?.text || ''"
+        (mouseenter)="cardEv.hoverCard$.next(card)"
+        (mouseleave)="cardEv.hoverCard$.next(null)">
+      </game-card>
+    </div>
+
+    <div class="play-box">
+      <game-card *ngFor="let card of displayTableA" [card]="card" from="tbleA"
+        [style.left.px]="card.posX"
+        [style.top.px]="card.posY"
+        [style.z-index]="card.zInd"
+        (click)="selectCardFromTable(card)"
+        (mouseenter)="cardEv.hoverCard$.next(card)"
+        (mouseleave)="cardEv.hoverCard$.next(null)">
+      </game-card>
+    </div>
+
+  </div>
+
+
+
+
+
+
+
+
+  <div class="left-panel" *ngIf="false">
+    <div class="player-B">
+
+
+
+
+
+    </div>
+
+
+
+    <div class="full-card" (window:resize)="calcFullCardSize()">
+      <div class="card-border">
+        <img #fullCardEl [src]="'assets/images/cards/' + fullCard.img"
+             [class.black-border]="fullCard.border === 'black'"
+             [style.border-width.px]="fullCard.borderWidth"
+             [style.border-radius.px]="fullCard.borderRadius"/>
+      </div>
+    </div>
+
+    <div class="player-A">
+
+
+
+    </div>
+
+  </div>
+
+
+  <!-- --------------------------------------------------------------------------------------------- -->
+  <!-- --------------------------------------------------------------------------------------------- -->
+  <!-- --------------------------------------------------------------------------------------------- -->
+
+
+  <div class="board-panel" *ngIf="false">
+    <div class="player-B" 
+         [class.expanded]="expandedTalbe === 'B'"
+         [class.in-waiting]="state.control === game.playerANum" 
+         [class.in-control]="state.control !== game.playerANum">
+      <div class="expand-table-pin b" *ngIf="expandedTalbe !== 'A'" (click)="expandedTalbe = expandedTalbe === 'B' ? null : 'A'; autoPositionGameCards()">
+        <span class="icon-arrow-up"></span>
+      </div>
+
+
+
+
+
+      <!-- bfDropContainer (bfDrop)="moveCardPosition($event)"  -->
+
+
+    </div>
+
+ ------------------------------------------------------------------------------------------------------------------------ -->
+
+    <div class="player-A" #tableADiv [class.expanded]="expandedTalbe === 'A'"
+         [class.in-waiting]="state.control !== game.playerANum" 
+         [class.in-control]="state.control === game.playerANum">
+      <div class="expand-table-pin a" *ngIf="expandedTalbe !== 'B'" (click)="expandedTalbe = expandedTalbe === 'A' ? null : 'B'; autoPositionGameCards()">
+        <span class="icon-arrow-down"></span>
+      </div>
+
+
+
+
+
+      <!-- bfDropContainer (bfDrop)="moveCardPosition($event)" -->
+
+
+    </div>
+  </div>
+
+  
+  <panel-graveyard        *ngIf="win.graveyardPanel.display"   ></panel-graveyard>
+  <dialog-upkeep          *ngIf="win.upkeepDialog.display"     ></dialog-upkeep>
+  <dialog-damage          *ngIf="win.damageDialog.display"     ></dialog-damage>
+  <dialog-combat          *ngIf="win.combatDialog.display"     ></dialog-combat>
+  <dialog-selecting-mana  *ngIf="win.selectManaDialog.display" ></dialog-selecting-mana>
+  <dialog-spell-stack     *ngIf="win.spellStackDialog.display" ></dialog-spell-stack>
+  <dialog-regenerate      *ngIf="win.regenerateDialog.display" ></dialog-regenerate>
+  <dialog-extra-mana      *ngIf="win.extraManaDialog.display"  ></dialog-extra-mana>
+  <panel-effects          *ngIf="win.effectsPanel.display"     ></panel-effects>
+
+  <!-- Custom Card Dialogs -->
+  <black-lotus-dialog  *ngIf="win.customDialog.name === 'BlackLotus'"     ></black-lotus-dialog>
+  <dual-land-dialog    *ngIf="win.customDialog.name === 'Bayou'"          ></dual-land-dialog>
+  <dual-land-dialog    *ngIf="win.customDialog.name === 'Badlands'"       ></dual-land-dialog>
+  <dual-land-dialog    *ngIf="win.customDialog.name === 'Plateau'"        ></dual-land-dialog>
+  <dual-land-dialog    *ngIf="win.customDialog.name === 'Savannah'"       ></dual-land-dialog>
+  <dual-land-dialog    *ngIf="win.customDialog.name === 'Scrubland'"      ></dual-land-dialog>
+  <dual-land-dialog    *ngIf="win.customDialog.name === 'Taiga'"          ></dual-land-dialog>
+  <dual-land-dialog    *ngIf="win.customDialog.name === 'TropicalIsland'" ></dual-land-dialog>
+  <dual-land-dialog    *ngIf="win.customDialog.name === 'Tundra'"         ></dual-land-dialog>
+  <dual-land-dialog    *ngIf="win.customDialog.name === 'UndergroundSea'" ></dual-land-dialog>
+  <dual-land-dialog    *ngIf="win.customDialog.name === 'VolcanicIsland'" ></dual-land-dialog>
+  <erhnam-djinn-dialog      *ngIf="win.customDialog.name === 'ErhnamDjinn'"     ></erhnam-djinn-dialog>
+  <birds-of-paradise-dialog *ngIf="win.customDialog.name === 'BirdsOfParadise'" ></birds-of-paradise-dialog>
+  <demonic-tutor-dialog     *ngIf="win.customDialog.name === 'DemonicTutor'"    ></demonic-tutor-dialog>
+  <regrowth-dialog          *ngIf="win.customDialog.name === 'Regrowth'"        ></regrowth-dialog>
+  <raise-dead-dialog        *ngIf="win.customDialog.name === 'RaiseDead'"       ></raise-dead-dialog>
+  <animate-dead-dialog      *ngIf="win.customDialog.name === 'AnimateDead'"     ></animate-dead-dialog>
+  <reconstruction-dialog    *ngIf="win.customDialog.name === 'Reconstruction'"  ></reconstruction-dialog>
+  <library-of-alexandria-dialog  *ngIf="win.customDialog.name === 'LibraryOfAlexandria'"></library-of-alexandria-dialog>
+</div>
+
+
+
+
+<!-- <game-panel></game-panel> -->

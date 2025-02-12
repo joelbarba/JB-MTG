@@ -160,6 +160,15 @@ $table-center-left: calc(var(--left-panel-width) + var(--phases-col-width) + $ta
   bottom: calc($padding-top + $vertical-offset);
   right : $padding-left;
   left: calc(var(--left-panel-width) + var(--phases-col-width) + $padding-left);
+  @media only screen and (hover: none) and (pointer: coarse) { 
+    overflow: auto;
+    max-height: 95vh !important;
+    min-height: 95vh !important;
+    top    : 15px !important;
+    bottom : 15px !important;
+    left   : 15px !important;
+    right  : 15px !important;
+  }
 }
 
 @mixin resizable-panel($padding-top, $padding-left, $vertical-offset) {
@@ -184,6 +193,8 @@ $table-center-left: calc(var(--left-panel-width) + var(--phases-col-width) + $ta
     &.v-cards-len-1 { top: max($padding-top, calc($top - ($card-h-mar * 1))); bottom: max($padding-top, calc($bottom - ($card-h-mar * 1))); }
     &.v-cards-len-2 { top: max($padding-top, calc($top - ($card-h-mar * 2))); bottom: max($padding-top, calc($bottom - ($card-h-mar * 2))); }
     &.v-cards-len-3 { top: max($padding-top, calc($top - ($card-h-mar * 3))); bottom: max($padding-top, calc($bottom - ($card-h-mar * 3))); }
+
+    @media only screen and (hover: none) and (pointer: coarse) { left: $padding-left !important; right: $padding-left !important; }
   }
 }
 
