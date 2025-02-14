@@ -64,6 +64,9 @@
     </div>
 
     <div class="hand-box" [class.expanded]="isHandBExp">
+      <div class="box-button" *ngIf="mainPanel === 'B'">
+        <span>{{handB.length}}<span class="icon-hand"></span></span>
+      </div>
       <div *ngIf="!handB.length" class="no-cards">No Cards on the Hand</div>
       <game-card *ngFor="let card of handB" [card]="card" from="handB" [back]="true"></game-card>
     </div>
@@ -197,8 +200,8 @@
 
 
     <div class="hand-box" [class.expanded]="isHandAExp">
-      <div class="box-button">
-        <span>{{handB.length}}<span class="icon-hand"></span></span>
+      <div class="box-button" *ngIf="mainPanel === 'A'">
+        <span>{{handA.length}}<span class="icon-hand"></span></span>
       </div>
       <div *ngIf="!handA.length" class="no-cards">No Cards on your Hand</div>
       <game-card *ngFor="let card of handA"  [card]="card" from="handA"

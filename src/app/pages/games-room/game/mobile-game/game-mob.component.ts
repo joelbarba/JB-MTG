@@ -38,7 +38,11 @@ import { LibraryOfAlexandriaDialogComponent } from '../custom-dialogs/library-of
 import { ReconstructionDialogComponent } from "../custom-dialogs/reconstruction/reconstruction-dialog.component";
 import { mobileCheck } from '../../../../core/common/commons';
 
-
+type TTableGrid = {
+  lands     :Array<Array<TExtGameCard>>;
+  others    :Array<Array<TExtGameCard>>;
+  creatures :Array<Array<TExtGameCard>>;
+};
 
 
 @Component({
@@ -465,41 +469,52 @@ export class GameMobComponent {
   displayTableB: Array<TExtGameCard> = [];  // tableB + playing cards from A that target cards from tableB
   autoPositionGameCards(autocollapseHandB = false) {
 
+    const gridLoc = (card: TGameCard) => {
+      if (card.isType('land')) { return 'land'; }
+      if (card.isType('creature')) { return 'creature'; }
+      return 'other';
+    }
+
     // Order cards in a grid of columns: Lands + Creatures + Others
     const positionTable = (tableCards: Array<TExtGameCard>) => {
-      const tableGrid: Array<Array<TExtGameCard>> = [];
+      const tableGrid: TTableGrid = {
+        lands     : [] as Array<Array<TExtGameCard>>,
+        others    : [] as Array<Array<TExtGameCard>>,
+        creatures : [] as Array<Array<TExtGameCard>>,
+      };
   
-      const lands     = tableCards.filter(c => c.isType('land')).sort((a,b) => a.order > b.order ? 1: -1);
-      const creatures = tableCards.filter(c => c.isType('creature')).sort((a,b) => a.order > b.order ? 1: -1);
-      const others    = tableCards.filter(c => !c.isType('land') && !c.isType('creature')).sort((a,b) => a.order > b.order ? 1: -1);
+      const lands     = tableCards.filter(c => gridLoc(c) === 'land'     ).sort((a,b) => a.order > b.order ? 1: -1);
+      const creatures = tableCards.filter(c => gridLoc(c) === 'creature' ).sort((a,b) => a.order > b.order ? 1: -1);
+      const others    = tableCards.filter(c => gridLoc(c) === 'other'    ).sort((a,b) => a.order > b.order ? 1: -1);
 
       const cardsToGroup = (card1: TGameCard, card2: TGameCard) => {
-        if (tableCards.length < 8) { return false; }
         if (card1.id !== card2.id) { return false; }
         const eff1 = (card1.effectsFrom || []).sort((a,b) => a.id > b.id ? 1 : -1).map(e => e.id).join(',');
         const eff2 = (card2.effectsFrom || []).sort((a,b) => a.id > b.id ? 1 : -1).map(e => e.id).join(',');
         if (eff1 !== eff2) { return false; } // If they have different effects, don't group them
         return true; // Same card id, same effects => group them
       }
+
+      const maxCardsPerRow = 4;
   
       lands.forEach(card => {
-        const col = tableGrid.find(col => col.find(c => cardsToGroup(c, card)));
-        if (col) { col.push(card); } else { tableGrid.push([card]); }
+        const col = tableGrid.lands.find(col => col.find(c => cardsToGroup(c, card)));
+        if (col && col.length < maxCardsPerRow) { col.push(card); } else { tableGrid.lands.push([card]); }
       });
       creatures.forEach(card => {
-        const col = tableGrid.find(col => col.find(c => cardsToGroup(c, card)));
-        if (col) { col.push(card); } else { tableGrid.push([card]); }
+        const col = tableGrid.creatures.find(col => col.find(c => cardsToGroup(c, card)));
+        if (col && col.length < maxCardsPerRow) { col.push(card); } else { tableGrid.creatures.push([card]); }
       });
       others.forEach(card => {
-        const col = tableGrid.find(col => col.find(c => cardsToGroup(c, card)));
-        if (col) { col.push(card); } else { tableGrid.push([card]); }
+        const col = tableGrid.others.find(col => col.find(c => cardsToGroup(c, card)));
+        if (col && col.length < maxCardsPerRow) { col.push(card); } else { tableGrid.others.push([card]); }
       });
       return tableGrid;
     };
 
     // Enchantments that have only 1 target should be placed right before that target
     // If the target belongs to the opponent, move it to the opponent's grid
-    const repositionCardsWithOneTarget = (tableCards: Array<TExtGameCard>, tableGrid: Array<Array<TExtGameCard>>) => {
+    const repositionCardsWithOneTarget = (tableCards: Array<TExtGameCard>, tableGrid: TTableGrid) => {
       const oneTarget = tableCards.filter(c => c.isType('enchantment') && c.targets.length === 1).sort((a,b) => a.order > b.order ? 1: -1);
   
       oneTarget.forEach(card => { // Find cards with 1 target, and reposition them right before their target
@@ -508,14 +523,20 @@ export class GameMobComponent {
         const targetB = this.tableB.find(t => t.gId === targetId);
         if (targetA && card.grid === 'B') { card.grid = 'A'; } // Changing grid (opponent's targeting one of your cards)
         if (targetB && card.grid === 'A') { card.grid = 'B'; } // Changing grid (you targeting one of opponent's cards)
-        const targetGrid = targetA ? tableGridA : targetB ? tableGridB : null;
-        if (targetGrid) {
-          let cCol = -1, cInd = -1; // Card position in its grid
+        const target = targetA || targetB;
+        const tGridObj = targetA ? tableGridA : targetB ? tableGridB : null;
+        if (target && tGridObj) {
+          // Remove card from the original position in the grid
+          let cCol = -1, cInd = -1; // Card position in its grid          
+          const cardGrid = gridLoc(card) === 'land' ? tableGrid.lands : gridLoc(card) === 'creature' ? tableGrid.creatures : tableGrid.others;
+          cardGrid.forEach((arr, col) => arr.forEach((c, ind) => { if (c.gId === card.gId) { cCol = col; cInd = ind; } }));
+          if (cCol >= 0 && cInd >= 0) { cardGrid[cCol].splice(cInd, 1); } 
+          
+          // Add it to the target column, right before the target 
           let tCol = -1, tInd = -1; // Target position in its grid
-          tableGrid.forEach((arr, col) => arr.forEach((c, ind) => { if (c.gId === card.gId) { cCol = col; cInd = ind; } }));
+          const targetGrid = gridLoc(target) === 'land' ? tGridObj.lands : gridLoc(target) === 'creature' ? tGridObj.creatures : tGridObj.others;          
           targetGrid.forEach((arr, col) => arr.forEach((c, ind) => { if (c.gId === targetId) { tCol = col; tInd = ind; } }));
-          if (cCol >= 0 && cInd >= 0) { tableGrid[cCol].splice(cInd, 1); } // Remove it from the original position
-          if (tCol >= 0 && tInd >= 0) { targetGrid[tCol].splice(tInd, 0, card); } // Add it to the target column, right before the target 
+          if (tCol >= 0 && tInd >= 0) { targetGrid[tCol].splice(tInd, 0, card); } 
         }
       });
     };
@@ -531,47 +552,91 @@ export class GameMobComponent {
     this.displayTableA = allTableCards.filter(c => c.grid === 'A');
     this.displayTableB = allTableCards.filter(c => c.grid === 'B');
 
-    let cardWidth = 121, cardHeight = 170, gap = 15; // 150 * 0.81, 210 * 0.81
-    if (this.windowHeight <= 1050) { cardWidth = 97; cardHeight = 136; gap = 12; }
-    if (this.windowHeight <= 900)  { cardWidth = 81; cardHeight = 113; gap = 10; }
+    let cardWidth = 121, cardHeight = 170, gap = 15, handHeight = 230; // large screen
+    if (this.windowHeight <= 1050) { cardWidth = 97; cardHeight = 136; gap = 12, handHeight = 190; } // medium
+    if (this.windowHeight <= 900)  { cardWidth = 81; cardHeight = 113; gap = 10, handHeight = 157; } // small
 
-    let maxCardsPerRow = 2;
+    // If there is room only for 2 rows
+    if (this.windowHeight <= 620) {
+      tableGridA.others = [...tableGridA.others, ...tableGridA.creatures];
+      tableGridB.others = [...tableGridB.others, ...tableGridB.creatures];
+      tableGridA.creatures = [];
+      tableGridB.creatures = [];
+    }
+
+
+    // let maxCardsPerRow = 2;
     // if (!this.tableWidth) { maxCardsPerRow = 10; }
 
-    const maxGroupedCardsA = tableGridA.reduce((a,v) => Math.max(v.length, a), 1); // Maxim number of grouped cards
-    const maxGroupedCardsB = tableGridB.reduce((a,v) => Math.max(v.length, a), 1);
+    const maxGroupedLandsA = tableGridA.lands.reduce((a,v) => Math.max(v.length, a), 1); // Maxim number of grouped cards
+    const maxGroupedOthersA = tableGridA.others.reduce((a,v) => Math.max(v.length, a), 1); // Maxim number of grouped cards
+    const maxGroupedCreaturesA = tableGridA.creatures.reduce((a,v) => Math.max(v.length, a), 1); // Maxim number of grouped cards
+
+    const totalLands = tableGridA.lands.filter(c => !!c.length).length;
+    const totalOthers = tableGridA.others.filter(c => !!c.length).length;
+    const totalCreatures = tableGridA.creatures.filter(c => !!c.length).length;
+
+    const landsRowTop = totalLands === 0 ? 0 : this.windowHeight - 70 - handHeight - cardHeight - (maxGroupedLandsA * gap);
+    const othersRowTop = totalOthers === 0 ? landsRowTop : landsRowTop - gap - cardHeight - (maxGroupedOthersA * gap);
+    const creaturesRowTop = othersRowTop - gap - cardHeight - (maxGroupedCreaturesA * gap);
 
     // Once the grid is constructed, give coordinates to every card
-    tableGridA.filter(c => !!c.length).forEach((arr, col) => {
-      const row = Math.floor(col / maxCardsPerRow);
-      const isThereSpace = this.expandedTalbe === 'A' && (this.windowHeight > 750 || !this.isHandAExp);
-      const rowGap = isThereSpace ? gap * maxGroupedCardsA * 2 : gap * 2;
-      let rowTop = 20 + (row * (cardHeight + rowGap));
+    tableGridA.lands.filter(c => !!c.length).forEach((arr, col) => {
       arr.forEach((card, ind) => {
-        card.posX = 20 + ((col % maxCardsPerRow) * (cardWidth + gap));
-        card.posY = rowTop + (ind * gap * 2);
+        card.posX = 50 + (col * (cardWidth + gap));
+        card.posY = landsRowTop + (ind * gap * 2);
+        card.zInd = 100 + ind;
+      })
+    });
+    tableGridA.others.filter(c => !!c.length).forEach((arr, col) => {
+      arr.forEach((card, ind) => {
+        card.posX = 50 + (col * (cardWidth + gap));
+        card.posY = othersRowTop + (ind * gap * 2);
+        card.zInd = 100 + ind;
+      })
+    });
+    tableGridA.creatures.filter(c => !!c.length).forEach((arr, col) => {
+      arr.forEach((card, ind) => {
+        card.posX = 50 + (col * (cardWidth + gap));
+        card.posY = creaturesRowTop + (ind * gap * 2);
         card.zInd = 100 + ind;
       })
     });
 
-    // const totalBCols = tableGridB.filter(c => !!c.length).length;
-    // if (totalBCols > maxCardsPerRow && autocollapseHandB) { this.isHandBExp = false; } // Collapse Opponent's hand to give more space
 
-    // const tableBTop = Math.max(20, (cardHeight * 1.6) - (Math.floor(tableGridB.filter(c => !!c.length).length / maxCardsPerRow) * (cardHeight + gap)));
-    const tableBTop = Math.max(20, (cardHeight * 1.6));
-    // console.log('tableBTop', tableBTop);
-    tableGridB.filter(c => !!c.length).forEach((arr, col) => {
-      const row = Math.floor(col / maxCardsPerRow);
-      const isThereSpace = this.expandedTalbe === 'B' && (this.windowHeight > 750 || !this.isHandBExp);
-      const rowGap = isThereSpace ? gap * maxGroupedCardsB * 2 : gap * 2;
-      let rowTop = tableBTop + (row * (cardHeight + rowGap));
+    const maxGroupedLandsB = tableGridB.lands.reduce((a,v) => Math.max(v.length, a), 1); // Maxim number of grouped cards
+    const maxGroupedOthersB = tableGridB.others.reduce((a,v) => Math.max(v.length, a), 1); // Maxim number of grouped cards
+    const maxGroupedCreaturesB = tableGridB.creatures.reduce((a,v) => Math.max(v.length, a), 1); // Maxim number of grouped cards
+
+    const totalLandsB = tableGridB.lands.filter(c => !!c.length).length;
+    const totalOthersB = tableGridB.others.filter(c => !!c.length).length;
+
+    const landsRowTopB = 20;
+    const othersRowTopB = totalOthersB === 0 ? landsRowTopB : landsRowTopB + cardHeight + (maxGroupedLandsB * gap * 2);
+    const creaturesRowTopB = othersRowTopB + cardHeight + (maxGroupedOthersB * gap * 2);
+
+    // Once the grid is constructed, give coordinates to every card
+    tableGridB.lands.filter(c => !!c.length).forEach((arr, col) => {
       arr.forEach((card, ind) => {
-        card.posX = 20 + ((col % maxCardsPerRow) * (cardWidth + gap));
-        card.posY = rowTop + (ind * gap * 2);
-        card.zInd = 100 + (col * 15) + ind;
+        card.posX = 50 + (col * (cardWidth + gap));
+        card.posY = landsRowTopB + (ind * gap * 2);
+        card.zInd = 100 + ind;
       })
     });
-
+    tableGridB.others.filter(c => !!c.length).forEach((arr, col) => {
+      arr.forEach((card, ind) => {
+        card.posX = 50 + (col * (cardWidth + gap));
+        card.posY = othersRowTopB + (ind * gap * 2);
+        card.zInd = 100 + ind;
+      })
+    });
+    tableGridB.creatures.filter(c => !!c.length).forEach((arr, col) => {
+      arr.forEach((card, ind) => {
+        card.posX = 50 + (col * (cardWidth + gap));
+        card.posY = creaturesRowTopB + (ind * gap * 2);
+        card.zInd = 100 + ind;
+      })
+    });
 
   }
 

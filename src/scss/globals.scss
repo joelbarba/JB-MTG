@@ -50,3 +50,11 @@
   -ms-user-select: none;
   user-select: none;
 }
+
+
+.growl-wrapper {
+  // left: 20px;
+  .msg-box { 
+    max-width: 85vw;
+  }
+}

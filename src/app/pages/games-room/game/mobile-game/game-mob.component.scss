@@ -292,7 +292,7 @@ $hand-height-sm: 157px; // small screen
     .play-box {
       z-index: 100;
       position: absolute;
-      left: 60px;
+      left: 25px;
       right: 0px;
       top: 0;
       bottom: $hand-height-lg;
@@ -310,7 +310,7 @@ $hand-height-sm: 157px; // small screen
       top: $hand-height-lg;
       @media (max-height: 1050px) { top: $hand-height-md; }  // medium screen
       @media (max-height: 900px)  { top: $hand-height-sm; } // small screen
-      bottom: 309px;
+      bottom: 245px;
     }
     .mana-pool {
       bottom: unset;
@@ -325,6 +325,18 @@ $hand-height-sm: 157px; // small screen
     .hand-box {
       bottom: unset;
       top: 0;
+      .box-button {
+        bottom: unset;
+        top: 0;
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 3px;
+      }
+    }
+    .play-box {
+      top: $hand-height-lg;
+      @media (max-height: 1050px) { top: $hand-height-md; }  // medium screen
+      @media (max-height: 900px)  { top: $hand-height-sm; } // small screen
+      bottom: 0;
     }
   }
 
