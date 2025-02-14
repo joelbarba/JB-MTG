@@ -535,15 +535,15 @@ export class GameMobComponent {
     if (this.windowHeight <= 1050) { cardWidth = 97; cardHeight = 136; gap = 12; }
     if (this.windowHeight <= 900)  { cardWidth = 81; cardHeight = 113; gap = 10; }
 
-    let maxCardsPerRow = 99999;
-    if (!this.tableWidth) { maxCardsPerRow = 10; }
+    let maxCardsPerRow = 2;
+    // if (!this.tableWidth) { maxCardsPerRow = 10; }
 
     const maxGroupedCardsA = tableGridA.reduce((a,v) => Math.max(v.length, a), 1); // Maxim number of grouped cards
     const maxGroupedCardsB = tableGridB.reduce((a,v) => Math.max(v.length, a), 1);
 
     // Once the grid is constructed, give coordinates to every card
     tableGridA.filter(c => !!c.length).forEach((arr, col) => {
-      const row = 0; // Math.floor(col / maxCardsPerRow);
+      const row = Math.floor(col / maxCardsPerRow);
       const isThereSpace = this.expandedTalbe === 'A' && (this.windowHeight > 750 || !this.isHandAExp);
       const rowGap = isThereSpace ? gap * maxGroupedCardsA * 2 : gap * 2;
       let rowTop = 20 + (row * (cardHeight + rowGap));
@@ -561,7 +561,7 @@ export class GameMobComponent {
     const tableBTop = Math.max(20, (cardHeight * 1.6));
     // console.log('tableBTop', tableBTop);
     tableGridB.filter(c => !!c.length).forEach((arr, col) => {
-      const row = 0; // Math.floor(col / maxCardsPerRow);
+      const row = Math.floor(col / maxCardsPerRow);
       const isThereSpace = this.expandedTalbe === 'B' && (this.windowHeight > 750 || !this.isHandBExp);
       const rowGap = isThereSpace ? gap * maxGroupedCardsB * 2 : gap * 2;
       let rowTop = tableBTop + (row * (cardHeight + rowGap));
@@ -634,8 +634,31 @@ export class GameMobComponent {
     }
   }
 
+  private swipeTime = 0;
+  private yIni = 0;
+  swipe($event: TouchEvent, when: 'start' | 'end', player: 'A' | 'B') {
+    const y = $event.changedTouches[0].clientY;
+    const time = new Date().getTime();
+  
+    if (when === 'start') {
+      this.yIni = $event.changedTouches[0].clientY;
+      this.swipeTime = time;
 
-
+    } else { // end
+      const duration = time - this.swipeTime;
+      if (duration < 800) {
+        // console.log('this.yIni - y = ', this.yIni - y, duration);
+        if (this.yIni - y > 50)  {
+          console.log('swiping up');
+          if (player === 'B') { this.mainPanel = 'A'; }
+        }
+        if (this.yIni - y < -50)  {
+          console.log('swiping down');
+          if (player === 'A') { this.mainPanel = 'B'; }
+        }
+      }
+    }
+  }
 
 
   // -------------------------- Actions --------------------------

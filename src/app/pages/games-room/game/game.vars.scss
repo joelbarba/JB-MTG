@@ -163,11 +163,13 @@ $table-center-left: calc(var(--left-panel-width) + var(--phases-col-width) + $ta
   @media only screen and (hover: none) and (pointer: coarse) { 
     overflow: auto;
     max-height: 95vh !important;
-    min-height: 95vh !important;
-    top    : 15px !important;
-    bottom : 15px !important;
-    left   : 15px !important;
-    right  : 15px !important;
+    &:not(.minimized) {
+      min-height: 95vh !important;
+      top    : 15px !important;
+      bottom : 15px !important;
+      left   : 15px !important;
+      right  : 15px !important;
+    }
   }
 }
 

@@ -1,13 +1,14 @@
 <div class="game" *ngIf="!!state">
 
-  <div class="ctrl-panel">
+  <!-- <div class="ctrl-panel">
     <div class="ctrl-btn" [class.active]="mainPanel === 'B'" (click)="mainPanel = 'B'"><span class="icon-arrow-up"></span></div>
     <div class="ctrl-btn" [class.active]="mainPanel === 'A'" (click)="mainPanel = 'A'"><span class="icon-arrow-down"></span></div>
-  </div>
+  </div> -->
 
 
 
   <div [class.active]="mainPanel === 'B'" class="playerB-panel"
+       (touchstart)="swipe($event, 'start', 'B')" (touchend)="swipe($event, 'end', 'B')"
        [class.in-waiting]="state.control === game.playerANum" 
        [class.in-control]="state.control !== game.playerANum">
     <!-- <span class="panel-label">Opponent</span> -->
@@ -43,11 +44,11 @@
       <div class="deck">
         <div class="deck-label">Deck:</div>
         <game-card [card]="null" from="mobDeck"
-                   [back]="true"
-                   [selectable]="false"
-                   [hoverTip]="playerB.name + '\'s Deck (' + deckBCount + ' cards)'"
-                   tipSide="bottom"
-                   [count]="deckBCount">
+                  [back]="true"
+                  [selectable]="false"
+                  [hoverTip]="playerB.name + '\'s Deck (' + deckBCount + ' cards)'"
+                  tipSide="bottom"
+                  [count]="deckBCount">
         </game-card>
       </div>
       <div class="deck">
@@ -82,6 +83,7 @@
   </div>
 
   <div [class.active]="mainPanel === 'A'" class="playerA-panel"
+       (touchstart)="swipe($event, 'start', 'A')" (touchend)="swipe($event, 'end', 'A')"
        [class.in-waiting]="state.control !== game.playerANum" 
        [class.in-control]="state.control === game.playerANum">
     <!-- <span class="panel-label">You</span> -->
@@ -106,14 +108,16 @@
     </div>
 
     <div class="life-deck">
+
       <div class="life" 
-           (mouseleave)="itemInfo = ''"
-           (mouseenter)="itemInfo = 'Select target player (you)'"
-           [class.is-selectable]="isPlayerSelectable(playerA.num)"
-           (click)="selectPlayer(playerA.num)">
+            (mouseleave)="itemInfo = ''"
+            (mouseenter)="itemInfo = 'Select target player (you)'"
+            [class.is-selectable]="isPlayerSelectable(playerA.num)"
+            (click)="selectPlayer(playerA.num)">
         <div class="life-label">Life:</div>
         <div class="life-value">{{playerA.life}}</div>
       </div>
+
       <div class="deck">
         <div class="deck-label">Deck:</div>
         <game-card [card]="null" from="mobDeck"
@@ -133,21 +137,53 @@
                    (click)="win.graveyardPanel.toggle('A')">
         </game-card>
       </div>
+
+
+
     </div>
 
     <!-- ----------------------------- Info Box ----------------------------- -->
-    <div class="info-box">
-      <bf-btn (bfClick)="skipPhase.skip()" [bfDisabled]="!skipPhase.enabled"
+    <div class="info-box">      
+      <!-- <bf-btn (bfClick)="skipPhase.skip()" [bfDisabled]="!skipPhase.enabled"
               bfText="Next Phase" class="primary" bfIcon="icon-arrow-right3"
               (mouseover)="itemInfo = skipPhase.enabled ? skipPhase.help : skipPhase.whyNot"
               (mouseleave)="itemInfo = ''">
-      </bf-btn>
-      <bf-btn *ngFor="let gBtn of globalButtons"
+      </bf-btn> -->
+      <div class="info-btn" [class.disabled]="!skipPhase.enabled" (click)="skipPhase.enabled && skipPhase.skip()">
+        <button class="bf-btn" tabindex="0">
+          <span class="btn-text-section">Next Phase</span>
+          <span class="btn-icon-section right">
+            <span class="icon-arrow-right3"></span>
+          </span>
+        </button>
+      </div>
+
+      <!-- <bf-btn *ngFor="let gBtn of globalButtons"
               [bfText]="gBtn.text" [bfIcon]="gBtn.icon" (bfClick)="gBtn.clickFn()">
-      </bf-btn>
-      <bf-btn *ngIf="cardOp.status" [bfText]="'Cancel ' + cardOp.card?.name" 
-              bfIcon="icon-cross" (bfClick)="cardOp.cancel()">
-      </bf-btn>
+      </bf-btn> -->
+      <div *ngFor="let gBtn of globalButtons"
+           class="info-btn global-btn" (click)="gBtn.clickFn()">
+        <button class="bf-btn" tabindex="0">
+          <span class="btn-text-section">{{gBtn.text}}</span>
+          <span class="btn-icon-section right">
+            <span [ngClass]="gBtn.icon"></span>
+          </span>
+        </button>
+      </div>
+
+      <!-- <bf-btn *ngIf="cardOp.status" [bfText]="'Cancel ' + cardOp.card?.name" 
+            bfIcon="icon-cross" (bfClick)="cardOp.cancel()">
+      </bf-btn> -->
+      <div class="info-btn cancel-btn" *ngIf="cardOp.status" (click)="cardOp.cancel()">
+        <button class="bf-btn" tabindex="0">
+          <span class="btn-text-section">Cancel {{cardOp.card?.name}}</span>
+          <span class="btn-icon-section right">
+            <span class="icon-cross"></span>
+          </span>
+        </button>
+      </div>
+
+
       <span class="main-info" *ngIf="mainInfo && !opInfo && !itemInfo">{{mainInfo}}</span>
       <span class="main-info" *ngIf="opInfo && !itemInfo">
         <span>{{opInfo}}</span>
@@ -161,6 +197,9 @@
 
 
     <div class="hand-box" [class.expanded]="isHandAExp">
+      <div class="box-button">
+        <span>{{handB.length}}<span class="icon-hand"></span></span>
+      </div>
       <div *ngIf="!handA.length" class="no-cards">No Cards on your Hand</div>
       <game-card *ngFor="let card of handA"  [card]="card" from="handA"
         (click)="selectCardFromYourHand(card)"

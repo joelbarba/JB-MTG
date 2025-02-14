@@ -12,32 +12,36 @@ $hand-height-sm: 157px; // small screen
   width: 100%;
   height: 100%;
 
-  .ctrl-panel {
-    z-index: 300;
-    position: fixed;
-    border: 1px solid black;
-    // top: 0;
-    // height: 157px;
-    // bottom: 0;
+  // .ctrl-panel {
+  //   z-index: 300;
+  //   position: fixed;
+  //   // border: 1px solid black;
+  //   // border-radius: 3px;
+  //   top: 240px;
+  //   left: 0;
 
-    // This should be for vertical device only
-    top: calc(50% - 100px);
-    height: 200px;
+  //   width: 60px;
+  //   height: 70px;
+  //   display: flex;
+  //   flex-direction: column;
 
-    right: 0;
-    width: 60px;
-    display: flex;
-    flex-direction: column;
-    .ctrl-btn {
-      flex: 1;
-      background-color: #d9d9d9;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 30px;
-      &.active { box-shadow: inset 0px 0px 5px 3px #626362; background: gray; }
-    }
-  }
+  //   .ctrl-btn {
+  //     flex: 1;
+  //     display: flex;
+  //     align-items: center;
+  //     justify-content: center;
+  //     font-size: 30px;
+  //     // box-shadow: inset 0px 0px 5px 3px #626362;
+  //     // background-color: #d9d9d9;
+  //     background: #616161;
+  //     color: gainsboro;
+  //     border-bottom-right-radius: 4px;
+  //     &.active { 
+  //       display: none;
+  //       // box-shadow: inset 0px 0px 5px 3px #626362; background: gray; 
+  //     }
+  //   }
+  // }
 
 
 
@@ -64,7 +68,7 @@ $hand-height-sm: 157px; // small screen
       position: absolute;
       width: 25px;
       left: 0;
-      top: 0;
+      top: 245px;
       bottom: $hand-height-lg;
       @media (max-height: 1050px) { bottom: $hand-height-md; }  // medium screen
       @media (max-height: 900px)  { bottom: $hand-height-sm; } // small screen
@@ -100,7 +104,8 @@ $hand-height-sm: 157px; // small screen
       background: $gray-dark;
       border-left: 1px solid $gray-light;
       display: flex;
-      flex-direction: column;        
+      flex-direction: column;
+      padding-top: 1px;
       .mana {
         flex: 1;
         border-top: 1px solid $gray-light;
@@ -127,11 +132,12 @@ $hand-height-sm: 157px; // small screen
 
     .life-deck {
       position: absolute;
+      height: 245px;
       top: 0;
-      right: 0;
+      left: 0;
       z-index: 200;
       background-color: $gray-light;
-      border-bottom-left-radius: 4px;
+      border-bottom-right-radius: 4px;
       display: flex;
       flex-direction: column;
       padding: 5px 0 0;
@@ -163,28 +169,69 @@ $hand-height-sm: 157px; // small screen
       bottom: $hand-height-lg;
       @media (max-height: 1050px) { bottom: $hand-height-md; }  // medium screen
       @media (max-height: 900px)  { bottom: $hand-height-sm; } // small screen
-      left: 25px;
-      // right: 0;
       padding: 5px;
       display: flex;
-      align-items: center;
-      border-top-right-radius: 6px;
+      flex-wrap: wrap-reverse;
+      align-items: baseline;
+      justify-content: flex-end;
+      right: 0;
+      max-width: calc(100% - 26px);
+      border-top-left-radius: 6px;
       z-index: 600;
-      box-shadow: 3px -4px 5px 1px rgb(97 97 97 / 18%);
+      box-shadow: -3px -3px 5px 1px rgb(97 97 97 / 18%);
       background: $info-box-bg;
-      bf-btn + bf-btn { margin-left: 10px; }
+      // bf-btn + bf-btn { margin-left: 10px; }      
+      .info-btn + .info-btn { margin-left: 10px; }
+      // .info-btn.cancel-btn { margin-right: 10px; }
       .main-info {
-        margin: 0 15px;
+        margin: 0 5px 3px;
         display: flex;
         align-items: center;
       }
 
-      @media screen and (max-height: 900px) {
-        bf-btn {
-          transform: scale(0.70);
-          transform-origin: left;
+      // .info-btn.global-btn { margin: 0 10px; }
+      // .info-btn.cancel-btn { margin: 0 10px; }
+
+      .info-btn {
+        button.bf-btn {
+          display: flex;
+          align-items: center;
           height: 26px;
-          margin: -7px -45px 0 -3px;
+          border-radius: 4px;
+          border: 0;
+          padding: 0;
+          overflow: hidden;
+          cursor: pointer;
+          color: #fff;
+          background: royalblue;
+          box-shadow: 0 1px 2px rgba(34, 36, 38, 0.6);          
+          .btn-text-section {
+            flex: 1;
+            font-weight: 500;
+            letter-spacing: 1px;
+            text-align: center;
+            white-space: nowrap;
+            line-height: 10px;
+            font-size: 9px;
+            padding: 0 10px;
+          }
+          .btn-icon-section {
+            display: flex;
+            width: 30px;
+            padding: 0;
+            align-items: center;
+            justify-content: center;
+            background: #2b58de;
+            height: 100%;
+            font-size: 10px;
+          }
+        }
+        &:not(.disabled) {
+          button.bf-btn:active { box-shadow: inset 2px 2px 5px rgba(34, 36, 38, 0.4); }          
+        }
+        &.disabled {
+          cursor: not-allowed;
+          opacity: 0.65;          
         }
       }
     }
@@ -216,6 +263,27 @@ $hand-height-sm: 157px; // small screen
         min-height: calc(var(--card-height) + 10px); // xl = 220px;
         max-width: calc(var(--card-width) - 15px); // xl = 135px;
       }
+      .box-button {
+        position: absolute;
+        display: flex;
+        align-items: center;
+        .icon-hand { margin-left: 3px; font-size: 10px; }
+        z-index: 700;
+        bottom: 0px;
+        font-size: 12px;
+        width: 30px;
+        position: fixed;
+        background: #616161;
+        background: #3c3c3c;
+        color: gainsboro;
+        padding: 0;
+        justify-content: center;
+        line-height: 15px;
+        right: 0;
+        border-top-left-radius: 3px;
+        opacity: 0.75;
+        padding: 1px 0 0 0;
+      }
 
       display: flex;
       game-card { margin: 2.5px 4px; }
@@ -224,10 +292,12 @@ $hand-height-sm: 157px; // small screen
     .play-box {
       z-index: 100;
       position: absolute;
-      left: 25px;
-      right: 60px;
+      left: 60px;
+      right: 0px;
       top: 0;
-      bottom: 0;
+      bottom: $hand-height-lg;
+      @media (max-height: 1050px) { bottom: $hand-height-md; }  // medium screen
+      @media (max-height: 900px)  { bottom: $hand-height-sm; } // small screen
       padding: 5px;
       overflow: auto;
       game-card { position: absolute; }
@@ -240,11 +310,17 @@ $hand-height-sm: 157px; // small screen
       top: $hand-height-lg;
       @media (max-height: 1050px) { top: $hand-height-md; }  // medium screen
       @media (max-height: 900px)  { top: $hand-height-sm; } // small screen
-      bottom: 0;
+      bottom: 309px;
     }
     .mana-pool {
       bottom: unset;
       top: 0;
+    }
+    .life-deck {
+      top: unset;
+      bottom: 0;
+      border-bottom-right-radius: 0;
+      border-top-right-radius: 4px;
     }
     .hand-box {
       bottom: unset;
