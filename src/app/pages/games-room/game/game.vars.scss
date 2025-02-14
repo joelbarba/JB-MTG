@@ -169,8 +169,8 @@ $table-center-left: calc(var(--left-panel-width) + var(--phases-col-width) + $ta
       bottom : 15px !important;
       left   : 15px !important;
       right  : 15px !important;
-      max-width: 92vw;
-      min-width: 92vw;
+      max-width: 92vw !important;
+      min-width: 92vw !important;
     }
   }
 }
