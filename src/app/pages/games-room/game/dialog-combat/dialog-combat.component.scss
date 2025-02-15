@@ -17,9 +17,15 @@
     align-items: center;
     justify-content: space-between;
 
+    overflow-x: auto;
+    overflow-y: hidden;
+    max-width: calc(100% + 20px);
+    margin: 0 -10px;
+
     .creature-list {
       height: 100%;
       display: flex;
+      align-self: flex-start;
       .combat-col {
         display: flex;
         flex-direction: column;

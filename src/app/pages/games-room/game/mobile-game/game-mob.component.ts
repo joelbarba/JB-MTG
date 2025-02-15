@@ -160,6 +160,8 @@ export class GameMobComponent {
     const gameId = this.route.snapshot.params['gameId'];
     console.log('Entering Game ID', gameId);
 
+    document.querySelector('body')?.requestFullscreen();
+
     // if (!mobileCheck()) { window.location.href = '/game/' + gameId; return; } // If not mobile
 
     await this.game.activateGame(gameId);
