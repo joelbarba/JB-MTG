@@ -470,17 +470,19 @@ export class GameComponent {
         if (eff1 !== eff2) { return false; } // If they have different effects, don't group them
         return true; // Same card id, same effects => group them
       }
+
+      const maxCardsPerRow = 5;
   
       lands.forEach(card => {
-        const col = tableGrid.find(col => col.find(c => cardsToGroup(c, card)));
+        const col = tableGrid.find(col => col.length < maxCardsPerRow && col.find(c => cardsToGroup(c, card)));
         if (col) { col.push(card); } else { tableGrid.push([card]); }
       });
       creatures.forEach(card => {
-        const col = tableGrid.find(col => col.find(c => cardsToGroup(c, card)));
+        const col = tableGrid.find(col => col.length < maxCardsPerRow && col.find(c => cardsToGroup(c, card)));
         if (col) { col.push(card); } else { tableGrid.push([card]); }
       });
       others.forEach(card => {
-        const col = tableGrid.find(col => col.find(c => cardsToGroup(c, card)));
+        const col = tableGrid.find(col => col.length < maxCardsPerRow && col.find(c => cardsToGroup(c, card)));
         if (col) { col.push(card); } else { tableGrid.push([card]); }
       });
       return tableGrid;

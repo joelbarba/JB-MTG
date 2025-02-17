@@ -160,7 +160,7 @@ export class GameMobComponent {
     const gameId = this.route.snapshot.params['gameId'];
     console.log('Entering Game ID', gameId);
 
-    document.querySelector('body')?.requestFullscreen();
+    // document.querySelector('body')?.requestFullscreen();
 
     // if (!mobileCheck()) { window.location.href = '/game/' + gameId; return; } // If not mobile
 
@@ -494,22 +494,23 @@ export class GameMobComponent {
         const eff1 = (card1.effectsFrom || []).sort((a,b) => a.id > b.id ? 1 : -1).map(e => e.id).join(',');
         const eff2 = (card2.effectsFrom || []).sort((a,b) => a.id > b.id ? 1 : -1).map(e => e.id).join(',');
         if (eff1 !== eff2) { return false; } // If they have different effects, don't group them
-        return true; // Same card id, same effects => group them
+        return false; // Don't group for mobile view
+        // return true; // Same card id, same effects => group them
       }
 
       const maxCardsPerRow = 4;
   
       lands.forEach(card => {
-        const col = tableGrid.lands.find(col => col.find(c => cardsToGroup(c, card)));
-        if (col && col.length < maxCardsPerRow) { col.push(card); } else { tableGrid.lands.push([card]); }
+        const col = tableGrid.lands.find(col => col.length < maxCardsPerRow && col.find(c => cardsToGroup(c, card)));
+        if (col) { col.push(card); } else { tableGrid.lands.push([card]); }
       });
       creatures.forEach(card => {
-        const col = tableGrid.creatures.find(col => col.find(c => cardsToGroup(c, card)));
-        if (col && col.length < maxCardsPerRow) { col.push(card); } else { tableGrid.creatures.push([card]); }
+        const col = tableGrid.creatures.find(col => col.length < maxCardsPerRow && col.find(c => cardsToGroup(c, card)));
+        if (col) { col.push(card); } else { tableGrid.creatures.push([card]); }
       });
       others.forEach(card => {
-        const col = tableGrid.others.find(col => col.find(c => cardsToGroup(c, card)));
-        if (col && col.length < maxCardsPerRow) { col.push(card); } else { tableGrid.others.push([card]); }
+        const col = tableGrid.others.find(col => col.length < maxCardsPerRow && col.find(c => cardsToGroup(c, card)));
+        if (col) { col.push(card); } else { tableGrid.others.push([card]); }
       });
       return tableGrid;
     };
@@ -578,7 +579,7 @@ export class GameMobComponent {
     const totalOthers = tableGridA.others.filter(c => !!c.length).length;
     const totalCreatures = tableGridA.creatures.filter(c => !!c.length).length;
 
-    const landsRowTop = totalLands === 0 ? 0 : this.windowHeight - 70 - handHeight - cardHeight - (maxGroupedLandsA * gap);
+    const landsRowTop = totalLands === 0 ? 0 : this.windowHeight - 80 - handHeight - cardHeight - (maxGroupedLandsA * gap);
     const othersRowTop = totalOthers === 0 ? landsRowTop : landsRowTop - gap - cardHeight - (maxGroupedOthersA * gap);
     const creaturesRowTop = othersRowTop - gap - cardHeight - (maxGroupedCreaturesA * gap);
 

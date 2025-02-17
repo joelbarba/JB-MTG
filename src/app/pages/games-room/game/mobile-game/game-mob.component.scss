@@ -4,57 +4,22 @@ $hand-height-lg: 230px; // large screen
 $hand-height-md: 190px; // medium screen
 $hand-height-sm: 157px; // small screen
 
-// $hand-height: 230px; // large screen
-// @media (max-height: 1050px) { $hand-height: 190px; }  // medium screen
-// @media (max-height: 900px)  { $hand-height: 157px; } // small screen
+$panel-height: calc(100vh - 50px);
 
 .game {
   width: 100%;
   height: 100%;
-
-  // .ctrl-panel {
-  //   z-index: 300;
-  //   position: fixed;
-  //   // border: 1px solid black;
-  //   // border-radius: 3px;
-  //   top: 240px;
-  //   left: 0;
-
-  //   width: 60px;
-  //   height: 70px;
-  //   display: flex;
-  //   flex-direction: column;
-
-  //   .ctrl-btn {
-  //     flex: 1;
-  //     display: flex;
-  //     align-items: center;
-  //     justify-content: center;
-  //     font-size: 30px;
-  //     // box-shadow: inset 0px 0px 5px 3px #626362;
-  //     // background-color: #d9d9d9;
-  //     background: #616161;
-  //     color: gainsboro;
-  //     border-bottom-right-radius: 4px;
-  //     &.active { 
-  //       display: none;
-  //       // box-shadow: inset 0px 0px 5px 3px #626362; background: gray; 
-  //     }
-  //   }
-  // }
-
-
+  background-color: black;
 
   .playerA-panel, .playerB-panel, .data-panel {
     position: fixed;
-    height: 100vh;
+    height: $panel-height;
     left: 0;
     right: 0;
     transition-duration: 200ms;
     transition-timing-function: cubic-bezier(.05,.5,.2,.9);
     &.playerB-panel { top: -100vh; }
     &.playerA-panel { top: 100vh;  }
-    &.data-panel { top: 100vh; }
     &.active { top: 0; }
 
     &.in-control { background-color: $player-in-control-bg; }
@@ -166,19 +131,24 @@ $hand-height-sm: 157px; // small screen
 
     .info-box {
       position: absolute;
-      bottom: $hand-height-lg;
-      @media (max-height: 1050px) { bottom: $hand-height-md; }  // medium screen
-      @media (max-height: 900px)  { bottom: $hand-height-sm; } // small screen
+      bottom: calc($hand-height-lg + 1px);
+
+      // justify-content: flex-end;
+      // border-top-left-radius: 6px;
+      // right: 0;
+      border-top-right-radius: 6px;
+      justify-content: flex-start;
+      left: 25px;
+
+      @media (max-height: 1050px) { bottom: calc($hand-height-md + 1px); }  // medium screen
+      @media (max-height: 900px)  { bottom: calc($hand-height-sm + 1px); } // small screen
       padding: 5px;
       display: flex;
       flex-wrap: wrap-reverse;
       align-items: baseline;
-      justify-content: flex-end;
-      right: 0;
       max-width: calc(100% - 26px);
-      border-top-left-radius: 6px;
       z-index: 600;
-      box-shadow: -3px -3px 5px 1px rgb(97 97 97 / 18%);
+      box-shadow: 3px -3px 5px 1px rgb(97 97 97 / 18%);
       background: $info-box-bg;
       // bf-btn + bf-btn { margin-left: 10px; }      
       .info-btn + .info-btn { margin-left: 10px; }
@@ -269,7 +239,7 @@ $hand-height-sm: 157px; // small screen
         align-items: center;
         .icon-hand { margin-left: 3px; font-size: 10px; }
         z-index: 700;
-        bottom: 0px;
+        bottom: 50px;
         font-size: 12px;
         width: 30px;
         position: fixed;
