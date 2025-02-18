@@ -6,6 +6,8 @@ $hand-height-sm: 157px; // small screen
 
 $panel-height: calc(100vh - 50px);
 
+$life-deck-height: 275px;
+
 .game {
   width: 100%;
   height: 100%;
@@ -34,7 +36,7 @@ $panel-height: calc(100vh - 50px);
       position: absolute;
       width: 25px;
       left: 0;
-      top: 245px;
+      top: $life-deck-height; // 275px
       bottom: $hand-height-lg;
       @media (max-height: 1050px) { bottom: $hand-height-md; }  // medium screen
       @media (max-height: 900px)  { bottom: $hand-height-sm; } // small screen
@@ -98,7 +100,7 @@ $panel-height: calc(100vh - 50px);
 
     .life-deck {
       position: absolute;
-      height: 245px;
+      height: $life-deck-height; // 275px
       top: 0;
       left: 0;
       z-index: 200;
@@ -106,7 +108,7 @@ $panel-height: calc(100vh - 50px);
       border-bottom-right-radius: 4px;
       display: flex;
       flex-direction: column;
-      padding: 5px 0 0;
+      padding: 0;
       .life {
         flex: 1;
         color: $white-dark;        
@@ -127,6 +129,25 @@ $panel-height: calc(100vh - 50px);
         .deck-label { font-size: 9px; color: white; text-align: center; }
         game-card { &.selectable { cursor: pointer; } }
         .grav-card { opacity: 0.5; }
+      }
+      .arrow {
+        height: 30px;
+        .ctrl-btn {
+          font-size: 20px;
+          width: 100%;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          height: 100%;          
+          color: #6f6f6f;
+        }
+        &.up {
+          margin-bottom: 5px;
+          border-bottom: 1px solid #6f6f6f;
+        }
+        &.down {
+          border-top: 1px solid #6f6f6f;
+        }
       }
     }
 
@@ -281,7 +302,7 @@ $panel-height: calc(100vh - 50px);
       top: $hand-height-lg;
       @media (max-height: 1050px) { top: $hand-height-md; }  // medium screen
       @media (max-height: 900px)  { top: $hand-height-sm; } // small screen
-      bottom: 245px;
+      bottom: $life-deck-height; // 275px
     }
     .mana-pool {
       bottom: unset;
@@ -292,6 +313,7 @@ $panel-height: calc(100vh - 50px);
       bottom: 0;
       border-bottom-right-radius: 0;
       border-top-right-radius: 4px;
+      padding-top: 10px;
     }
     .hand-box {
       bottom: unset;

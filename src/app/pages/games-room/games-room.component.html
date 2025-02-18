@@ -87,8 +87,8 @@
 
             <div class="col-12">
               <!-- <span>{{game.player1.name + ' - ' + game.player2.name}}</span> -->
-              <span *ngIf="game.youArePlayer1">You against {{game.player2.name}}</span>
-              <span *ngIf="!game.youArePlayer1">You against {{game.player1.name}}</span>
+              <span *ngIf="game.youArePlayer1">You against <b>{{game.player2.name}}</b></span>
+              <span *ngIf="!game.youArePlayer1">You against <b>{{game.player1.name}}</b></span>
             </div>
 
             <div class="col-12">

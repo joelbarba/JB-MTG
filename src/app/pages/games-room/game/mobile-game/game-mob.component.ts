@@ -204,8 +204,8 @@ export class GameMobComponent {
       const gCards = this.game.getCards(state);
       const gPlayers = this.game.getPlayers(state);
 
-      this.handA = gCards.handA;
-      this.handB = gCards.handB;
+      this.handA = gCards.handA.sort((a, b) => a.order > b.order ? -1 : 1); // revert ordr
+      this.handB = gCards.handB.sort((a, b) => a.order > b.order ? -1 : 1); // so you can see your last drawing
 
       this.tableA = gCards.tableA.map(c => this.extendTableCard(c, 'A'));
       this.tableB = gCards.tableB.map(c => this.extendTableCard(c, 'B'));
@@ -716,11 +716,11 @@ export class GameMobComponent {
       const duration = time - this.swipeTime;
       if (duration < 800) {
         // console.log('this.yIni - y = ', this.yIni - y, duration);
-        if (this.yIni - y > 50)  {
+        if (this.yIni - y > 100)  {
           console.log('swiping up');
           if (player === 'B') { this.mainPanel = 'A'; }
         }
-        if (this.yIni - y < -50)  {
+        if (this.yIni - y < -100)  {
           console.log('swiping down');
           if (player === 'A') { this.mainPanel = 'B'; }
         }

@@ -61,6 +61,9 @@
                    (click)="win.graveyardPanel.toggle('B')">
         </game-card>
       </div>
+      <div class="arrow down">
+        <div class="ctrl-btn" [class.active]="mainPanel === 'A'" (click)="mainPanel = 'A'"><span class="icon-arrow-down"></span></div>
+      </div>
     </div>
 
     <div class="hand-box" [class.expanded]="isHandBExp">
@@ -111,7 +114,9 @@
     </div>
 
     <div class="life-deck">
-
+      <div class="arrow up">
+        <div class="ctrl-btn" [class.active]="mainPanel === 'B'" (click)="mainPanel = 'B'"><span class="icon-arrow-up"></span></div>
+      </div>
       <div class="life" 
             (mouseleave)="itemInfo = ''"
             (mouseenter)="itemInfo = 'Select target player (you)'"
