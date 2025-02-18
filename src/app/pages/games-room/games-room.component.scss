@@ -1,3 +1,12 @@
+:host {
+  overflow: auto;
+  display: block;
+  height: calc(100dvh - 72px);
+  width: calc(100% + 15px);
+  padding-bottom: 100px;
+  padding-right: 15px;
+}
+
 h2 { padding: 15px 15px 0 15px; }
 
 .page {
@@ -11,5 +20,18 @@ h2 { padding: 15px 15px 0 15px; }
     align-items: center;
     bf-checkbox + bf-checkbox  { margin-left: 45px; }
     .right-btn { flex: 1; text-align: right; }
+  }
+
+  &.is-mobile { display: none; }
+  
+  @media only screen and (hover: none) and (pointer: coarse) { 
+    &.is-desktop { display: none; }
+    &.is-mobile { display: block; }
+
+    bf-checkbox { margin-top: 5px; }
+
+    .list-row {
+      .col-12 { margin-bottom: 10px; }
+    }
   }
 }

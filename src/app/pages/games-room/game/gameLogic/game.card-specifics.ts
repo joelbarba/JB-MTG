@@ -1125,9 +1125,9 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
     card.getUpkeepCost = (nextState) => {
       const { otherPlayer, hand } = getShorts(nextState);
       const numOfHandCards = hand.filter(c => c.controller === otherPlayer.num).length;
-      let text = `Your opponent's Black Vise does 1 damage to you for for each card in excess of 4 in your hand.`;
+      let text = `Your opponent's Black Vise does 1 damage to you for each card in excess of 4 in your hand.`;
       text += `<br/><br/>You have ${numOfHandCards} cards, so you get ${Math.max(0, numOfHandCards - 4)} damage`;
-      let opText = `Your Black Vise does 1 damage to your opponent for for each card in excess of 4 in their hand.`;
+      let opText = `Your Black Vise does 1 damage to your opponent for each card in excess of 4 in their hand.`;
       opText += `<br/><br/>Player has ${numOfHandCards} cards, so ${Math.max(0, numOfHandCards - 4)} damage`;
       return { mana: [0,0,0,0,0,0], text, opText };
     }

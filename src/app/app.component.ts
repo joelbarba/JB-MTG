@@ -32,8 +32,8 @@ export class AppComponent {
   ngOnInit() {
     if (mobileCheck()) { 
       this.el.nativeElement.closest('body').className = 'is-mobile'; 
-      this.el.nativeElement.closest('body').setAttribute('style', 'overscroll-behavior-y: contain; background: black;'); 
-      this.el.nativeElement.closest('html').setAttribute('style', 'overscroll-behavior-y: contain; background: black;'); 
+      this.el.nativeElement.closest('body').setAttribute('style', 'overscroll-behavior-y: contain;'); 
+      this.el.nativeElement.closest('html').setAttribute('style', 'overscroll-behavior-y: contain;'); 
     }
   }
 

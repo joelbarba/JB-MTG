@@ -1,6 +1,6 @@
 <h2>Games</h2>
 
-<div class="page">
+<div class="page is-desktop">
   <div class="games-list">
 
     <div class="whiteBg filters">
@@ -32,7 +32,7 @@
 
               <bf-btn bfText="Withdraw your Request"   class="warning"   bfIcon="icon-cross" *ngIf="game.op === 'requesting'" (bfClick)="withdrawRequest(game)"></bf-btn>
               <bf-btn bfText="Accept Request and Play" class="secondary" bfIcon="icon-flag7" *ngIf="game.op === 'requested'" (bfClick)="acceptGameRequest(game)"></bf-btn>
-              <bf-btn bfText="Go to the Game" bfIcon="icon-flag7" *ngIf="game.op === 'ongoing'" (bfClick)="goToGame(game.gameId)"></bf-btn>
+              <bf-btn bfText="Play" bfIcon="icon-flag7" *ngIf="game.op === 'ongoing'" (bfClick)="goToGame(game.gameId)"></bf-btn>
               
             </div>
             <!-- <div class="col-1">{{game.op}}</div> -->
@@ -55,6 +55,63 @@
     </div>
     <!-- <div class="row whiteBg">
       <bf-list-paginator class="col-12" [bfCtrl]="usersList" [bfShowSelector]="true"></bf-list-paginator>
+    </div> -->
+
+  </div>
+
+</div>
+
+<div class="page is-mobile">
+  <div class="games-list">
+
+    <div class="whiteBg row">
+      <div class="col-12" style="margin-bottom: 10px;">
+        <bf-btn class="full-width" bfText="Create New Game" bfType="add" (bfClick)="openNewGameModal()"></bf-btn>
+      </div>
+      <bf-checkbox class="col-12" bfLabel="Show Game Requests sent to you" [(ngModel)]="filters.requested" (ngModelChange)="filterGames()"></bf-checkbox>
+      <bf-checkbox class="col-12" bfLabel="Show Your Game Requests" [(ngModel)]="filters.requesting" (ngModelChange)="filterGames()"></bf-checkbox>
+      <bf-checkbox class="col-12" bfLabel="Show Ongoing Games" [(ngModel)]="filters.ongoing" (ngModelChange)="filterGames()"></bf-checkbox>
+      <bf-checkbox class="col-12" bfLabel="Show Archived Games" [(ngModel)]="filters.archived" (ngModelChange)="filterGames()"></bf-checkbox>
+    </div>
+    <div class="row">
+      <div class="col-12">
+        <ul class="list-unstyled table-list" *ngIf="gamesList.loadingStatus === 2">
+          <li class="list-header">
+            <bf-list-header-col class="col-12" colTitle="Games"></bf-list-header-col>
+          </li>
+    
+          <li class="list-row" *ngFor="let game of gamesList.renderList$ | async">
+            <div class="col-12">{{ game.created | date: 'medium' }}</div>
+            <div class="col-12" *ngIf="isAdmin">id={{game.gameId}}</div>
+            <div class="col-12">{{game.desc}}</div>
+
+            <div class="col-12">
+              <!-- <span>{{game.player1.name + ' - ' + game.player2.name}}</span> -->
+              <span *ngIf="game.youArePlayer1">You against {{game.player2.name}}</span>
+              <span *ngIf="!game.youArePlayer1">You against {{game.player1.name}}</span>
+            </div>
+
+            <div class="col-12">
+              <bf-btn *ngIf="isAdmin" class="warning" bfIcon="icon-cross" (bfClick)="deleteGame(game.gameId)"></bf-btn>
+              <bf-btn *ngIf="isAdmin" bfIcon="icon-rotate-ccw3" (bfClick)="resetGame(game)"></bf-btn>
+
+              <bf-btn bfText="Withdraw your Request"   class="warning"   bfIcon="icon-cross" *ngIf="game.op === 'requesting'" (bfClick)="withdrawRequest(game)"></bf-btn>
+              <bf-btn bfText="Accept Request and Play" class="secondary" bfIcon="icon-flag7" *ngIf="game.op === 'requested'" (bfClick)="acceptGameRequest(game)"></bf-btn>
+              <bf-btn bfText="Play" bfIcon="icon-flag7" *ngIf="game.op === 'ongoing'" (bfClick)="goToGame(game.gameId)"></bf-btn>
+              
+            </div>
+            <!-- <div class="col-1">{{game.op}}</div> -->
+
+
+
+            
+
+          </li>
+        </ul>
+      </div>
+    </div>
+    <!-- <div class="row whiteBg" *ngIf="gamesList.totalItems > 10">
+      <bf-list-paginator class="col-12" [bfCtrl]="gamesList" [bfShowSelector]="false"></bf-list-paginator>
     </div> -->
 
   </div>

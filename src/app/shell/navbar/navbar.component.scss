@@ -47,6 +47,13 @@ nav.navbar {
   }
 }
 
+@media only screen and (hover: none) and (pointer: coarse) { 
+  nav.navbar {
+    .app-title { font-size: 1.5rem; letter-spacing: 2px; }
+    .navbar-content.your-credit { font-size: 1rem; }
+  }
+}
+
 $profile-panel-height: 450px;
 $profile-panel-width: 370px;
 

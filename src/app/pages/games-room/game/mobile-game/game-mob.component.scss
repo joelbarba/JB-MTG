@@ -14,12 +14,13 @@ $panel-height: calc(100vh - 50px);
   .playerA-panel, .playerB-panel, .data-panel {
     position: fixed;
     height: $panel-height;
+    height: 100dvh;
     left: 0;
     right: 0;
     transition-duration: 200ms;
     transition-timing-function: cubic-bezier(.05,.5,.2,.9);
-    &.playerB-panel { top: -100vh; }
-    &.playerA-panel { top: 100vh;  }
+    &.playerB-panel { top: -100vh; top: -100dvh; }
+    &.playerA-panel { top: 100vh; top: 100dvh;  }
     &.active { top: 0; }
 
     &.in-control { background-color: $player-in-control-bg; }
@@ -239,7 +240,7 @@ $panel-height: calc(100vh - 50px);
         align-items: center;
         .icon-hand { margin-left: 3px; font-size: 10px; }
         z-index: 700;
-        bottom: 50px;
+        bottom: 0;
         font-size: 12px;
         width: 30px;
         position: fixed;
