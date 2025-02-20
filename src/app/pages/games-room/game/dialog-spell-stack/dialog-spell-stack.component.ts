@@ -34,7 +34,7 @@ export type TStackTree = {
   ],
 })
 export class DialogSpellStackComponent {
-  TIMER_TIME = 5000;
+  TIMER_TIME = 5000; // * 100000;
 
   title = 'Spell Stack';
   youControl: boolean = false;

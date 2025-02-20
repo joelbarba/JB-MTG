@@ -55,3 +55,28 @@
   // }
 
 }
+
+
+@media only screen and (hover: none) and (pointer: coarse) { 
+  .spell-stack {
+    .btns-box {
+      display: block;
+      .main-info {
+        width: 100%;
+        text-align: center;
+        display: block;
+        margin: 10px 0;
+      }
+      .wating-progress-bar {
+        margin-bottom: 10px;
+        display: inline-block;
+        vertical-align: bottom;
+      }
+      .wait {
+        margin-bottom: 10px;
+      }
+      // .go { margin-left: 0; }
+      bf-btn + bf-btn { margin-left: 0; }
+    }
+  }
+}

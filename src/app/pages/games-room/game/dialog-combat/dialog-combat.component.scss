@@ -126,3 +126,28 @@
   //   bf-btn { transform: scale(2); }
   // }
 }
+
+
+@media only screen and (hover: none) and (pointer: coarse) { 
+  .combat-phases .subphase { margin-bottom: 2px; }
+  .combat {
+    .btns-box {
+      display: block;
+      .main-info {
+        width: 100%;
+        text-align: center;
+        display: block;
+        margin: 10px 0;
+      }
+      .wating-progress-bar {
+        margin-bottom: 10px;
+        display: inline-block;
+        vertical-align: bottom;
+      }
+      .wait {
+        margin-bottom: 10px;
+      }
+      bf-btn + bf-btn { margin-left: 0; margin-top: 5px; }
+    }
+  }
+}

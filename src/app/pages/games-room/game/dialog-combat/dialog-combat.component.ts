@@ -35,7 +35,7 @@ type TCol = {
 ],
 })
 export class DialogCombatComponent {
-  TIMER_TIME = 5000;
+  TIMER_TIME = 5000; // * 1000000;
 
   attacker!: 'A' | 'B';
   stateSub!: Subscription;

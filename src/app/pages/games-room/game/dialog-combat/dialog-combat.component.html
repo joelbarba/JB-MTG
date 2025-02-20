@@ -134,7 +134,7 @@
     <div *ngIf="showTimer && !diableButtons" class="wating-progress-bar">
       <div class="time" [style.width.px]="progressBar"></div>
     </div>
-    <bf-btn *ngIf="showTimer && !diableButtons" (bfClick)="pause()" bfText="Wait" bfIcon="icon-pause2"></bf-btn>
+    <bf-btn class="wait" *ngIf="showTimer && !diableButtons" (bfClick)="pause()" bfText="Wait" bfIcon="icon-pause2"></bf-btn>
     
 
     <bf-btn *ngIf="attacker === 'A' && subPhase === 'selectAttack'"  bfText="Cancel"                          [bfDisabled]="diableButtons" (bfClick)="cancelAttack()"  bfIcon="icon-cross"></bf-btn>
@@ -143,9 +143,9 @@
     <bf-btn *ngIf="attacker === 'B' && subPhase === 'selectDefense' && anyDefenders" bfText="Cancel"                        [bfDisabled]="diableButtons" (bfClick)="cancelDefense()" bfIcon="icon-cross"></bf-btn>
     <bf-btn *ngIf="attacker === 'B' && subPhase === 'selectDefense' && anyDefenders" bfText="Defend with current selection" [bfDisabled]="diableButtons" (bfClick)="submitDefense()" bfIcon="icon-arrow-right3"></bf-btn>
 
-    <bf-btn *ngIf="subPhase === 'attacking'"      bfText="Continue" [bfDisabled]="diableButtons" (bfClick)="continueCombat()" bfIcon="icon-arrow-right3"></bf-btn>
-    <bf-btn *ngIf="subPhase === 'beforeDamage'"   bfText="Continue" [bfDisabled]="diableButtons" (bfClick)="continueCombat()" bfIcon="icon-arrow-right3"></bf-btn>
-    <bf-btn *ngIf="subPhase === 'afterDamage'"    bfText="Continue" [bfDisabled]="diableButtons" (bfClick)="continueCombat()" bfIcon="icon-arrow-right3"></bf-btn>
+    <bf-btn *ngIf="subPhase === 'attacking'"      bfText="Continue" [bfDisabled]="diableButtons" (bfClick)="continueCombat()" bfIcon="icon-arrow-right3" [class.full-width]="game.isMobile"></bf-btn>
+    <bf-btn *ngIf="subPhase === 'beforeDamage'"   bfText="Continue" [bfDisabled]="diableButtons" (bfClick)="continueCombat()" bfIcon="icon-arrow-right3" [class.full-width]="game.isMobile"></bf-btn>
+    <bf-btn *ngIf="subPhase === 'afterDamage'"    bfText="Continue" [bfDisabled]="diableButtons" (bfClick)="continueCombat()" bfIcon="icon-arrow-right3" [class.full-width]="game.isMobile"></bf-btn>
 
   </div>
 

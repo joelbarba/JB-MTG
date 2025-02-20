@@ -253,7 +253,7 @@ $life-deck-height: 275px;
         font-size: 20px;
         padding: 30% 0;
         min-height: calc(var(--card-height) + 10px); // xl = 220px;
-        max-width: calc(var(--card-width) - 15px); // xl = 135px;
+        // max-width: calc(var(--card-width) - 15px); // xl = 135px;
       }
       .box-button {
         position: absolute;
