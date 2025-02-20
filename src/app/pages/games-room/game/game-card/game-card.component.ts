@@ -1,4 +1,4 @@
-import { Component, ElementRef, EventEmitter, Inject, Input, Output, ViewChild } from '@angular/core';
+import { Component, ElementRef, EventEmitter, HostListener, Inject, Input, Output, ViewChild } from '@angular/core';
 import { CommonModule, DOCUMENT, ViewportScroller } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -39,6 +39,8 @@ export class GameCardComponent {
   @Input() count: number | null = null;
   @Input() selectable = true;
   @Input() shadow ?: { damage: number, defense: number, force: string, delta: string };
+  @Output() touchStart = new EventEmitter<void>();
+  @Output() longTouch = new EventEmitter<void>();
 
   constructor(
     public game: GameStateService,
@@ -48,6 +50,7 @@ export class GameCardComponent {
     public cardOp: CardOpServiceNew,
     public cardEv: GameCardEventsService,
     public win: WindowsService,
+    private el: ElementRef,
   ) {
 
   }
@@ -66,7 +69,15 @@ export class GameCardComponent {
     }
   }
 
-  ngAfterViewInit() {}
+  ngAfterViewInit() {
+    if (this.game.isMobile) { // Avoid long press menu
+      this.el.nativeElement.addEventListener('contextmenu', function(e: Event) { 
+        e.preventDefault();
+        e.stopPropagation();
+        return false; 
+      });
+    }
+  }
 
   ngOnDestroy() {
     // if (this.stateSub) { this.stateSub.unsubscribe(); }
@@ -101,5 +112,18 @@ export class GameCardComponent {
     }
     return '';
   }
+
+
+
+  touchTimeout!: ReturnType<typeof setTimeout>;
+  @HostListener('touchstart') touchstart() {
+    const longTouchTime = 700;
+    this.touchTimeout = setTimeout(() => this.longTouch.emit(), longTouchTime); 
+    this.touchStart.emit();
+  }
+  @HostListener('touchend') touchend() {
+    if (this.touchTimeout) { clearTimeout(this.touchTimeout); }
+  }
+
 
 }

@@ -8,7 +8,7 @@ import { calcManaCost, calcManaForUncolored, checkMana, drawCard, endGame, getCa
 import { GameOptionsService } from './game.options.service';
 import { extendCardLogic } from './game.card-specifics';
 import { BfDefer } from 'bf-ui-lib';
-import { getTime } from '../../../../core/common/commons';
+import { getTime, mobileCheck } from '../../../../core/common/commons';
 import { dbCards } from '../../../../core/dbCards';
 
 
@@ -37,7 +37,7 @@ export class GameStateService {
 
   debugMode = false;
   debugPanel = false;
-
+  isMobile = false;
 
 
   playerA = () => this.playerANum === '1' ? this.state.player1 : this.state.player2;
@@ -61,6 +61,7 @@ export class GameStateService {
   ) {
     this.loadLibrary();
     this.firstStateDef = new BfDefer();
+    this.auth.authLoadPromise.then(() => this.isMobile = mobileCheck());
   }
 
   loadLibrary() { // Load card library

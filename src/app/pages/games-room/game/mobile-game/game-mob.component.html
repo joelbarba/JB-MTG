@@ -80,6 +80,8 @@
         [style.top.px]="card.posY"
         [style.z-index]="card.zInd"
         (click)="selectCardFromTable(card)"
+        (longTouch)="longTouchCard(card)"
+        (touchStart)="fullCard.isShown = false"
         (mouseenter)="cardEv.hoverCard$.next(card)"
         (mouseleave)="cardEv.hoverCard$.next(null)">
       </game-card>
@@ -211,6 +213,8 @@
       <div *ngIf="!handA.length" class="no-cards">No Cards on your Hand</div>
       <game-card *ngFor="let card of handA"  [card]="card" from="handA"
         (click)="selectCardFromYourHand(card)"
+        (longTouch)="longTouchCard(card)"
+        (touchStart)="fullCard.isShown = false"
         [hoverTip]="card.selectableAction?.text || ''"
         (mouseenter)="cardEv.hoverCard$.next(card)"
         (mouseleave)="cardEv.hoverCard$.next(null)">
@@ -223,6 +227,8 @@
         [style.top.px]="card.posY"
         [style.z-index]="card.zInd"
         (click)="selectCardFromTable(card)"
+        (longTouch)="longTouchCard(card)"
+        (touchStart)="fullCard.isShown = false"
         (mouseenter)="cardEv.hoverCard$.next(card)"
         (mouseleave)="cardEv.hoverCard$.next(null)">
       </game-card>
@@ -233,80 +239,13 @@
 
 
 
-
-
-
-
-  <div class="left-panel" *ngIf="false">
-    <div class="player-B">
-
-
-
-
-
+  <div class="full-card" [class.is-on]="fullCard.isShown" (click)="fullCard.isShown = false">
+    <div class="card-border">
+      <img #fullCardEl [src]="'assets/images/cards/' + fullCard.img"/>
     </div>
-
-
-
-    <div class="full-card" (window:resize)="calcFullCardSize()">
-      <div class="card-border">
-        <img #fullCardEl [src]="'assets/images/cards/' + fullCard.img"
-             [class.black-border]="fullCard.border === 'black'"
-             [style.border-width.px]="fullCard.borderWidth"
-             [style.border-radius.px]="fullCard.borderRadius"/>
-      </div>
-    </div>
-
-    <div class="player-A">
-
-
-
-    </div>
-
+    <!-- <div class="full-card-backdrop" (click)="fullCard.isShown = false"></div> -->
   </div>
 
-
-  <!-- --------------------------------------------------------------------------------------------- -->
-  <!-- --------------------------------------------------------------------------------------------- -->
-  <!-- --------------------------------------------------------------------------------------------- -->
-
-
-  <div class="board-panel" *ngIf="false">
-    <div class="player-B" 
-         [class.expanded]="expandedTalbe === 'B'"
-         [class.in-waiting]="state.control === game.playerANum" 
-         [class.in-control]="state.control !== game.playerANum">
-      <div class="expand-table-pin b" *ngIf="expandedTalbe !== 'A'" (click)="expandedTalbe = expandedTalbe === 'B' ? null : 'A'; autoPositionGameCards()">
-        <span class="icon-arrow-up"></span>
-      </div>
-
-
-
-
-
-      <!-- bfDropContainer (bfDrop)="moveCardPosition($event)"  -->
-
-
-    </div>
-
- ------------------------------------------------------------------------------------------------------------------------ -->
-
-    <div class="player-A" #tableADiv [class.expanded]="expandedTalbe === 'A'"
-         [class.in-waiting]="state.control !== game.playerANum" 
-         [class.in-control]="state.control === game.playerANum">
-      <div class="expand-table-pin a" *ngIf="expandedTalbe !== 'B'" (click)="expandedTalbe = expandedTalbe === 'A' ? null : 'B'; autoPositionGameCards()">
-        <span class="icon-arrow-down"></span>
-      </div>
-
-
-
-
-
-      <!-- bfDropContainer (bfDrop)="moveCardPosition($event)" -->
-
-
-    </div>
-  </div>
 
   
   <panel-graveyard        *ngIf="win.graveyardPanel.display"   ></panel-graveyard>

@@ -92,6 +92,7 @@ export class GameMobComponent {
     borderWidth  : 12,
     borderRadius : 12,
     prevHeight   : 0,
+    isShown      : false,
   }
   cardActionHelp = '';  // Current help message for the hovering card
   isHandBExp = true;  // Whether the hand box B is expanded
@@ -166,15 +167,15 @@ export class GameMobComponent {
 
     await this.game.activateGame(gameId);
 
-    this.subs.push(this.cardEv.hoverCard$.subscribe(hoveringCard => {
-      if (hoveringCard) {
-        this.fullCard.img = hoveringCard.image;
-        this.fullCard.border = hoveringCard.border || 'white';
-        // this.itemInfo = hoveringCard.selectableAction?.text || '';
-      } else {
-        // this.itemInfo = '';
-      }
-    }));
+    // this.subs.push(this.cardEv.hoverCard$.subscribe(hoveringCard => {
+    //   if (hoveringCard) {
+    //     this.fullCard.img = hoveringCard.image;
+    //     this.fullCard.border = hoveringCard.border || 'white';
+    //     // this.itemInfo = hoveringCard.selectableAction?.text || '';
+    //   } else {
+    //     // this.itemInfo = '';
+    //   }
+    // }));
 
 
 
@@ -184,7 +185,8 @@ export class GameMobComponent {
       this.mainInfo = '';
       this.itemInfo = '';
       this.globalButtons = [];
-      this.tooltipService.flush();      
+      this.tooltipService.flush();
+      this.fullCard.isShown = false;
 
       // console.log('New State:', state);      
       this.state = state;
@@ -291,17 +293,17 @@ export class GameMobComponent {
   }
 
   calcFullCardSize() {
-    if (this.fullCardEl) {
-      const cardHeight = this.fullCardEl.nativeElement.getBoundingClientRect().height;
-      if (Math.abs(this.fullCard.prevHeight - cardHeight) > 30) {
-        // console.log('Full Card Height', cardHeight, this.fullCard.prevHeight);
-        this.fullCard.prevHeight = cardHeight;
-        setTimeout(() => {
-          this.fullCard.borderWidth  = Math.max(1, cardHeight * 0.0215);
-          this.fullCard.borderRadius = Math.max(1, cardHeight * 0.0275);
-        });
-      }
-    }
+    // if (this.fullCardEl) {
+    //   const cardHeight = this.fullCardEl.nativeElement.getBoundingClientRect().height;
+    //   if (Math.abs(this.fullCard.prevHeight - cardHeight) > 30) {
+    //     // console.log('Full Card Height', cardHeight, this.fullCard.prevHeight);
+    //     this.fullCard.prevHeight = cardHeight;
+    //     setTimeout(() => {
+    //       this.fullCard.borderWidth  = Math.max(1, cardHeight * 0.0215);
+    //       this.fullCard.borderRadius = Math.max(1, cardHeight * 0.0275);
+    //     });
+    //   }
+    // }
   }
 
 
@@ -758,6 +760,11 @@ export class GameMobComponent {
     return this.cardOp.isTargetPlayer(num); 
   }
 
+  longTouchCard(card: TGameCard) {
+    this.fullCard.img = card.image;
+    this.fullCard.border = card.border || 'white';
+    this.fullCard.isShown = true;
+  }
 
 
   // Debugging tools

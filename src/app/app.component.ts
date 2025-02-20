@@ -34,6 +34,12 @@ export class AppComponent {
       this.el.nativeElement.closest('body').className = 'is-mobile'; 
       this.el.nativeElement.closest('body').setAttribute('style', 'overscroll-behavior-y: contain;'); 
       this.el.nativeElement.closest('html').setAttribute('style', 'overscroll-behavior-y: contain;'); 
+
+      // document.addEventListener('contextmenu', function (e) { 
+      //   e.preventDefault();
+      //   e.stopPropagation();
+      //   return false; 
+      // });
     }
   }
 

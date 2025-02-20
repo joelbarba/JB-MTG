@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Subject } from 'rxjs';
+import { mobileCheck } from '../../commons';
 
 @Injectable({ providedIn: 'root' })
 export class BfTooltipService {
@@ -18,7 +19,9 @@ export class BfTooltipService {
   // The arrow is already 6px, so consider >= 6
   private margin = 12; 
 
-  constructor() {}
+  constructor() {
+    if (mobileCheck()) { this.enabled = false; }
+  }
 
   // rect = rectangle of the hovering element that cause the tooltip trigger
   activate(text: string, tipId: string, tipSide: 'top' | 'right' | 'bottom' | 'left', rect: DOMRect) {

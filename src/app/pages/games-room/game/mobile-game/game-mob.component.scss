@@ -292,7 +292,9 @@ $life-deck-height: 275px;
       @media (max-height: 900px)  { bottom: $hand-height-sm; } // small screen
       padding: 5px;
       overflow: auto;
-      game-card { position: absolute; }
+      game-card { 
+        position: absolute;
+      }
     }
 
   }
@@ -341,6 +343,45 @@ game-card[from="tbleA"] { width: 0; height: 0; }
 game-card[from="tbleB"] { width: 0; height: 0; }
 
 
+.full-card {
+  &:not(.is-on) { display: none; }
+  position: fixed;
+  top: 1%;
+  right: 1%;
+  height: 126dvw;
+  width: 90dvw;
+  border: 1px solid black;
+  border-radius: 13px;
+  box-shadow: -7px 7px 9px 8px rgb(22 22 22 / 45%);
+  .card-border {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 10px solid white;
+    background: white;
+    &.black-border { background: black; }
+    border-width: 2.5dvw;
+    border-radius: 12px;
+    img { 
+      max-height: calc(100% + 2px);
+      max-width:  calc(100% + 2px);
+      width:      calc(100% + 2px);
+      height:     calc(100% + 2px);
+    }
+  }
+  // .full-card-backdrop {
+  //   position: fixed;
+  //   top: 0;
+  //   bottom: 0;
+  //   right: 0;
+  //   left: 0;
+  // }
+}
 
 
 .center { display: flex; justify-content: center; }
