@@ -240,7 +240,7 @@
 
 
   <div class="full-card" [class.is-on]="fullCard.isShown" (click)="fullCard.isShown = false">
-    <div class="card-border">
+    <div class="card-border" [class.black-border]="fullCard.border === 'black'">
       <img #fullCardEl [src]="'assets/images/cards/' + fullCard.img"/>
     </div>
     <!-- <div class="full-card-backdrop" (click)="fullCard.isShown = false"></div> -->

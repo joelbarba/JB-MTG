@@ -364,7 +364,7 @@ game-card[from="tbleB"] { width: 0; height: 0; }
     align-items: center;
     border: 10px solid white;
     background: white;
-    &.black-border { background: black; }
+    &.black-border { background: black; border-color: black; }
     border-width: 2.5dvw;
     border-radius: 12px;
     img { 

@@ -89,3 +89,17 @@
   justify-content: space-between;
   align-items: center;
 }
+
+
+// Mobile
+@media only screen and (hover: none) and (pointer: coarse) { 
+  .content {
+    flex-direction: column;
+    .users { margin: 0 0 15px 0; }
+    .decks { margin: 0; }
+  }
+  .bottom-row {
+    display: block;
+    text-align: center !important;
+  }
+}
