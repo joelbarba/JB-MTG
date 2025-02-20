@@ -237,7 +237,8 @@ export class DialogCombatComponent {
       this.progressBar = Math.min(100, ((new Date()).getTime() - ctrlTime) * 200 / this.TIMER_TIME);
       if (this.progressBar >= 100) { // Max reach
         console.log('AUTO Continue');
-        this.releaseStack();
+        // this.releaseStack();
+        this.continueCombat();
       }
     }, 25);
   }
