@@ -116,12 +116,15 @@ export class GameCardComponent {
 
 
   touchTimeout!: ReturnType<typeof setTimeout>;
-  @HostListener('touchstart') touchstart() {
+  @HostListener('touchstart') touchstart($event: TouchEvent) {
     const longTouchTime = 700;
     this.touchTimeout = setTimeout(() => this.longTouch.emit(), longTouchTime); 
     this.touchStart.emit();
   }
   @HostListener('touchend') touchend() {
+    if (this.touchTimeout) { clearTimeout(this.touchTimeout); }
+  }
+  @HostListener('touchmove') touchmove($event: TouchEvent) {
     if (this.touchTimeout) { clearTimeout(this.touchTimeout); }
   }
 
