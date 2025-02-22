@@ -68,6 +68,6 @@ export class HomeComponent {
 
   goToYourCards() { this.router.navigate(['cards']); }
   goToYourDecs() { this.router.navigate(['cards']); }
-  goToGames() { this.router.navigate(['game']); }
+  goToGames() { this.router.navigate(['game', 'oja2Is88Uk4bcUxLhEvA']); }
 
 }

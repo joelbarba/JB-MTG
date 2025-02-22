@@ -66,7 +66,10 @@ export class OnboardingComponent {
         this.btnEnabled = true;
 
         if (this.auth.isGuest) {
-          this.router.navigate(['/game', 'WvYPxRKiPZ4lCzuV3yHZ']);
+          // this.router.navigate(['/game', 'WvYPxRKiPZ4lCzuV3yHZ']);
+          this.router.navigate(['/']);
+          this.shell.showMenu = true;
+          this.shell.showNavBar = true;
         }
 
       }).catch(err => {

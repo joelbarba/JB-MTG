@@ -28,10 +28,10 @@ export class AuthGuard {
       this.router.navigate(['/onboarding']); // Redirect
       return false;
     }
-    if (this.auth.isGuest && url !== '/game/WvYPxRKiPZ4lCzuV3yHZ' && url !== '/game-mob/WvYPxRKiPZ4lCzuV3yHZ') {
-      this.router.navigate(['/game', 'WvYPxRKiPZ4lCzuV3yHZ']);
-      return false;
-    }
+    // if (this.auth.isGuest && url !== '/game/WvYPxRKiPZ4lCzuV3yHZ' && url !== '/game-mob/WvYPxRKiPZ4lCzuV3yHZ') {
+    //   this.router.navigate(['/game', 'WvYPxRKiPZ4lCzuV3yHZ']);
+    //   return false;
+    // }
     if (!this.auth.isAdmin) {
       if (['/users', '/settings'].indexOf(url) >= 0) {
         this.router.navigate(['/home']); return false;
