@@ -50,7 +50,9 @@ export class OnboardingComponent {
     this.shell.showNavBar = false;
   }
 
-  // http://127.0.0.1:4200/onboarding?usr=guest
+  // http://127.0.0.1:4200/onboarding?usr=guest&gameId=WvYPxRKiPZ4lCzuV3yHZ   White/Red
+  // http://127.0.0.1:4200/onboarding?usr=guest&gameId=QqvfUu7oXeOGvUd0sD0M   Red/Green
+  // http://127.0.0.1:4200/onboarding?usr=guest&gameId=YooyaaZBM6GwtDUb9SgZ   Tipus1
 
   ngOnInit() {
     this.username = this.route.snapshot.queryParams['usr'];

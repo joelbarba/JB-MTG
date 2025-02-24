@@ -2,6 +2,19 @@
 
 <div class="page">
   <p translate>Welcome to the old cool Magic the Gathering Game</p>
+  
+  <p *ngIf="auth.isAdmin"><b (click)="copyLink('https://jb-mtg.netlify.app/onboarding?usr=guest&gameId=WvYPxRKiPZ4lCzuV3yHZ')" class="onb-link" hoverTip="Click to copy to the clipboard">
+    https://jb-mtg.netlify.app/onboarding?usr=guest&gameId=WvYPxRKiPZ4lCzuV3yHZ   White/Red
+  </b></p>
+  
+  <p *ngIf="auth.isAdmin"><b (click)="copyLink('https://jb-mtg.netlify.app/onboarding?usr=guest&gameId=QqvfUu7oXeOGvUd0sD0M')" class="onb-link" hoverTip="Click to copy to the clipboard">
+    https://jb-mtg.netlify.app/onboarding?usr=guest&gameId=QqvfUu7oXeOGvUd0sD0M   Red/Green
+  </b></p>
+  
+  <p *ngIf="auth.isAdmin"><b (click)="copyLink('https://jb-mtg.netlify.app/onboarding?usr=guest&gameId=YooyaaZBM6GwtDUb9SgZ')" class="onb-link" hoverTip="Click to copy to the clipboard">
+    https://jb-mtg.netlify.app/onboarding?usr=guest&gameId=YooyaaZBM6GwtDUb9SgZ   Tipus1
+  </b></p>
+
 
   <div class="home-boxes">
 

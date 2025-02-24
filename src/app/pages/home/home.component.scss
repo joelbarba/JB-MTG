@@ -16,6 +16,14 @@ h2 { padding: 15px 15px 0 15px; }
       cursor: pointer;
     }
   }
+
+  .onb-link {
+    cursor: pointer;
+    background: aquamarine;
+    padding: 4px 8px;
+    border-radius: 4px;
+    // &:hover { text-decoration: underline; }
+  }
 }
 
 

@@ -12,6 +12,7 @@ import { TDBUser } from '../../core/types';
 import { Router, RouterModule } from '@angular/router';
 import { DataService } from '../../core/dataService';
 import { AuthService } from '../../core/common/auth.service';
+import { HoverTipDirective } from '../../core/common/internal-lib/bf-tooltip/bf-tooltip.directive';
 
 const roles = [
   { code: 'onboarding' },
@@ -30,6 +31,7 @@ const roles = [
     FormsModule,
     BfUiLibModule,
     RouterModule,
+    HoverTipDirective,
   ],
   templateUrl: './users.component.html',
   styleUrl: './users.component.scss',

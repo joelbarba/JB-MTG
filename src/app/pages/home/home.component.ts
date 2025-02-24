@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { BfUiLibModule } from 'bf-ui-lib';
+import { BfGrowlService, BfUiLibModule } from 'bf-ui-lib';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { BfLang, BfLangList, AppTranslateService } from '../../core/common/app-translate.service';
 import { BehaviorSubject, Observable, Subject, map, take } from 'rxjs';
@@ -39,8 +39,9 @@ export class HomeComponent {
     private appTranslate: AppTranslateService,
     private firestore: Firestore,
     private dataService: DataService,
-    private auth: AuthService,
     private router: Router,
+    private growl: BfGrowlService,
+    public auth: AuthService,
   ) {    
   }
 
@@ -68,6 +69,11 @@ export class HomeComponent {
 
   goToYourCards() { this.router.navigate(['cards']); }
   goToYourDecs() { this.router.navigate(['cards']); }
-  goToGames() { this.router.navigate(['game', 'oja2Is88Uk4bcUxLhEvA']); }
+  goToGames() { this.router.navigate(['game']); }
+  // goToGames() { this.router.navigate(['game', 'oja2Is88Uk4bcUxLhEvA']); }
 
+  copyLink(link: string) {
+    navigator.clipboard.writeText(link);
+    this.growl.success('Link copied to the clipboard');
+  }
 }
