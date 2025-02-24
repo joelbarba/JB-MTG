@@ -22,3 +22,9 @@
     padding-bottom: 50px;
   }
 }
+
+@media only screen and (hover: none) and (pointer: coarse) {
+  .route-container.show-menu {
+    left: 30px;
+  }
+}

@@ -12,9 +12,24 @@ h2 { padding: 15px 15px 0 15px; }
       h3 { margin-bottom: 40px; }
       padding: 40px 60px;
       text-align: center;
-      display: 1;
       margin: 0 20px;
       cursor: pointer;
+    }
+  }
+}
+
+
+@media only screen and (hover: none) and (pointer: coarse) { 
+  h2 { text-align: center; }
+  .page {
+    text-align: center; 
+    .home-boxes { 
+      flex-direction: column;
+      .whiteBg { 
+        margin-bottom: 15px; 
+        h3 { margin-bottom: 15px; }
+        padding: 20px 0 10px;
+      }
     }
   }
 }

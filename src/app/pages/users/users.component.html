@@ -63,6 +63,11 @@
     <!-- <div class="col-12 text-right">
       <bf-btn bfText="Update Password" bfIcon="icon-checkmark" class="extra" (bfClick)="updatePassword(newPass)"></bf-btn>
     </div> -->
+    <div class="col-12">
+      <bf-checkbox bfLabel="Only Game - If true, the user can only access the game/[id] url"
+                   [(ngModel)]="editUser.onlyGame">
+      </bf-checkbox>
+    </div>
 
     <div class="col-12" style="margin: 35px 0;">
       <div *ngIf="editUser.role === 'onboarding'" style="margin-bottom: 20px;">Onboarding link to set the password: 

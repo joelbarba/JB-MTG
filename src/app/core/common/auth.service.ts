@@ -125,6 +125,7 @@ export class AuthService {
       email     : user.email || '',
       sats      : 0,
       role      : 'player',
+      onlyGame  : false,
     };
 
     // Fetch /users document and add the custom data
@@ -136,6 +137,7 @@ export class AuthService {
       profile.email     = data.email;
       profile.role      = data.role;
       profile.sats      = data.sats;
+      profile.onlyGame  = !!data.onlyGame;
     }
 
     this.isAdmin   = profile.role === 'admin';

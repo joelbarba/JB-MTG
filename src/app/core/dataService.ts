@@ -35,6 +35,7 @@ export class DataService {
     email    : 'joel.barba.vidal@gmail.com',
     role     : 'admin',
     sats     : 5000000,
+    onlyGame : false,
   };
 
   private subs: Array<Unsubscribe> = [];

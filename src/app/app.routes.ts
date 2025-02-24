@@ -21,7 +21,7 @@ export class AuthGuard {
 
   async canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Promise<GuardResult> {
     await this.auth.profilePromise;
-    console.log(route.routeConfig?.path, state.url);
+    console.log(route.routeConfig?.path, state.url, this.auth.profile?.onlyGame);
     const url = state.url; // route.routeConfig?.path
     if (!this.auth.profileUserId) { return false; } // Prevent access to the route      
     if (this.auth.isOnboarding) {
@@ -29,9 +29,10 @@ export class AuthGuard {
       return false;
     }
     // if (this.auth.isGuest && url !== '/game/WvYPxRKiPZ4lCzuV3yHZ' && url !== '/game-mob/WvYPxRKiPZ4lCzuV3yHZ') {
-    //   this.router.navigate(['/game', 'WvYPxRKiPZ4lCzuV3yHZ']);
-    //   return false;
-    // }
+    if (this.auth.isGuest && this.auth.profile?.onlyGame && route.routeConfig?.path !== 'game') {
+      this.router.navigate(['/game', 'WvYPxRKiPZ4lCzuV3yHZ']);
+      return false;
+    }
     if (!this.auth.isAdmin) {
       if (['/users', '/settings'].indexOf(url) >= 0) {
         this.router.navigate(['/home']); return false;

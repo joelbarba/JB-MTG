@@ -9,6 +9,7 @@ import { AuthService } from '../../core/common/auth.service';
 import { ShellService } from '../../shell/shell.service';
 import { Auth, updatePassword } from '@angular/fire/auth';
 import { Firestore, doc, updateDoc } from '@angular/fire/firestore';
+import { DataService } from '../../core/dataService';
 
 @Component({
   selector    : 'app-onboarding',
@@ -43,17 +44,17 @@ export class OnboardingComponent {
     public auth: AuthService,
     public shell: ShellService,
     public growl: BfGrowlService,
+    private data: DataService,
   ) {
     this.shell.showMenu = false;
     this.shell.showNavBar = false;
   }
 
-  // http://127.0.0.1:4200/onboarding?usr=test
-  // n3W_P4ss
-  // joel.barba.vidal+test@gmail.com
+  // http://127.0.0.1:4200/onboarding?usr=guest
 
   ngOnInit() {
     this.username = this.route.snapshot.queryParams['usr'];
+    const gameId = this.route.snapshot.queryParams['gameId'];
 
     // Try to log in with default cretentials
     if (this.username) {
@@ -66,10 +67,9 @@ export class OnboardingComponent {
         this.btnEnabled = true;
 
         if (this.auth.isGuest) {
-          // this.router.navigate(['/game', 'WvYPxRKiPZ4lCzuV3yHZ']);
-          this.router.navigate(['/']);
           this.shell.showMenu = true;
           this.shell.showNavBar = true;
+          this.router.navigate(['/game', gameId || 'WvYPxRKiPZ4lCzuV3yHZ']);
         }
 
       }).catch(err => {

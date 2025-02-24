@@ -79,7 +79,7 @@ export class UsersComponent {
   }
 
   prepareNewUser() {
-    this.newUser = { name: '', username: '', email: '', pass: '', sats: 100000, role: 'onboarding', };
+    this.newUser = { name: '', username: '', email: '', pass: '', sats: 100000, role: 'onboarding', onlyGame: false };
     this.editUser = undefined;
     this.btnDisabled = false;
   }
@@ -111,6 +111,7 @@ export class UsersComponent {
         email     : this.newUser.email,
         sats      : this.newUser.sats,
         role      : this.newUser.role,
+        onlyGame  : this.newUser.onlyGame,
       };
       const email = this.newUser.email;
       const pass = this.newUser.pass || this.newUser.email;
@@ -194,6 +195,7 @@ export class UsersComponent {
         email     : this.editUser.email,
         role      : this.editUser.role,
         sats      : this.editUser.sats,
+        onlyGame  : !!this.editUser.onlyGame,
       };
       setDoc(doc(this.firestore, 'users', this.editUser.uid), userDoc).then(docRef => {
         this.growl.success(`User ${userDoc.name} updated successfuly`);

@@ -26,11 +26,13 @@
   }
 }
 
-.selecting-mana .btns-box {
-  display: block;
-  .left-btn {
+@media only screen and (hover: none) and (pointer: coarse) { 
+  .selecting-mana .btns-box {
     display: block;
-    margin-bottom: 15px;
-    text-align: center;
+    .left-btn {
+      display: block;
+      margin-bottom: 15px;
+      text-align: center;
+    }
   }
 }

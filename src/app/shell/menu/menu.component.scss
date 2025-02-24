@@ -36,3 +36,14 @@ nav.menu {
     }
   }
 }
+
+@media only screen and (hover: none) and (pointer: coarse) {
+  :host {
+    width: 30px;
+    top: 62px;
+  }
+  nav.menu ul.menu-nav li.menu-item {
+    font-size: 16px;
+    a { border-bottom: 1px solid white; }
+  }
+}
