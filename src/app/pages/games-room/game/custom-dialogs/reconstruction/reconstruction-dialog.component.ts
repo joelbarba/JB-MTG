@@ -26,6 +26,7 @@ import { WindowsService } from '../../gameLogic/windows.service';
   ],
 })
 export class ReconstructionDialogComponent {
+  @Input() fix = false;
   card: TGameCard | null = null;
   winSub!: Subscription;
   selectableArtifacts: Array<TGameCard> = [];

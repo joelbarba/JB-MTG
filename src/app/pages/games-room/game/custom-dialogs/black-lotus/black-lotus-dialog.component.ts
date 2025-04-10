@@ -28,6 +28,7 @@ import { WindowsService } from '../../gameLogic/windows.service';
   ],
 })
 export class BlackLotusDialogComponent {
+  @Input() fix = false;
   card: TGameCard | null = null;
   winSub!: Subscription;
   title = 'Black Lotus';

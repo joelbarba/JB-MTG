@@ -160,17 +160,24 @@ $table-center-left: calc(var(--left-panel-width) + var(--phases-col-width) + $ta
   bottom: calc($padding-top + $vertical-offset);
   right : $padding-left;
   left: calc(var(--left-panel-width) + var(--phases-col-width) + $padding-left);
-  @media only screen and (hover: none) and (pointer: coarse) { 
-    overflow: auto;
-    max-height: 90vh !important;
-    &:not(.minimized) {
-      min-height: 90vh !important;
-      top    : 15px !important;
-      bottom : 65px !important;
-      left   : 15px !important;
-      right  : 15px !important;
-      max-width: 92vw !important;
-      min-width: 92vw !important;
+  &.fix { 
+    position: fixed;
+    left: 15px; right: 15px;
+    top: 15px; bottom: 25px;
+  }
+  &:not(.fix) {
+    @media only screen and (hover: none) and (pointer: coarse) { 
+      overflow: auto;
+      max-height: 90vh !important;
+      &:not(.minimized) {
+        min-height: 90vh !important;
+        top    : 15px !important;
+        bottom : 65px !important;
+        left   : 15px !important;
+        right  : 15px !important;
+        max-width: 92vw !important;
+        min-width: 92vw !important;
+      }
     }
   }
 }

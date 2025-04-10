@@ -28,6 +28,7 @@ import { WindowsService } from '../../gameLogic/windows.service';
   ],
 })
 export class RegrowthDialogComponent {
+  @Input() fix = false;
   card: TGameCard | null = null;
   winSub!: Subscription;
   selectableCards: Array<TGameCard> = [];

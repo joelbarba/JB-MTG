@@ -1,5 +1,5 @@
-<div class="dialog-container"
-     [style.bottom.px]="win.customDialog.size === 'min' ? win.customDialog.bottom : undefined"
+<div class="dialog-container" [class.fix]="fix"
+     [style.bottom.px]="win.customDialog.size === 'min' ? win.customDialog.bottom : fix ? 25 : undefined"
      [class.minimized]="win.customDialog.size === 'min'" [style.z-index]="win.customDialog.zInd">
   <div class="window-bg" (click)="win.customDialog.maximize()"></div>
   <div [hidden]="win.customDialog.size === 'min'" class="min-btn" (click)="win.customDialog.minimize()" hoverTip="Click to minimize the window" tipSide="right">-</div>

@@ -30,6 +30,7 @@ import { HoverTipDirective } from '../../../../../core/common/internal-lib/bf-to
   ],
 })
 export class LibraryOfAlexandriaDialogComponent {
+  @Input() fix = false;
   card: TGameCard | null = null;
   winSub!: Subscription;
 

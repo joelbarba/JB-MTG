@@ -28,6 +28,8 @@ import { WindowsService } from '../../gameLogic/windows.service';
   ],
 })
 export class DualLandDialogComponent {
+  @Input() fix = false;
+
   card: TGameCard | null = null;
   winSub!: Subscription;
 
