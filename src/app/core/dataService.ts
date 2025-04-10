@@ -7,6 +7,7 @@ import { Unsubscribe } from "firebase/auth";
 import { BfDefer } from "bf-ui-lib";
 import { dbCards } from "./dbCards";
 import { getTime } from "./common/commons";
+import { extendCardLogic } from "../pages/games-room/game/gameLogic/game.card-specifics";
 
 export type TFullUnit = TDBUnit & { ref: string, owner: TDBUser, isYours: boolean; cardId: string, shortRef: string, card: TFullCard };
 export type TFullCard = TDBCard & { units: Array<TFullUnit>; };
@@ -386,6 +387,25 @@ export class DataService {
 
     deck1.sort((a, b) => a.order > b.order ? 1 : -1).forEach((c, ind) => c.order = ind);
     deck2.sort((a, b) => a.order > b.order ? 1 : -1).forEach((c, ind) => c.order = ind);
+
+    
+    const checkIfLands = (deck: Array<TDBGameCard>) => { // If deck has no lands in hand (first 7), shuffle again
+      if (!deck.slice(0,7).find(c => extendCardLogic({ ...c, gId: 'g000' } as TGameCard).isType('land'))) {
+        console.log('Deck has no lands in hand. Shuffling again', deck.slice(0,7));
+        deck.forEach(c => c.order = Math.round(Math.random() * 9999)); // Shuffle
+        deck.sort((a, b) => a.order > b.order ? 1 : -1).forEach((c, ind) => c.order = ind);
+      }
+    }
+    for (let t = 0; t < 10; t++) { checkIfLands(deck1); checkIfLands(deck2); }
+    console.log('Deck1 Hand = ', deck1.slice(0,7));
+    console.log('Deck2 Hand = ', deck2.slice(0,7));
+
+    // If deck2 has no lands in hand (first 7), shuffle again
+    if (!deck2.slice(0,7).find(c => extendCardLogic({ ...c, gId: 'g000' } as TGameCard).isType('land'))) {
+      console.log('Deck 2 has no lands in hand. Shuffling again', deck2.slice(0,7));
+      deck2.forEach(c => c.order = Math.round(Math.random() * 9999)); // Shuffle
+      deck2.sort((a, b) => a.order > b.order ? 1 : -1).forEach((c, ind) => c.order = ind);
+    }
 
     newGame.cards = deck1.concat(deck2) as Array<TGameCard>;
     newGame.cards.forEach((c, ind) => c.gId = generateId(ind)); // Generate unique identifiers on the game

@@ -653,6 +653,7 @@ export const extendCardLogic = (card: TGameCard): TGameCard => {
 
   
   function dualLand(color1: number, color2: number) {
+    card.type = 'land';
     const landTypes = ['island', 'island', 'plains', 'swamp', 'mountain', 'forest'] as TCardExtraType[];
     isAlsoType(landTypes[color1], landTypes[color2]);
     
