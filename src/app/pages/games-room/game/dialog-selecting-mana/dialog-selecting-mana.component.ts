@@ -25,6 +25,7 @@ import { WindowsService } from '../gameLogic/windows.service';
   ],
 })
 export class DialogSelectingManaComponent {
+  @Input() fix = false;
 
   constructor(
     public cardOp: CardOpServiceNew,

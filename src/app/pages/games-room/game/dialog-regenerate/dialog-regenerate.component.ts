@@ -29,6 +29,7 @@ import { WindowsService } from '../gameLogic/windows.service';
 ]
 })
 export class DialogRegenerateComponent {
+  @Input() fix = false;
   creatures!: TGameCard[];
   card?: TGameCard;
 

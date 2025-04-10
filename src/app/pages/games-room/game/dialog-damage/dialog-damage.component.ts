@@ -28,6 +28,7 @@ import { WindowsService } from '../gameLogic/windows.service';
   ]
 })
 export class DialogDamageComponent {
+  @Input() fix = false;
   title = 'Damage';
   text = '';
   icon = '';

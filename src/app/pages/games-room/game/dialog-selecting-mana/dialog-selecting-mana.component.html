@@ -1,5 +1,5 @@
-<div class="selecting-mana" 
-     [style.bottom.px]="win.selectManaDialog.size === 'min' ? win.selectManaDialog.bottom : undefined"
+<div class="selecting-mana" [class.fix]="fix"
+     [style.bottom.px]="win.selectManaDialog.size === 'min' ? win.selectManaDialog.bottom : fix ? 25 : undefined"
      [class.minimized]="win.selectManaDialog.size === 'min'" [style.z-index]="win.selectManaDialog.zInd">
   <div class="window-bg" (click)="win.selectManaDialog.maximize()"></div>
   <div [hidden]="win.selectManaDialog.size === 'min'" class="min-btn" (click)="win.selectManaDialog.minimize()" hoverTip="Click to minimize the window" tipSide="right">-</div>

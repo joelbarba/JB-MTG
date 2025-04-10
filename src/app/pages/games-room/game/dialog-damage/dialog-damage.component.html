@@ -1,5 +1,5 @@
-<div class="dialog-container" [class.life-gain]="damage < 0"
-  [style.bottom.px]="win.damageDialog.size === 'min' ? win.damageDialog.bottom : undefined"
+<div class="dialog-container" [class.life-gain]="damage < 0" [class.fix]="fix"
+  [style.bottom.px]="win.damageDialog.size === 'min' ? win.damageDialog.bottom : fix ? 25 : undefined"
   [class.minimized]="win.damageDialog.size === 'min'" [style.z-index]="win.damageDialog.zInd">
   <div class="window-bg" (click)="win.damageDialog.maximize()"></div>
   <!-- <div [hidden]="win.damageDialog.size === 'min'" class="min-btn" (click)="win.damageDialog.minimize()" hoverTip="Click to minimize the window" tipSide="right">-</div> -->

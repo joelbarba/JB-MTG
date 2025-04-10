@@ -25,6 +25,7 @@ import { WindowsService } from '../gameLogic/windows.service';
 ],
 })
 export class PanelEffectsComponent {
+  @Input() fix = false;
   card!: TGameCard;
   minimized = false;
   stateSub!: Subscription;

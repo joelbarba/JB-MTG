@@ -35,6 +35,7 @@ type TCol = {
 ],
 })
 export class DialogCombatComponent {
+  @Input() fix = false;
   TIMER_TIME = 5000; // * 1000000;
 
   attacker!: 'A' | 'B';

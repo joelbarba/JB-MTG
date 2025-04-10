@@ -26,6 +26,7 @@ import { GameStateService } from '../gameLogic/game-state.service';
   ],
 })
 export class DialogExtraManaComponent {
+  @Input() fix = false;
 
   constructor(
     public cardOp: CardOpServiceNew,

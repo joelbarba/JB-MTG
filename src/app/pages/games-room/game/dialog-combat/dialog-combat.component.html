@@ -1,5 +1,5 @@
-<div class="combat h-cards-len-{{hCardsLen}}"
-     [style.bottom.px]="win.combatDialog.size === 'min' ? win.combatDialog.bottom : undefined"
+<div class="combat h-cards-len-{{hCardsLen}}" [class.fix]="fix"
+     [style.bottom.px]="win.combatDialog.size === 'min' ? win.combatDialog.bottom : fix ? 25 : undefined"
      [class.minimized]="win.combatDialog.size === 'min'" [style.z-index]="win.combatDialog.zInd">
   <div class="window-bg" (click)="win.combatDialog.maximize()"></div>
   <div [hidden]="win.combatDialog.size === 'min'" class="min-btn" (click)="win.combatDialog.minimize()" hoverTip="Click to minimize the window" tipSide="right">-</div>

@@ -1,5 +1,5 @@
-<div class="dialog-container"
-  [style.bottom.px]="win.upkeepDialog.size === 'min' ? win.upkeepDialog.bottom : undefined"
+<div class="dialog-container" [class.fix]="fix"
+  [style.bottom.px]="win.upkeepDialog.size === 'min' ? win.upkeepDialog.bottom : fix ? 25 : undefined"
   [class.minimized]="win.upkeepDialog.size === 'min'" [style.z-index]="win.upkeepDialog.zInd">
   <div class="window-bg" (click)="win.upkeepDialog.maximize()"></div>
   <div [hidden]="win.upkeepDialog.size === 'min'" class="min-btn" (click)="win.upkeepDialog.minimize()" hoverTip="Click to minimize the window" tipSide="right">-</div>

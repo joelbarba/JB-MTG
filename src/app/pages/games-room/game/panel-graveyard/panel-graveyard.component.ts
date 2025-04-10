@@ -25,6 +25,7 @@ import { GameCardEventsService } from '../gameLogic/game-card-events.service';
 ],
 })
 export class PanelGraveyardComponent {
+  @Input() fix = false;  
   stateSub!: Subscription;
   winSub!: Subscription;
   title = 'Graveyard';

@@ -1,5 +1,5 @@
-<div class="spell-stack h-cards-len-{{hCardsLen}} v-cards-len-{{vCardsLen}}" 
-     [style.bottom.px]="win.spellStackDialog.size === 'min' ? win.spellStackDialog.bottom : undefined"
+<div class="spell-stack h-cards-len-{{hCardsLen}} v-cards-len-{{vCardsLen}}" [class.fix]="fix"
+     [style.bottom.px]="win.spellStackDialog.size === 'min' ? win.spellStackDialog.bottom : fix ? 25 : undefined"
      [class.minimized]="win.spellStackDialog.size === 'min'" [style.z-index]="win.spellStackDialog.zInd">
   <div class="window-bg" (click)="win.spellStackDialog.maximize()"></div>
   <div [hidden]="win.spellStackDialog.size === 'min'" class="min-btn" (click)="win.spellStackDialog.minimize()" hoverTip="Click to minimize the window" tipSide="right">-</div>

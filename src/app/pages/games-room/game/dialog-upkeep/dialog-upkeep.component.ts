@@ -30,6 +30,7 @@ import { validateCost } from '../gameLogic/game.utils';
 ]
 })
 export class DialogUpkeepComponent {
+  @Input() fix = false;
   title = 'Upkeep';
   youControl = false;
   cost: TActionCost | null = null;

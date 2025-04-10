@@ -248,15 +248,15 @@
 
 
   
-  <panel-graveyard        *ngIf="win.graveyardPanel.display"   ></panel-graveyard>
-  <dialog-upkeep          *ngIf="win.upkeepDialog.display"     ></dialog-upkeep>
-  <dialog-damage          *ngIf="win.damageDialog.display"     ></dialog-damage>
-  <dialog-combat          *ngIf="win.combatDialog.display"     ></dialog-combat>
-  <dialog-selecting-mana  *ngIf="win.selectManaDialog.display" ></dialog-selecting-mana>
-  <dialog-spell-stack     *ngIf="win.spellStackDialog.display" ></dialog-spell-stack>
-  <dialog-regenerate      *ngIf="win.regenerateDialog.display" ></dialog-regenerate>
-  <dialog-extra-mana      *ngIf="win.extraManaDialog.display"  ></dialog-extra-mana>
-  <panel-effects          *ngIf="win.effectsPanel.display"     ></panel-effects>
+  <panel-graveyard        *ngIf="win.graveyardPanel.display"   [fix]="true"></panel-graveyard>
+  <dialog-upkeep          *ngIf="win.upkeepDialog.display"     [fix]="true"></dialog-upkeep>
+  <dialog-damage          *ngIf="win.damageDialog.display"     [fix]="true"></dialog-damage>
+  <dialog-combat          *ngIf="win.combatDialog.display"     [fix]="true"></dialog-combat>
+  <dialog-selecting-mana  *ngIf="win.selectManaDialog.display" [fix]="true"></dialog-selecting-mana>
+  <dialog-spell-stack     *ngIf="win.spellStackDialog.display" [fix]="true"></dialog-spell-stack>
+  <dialog-regenerate      *ngIf="win.regenerateDialog.display" [fix]="true"></dialog-regenerate>
+  <dialog-extra-mana      *ngIf="win.extraManaDialog.display"  [fix]="true"></dialog-extra-mana>
+  <panel-effects          *ngIf="win.effectsPanel.display"     [fix]="true"></panel-effects>
 
   <!-- Custom Card Dialogs -->
   <black-lotus-dialog  *ngIf="win.customDialog.name === 'BlackLotus'"     [fix]="true"></black-lotus-dialog>
