@@ -581,9 +581,9 @@ export class GameMobComponent {
     const totalOthers = tableGridA.others.filter(c => !!c.length).length;
     const totalCreatures = tableGridA.creatures.filter(c => !!c.length).length;
 
-    const landsRowTop = totalLands === 0 ? 0 : this.windowHeight - 80 - handHeight - cardHeight - (maxGroupedLandsA * gap);
-    const othersRowTop = totalOthers === 0 ? landsRowTop : landsRowTop - gap - cardHeight - (maxGroupedOthersA * gap);
-    const creaturesRowTop = othersRowTop - gap - cardHeight - (maxGroupedCreaturesA * gap);
+    const landsRowTop     = this.windowHeight - 80 - handHeight - cardHeight - (maxGroupedLandsA * gap);
+    const othersRowTop    = totalLands === 0 ? landsRowTop : landsRowTop - gap - cardHeight - (maxGroupedOthersA * gap);
+    const creaturesRowTop = totalOthers === 0 ? othersRowTop : othersRowTop - gap - cardHeight - (maxGroupedCreaturesA * gap);
 
     // Once the grid is constructed, give coordinates to every card
     tableGridA.lands.filter(c => !!c.length).forEach((arr, col) => {
@@ -609,6 +609,7 @@ export class GameMobComponent {
     });
 
 
+
     const maxGroupedLandsB = tableGridB.lands.reduce((a,v) => Math.max(v.length, a), 1); // Maxim number of grouped cards
     const maxGroupedOthersB = tableGridB.others.reduce((a,v) => Math.max(v.length, a), 1); // Maxim number of grouped cards
     const maxGroupedCreaturesB = tableGridB.creatures.reduce((a,v) => Math.max(v.length, a), 1); // Maxim number of grouped cards
@@ -617,8 +618,8 @@ export class GameMobComponent {
     const totalOthersB = tableGridB.others.filter(c => !!c.length).length;
 
     const landsRowTopB = 20;
-    const othersRowTopB = totalOthersB === 0 ? landsRowTopB : landsRowTopB + cardHeight + (maxGroupedLandsB * gap * 2);
-    const creaturesRowTopB = othersRowTopB + cardHeight + (maxGroupedOthersB * gap * 2);
+    const othersRowTopB = totalLandsB === 0 ? landsRowTopB : landsRowTopB + cardHeight + (maxGroupedLandsB * gap * 2);
+    const creaturesRowTopB = totalOthersB === 0 ? othersRowTopB : othersRowTopB + cardHeight + (maxGroupedOthersB * gap * 2);
 
     // Once the grid is constructed, give coordinates to every card
     tableGridB.lands.filter(c => !!c.length).forEach((arr, col) => {
@@ -642,6 +643,7 @@ export class GameMobComponent {
         card.zInd = 100 + ind;
       })
     });
+
 
   }
 
