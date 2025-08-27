@@ -107,28 +107,28 @@ That info is replicated into a static file so it does not need to be loaded from
 Then, you can find all the specific logic for every card coded in [game.card-specifics.ts](./src/app/pages/games-room/game/gameLogic/game.card-specifics.ts)<br/>
 There the same static card object is extended with some methods that will be called during specific moments on the game (when the abilities are required):
 ```
-- onSummon()          : What the card does when it's summoned
-- onAbility()         : What the card does when it's used for its ability (tap...)
-- onStack()           : What the card does when it's added to the stack
-- onTarget()          : What the card does when a target is selected (in cardOp)
-- onCancel()          : What the card does when the summoning operation is canceled (in cardOp)
-- onDestroy()         : What the card does when it's destroyed
-- onDiscard()         : What the card does when it's discarded
-- onUpkeep()          : What the card does during the upkeep phase
-- onEffect()          : What the effect of the card does when it's applied
-- onPlayerDamage()    : When the card damages a player in combat
-- onCreatureDamage()  : When the card damages a creature in combat
-- afterCombat()       : What the card does after combat
-- isType()            : Checks if the card is of a certain type
-- isColor()           : Checks if the card is of a certain color
-- canUntap()          : Whether the card can be normally untapped
-- canAttack()         : Whether the creature can be selected to attack
-- canDefend()         : Whether the creature can be selected to defend
-- targetBlockers()    : List of attackers the current creature can block
-- getSummonCost()     : Cost to summon the card
-- getAbilityCost()    : Cost to trigger a card ability
-- getUpkeepCost()     : Cost play the onUpkeep() action
-- getCost()           : Generic cost getter
+- onSummon()         : What the card does when it's summoned
+- onAbility()        : What the card does when it's used for its ability (tap...)
+- onStack()          : What the card does when it's added to the stack
+- onTarget()         : What the card does when a target is selected (in cardOp)
+- onCancel()         : What the card does when the summoning operation is canceled in cardOp
+- onDestroy()        : What the card does when it's destroyed
+- onDiscard()        : What the card does when it's discarded
+- onUpkeep()         : What the card does during the upkeep phase
+- onEffect()         : What the effect of the card does when it's applied
+- onPlayerDamage()   : When the card damages a player in combat
+- onCreatureDamage() : When the card damages a creature in combat
+- afterCombat()      : What the card does after combat
+- isType()           : Checks if the card is of a certain type
+- isColor()          : Checks if the card is of a certain color
+- canUntap()         : Whether the card can be normally untapped
+- canAttack()        : Whether the creature can be selected to attack
+- canDefend()        : Whether the creature can be selected to defend
+- targetBlockers()   : List of attackers the current creature can block
+- getSummonCost()    : Cost to summon the card
+- getAbilityCost()   : Cost to trigger a card ability
+- getUpkeepCost()    : Cost play the onUpkeep() action
+- getCost()          : Generic cost getter
 ```
 
 You can find the card object definition in [types.ts](./src/app/core/types.ts)
@@ -148,7 +148,7 @@ this.game.action(card.selectableAction.action, { gId: card.gId });
 
 You can see the state management trigger in [game-state.service.ts - action()](./src/app/pages/games-room/game/gameLogic/game-state.service.ts#L253)
 
-### Summon/Trigger Cards
+### Summon / Trigger Cards
 The most common actions in the game are summoning a card or triggering a card's ability. Both usually require a cost (pay mana) and sometimes targets.
 To ease the selection of the cost (mana) and targets, a multi-action operation is remembered, so the player can pause the action to perform other actions that will help pay the cost.
 
@@ -227,6 +227,7 @@ It may happen that some creatures can be regenerated after they die. If so, the 
 Once all creatures are either regenerated or dead, the combat phase ends. Control is always returned to the attacker after the combat.
 
 <hr>
+
 **Auto advance**: To ease the ux, there are some cases where the game controller will auto advance the sub-phase of the combat:
 During your turn, if you don't have any creature that can attack, the whole combat phase is skipped.
 If you are being attacked and have no creatures that can block the attackers, the selectDefense subphase is skipped
@@ -274,12 +275,11 @@ Permanent abilities from creatures:
 - **First Strike**	→ When dealing combat damage, if that kills the other attacking/defender, they don't receive any damage. https://mtg.fandom.com/wiki/First_strike
 - **Haste**		→ They can attack the same turn they are summoned (they have no summoning sickness). https://mtg.fandom.com/wiki/Haste
 - **Walls**		→ They cannot attack, only defend
-
-Protection from color → The creature/permanent cannot be:
-- The target of an enchantment of that color.
-- Blocked by creatures that color.
-- Targeted by spells of that color, or by abilities from sources of that color.
-- Damaged by sources (instants or effects) from that color
+- **Protection from color** → The creature/permanent cannot be:
+    - The target of an enchantment of that color.
+    - Blocked by creatures that color.
+    - Targeted by spells of that color, or by abilities from sources of that color.
+    - Damaged by sources (instants or effects) from that color
 
 ### Regenerate
 The ability to regenerate is a bit special.
@@ -288,6 +288,7 @@ However, the regeneration often requires a cost, so it is treated as a card abil
 
 When a creature is killed (damage >= defense) or destroyed, if it can be regenerated we set the flag `card.isDying = true` instead of sending it to the graveyard. Enchantments/effects are kept too.<br/>
 When the state reducer detects a creature with the flag isDying, it immediately gives the game control to the creature's owner and opens the `<dialog-regenerate>`, showing the card to regenerate and activating its regenerate ability, so the operation to gather the ability cost starts immediately.<br/>
+
 If you cancel the regenerate ability, the creature dies as it would've normally (it is sent to the graveyard).
 If you pay the regenerate ability cost and regenerate the creature, the `turnDamage` is reset to 0 and the creature remains, along with all its enchantments and effects.<br/>
 During the regenerate special step, you can also trigger other card's abilities (to generate mana).
@@ -306,7 +307,7 @@ A parameter (`paid=true`) is passed, so we know whether the player has paid the 
 Every time a player receives damage and loses or gains life, a dialog opens to him/her to notify that (after the life's been subtracted/added).
 At the same time, another dialog with the same info is shown to the opponent too.
 
-The dialog remains on top (without other options available) until the player "acknowledges" it, and the game can continue.
+The dialog remains on top (without other options available) until the player **"acknowledges"** it, and the game can continue.
 Some dialogs have a timer that will automatically acknowledge them after a few seconds, so the game doesn't stop too much.
 
 These are controlled from the `state.lifeChanges[]` array. Every card that deals damage or adds life will push a notification to that array, and the reducer will detect that, stop the game and show the dialog.
