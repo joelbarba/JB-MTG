@@ -3,6 +3,7 @@
 An online version of the **_Magic the Gathering_** card game (vintage)<br/>
 <br/>
 As a fan player in my childhood, I wanted to recreate the game as it was 30 years ago, so I could play my friends online.<br/>
+
 So far I've managed to build a stable engine that works with an internal framework that allows coding different cards (up to 175 cards so far).
 The complexity of the game scales as each card may change the rules again, add new modals, or redefine current card properties.
 <br/>
@@ -10,7 +11,7 @@ The complexity of the game scales as each card may change the rules again, add n
 
 ![Screenshot of a game](./samples/sample1.png)
 
-
+You can test a playable demo on [https://jb-mtg.netlify.app/game/QqvfUu7oXeOGvUd0sD0M](https://jb-mtg.netlify.app/game/QqvfUu7oXeOGvUd0sD0M)
 
 
 ## Main Features
