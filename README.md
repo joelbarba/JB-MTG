@@ -11,7 +11,7 @@ The complexity of the game scales as each card may change the rules again, add n
 
 ![Screenshot of a game](./samples/sample1.png)
 
-You can test a playable demo on [https://jb-mtg.netlify.app/game/QqvfUu7oXeOGvUd0sD0M](https://jb-mtg.netlify.app/game/QqvfUu7oXeOGvUd0sD0M)
+You can test a playable demo on [https://jb-mtg.netlify.app/onboarding?usr=guest&gameId=QqvfUu7oXeOGvUd0sD0M](https://jb-mtg.netlify.app/onboarding?usr=guest&gameId=QqvfUu7oXeOGvUd0sD0M)
 
 
 ## Main Features
