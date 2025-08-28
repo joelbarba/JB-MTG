@@ -107,7 +107,7 @@ That info is replicated into a static file so it does not need to be loaded from
 
 Then, you can find all the specific logic for every card coded in [game.card-specifics.ts](./src/app/pages/games-room/game/gameLogic/game.card-specifics.ts)<br/>
 There the same static card object is extended with some methods that will be called during specific moments on the game (when the abilities are required):
-```
+```typescript
 - onSummon()         : What the card does when it's summoned
 - onAbility()        : What the card does when it's used for its ability (tap...)
 - onStack()          : What the card does when it's added to the stack
@@ -142,7 +142,7 @@ From that update, every client calculates all possible next actions, grouping th
 Actions are composed from a "verb" (action) + some extra parameters, like gId to tell what card the action is being applied to.
 
 Example:
-```
+```typescript
 this.game.action('skip-phase');
 this.game.action(card.selectableAction.action, { gId: card.gId });
 ```
